@@ -5,6 +5,7 @@
 #include <seismic_geometry.hpp>
 #include <seismic_output.hpp>
 
+
 void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
     ModelSettings * model_settings = seismic_parameters.model_settings;
     size_t nx = seismic_parameters.seismicGeometry()->nx();
