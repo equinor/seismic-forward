@@ -58,29 +58,29 @@ class SeismicGeometry {
 
     void printValues();
 
-    double _dx;
-    double _dy;
-    double _dz;
-    double _dt;
+    double dx_;
+    double dy_;
+    double dz_;
+    double dt_;
 
-    double _x0;
-    double _y0;
-    double _z0;
-    double _t0;
+    double x0_;
+    double y0_;
+    double z0_;
+    double t0_;
 
-    double _z_max;
-    double _t_max;
+    double z_max_;
+    double t_max_;
 
-    double _lx;
-    double _ly;
+    double lx_;
+    double ly_;
 
-    double _angle;
+    double angle_;
 
-    double _lx_surf;
-    double _ly_surf;
+    double lx_surf_;
+    double ly_surf_;
 
-    size_t _z_reflector_count;
-    size_t _nt;
+    size_t z_reflector_count_;
+    size_t nt_;
 };
 
 #endif

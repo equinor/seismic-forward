@@ -4,209 +4,209 @@
 
 
 SeismicGeometry::SeismicGeometry() {
-    _x0 = 0.0;
-    _y0 = 0.0;
-    _z0 = 0.0;
-    _t0 = 0.0;
+  x0_ = 0.0;
+  y0_ = 0.0;
+  z0_ = 0.0;
+  t0_ = 0.0;
 
-    _lx = 0.0;
-    _ly = 0.0;
+  lx_ = 0.0;
+  ly_ = 0.0;
 
-    _z_max = 0.0;
-    _t_max = 0.0;
+  z_max_ = 0.0;
+  t_max_ = 0.0;
 
-    _angle = 0.0;
-    _lx_surf = 0.0;
-    _ly_surf = 0.0;
+  angle_ = 0.0;
+  lx_surf_ = 0.0;
+  ly_surf_ = 0.0;
 
-    _dx = 0.0;
-    _dy = 0.0;
-    _dz = 0.0;
-    _dt = 0.0;
+  dx_ = 0.0;
+  dy_ = 0.0;
+  dz_ = 0.0;
+  dt_ = 0.0;
 
-    _z_reflector_count = 0;
-    _nt = 0;
+  z_reflector_count_ = 0;
+  nt_ = 0;
 }
 
 double SeismicGeometry::x0() {
-    return _x0;
+  return x0_;
 }
 
 double SeismicGeometry::y0() {
-    return _y0;
+  return y0_;
 }
 
 double SeismicGeometry::xlength() {
-    return _lx;
+  return lx_;
 }
 
 double SeismicGeometry::ylength() {
-    return _ly;
+  return ly_;
 }
 
 double SeismicGeometry::angle() {
-    return _angle;
+  return angle_;
 }
 
 double SeismicGeometry::dx() {
-    return _dx;
+  return dx_;
 }
 
 double SeismicGeometry::dy() {
-    return _dy;
+  return dy_;
 }
 
 double SeismicGeometry::dz() {
-    return _dz;
+  return dz_;
 }
 
 double SeismicGeometry::dt() {
-    return _dt;
+  return dt_;
 }
 
 double SeismicGeometry::xmin() {
-    double xmin;
-    if (_angle < -NRLib::PiHalf) {
-        xmin = _x0 - _lx * fabs(cos(_angle));
-    } else if (_angle < 0) {
-        xmin = _x0;
-    } else if (_angle < NRLib::PiHalf) {
-        xmin = _x0 - _ly * cos(NRLib::PiHalf - _angle);
-    } else {
-        xmin = _x0 - _ly * cos(_angle - NRLib::PiHalf) - _lx * cos(NRLib::Pi - _angle);
-    }
-    return xmin;
+  double xmin;
+  if (angle_ < -NRLib::PiHalf) {
+    xmin = x0_ - lx_ * fabs(cos(angle_));
+  } else if (angle_ < 0) {
+    xmin = x0_;
+  } else if (angle_ < NRLib::PiHalf) {
+    xmin = x0_ - ly_ * cos(NRLib::PiHalf - angle_);
+  } else {
+    xmin = x0_ - ly_ * cos(angle_ - NRLib::PiHalf) - lx_ * cos(NRLib::Pi - angle_);
+  }
+  return xmin;
 }
 
 double SeismicGeometry::ymin() {
-    double ymin;
-    if (_angle < -NRLib::PiHalf) {
-        ymin = _y0 - _ly_surf;
-    } else if (_angle < 0) {
-        ymin = _y0 - _lx * sin(-_angle);
-    } else if (_angle < NRLib::PiHalf) {
-        ymin = _y0;
-    } else {
-        ymin = _y0 - _ly * sin(_angle - NRLib::PiHalf);
-    }
-    return ymin;
+  double ymin;
+  if (angle_ < -NRLib::PiHalf) {
+    ymin = y0_ - ly_surf_;
+  } else if (angle_ < 0) {
+    ymin = y0_ - lx_ * sin(-angle_);
+  } else if (angle_ < NRLib::PiHalf) {
+    ymin = y0_;
+  } else {
+    ymin = y0_ - ly_ * sin(angle_ - NRLib::PiHalf);
+  }
+  return ymin;
 }
 
 double SeismicGeometry::xsurfacelength() {
-    return _lx_surf;
+  return lx_surf_;
 }
 
 double SeismicGeometry::ysurfacelength() {
-    return _ly_surf;
+  return ly_surf_;
 }
 
 size_t SeismicGeometry::nx() {
-    return static_cast<size_t>(floor(xlength() / dx()));
+  return static_cast<size_t>(floor(xlength() / dx()));
 }
 
 size_t SeismicGeometry::ny() {
-    return static_cast<size_t>(floor(ylength() / dy()));
+  return static_cast<size_t>(floor(ylength() / dy()));
 }
 
 size_t SeismicGeometry::nxsurfaceeclipse() {
-    return static_cast<size_t>(xsurfacelength() / dx());
+  return static_cast<size_t>(xsurfacelength() / dx());
 }
 
 size_t SeismicGeometry::nysurfaceeclipse() {
-    return static_cast<size_t>(ysurfacelength() / dy());
+  return static_cast<size_t>(ysurfacelength() / dy());
 }
 
 double SeismicGeometry::zlength() {
-    return nz() * dz();
+  return nz() * dz();
 }
 
 double SeismicGeometry::z0() {
-    return _z0;
+  return z0_;
 }
 
 size_t SeismicGeometry::nz() {
-    return static_cast<size_t>(floor((_z_max - _z0) / _dz));
+  return static_cast<size_t>(floor((z_max_ - z0_) / dz_));
 }
 
 size_t SeismicGeometry::zreflectorcount() {
-    return _z_reflector_count;
+  return z_reflector_count_;
 }
 
 size_t SeismicGeometry::nt() {
-    return _nt;
+  return nt_;
 }
 
 void SeismicGeometry::setGeometry(double x0, double y0, double lx, double ly, double angle) {
-    _x0 = x0;
-    _y0 = y0;
-    _lx = lx;
-    _ly = ly;
+  x0_ = x0;
+  y0_ = y0;
+  lx_ = lx;
+  ly_ = ly;
 
-    if (angle > NRLib::Pi) {
-        angle = angle - 2 * NRLib::Pi;
-    }
-    if (angle < -NRLib::Pi) {
-        angle = angle + 2 * NRLib::Pi;
-    }
+  if (angle > NRLib::Pi) {
+    angle = angle - 2 * NRLib::Pi;
+  }
+  if (angle < -NRLib::Pi) {
+    angle = angle + 2 * NRLib::Pi;
+  }
 
-    _angle = angle;
+  angle_ = angle;
 
-    _lx_surf = lx * fabs(cos(angle)) + ly * sin(fabs(angle));
-    _ly_surf = lx * sin(fabs(angle)) + ly * fabs(cos(angle));
+  lx_surf_ = lx * fabs(cos(angle)) + ly * sin(fabs(angle));
+  ly_surf_ = lx * sin(fabs(angle)) + ly * fabs(cos(angle));
 }
 
 void SeismicGeometry::setDxDy(double dx, double dy) {
-    _dx = dx;
-    _dy = dy;
+  dx_ = dx;
+  dy_ = dy;
 }
 
 void SeismicGeometry::setDz(double dz) {
-    _dz = dz;
+  dz_ = dz;
 }
 
 void SeismicGeometry::setDt(double dt) {
-    _dt = dt;
+  dt_ = dt;
 }
 
 void SeismicGeometry::setNt(size_t nt) {
-    _nt = nt;
+  nt_ = nt;
 }
 
 void SeismicGeometry::setZReflectorCount(size_t nzrefl) {
-    _z_reflector_count = nzrefl;
+  z_reflector_count_ = nzrefl;
 }
 
 void SeismicGeometry::setZRange(double z_min, double z_max) {
-    _z0 = z_min;
-    _z_max = z_max;
+  z0_ = z_min;
+  z_max_ = z_max;
 }
 
 double SeismicGeometry::t0() {
-    return _t0;
+  return t0_;
 }
 
 void SeismicGeometry::setTRange(double t_min, double t_max) {
-    _t0 = t_min;
-    _t_max = t_max;
+  t0_ = t_min;
+  t_max_ = t_max;
 }
 
 double SeismicGeometry::tlength() {
-    return nt() * dt();
+  return nt() * dt();
 }
 
 NRLib::Volume SeismicGeometry::createDepthVolume() {
-    return NRLib::Volume(_x0, _y0, _z0, _lx, _ly, zlength(), _angle);
+  return NRLib::Volume(x0_, y0_, z0_, lx_, ly_, zlength(), angle_);
 }
 
 NRLib::Volume SeismicGeometry::createTimeVolume() {
-    return NRLib::Volume(_x0, _y0, _t0, _lx, _ly, tlength(), _angle);
+  return NRLib::Volume(x0_, y0_, t0_, lx_, ly_, tlength(), angle_);
 }
 
 void SeismicGeometry::printValues() {
-    printf("x0: %f lx: %f nx: %u dx: %f\n", x0(), xlength(), nx(), dx());
-    printf("y0: %f ly: %f ny: %u dy: %f\n", y0(), ylength(), ny(), dy());
-    printf("z0: %f lz: %f nz: %u dz: %f\n", z0(), zlength(), nz(), dz());
-    printf("t0: %f lt: %f nt: %u dt: %f\n", t0(), tlength(), nt(), dt());
-    printf("zrefl: %u lx_surf: %f ly_surf: %f angle: %f\n", zreflectorcount(), xsurfacelength(), ysurfacelength(), angle());
-    printf("nxse: %u nyse: %u\n", nxsurfaceeclipse(), nysurfaceeclipse());
+  printf("x0: %f lx: %f nx: %u dx: %f\n", x0(), xlength(), nx(), dx());
+  printf("y0: %f ly: %f ny: %u dy: %f\n", y0(), ylength(), ny(), dy());
+  printf("z0: %f lz: %f nz: %u dz: %f\n", z0(), zlength(), nz(), dz());
+  printf("t0: %f lt: %f nt: %u dt: %f\n", t0(), tlength(), nt(), dt());
+  printf("zrefl: %u lx_surf: %f ly_surf: %f angle: %f\n", zreflectorcount(), xsurfacelength(), ysurfacelength(), angle());
+  printf("nxse: %u nyse: %u\n", nxsurfaceeclipse(), nysurfaceeclipse());
 }

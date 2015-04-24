@@ -21,12 +21,12 @@ class SeismicRegridding {
 //    static void findTWT(NRLib::StormContGrid &vpgrid, NRLib::StormContGrid &twtgrid, NRLib::StormContGrid &zgrid,NRLib::RegularSurface<double> &toptime, NRLib::RegularSurface<double> &bottime);
 
     static void findPointZValue(size_t i, size_t j, size_t k,
-            NRLib::Point &point,
-            const NRLib::EclipseGeometry &geometry,
-            const NRLib::Grid<double> &grid,
-            const NRLib::Grid2D<double> &value_above,
-            double &default_value,
-            double &zlimit);
+                                NRLib::Point &point,
+                                const NRLib::EclipseGeometry &geometry,
+                                const NRLib::Grid<double> &grid,
+                                const NRLib::Grid2D<double> &value_above,
+                                double &default_value,
+                                double &zlimit);
 };
 
 #endif

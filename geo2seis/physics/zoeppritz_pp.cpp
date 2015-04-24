@@ -30,14 +30,16 @@ ZoeppritzPP::~ZoeppritzPP() {
 
 }
 
-void ZoeppritzPP::ComputeConstants(double theta) {
-    a1_ = 0.5 * (1.0 + tan(theta) * tan(theta));
-    sin2theta_ = sin(theta) * sin(theta);
+void ZoeppritzPP::ComputeConstants(double theta)
+{
+  a1_ = 0.5 * (1.0 + tan(theta) * tan(theta));
+  sin2theta_ = sin(theta) * sin(theta);
 }
 
-double ZoeppritzPP::GetReflection(double diffvp, double meanvp, double diffrho, double meanrho, double diffvs, double meanvs) {
-    a2_ = -4.0 * meanvs * meanvs * sin2theta_ / (meanvp * meanvp);
-    a3_ = 0.5 + 0.5 * a2_;
-    double refl = a1_ * diffvp / meanvp + a2_ * diffvs / meanvs + a3_ * diffrho / meanrho;
-    return refl;
+double ZoeppritzPP::GetReflection(double diffvp, double meanvp, double diffrho, double meanrho, double diffvs, double meanvs) 
+{
+  a2_ = -4.0 * meanvs * meanvs * sin2theta_ / (meanvp * meanvp);
+  a3_ = 0.5 + 0.5 * a2_;
+  double refl = a1_ * diffvp / meanvp + a2_ * diffvs / meanvs + a3_ * diffrho / meanrho;
+  return refl;
 }

@@ -29,69 +29,77 @@ class SeismicParameters {
     ~SeismicParameters() {
     };
 
-    NRLib::StormContGrid &zGrid()  { return *zgrid; };
-    NRLib::StormContGrid &vpGrid()  { return *vpgrid; };
-    NRLib::StormContGrid &vsGrid()  { return *vsgrid; };
-    NRLib::StormContGrid &rhoGrid()  { return *rhogrid; };
-    NRLib::StormContGrid &twtGrid()  { return *twtgrid; };
-    std::vector<NRLib::StormContGrid> &rGrids()  { return *rgridvec; };
-    std::vector<NRLib::StormContGrid> &extraParametersGrids()  { return *extra_parameter_grid; };
-    NRLib::EclipseGrid &eclipseGrid()  { return *eclipse_grid; };
+    NRLib::StormContGrid &zGrid()                              { return *zgrid_; };
+    NRLib::StormContGrid &vpGrid()                             { return *vpgrid_; };
+    NRLib::StormContGrid &vsGrid()                             { return *vsgrid_; };
+    NRLib::StormContGrid &rhoGrid()                            { return *rhogrid_; };
+    NRLib::StormContGrid &twtGrid()                            { return *twtgrid_; };
+    std::vector<NRLib::StormContGrid> &rGrids()                { return *rgridvec_; };
+    std::vector<NRLib::StormContGrid> &extraParametersGrids()  { return *extra_parameter_grid_; };
+    NRLib::EclipseGrid &eclipseGrid()                          { return *eclipse_grid_; };
 
-    size_t topK() { return top_k; }
-    size_t bottomK() { return bottom_k; }
-    double theta0() { return theta_0; }
-    double dTheta() { return dtheta; }
-    size_t nTheta() { return ntheta; }
+    void deleteEclipseGrid();
+    void deleteParameterGrids();
+    void deleteZandRandTWTGrids();
+    void deleteWavelet();
+    void deleteGeometryAndOutput();
 
-    NRLib::RegularSurface<double> &topTime() { return top_time; };
-    NRLib::RegularSurface<double> &bottomTime() { return bot_time; };
+    size_t topK()    { return top_k_; }
+    size_t bottomK() { return bottom_k_; }
+    double theta0()  { return theta_0_; }
+    double dTheta()  { return dtheta_; }
+    size_t nTheta()  { return ntheta_; }
 
-    NRLib::RegularSurface<double> &topEclipse() { return topeclipse; };
-    NRLib::RegularSurface<double> &bottomEclipse() { return boteclipse; };
+    NRLib::RegularSurface<double> &topTime()       { return top_time_; };
+    NRLib::RegularSurface<double> &bottomTime()    { return bot_time_; };
+
+    NRLib::RegularSurface<double> &topEclipse()    { return topeclipse_; };
+    NRLib::RegularSurface<double> &bottomEclipse() { return boteclipse_; };
 
 
-    ModelSettings *model_settings;
+    ModelSettings*       modelSettings()   { return model_settings_;};
 
-    SeismicOutput* seismicOutput() { return seismic_output; };
-    SeismicGeometry* seismicGeometry() { return seismic_geometry; };
+    SeismicOutput*       seismicOutput()   { return seismic_output_; };
+    SeismicGeometry*     seismicGeometry() { return seismic_geometry_; };
 
-    NRLib::SegyGeometry *segyGeometry() { return segy_geometry; };
-    Wavelet* wavelet() { return _wavelet; };
-    double waveletScale() { return  _wavelet_scale; };
+    NRLib::SegyGeometry* segyGeometry()    { return segy_geometry_; };
+    Wavelet*             wavelet()         { return wavelet_; };
+    double               waveletScale()    { return  wavelet_scale_; };
 
   private:
-    SeismicGeometry *seismic_geometry;
-    SeismicOutput *seismic_output;
+    ModelSettings *model_settings_;
 
-    size_t ntheta;
-    double theta_0;
-    double dtheta;
-    double theta_max;
+    SeismicGeometry *seismic_geometry_;
+    SeismicOutput *seismic_output_;
 
-    Wavelet *_wavelet;
-    double _wavelet_scale;
+    size_t ntheta_;
+    double theta_0_;
+    double dtheta_;
+    double theta_max_;
 
-    NRLib::EclipseGrid *eclipse_grid;
+    Wavelet *wavelet_;
+    double wavelet_scale_;
 
-    size_t top_k;
-    size_t bottom_k;
+    NRLib::EclipseGrid *eclipse_grid_;
 
-    NRLib::RegularSurface<double> top_time;
-    NRLib::RegularSurface<double> bot_time;
+    size_t top_k_;
+    size_t bottom_k_;
 
-    NRLib::RegularSurface<double> topeclipse;
-    NRLib::RegularSurface<double> boteclipse;
+    NRLib::RegularSurface<double> top_time_;
+    NRLib::RegularSurface<double> bot_time_;
 
-    NRLib::SegyGeometry *segy_geometry;
+    NRLib::RegularSurface<double> topeclipse_;
+    NRLib::RegularSurface<double> boteclipse_;
 
-    NRLib::StormContGrid *zgrid;
-    NRLib::StormContGrid *vpgrid;
-    NRLib::StormContGrid *vsgrid;
-    NRLib::StormContGrid *rhogrid;
-    NRLib::StormContGrid *twtgrid;
-    std::vector<NRLib::StormContGrid> *rgridvec;
-    std::vector<NRLib::StormContGrid> *extra_parameter_grid;
+    NRLib::SegyGeometry *segy_geometry_;
+
+    NRLib::StormContGrid *zgrid_;
+    NRLib::StormContGrid *vpgrid_;
+    NRLib::StormContGrid *vsgrid_;
+    NRLib::StormContGrid *rhogrid_;
+    NRLib::StormContGrid *twtgrid_;
+    std::vector<NRLib::StormContGrid> *rgridvec_;
+    std::vector<NRLib::StormContGrid> *extra_parameter_grid_;
 
     void setupWavelet();
 
