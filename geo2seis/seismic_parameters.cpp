@@ -226,8 +226,13 @@ void SeismicParameters::findSurfaceGeometry() {
   seismic_geometry_->setZReflectorCount(static_cast<size_t>(bottom_k_ + 2 - top_k_));
 
   NRLib::Grid2D<double> values(nxsurfec + 2, nysurfec + 2, 0.0);
-  //what? no interpolation on top?
-  geometry.FindLayerSurface(values, top_k_, 0, topeclipse_.GetDX(), topeclipse_.GetDY(), xmin - dx, ymin - dy, 0.0, 0);
+  if (model_settings_->GetUseCornerpointInterpol()) {
+    geometry.FindLayerSurfaceCornerpoint(values, top_k_, 0, topeclipse_.GetDX(), topeclipse_.GetDY(), xmin - dx, ymin - dy, 0.0, 0);
+  }
+  else {
+    geometry.FindLayerSurface(values, top_k_, 0, topeclipse_.GetDX(), topeclipse_.GetDY(), xmin - dx, ymin - dy, 0.0, 0);
+  }
+
   for (size_t i = 0; i < topeclipse_.GetNI(); i++) {
     for (size_t j = 0; j < topeclipse_.GetNJ(); j++) {
       topeclipse_(i, j) = values(i, j);
