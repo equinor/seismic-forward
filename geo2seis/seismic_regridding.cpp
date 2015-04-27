@@ -47,6 +47,10 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   NRLib::StormContGrid &zgrid            = seismic_parameters.zGrid();
   bool find_for_ps = seismic_parameters.modelSettings()->GetPSSeismic();
   findTWT(vpgrid, vsgrid, twtgrid, zgrid, toptime, bottime, find_for_ps);
+  //findVrms();
+  //findTWTx();
+  //findTheta(seismic_parameters);
+  //findReflections(seismic_parameters);
 
 
   std::vector<double> constvp = seismic_parameters.modelSettings()->GetConstVp();
@@ -54,9 +58,7 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
 
   toptime.Add(-2000 / constvp[0] * wavelet->GetDepthAdjustmentFactor()); // add one wavelet length to bot and subtract from top
   bottime.Add(2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor());
-  //toptime.Add(-2000*1200.0/(wavelet->GetPeakFrequency()*constvp[0]));// add one wavelet length to bot and subtract from top
-  //bottime.Add(2000*1200.0/(wavelet->GetPeakFrequency()*constvp[2]));
-
+  
   double tmin = toptime.Min();
   double tmax = bottime.Max();
   size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.seismicGeometry()->dt()));
@@ -153,6 +155,51 @@ void SeismicRegridding::findZValues(SeismicParameters &seismic_parameters) {
     }
   }
 
+}
+
+void SeismicRegridding::findReflections(SeismicParameters &seismic_parameters){
+
+  NRLib::StormContGrid &vpgrid             = seismic_parameters.vpGrid();
+  NRLib::StormContGrid &vsgrid             = seismic_parameters.vsGrid();
+  NRLib::StormContGrid &rhogrid            = seismic_parameters.rhoGrid();
+  std::vector<NRLib::StormContGrid> &rgrid = seismic_parameters.rGrids();
+
+  size_t topk    = seismic_parameters.topK();
+  size_t botk    = seismic_parameters.bottomK();
+  bool ps_seis   = seismic_parameters.modelSettings()->GetPSSeismic();
+  double theta_0 = seismic_parameters.theta0();
+  double dtheta  = seismic_parameters.dTheta();
+
+  double theta;
+  size_t n_angle = rgrid.size();
+  std::vector<Zoeppritz *> zoeppritz(rgrid.size());
+  for (size_t i = 0; i < n_angle; i++) {
+    theta = theta_0 + i * dtheta;
+    if (ps_seis) {
+      zoeppritz[i] = new ZoeppritzPS();
+    } else {
+      zoeppritz[i] = new ZoeppritzPP();
+    }
+    zoeppritz[i]->ComputeConstants(theta);
+  }
+
+  double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
+  
+  for (size_t k = topk; k <= botk + 1; k++) {
+    for (size_t i = 0; i < rgrid[0].GetNI(); i++) {
+      for (size_t j = 0; j < rgrid[0].GetNJ(); j++) {
+        diffvp = vpgrid(i, j, (k - topk) + 1) - vpgrid(i, j, (k - topk));
+        meanvp = 0.5 * (vpgrid(i, j, (k - topk) + 1) + vpgrid(i, j, (k - topk)));
+        diffvs = vsgrid(i, j, (k - topk) + 1) - vsgrid(i, j, (k - topk));
+        meanvs = 0.5 * (vsgrid(i, j, (k - topk) + 1) + vsgrid(i, j, (k - topk)));
+        diffrho = rhogrid(i, j, (k - topk) + 1) - rhogrid(i, j, (k - topk));
+        meanrho = 0.5 * (rhogrid(i, j, (k - topk) + 1) + rhogrid(i, j, (k - topk)));
+        for (size_t l = 0; l < n_angle; l++) {
+          rgrid[l](i, j, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+        }
+      }
+    }
+  }                 
 }
 
 void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {

@@ -16,6 +16,7 @@ class SeismicRegridding {
   private:
     static void findZValues(SeismicParameters &seismic_parameters);
     static void findVpAndR(SeismicParameters &seismic_parameters);
+    static void findReflections(SeismicParameters &seismic_parameters);
     static void addNoiseToReflections(unsigned long seed, double std_dev, std::vector<NRLib::StormContGrid> &grid_vec);
     static void findTWT(NRLib::StormContGrid &vpgrid, NRLib::StormContGrid &vsgrid, NRLib::StormContGrid &twtgrid, NRLib::StormContGrid &zgrid, NRLib::RegularSurface<double> &toptime, NRLib::RegularSurface<double> &bottime, bool ps_seismic);
 //    static void findTWT(NRLib::StormContGrid &vpgrid, NRLib::StormContGrid &twtgrid, NRLib::StormContGrid &zgrid,NRLib::RegularSurface<double> &toptime, NRLib::RegularSurface<double> &bottime);
