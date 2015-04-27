@@ -144,7 +144,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
     }
 
     if (model_settings->GetOutputSeismicStackTimeStorm() || model_settings->GetOutputSeismicStackTimeSegy()) {
-      seismic_parameters.seismicOutput()->writeSeismicStackTime(seismic_parameters, timeshiftgridvec);
+      seismic_parameters.seismicOutput()->writeSeismicStackTime(seismic_parameters, timegridvec);
     }
 
     if (model_settings->GetOutputSeismicStackTimeShiftStorm() || model_settings->GetOutputSeismicStackTimeShiftSegy()) {
