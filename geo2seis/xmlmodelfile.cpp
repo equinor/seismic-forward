@@ -100,6 +100,7 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
     std::vector<std::string> legalCommands;
     legalCommands.push_back("elastic-param");
     legalCommands.push_back("angle");
+    legalCommands.push_back("nmo-stretch");
     legalCommands.push_back("output-grid");
     legalCommands.push_back("wavelet");
     legalCommands.push_back("white-noise");
@@ -108,6 +109,9 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("timeshift-twt");
     legalCommands.push_back("ps-seismic");
 
+    if (ParseNMOStretch(root, errTxt)){
+      modelSettings_->SetNMOCorr(true);
+    }
     ParseAngle(root, errTxt);
     ParseOutputGrid(root, errTxt);
     ParseElasticParam(root, errTxt);
@@ -320,6 +324,65 @@ bool XmlModelFile::ParseExtraParameters(TiXmlNode *node, std::string &errTxt) {
     CheckForJunk(root, errTxt, legalCommands, true);
     return true;
 
+}
+
+bool XmlModelFile::ParseNMOStretch(TiXmlNode *node, std::string &errTxt) {
+    TiXmlNode *root = node->FirstChildElement("nmo-stretch");
+    if (root == 0) {
+        return (false);
+    }
+
+    std::vector<std::string> legalCommands;
+    legalCommands.push_back("seafloor-depth");
+    legalCommands.push_back("velocity-in-water");
+    legalCommands.push_back("offset");
+
+    double value;
+    if (ParseValue(root, "seafloor-depth", value, errTxt) == true) {
+      modelSettings_->SetZw(value);
+    } else {
+      errTxt += "Value for seafloor depth is not given.\n";
+    }
+    if (ParseValue(root, "velocity-in-water", value, errTxt) == true) {
+      modelSettings_->SetVw(value);
+    } else {
+      errTxt += "Value for velocity in water is not given.\n";
+    }
+    ParseOffset(root, errTxt);
+
+    CheckForJunk(root, errTxt, legalCommands, true);
+    return true;
+}
+
+bool XmlModelFile::ParseOffset(TiXmlNode *node, std::string &errTxt) {
+    TiXmlNode *root = node->FirstChildElement("offset");
+    if (root == 0) {
+        return (false);
+    }
+    std::vector<std::string> legalCommands;
+    legalCommands.push_back("offset-0");
+    legalCommands.push_back("doffset");
+    legalCommands.push_back("offset-max");
+
+    double value;
+    if (ParseValue(root, "offset-0", value, errTxt) == true) {
+      modelSettings_->SetOffset0(value);
+    } else {
+      errTxt += "Value for minimum offset is not given.\n";
+    }
+    if (ParseValue(root, "doffset", value, errTxt) == true) {
+      modelSettings_->SetDOffset(value);
+    } else {
+      errTxt += "Value for offset increment is not given.\n";
+    }
+    if (ParseValue(root, "offset-max", value, errTxt) == true) {
+      modelSettings_->SetOffsetMax(value);
+    } else {
+      errTxt += "Value for maximum offset is not given.\n";
+    }
+
+    CheckForJunk(root, errTxt, legalCommands, true);
+    return true;
 }
 
 bool XmlModelFile::ParseAngle(TiXmlNode *node, std::string &errTxt) {

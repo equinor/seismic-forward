@@ -16,7 +16,7 @@ class SeismicForward {
     static void seismicForward(SeismicParameters &seismic_parameters);
 
   private:
-    static void generateSeismic(std::vector<NRLib::StormContGrid> &rgridvec,
+    static void generateSeismicOLD(std::vector<NRLib::StormContGrid> &rgridvec,
                                 NRLib::StormContGrid &twtgrid,
                                 NRLib::StormContGrid &zgrid,
                                 NRLib::StormContGrid &twt_timeshift,
@@ -33,6 +33,16 @@ class SeismicForward {
                                 bool time_output,
                                 bool depth_output,
                                 bool timeshift_output);
+    
+    static void generateSeismic(std::vector<NRLib::StormContGrid> &timegridvec,
+                                std::vector<NRLib::StormContGrid> &rgridvec,
+                                NRLib::StormContGrid              &twtgrid,
+                                NRLib::StormContGrid              &zgrid,                                     
+                                NRLib::RegularSurface<double>     &toptime,
+                                Wavelet *wavelet,
+                                double waveletScale,
+                                double t0,
+                                double dt);
 
     static void generateSeismicOnFile(std::vector<NRLib::StormContGrid> &rgridvec,
                                       NRLib::StormContGrid &twtgrid,
@@ -51,6 +61,17 @@ class SeismicForward {
                                       bool timeshift_output);
 
     static double findTFromZ(double z, std::vector<double> &zvec, std::vector<double> &tvec);
+    //static void   findRegularVrms(SeismicParameters &seismic_parameters, NRLib::StormContGrid &vrms_reg, std::vector<double> t0);
+    static void   regSamplInterpol1(NRLib::StormContGrid &t_in, NRLib::StormContGrid &data_in, std::vector<double> t_out, NRLib::StormContGrid &data_out);
+    static void   nmoCorrInterpol1(std::vector<double> &t_in, NRLib::StormContGrid &data_in, NRLib::StormContGrid t_out, NRLib::StormContGrid &data_out);
+    //static void   convertSeis(NRLib::StormContGrid &t_in, NRLib::StormContGrid &data_in, NRLib::StormContGrid t_out, NRLib::StormContGrid &data_out);
+    static std::vector<double> interpol1(std::vector<double> t_in, std::vector<double> data_in, std::vector<double> t_out);
+    static size_t findNearestNeighbourIndex(double x, std::vector<double> x_in);
+    static void   findReflections(SeismicParameters &seismic_parameters);
+    static void   findTheta(SeismicParameters &seismic_parameters, double offset);
+    static void   findRegTWTx(NRLib::StormContGrid &twtxgrid, NRLib::StormContGrid &vrmsgrid, std::vector<double> twt, double offset);
+    static void   findTWTx(NRLib::StormContGrid &twtxgrid,  NRLib::StormContGrid &vrmsgrid, NRLib::StormContGrid &twtgrid, double offset);
+    //static void   nmoCorrSeis(SeismicParameters &seismic_parameters, NRLib::StormContGrid &twtxgrid, NRLib::StormContGrid &timegrid, NRLib::StormContGrid &nmo_timegrid);
 };
 
 #endif

@@ -29,14 +29,20 @@ class SeismicParameters {
     ~SeismicParameters() {
     };
 
-    NRLib::StormContGrid &zGrid()                              { return *zgrid_; };
+    
     NRLib::StormContGrid &vpGrid()                             { return *vpgrid_; };
     NRLib::StormContGrid &vsGrid()                             { return *vsgrid_; };
     NRLib::StormContGrid &rhoGrid()                            { return *rhogrid_; };
+    NRLib::StormContGrid &zGrid()                              { return *zgrid_; };
     NRLib::StormContGrid &twtGrid()                            { return *twtgrid_; };
     std::vector<NRLib::StormContGrid> &rGrids()                { return *rgridvec_; };
     std::vector<NRLib::StormContGrid> &extraParametersGrids()  { return *extra_parameter_grid_; };
     NRLib::EclipseGrid &eclipseGrid()                          { return *eclipse_grid_; };
+
+    NRLib::StormContGrid &vrmsGrid()                           { return *vrmsgrid_; };
+    NRLib::StormContGrid &twtxGrid()                           { return *twtxgrid_; };
+    NRLib::StormContGrid &thetaGrid()                          { return *thetagrid_; };
+    
 
     void deleteEclipseGrid();
     void deleteParameterGrids();
@@ -49,6 +55,9 @@ class SeismicParameters {
     double theta0()  { return theta_0_; }
     double dTheta()  { return dtheta_; }
     size_t nTheta()  { return ntheta_; }
+    double offset0()  { return offset_0_; }
+    double dOffset()  { return doffset_; }
+    size_t nOffset()  { return noffset_; }
 
     NRLib::RegularSurface<double> &topTime()       { return top_time_; };
     NRLib::RegularSurface<double> &bottomTime()    { return bot_time_; };
@@ -77,6 +86,11 @@ class SeismicParameters {
     double dtheta_;
     double theta_max_;
 
+    size_t noffset_;
+    double offset_0_;
+    double doffset_;
+    double offset_max_;
+
     Wavelet *wavelet_;
     double wavelet_scale_;
 
@@ -101,6 +115,10 @@ class SeismicParameters {
     std::vector<NRLib::StormContGrid> *rgridvec_;
     std::vector<NRLib::StormContGrid> *extra_parameter_grid_;
 
+    NRLib::StormContGrid *vrmsgrid_;
+    NRLib::StormContGrid *twtxgrid_;
+    NRLib::StormContGrid *thetagrid_;
+    
     void setupWavelet();
 
     void readEclipseGrid();
@@ -110,6 +128,7 @@ class SeismicParameters {
     void findSurfaceGeometry();
 
     void calculateAngleSpan();
+    void calculateOffsetSpan();
 
     void createGrids();
 };

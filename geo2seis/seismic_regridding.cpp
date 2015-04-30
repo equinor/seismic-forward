@@ -23,20 +23,22 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
 
   seismic_parameters.deleteEclipseGrid();
 
-  // if we are adding noise to reflection write noise-free reflections to file before adding noise
-  if (seismic_parameters.modelSettings()->GetOutputReflections()) {
-    seismic_parameters.seismicOutput()->writeReflections(seismic_parameters, false);
-  }
+  if (seismic_parameters.modelSettings()->GetNMOCorr() == false) {
+    // if we are adding noise to reflection write noise-free reflections to file before adding noise
+    if (seismic_parameters.modelSettings()->GetOutputReflections()) {
+      seismic_parameters.seismicOutput()->writeReflections(seismic_parameters, false);
+    }
 
-  //-----------------Add white noise to reflections----------------------------
-  if (seismic_parameters.modelSettings()->GetWhiteNoise()) {
-    unsigned long seed = seismic_parameters.modelSettings()->GetSeed();
-    double deviation = seismic_parameters.modelSettings()->GetStandardDeviation();
-    addNoiseToReflections(seed, deviation, seismic_parameters.rGrids());
-  }
+    //-----------------Add white noise to reflections----------------------------
+    if (seismic_parameters.modelSettings()->GetWhiteNoise()) {
+      unsigned long seed = seismic_parameters.modelSettings()->GetSeed();
+      double deviation = seismic_parameters.modelSettings()->GetStandardDeviation();
+      addNoiseToReflections(seed, deviation, seismic_parameters.rGrids());
+    }
 
-  if (seismic_parameters.modelSettings()->GetOutputReflections() && seismic_parameters.modelSettings()->GetWhiteNoise()) {
-    seismic_parameters.seismicOutput()->writeReflections(seismic_parameters, true);
+    if (seismic_parameters.modelSettings()->GetOutputReflections() && seismic_parameters.modelSettings()->GetWhiteNoise()) {
+      seismic_parameters.seismicOutput()->writeReflections(seismic_parameters, true);
+    }
   }
 
   NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
@@ -47,11 +49,10 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   NRLib::StormContGrid &zgrid            = seismic_parameters.zGrid();
   bool find_for_ps = seismic_parameters.modelSettings()->GetPSSeismic();
   findTWT(vpgrid, vsgrid, twtgrid, zgrid, toptime, bottime, find_for_ps);
-  //findVrms();
-  //findTWTx();
-  //findTheta(seismic_parameters);
-  //findReflections(seismic_parameters);
 
+  if (seismic_parameters.modelSettings()->GetNMOCorr()){
+    findVrms(seismic_parameters);
+  }
 
   std::vector<double> constvp = seismic_parameters.modelSettings()->GetConstVp();
   Wavelet* wavelet = seismic_parameters.wavelet();
@@ -157,50 +158,29 @@ void SeismicRegridding::findZValues(SeismicParameters &seismic_parameters) {
 
 }
 
-void SeismicRegridding::findReflections(SeismicParameters &seismic_parameters){
+void SeismicRegridding::findVrms(SeismicParameters &seismic_parameters){
+  double v_w = seismic_parameters.modelSettings()->GetVw();
+  double z_w = seismic_parameters.modelSettings()->GetZw();
+  NRLib::StormContGrid &zgrid             = seismic_parameters.zGrid();
+  NRLib::StormContGrid &twtgrid           = seismic_parameters.twtGrid();
+  NRLib::StormContGrid &vrmsgrid          = seismic_parameters.vrmsGrid();
+  NRLib::StormContGrid &vpgrid            = seismic_parameters.vpGrid();
 
-  NRLib::StormContGrid &vpgrid             = seismic_parameters.vpGrid();
-  NRLib::StormContGrid &vsgrid             = seismic_parameters.vsGrid();
-  NRLib::StormContGrid &rhogrid            = seismic_parameters.rhoGrid();
-  std::vector<NRLib::StormContGrid> &rgrid = seismic_parameters.rGrids();
+  double w_const = 2* v_w * z_w; //v_w * v_w * (2* z_w / v_w);
 
-  size_t topk    = seismic_parameters.topK();
-  size_t botk    = seismic_parameters.bottomK();
-  bool ps_seis   = seismic_parameters.modelSettings()->GetPSSeismic();
-  double theta_0 = seismic_parameters.theta0();
-  double dtheta  = seismic_parameters.dTheta();
-
-  double theta;
-  size_t n_angle = rgrid.size();
-  std::vector<Zoeppritz *> zoeppritz(rgrid.size());
-  for (size_t i = 0; i < n_angle; i++) {
-    theta = theta_0 + i * dtheta;
-    if (ps_seis) {
-      zoeppritz[i] = new ZoeppritzPS();
-    } else {
-      zoeppritz[i] = new ZoeppritzPP();
-    }
-    zoeppritz[i]->ComputeConstants(theta);
-  }
-
-  double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
-  
-  for (size_t k = topk; k <= botk + 1; k++) {
-    for (size_t i = 0; i < rgrid[0].GetNI(); i++) {
-      for (size_t j = 0; j < rgrid[0].GetNJ(); j++) {
-        diffvp = vpgrid(i, j, (k - topk) + 1) - vpgrid(i, j, (k - topk));
-        meanvp = 0.5 * (vpgrid(i, j, (k - topk) + 1) + vpgrid(i, j, (k - topk)));
-        diffvs = vsgrid(i, j, (k - topk) + 1) - vsgrid(i, j, (k - topk));
-        meanvs = 0.5 * (vsgrid(i, j, (k - topk) + 1) + vsgrid(i, j, (k - topk)));
-        diffrho = rhogrid(i, j, (k - topk) + 1) - rhogrid(i, j, (k - topk));
-        meanrho = 0.5 * (rhogrid(i, j, (k - topk) + 1) + rhogrid(i, j, (k - topk)));
-        for (size_t l = 0; l < n_angle; l++) {
-          rgrid[l](i, j, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+  for (size_t i = 0; i < vrmsgrid.GetNI(); ++i) {
+    for (size_t j = 0; j < vrmsgrid.GetNJ(); ++j) {
+      for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
+        vrmsgrid(i,j,k) = w_const + vpgrid(i,j,0)* vpgrid(i,j,0)*(twtgrid(i,j,0) - 2*z_w/v_w);
+        for (size_t l = 1; i < k; ++l) {
+          vrmsgrid(i,j,k) += vpgrid(i,j,k)* vpgrid(i,j,k)*(twtgrid(i,j,k) - twtgrid(i,j,k-1));
         }
+        vrmsgrid(i,j,k) *= (1/twtgrid(i,j,k));
       }
     }
-  }                 
+  }
 }
+
 
 void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
   NRLib::StormContGrid &vpgrid  = seismic_parameters.vpGrid();
@@ -237,17 +217,18 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
 
   double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
   std::vector<Zoeppritz *> zoeppritz(rgrid.size());
-
-  double theta;
   size_t n_angle = rgrid.size();
-  for (size_t i = 0; i < n_angle; i++) {
-    theta = theta_0 + i * dtheta;
-    if (ps_seis) {
-      zoeppritz[i] = new ZoeppritzPS();
-    } else {
-      zoeppritz[i] = new ZoeppritzPP();
+  if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+    double theta;
+    for (size_t i = 0; i < n_angle; i++) {
+      theta = theta_0 + i * dtheta;
+      if (ps_seis) {
+        zoeppritz[i] = new ZoeppritzPS();
+      } else {
+        zoeppritz[i] = new ZoeppritzPP();
+      }
+      zoeppritz[i]->ComputeConstants(theta);
     }
-    zoeppritz[i]->ComputeConstants(theta);
   }
   NRLib::Grid2D<double> value_above_vp(egrid.GetNI(), egrid.GetNJ(), constvp[0]);
   NRLib::Grid2D<double> value_above_vs(egrid.GetNI(), egrid.GetNJ(), constvs[0]);
@@ -492,16 +473,22 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                       // if(intersect == true){
                       if (dist < 0.00000000001) {
                         vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                        diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                        meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
+                        if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+                          diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
+                          meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
+                        }
                         triangle8.FindIntersection(line, intersec_pt, true);
                         vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                        diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                        meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
+                        if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+                          diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
+                          meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
+                        }
                         triangle12.FindIntersection(line, intersec_pt, true);
                         rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                        diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                        meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
+                        if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+                          diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
+                          meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
+                        }
                         for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                           triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
                           extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
@@ -509,9 +496,11 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                       }
                     }
                     // if(intersect){
-                    if (dist < 0.00000000001) {
-                      for (size_t l = 0; l < n_angle; l++) {
-                        rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                    if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+                      if (dist < 0.00000000001) {
+                        for (size_t l = 0; l < n_angle; l++) {
+                          rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                        }
                       }
                     }
                   }
@@ -739,9 +728,11 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                   }
                 }
                 // if(intersect){
-                if (dist < 0.00000000001) {
-                  for (size_t l = 0; l < n_angle; l++) {
-                    rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+                  if (dist < 0.00000000001) {
+                    for (size_t l = 0; l < n_angle; l++) {
+                      rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                    }
                   }
                 }
               }
@@ -968,9 +959,11 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                   }
                 }
                 // if(intersect){
-                if (dist < 0.00000000001) {
-                  for (size_t l = 0; l < n_angle; l++) {
-                    rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+                  if (dist < 0.00000000001) {
+                    for (size_t l = 0; l < n_angle; l++) {
+                      rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                    }
                   }
                 }
               }
@@ -1196,9 +1189,11 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                   }
                 }
                 //if(intersect){
-                if (dist < 0.00000000001) {
-                  for (size_t l = 0; l < n_angle; l++) {
-                    rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+                  if (dist < 0.00000000001) {
+                    for (size_t l = 0; l < n_angle; l++) {
+                      rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                    }
                   }
                 }
               }
@@ -1421,9 +1416,11 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                   }
                 }
                 //if(intersect){
-                if (dist < 0.00000000001) {
-                  for (size_t l = 0; l < n_angle; l++) {
-                    rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+                  if (dist < 0.00000000001) {
+                    for (size_t l = 0; l < n_angle; l++) {
+                      rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+                    }
                   }
                 }
               }
@@ -1523,8 +1520,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
             for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
               extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt4_extra_param[ii].z);
             }
-            for (size_t l = 0; l < n_angle; l++) {
-              rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+            if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+              for (size_t l = 0; l < n_angle; l++) {
+                rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+              }
             }
           }
         }
@@ -1622,8 +1621,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
             for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
               extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt4_extra_param[ii].z);
             }
-            for (size_t l = 0; l < n_angle; l++) {
-              rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+            if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+              for (size_t l = 0; l < n_angle; l++) {
+                rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+              }
             }
           }
         }
@@ -1720,8 +1721,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
             for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
               extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt4_extra_param[ii].z);
             }
-            for (size_t l = 0; l < n_angle; l++) {
-              rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+            if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+              for (size_t l = 0; l < n_angle; l++) {
+                rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+              }
             }
           }
         }
@@ -1819,8 +1822,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
             for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
               extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt4_extra_param[ii].z);
             }
-            for (size_t l = 0; l < n_angle; l++) {
-              rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+            if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
+              for (size_t l = 0; l < n_angle; l++) {
+                rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+              }
             }
           }
         }

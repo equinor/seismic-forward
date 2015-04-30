@@ -57,6 +57,12 @@ class XmlModelFile {
     bool ParseAngle(TiXmlNode *node,
             std::string &errTxt);
 
+    bool ParseNMOStretch(TiXmlNode *node,
+            std::string &errTxt);
+
+    bool ParseOffset(TiXmlNode *node,
+            std::string &errTxt);
+
     bool ParseElasticParam(TiXmlNode *node,
             std::string &errTxt);
 

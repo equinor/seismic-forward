@@ -81,12 +81,18 @@ ModelSettings::ModelSettings(void) {
     utm_precision_ = -10;
     twt_file_name_ = "";
     ps_seismic_ = false;
+    nmo_corr_ = false;
     top_time_window_ = -9999;
     bot_time_window_ = -9999;
     top_depth_window_ = -9999;
     bot_depth_window_ = -9999;
     time_window_specified_ = false;
     depth_window_specified_ = false;
+    v_w_ = 0.0;
+    z_w_ = 0.0;
+    offset_0_ = 0.0;
+    doffset_ = 0.0;
+    offset_max_ = 0.0; 
 }
 
 ModelSettings::~ModelSettings(void) {

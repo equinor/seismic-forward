@@ -44,6 +44,11 @@ class SeismicOutput {
     void writeSeismicTimeSeismicOnFile(SeismicParameters &seismic_parameters, bool time_output);
     void writeSeismicDepthSeismicOnFile(SeismicParameters &seismic_parameters, bool depth_output);
 
+    void writeNMOSeismicTimeSegy(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegridvec, double offset);
+    void writeNMOSeismicTimeStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset, bool is_stack = false);
+
+    void writeNMOReflections(SeismicParameters &seismic_parameters, double offset, bool noise_added);
+
   private:
     void generateParameterGridForOutput(NRLib::StormContGrid &input_grid, NRLib::StormContGrid &time_or_depth_grid, NRLib::StormContGrid &output_grid, double delta_time_or_depth, double zero_time_or_depth, NRLib::RegularSurface<double> &toptime);
     size_t findCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid);

@@ -384,6 +384,32 @@ class ModelSettings {
         ps_seismic_ = ps;
     }
 
+    void SetNMOCorr(bool nmo) {
+        nmo_corr_ = nmo;
+    }
+
+    double SetVw(double value) {
+        v_w_ = value;
+    }
+
+    double SetZw(double value) {
+        z_w_ = value;
+    }
+
+    double SetOffset0(double value) {
+      offset_0_ = value;
+    }
+
+    double SetDOffset(double value) {
+      doffset_ = value;
+    }
+
+    double SetOffsetMax(double value) {
+      offset_max_ = value;
+    }
+
+
+
     bool GetOutputElasticParametersTimeSegy() {
         return elastic_parameters_time_segy_;
     }
@@ -509,6 +535,18 @@ class ModelSettings {
 
     double GetThetaMax() {
         return theta_max_;
+    }
+
+    double GetOffset0() {
+        return offset_0_;
+    }
+
+    double GetDOffset() {
+        return doffset_;
+    }
+
+    double GetOffsetMax() {
+        return offset_max_;
     }
 
     double GetPeakFrequency() {
@@ -701,6 +739,17 @@ class ModelSettings {
         return ps_seismic_;
     }
 
+    bool GetNMOCorr() {
+        return nmo_corr_;
+    }
+
+    double GetVw() {
+        return v_w_;
+    }
+
+    double GetZw() {
+        return z_w_;
+    }
   private:
     std::string eclipse_file_name_;
     std::vector<std::string> parameter_names_;
@@ -708,6 +757,7 @@ class ModelSettings {
     std::vector<double> constvs_;
     std::vector<double> constrho_;
     double theta_0_, dtheta_, theta_max_;  // seismic angle
+    double offset_0_, doffset_, offset_max_;  // seismic offset
     bool ricker_;
     bool area_given_;
     double peak_f_;
@@ -751,6 +801,9 @@ class ModelSettings {
     std::string twt_file_name_;
 
     bool ps_seismic_;
+
+    bool nmo_corr_;
+    double v_w_, z_w_;
 
 };
 

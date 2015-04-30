@@ -15,7 +15,12 @@ SeismicParameters::SeismicParameters(ModelSettings *model_settings) {
     seismic_geometry_ = new SeismicGeometry();
     seismic_output_ = new SeismicOutput(model_settings_);
 
-    calculateAngleSpan();
+    if (model_settings->GetNMOCorr()) {
+      calculateOffsetSpan();
+    }
+    else {
+      calculateAngleSpan();
+    }
 
     segy_geometry_ = NULL;
 
@@ -40,6 +45,19 @@ void SeismicParameters::calculateAngleSpan() {
     }
 }
 
+
+void SeismicParameters::calculateOffsetSpan() {
+    offset_0_ = model_settings_->GetOffset0();
+    doffset_ = model_settings_->GetDOffset();
+    offset_max_ = model_settings_->GetOffsetMax();
+
+    if (doffset_ == 0) {
+        noffset_ = 1;
+    } else {
+        noffset_ = size_t((offset_max_ - offset_0_) / doffset_) + 1;
+        doffset_ = (offset_max_ - offset_0_) / (noffset_ - 1);
+    }
+}
 
 void SeismicParameters::setupWavelet() {
     if (model_settings_->GetRicker()) {
@@ -98,6 +116,7 @@ void SeismicParameters::deleteZandRandTWTGrids() {
   delete twtgrid_;
   delete zgrid_;
   delete rgridvec_;
+  delete vrmsgrid_;
 }
 
 void SeismicParameters::deleteWavelet() {
@@ -283,15 +302,21 @@ void SeismicParameters::createGrids() {
 
   NRLib::Volume volume = seismic_geometry_->createDepthVolume();
 
-  zgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
-  vpgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
-  vsgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
-  rhogrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
-  twtgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
-
-  rgridvec_ = new std::vector<NRLib::StormContGrid>(ntheta_);
+  zgrid_    = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+  vpgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
+  vsgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
+  rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
+  twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+  if (model_settings_->GetNMOCorr()){
+    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1); //dimensions??
+    rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
+    twtxgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+  }
+  else {
+    rgridvec_ = new std::vector<NRLib::StormContGrid>(ntheta_);
+  }
   NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl);
-
+  
   std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
 
   std::vector<double> extra_parameter_default_values = model_settings_->GetExtraParameterDefaultValues();
@@ -313,7 +338,9 @@ void SeismicParameters::createGrids() {
         (*rhogrid_)(i, j, k) = static_cast<float>(const_rho[1]);
         (*twtgrid_)(i, j, k) = 0.0;
         rgrid(i, j, k) = 0.0;
-
+        if (model_settings_->GetNMOCorr()){
+          (*twtxgrid_)(i, j, k) = 0.0;
+        }
         for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
           (*extra_parameter_grid_)[epi](i, j, k) = static_cast<float>(extra_parameter_default_values[epi]);
         }
@@ -327,7 +354,12 @@ void SeismicParameters::createGrids() {
       }
     }
   }
-  for (size_t i = 0; i < ntheta_; i++) {
-    (*rgridvec_)[i] = rgrid;
+  if (model_settings_->GetNMOCorr()){
+    (*rgridvec_)[0] = rgrid;
+  }
+  else {
+    for (size_t i = 0; i < ntheta_; i++) {
+      (*rgridvec_)[i] = rgrid;
+    }
   }
 }
