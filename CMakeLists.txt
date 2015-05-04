@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(G2S)
 
+option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." ON)
+
 enable_testing()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -56,5 +58,8 @@ else()
     target_link_libraries(seismic_forward ${CBLAS_LIBRARY} lapack ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
 endif(MKL_FOUND)
 
-add_subdirectory(mex)
+if(BUILD_MATLAB_MEX)
+  add_subdirectory(mex)
+endif(BUILD_MATLAB_MEX)
+
 add_subdirectory(tests)
