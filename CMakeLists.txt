@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(G2S)
 
+option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." ON)
+
 enable_testing()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -46,5 +48,8 @@ add_library(geo2seis_static STATIC $<TARGET_OBJECTS:geo2seis_object>)
 add_executable(seismic_forward geo2seis/main.cpp $<TARGET_OBJECTS:geo2seis_object>)
 target_link_libraries(seismic_forward ${CBLAS_LIBRARY} lapack ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
 
-add_subdirectory(mex)
+if(BUILD_MATLAB_MEX)
+  add_subdirectory(mex)
+endif(BUILD_MATLAB_MEX)
+
 add_subdirectory(tests)
