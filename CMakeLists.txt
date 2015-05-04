@@ -18,13 +18,18 @@ set(CBLAS_LIBRARY "blas" CACHE FILEPATH "Path to a static or dynamic version of 
 
 include(cmake/AddSource.cmake)
 
-find_package(FFTW REQUIRED)
+find_package(MKL)
 
-if(FFTW_FOUND)
-    include_directories(${FFTW_INCLUDES})
-else(FFTW_FOUND)
-    message(FATAL_ERROR "Unable to find FFTW library.")
-endif(FFTW_FOUND)
+if(MKL_FOUND)
+   include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS})
+else()
+   find_package(FFTW REQUIRED)
+   if(FFTW_FOUND)
+        include_directories(${FFTW_INCLUDES})
+   else(FFTW_FOUND)
+        message(FATAL_ERROR "Unable to find FFTW library.")
+   endif(FFTW_FOUND)
+endif(MKL_FOUND)
 
 set_property(GLOBAL PROPERTY SOURCE_FILES)
 set_property(GLOBAL PROPERTY INCLUDE_ROOTS)
@@ -44,7 +49,12 @@ add_library(geo2seis_object OBJECT ${SOURCE_FILES})
 add_library(geo2seis_static STATIC $<TARGET_OBJECTS:geo2seis_object>)
 
 add_executable(seismic_forward geo2seis/main.cpp $<TARGET_OBJECTS:geo2seis_object>)
-target_link_libraries(seismic_forward ${CBLAS_LIBRARY} lapack ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
+
+if(MKL_FOUND)
+    target_link_libraries(seismic_forward ${MKL_LIBRARIES})
+else()
+    target_link_libraries(seismic_forward ${CBLAS_LIBRARY} lapack ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
+endif(MKL_FOUND)
 
 add_subdirectory(mex)
 add_subdirectory(tests)
