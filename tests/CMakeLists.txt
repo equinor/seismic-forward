@@ -14,12 +14,7 @@ function(build_and_test TEST_NAME SOURCE_FILES INCLUDES LINK_LIBRARIES)
 
 endfunction()
 
-set(LINK_LIBRARIES
-    ${CBLAS_LIBRARY}
-    lapack
-    ${FFTW_STATIC_LIBRARIES}
-    ${FFTWF_STATIC_LIBRARIES}
-)
+set(LINK_LIBRARIES ${MATH_LIBRARIES})
 
 build_and_test(cutest test_cutest.cpp "" "${LINK_LIBRARIES}")
 build_and_test(cwd current_directory_test.cpp "$<TARGET_OBJECTS:geo2seis_object>" "${LINK_LIBRARIES}")
