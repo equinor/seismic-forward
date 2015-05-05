@@ -14,23 +14,25 @@ endif(APPLE)
 
 set(CMAKE_BUILD_TYPE RELEASE)
 
-# Out-of-the-box on Unix Statoil systems this will not work and a path is required.
-# For example /prog/sdpsoft/gsl/lib/libgslcblas.a
-set(CBLAS_LIBRARY "blas" CACHE FILEPATH "Path to a static or dynamic version of CBLAS")
-
 include(cmake/AddSource.cmake)
 
 find_package(MKL)
-
 if(MKL_FOUND)
-   include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS})
+    include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS})
+    set(MATH_LIBRARIES ${MKL_LIBRARIES})
 else()
-   find_package(FFTW REQUIRED)
-   if(FFTW_FOUND)
+    # Out-of-the-box on Unix Statoil systems this will not work and a path is required.
+    # For example /prog/sdpsoft/gsl/lib/libgslcblas.a
+    set(CBLAS_LIBRARY "blas" CACHE FILEPATH "Path to a static or dynamic version of CBLAS")
+
+    find_package(FFTW REQUIRED)
+    if(FFTW_FOUND)
         include_directories(${FFTW_INCLUDES})
-   else(FFTW_FOUND)
+    else(FFTW_FOUND)
         message(FATAL_ERROR "Unable to find FFTW library.")
-   endif(FFTW_FOUND)
+    endif(FFTW_FOUND)
+
+    set(MATH_LIBRARIES ${CBLAS_LIBRARY} lapack ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
 endif(MKL_FOUND)
 
 set_property(GLOBAL PROPERTY SOURCE_FILES)
@@ -52,11 +54,7 @@ add_library(geo2seis_static STATIC $<TARGET_OBJECTS:geo2seis_object>)
 
 add_executable(seismic_forward geo2seis/main.cpp $<TARGET_OBJECTS:geo2seis_object>)
 
-if(MKL_FOUND)
-    target_link_libraries(seismic_forward ${MKL_LIBRARIES})
-else()
-    target_link_libraries(seismic_forward ${CBLAS_LIBRARY} lapack ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
-endif(MKL_FOUND)
+target_link_libraries(seismic_forward ${MATH_LIBRARIES})
 
 if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)
