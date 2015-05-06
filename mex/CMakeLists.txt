@@ -19,14 +19,16 @@ add_library(ide_mex_library ${SOURCE_FILES})
 # -----------------------------------------------------------------
 
 function(mex_compile MEX_SOURCE_FILE LINK_LIBRARIES DEPENDENCY)
-    set(MEX_CFLAGS -fPIC)
-    set(MEX_CXXFLAGS -fPIC)
+    if(NOT WIN32)
+        set(MEX_CFLAGS -fPIC)
+        set(MEX_CXXFLAGS -fPIC)
+    endif(NOT WIN32)
     set(MEX_LDFLAGS)
+    set(MEX_INCLUDES)
 
     get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
     foreach(dir ${dirs})
-      set(MEX_CFLAGS ${MEX_CFLAGS} -I${dir})
-      set(MEX_CXXFLAGS ${MEX_CXXFLAGS} -I${dir})
+      set(MEX_INCLUDES ${MEX_INCLUDES} -I${dir})
     endforeach()
 
     if(APPLE)
@@ -45,6 +47,7 @@ function(mex_compile MEX_SOURCE_FILE LINK_LIBRARIES DEPENDENCY)
                                   CFLAGS="${MEX_CFLAGS}"
                                   CXXFLAGS="${MEX_CXXFLAGS}"
                                   LDFLAGS="${MEX_LDFLAGS}"
+                                  ${MEX_INCLUDES}
                                   -outdir .
                                   ${CMAKE_CURRENT_LIST_DIR}/${MEX_SOURCE_FILE}.cpp
                           DEPENDS
@@ -61,6 +64,7 @@ function(mex_compile MEX_SOURCE_FILE LINK_LIBRARIES DEPENDENCY)
                                   CFLAGS="${MEX_CFLAGS}"
                                   CXXFLAGS="${MEX_CXXFLAGS}"
                                   LDFLAGS="${MEX_LDFLAGS}"
+                                  ${MEX_INCLUDES}
                                   -outdir .
                                   ${CMAKE_CURRENT_LIST_DIR}/${MEX_SOURCE_FILE}.cpp
                                   ${LINK_LIBRARIES}
