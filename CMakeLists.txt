@@ -39,7 +39,11 @@ set_property(GLOBAL PROPERTY SOURCE_FILES)
 set_property(GLOBAL PROPERTY INCLUDE_ROOTS)
 
 add_definitions(-DFLENS_FIRST_INDEX=0)
-add_definitions(-fPIC)
+if(MSVC)
+    add_definitions(-wd4996)
+else()
+    add_definitions(-fPIC)
+endif(MSVC)
 
 add_subdirectory(3rd-party)
 add_subdirectory(nr)
@@ -60,4 +64,7 @@ if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)
 endif(BUILD_MATLAB_MEX)
 
-add_subdirectory(tests)
+#Temporary, until tests work on Windows.
+if(NOT WIN32)
+    add_subdirectory(tests)
+endif(NOT WIN32)
