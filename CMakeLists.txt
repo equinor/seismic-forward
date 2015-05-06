@@ -20,6 +20,7 @@ find_package(MKL)
 if(MKL_FOUND)
     include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS})
     set(MATH_LIBRARIES ${MKL_LIBRARIES})
+    add_definitions(-DMKL)
 else()
     # Out-of-the-box on Unix Statoil systems this will not work and a path is required.
     # For example /prog/sdpsoft/gsl/lib/libgslcblas.a
