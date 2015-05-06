@@ -10,13 +10,32 @@
 #  MKL_LIBRARIES         - MKL link options
 #  MKL_FOUND             - True if FFTW found.
 
-find_path(MKLROOT
-          NAMES include/mkl.h
-          PATHS 
-               ENV MKLROOT
-               /nr/prog/intel/Compiler/mkl
-          DOC "Root directory for Intel MKL."
-         )
+if(UNIX)
+    find_path(MKLROOT
+              NAMES include/mkl.h
+              PATHS 
+                   ENV MKLROOT
+                   /nr/prog/intel/Compiler/mkl
+              DOC "Root directory for Intel MKL."
+              )
+elseif(WIN32)
+    set(PROG_FILES_ENV "PROGRAMFILES(X86)") # Needed to handle parenthesis
+    find_path(MKLROOT
+              NAMES include/mkl.h
+              PATHS 
+                   ENV MKLROOT
+                   "$ENV{${PROG_FILES_ENV}}/Intel/Composer XE/mkl"
+                   "%ProgramFiles%/Intel/Composer XE/mkl"
+              DOC "Root directory for Intel MKL."
+              )
+else()
+    find_path(MKLROOT
+              NAMES include/mkl.h
+              PATHS 
+                   ENV MKLROOT
+              DOC "Root directory for Intel MKL."
+              )
+endif(UNIX)
 
 if(MKLROOT)
    find_path(MKL_INCLUDE_DIRS
@@ -41,7 +60,7 @@ if(MKLROOT)
          find_library(MKL_COMPUTATIONAL_LIBRARY
                       NAME libmkl_core.a
                       PATHS ${MKLROOT}/lib)
-         set(MKL_LIBRARIES MKL_INTERFACE_LIBRARY MKL_THREADING_LIBRARY MKL_COMPUTATIONAL_LIBRARY pthread m)
+         set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_COMPUTATIONAL_LIBRARY} pthread m)
       else() # Linux
          set(MKL_LIB_PATH ${MKLROOT}/lib/intel64) 
          find_library(MKL_INTERFACE_LIBRARY
@@ -56,10 +75,19 @@ if(MKLROOT)
          set(MKL_LINK_GROUP "-Wl,--start-group ${MKL_INTERFACE_LIBRARY} ${MKL_COMPUTATIONAL_LIBRARY} ${MKL_THREADING_LIBRARY} -Wl,--end-group")
          set(MKL_LIBRARIES ${MKL_LINK_GROUP} pthread m dl)
       endif(APPLE)
+   elseif(WIN32)
+      set(MKL_LIB_PATH ${MKLROOT}/lib/intel64) 
+      find_library(MKL_INTERFACE_LIBRARY
+                   NAME mkl_intel_lp64.lib
+                   PATHS ${MKL_LIB_PATH})
+      find_library(MKL_THREADING_LIBRARY
+                   NAME mkl_sequential.lib
+                   PATHS ${MKL_LIB_PATH})
+      find_library(MKL_COMPUTATIONAL_LIBRARY
+                   NAME mkl_core.lib
+                   PATHS ${MKL_LIB_PATH})
+      set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_COMPUTATIONAL_LIBRARY})
    endif(UNIX)
-   if(WIN32)
-      set(MKL_LIBRARIES mkl_intel_lp64.lib mkl_core.lib mkl_sequential.lib)
-   endif(WIN32)
 endif(MKLROOT)
 
 
