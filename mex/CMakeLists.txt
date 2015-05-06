@@ -52,9 +52,38 @@ function(mex_compile MEX_SOURCE_FILE LINK_LIBRARIES DEPENDENCY)
                                   ${CMAKE_CURRENT_LIST_DIR}/${MEX_SOURCE_FILE}.cpp
                           DEPENDS
                                   ${CMAKE_CURRENT_LIST_DIR}/${MEX_SOURCE_FILE}.cpp)
-    else(APPLE)
-        set(MEX_LDFLAGS -shared)
+    elseif(WIN32)
+        # Does probably not work with older versions of Matlab.
+        set(MEX_OPT_PATH ${MATLAB_ROOT}/bin/win64/mexopts)
+        if(MSVC90)
+            set(MEX_OPT_FILE ${MEX_OPT_PATH}/msvcpp2008.xml)
+        elseif(MSVC10)
+            set(MEX_OPT_FILE ${MEX_OPT_PATH}/msvcpp2010.xml)
+        elseif(MSVC11)
+            set(MEX_OPT_FILE ${MEX_OPT_PATH}/msvcpp2012.xml)
+        elseif(MSVC12)
+            set(MEX_OPT_FILE ${MEX_OPT_PATH}/msvcpp2013.xml)
+        endif(MSVC90)
 
+        set(MEX_OPT_FLAG)
+        if()
+            set(MEX_OPT_FLAG "-g")
+        endif()
+        
+        add_custom_target(mex_compile_${MEX_SOURCE_FILE} ALL
+                          COMMAND
+                                  ${MATLAB_MEX}
+                                  -f ${MEX_OPT_FILE}
+                                  $<$<CONFIG:Debug>:-g>
+                                  $<$<CONFIG:Debug>:-D_DEBUG>
+                                  ${MEX_INCLUDES}
+                                  -outdir .
+                                  ${CMAKE_CURRENT_LIST_DIR}/${MEX_SOURCE_FILE}.cpp
+                                  ${LINK_LIBRARIES}
+                          DEPENDS
+                                  ${CMAKE_CURRENT_LIST_DIR}/${MEX_SOURCE_FILE}.cpp)
+    else() #Linux
+        set(MEX_LDFLAGS -shared)
         add_custom_target(mex_compile_${MEX_SOURCE_FILE} ALL
                           COMMAND
                                   ${MATLAB_MEX}
