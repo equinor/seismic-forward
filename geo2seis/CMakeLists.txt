@@ -18,5 +18,25 @@ set(CPP_FILES
     utils/storm_writer.cpp
 )
 
+set(H_FILES
+    modelsettings.hpp
+    seismic_forward.hpp
+    seismic_geometry.hpp
+    seismic_output.hpp
+    seismic_parameters.hpp
+    seismic_regridding.hpp
+    xmlmodelfile.hpp
+
+    physics/wavelet.hpp
+    physics/zoeppritz.hpp
+    physics/zoeppritz_pp.hpp
+    physics/zoeppritz_ps.hpp
+
+    utils/segy_writer.hpp
+    utils/storm_writer.hpp
+)
+
+
 append_source_files_to_property(${CMAKE_CURRENT_SOURCE_DIR} "${CPP_FILES}")
+append_source_files_to_property(${CMAKE_CURRENT_SOURCE_DIR} "${H_FILES}")
 add_include_root(${CMAKE_CURRENT_SOURCE_DIR})

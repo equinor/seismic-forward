@@ -12,7 +12,7 @@ IF(WIN32)
 
   # Search for a version of Matlab available, starting from the most modern one
   # to older versions.
-  FOREACH(MATVER "7.20" "7.19" "7.18" "7.17" "7.16" "7.15" "7.14" "7.13" "7.12" "7.11" "7.10" "7.9" "7.8" "7.7" "7.6" "7.5" "7.4")
+  FOREACH(MATVER "8.5" "8.4" "8.3" "8.2" "8.1" "8.0" "7.20" "7.19" "7.18" "7.17" "7.16" "7.15" "7.14" "7.13" "7.12" "7.11" "7.10" "7.9" "7.8" "7.7" "7.6" "7.5" "7.4")
     IF((NOT DEFINED MATLAB_ROOT)
         OR ("${MATLAB_ROOT}" STREQUAL "")
         OR ("${MATLAB_ROOT}" STREQUAL "/registry"))
@@ -26,8 +26,10 @@ IF(WIN32)
   ENDFOREACH(MATVER)
 
   FIND_PROGRAM(MATLAB_MEX
-    mex
-    ${MATLAB_ROOT}/bin
+    NAMES mex
+    #Using HINTS to prevent picking up mex-binary from MikTex.
+    HINTS ${MATLAB_ROOT}/bin
+          ${MATLAB_ROOT}/bin/win64
     )
 ELSE(WIN32)
   # Check if this is a Mac.
@@ -100,6 +102,8 @@ ELSE(NOT EXISTS "${MATLAB_MEX}" AND "${MatlabMex_FIND_REQUIRED}")
     SET(MATLABMEX_FOUND 1)
   ENDIF(EXISTS "${MATLAB_MEX}")
 ENDIF(NOT EXISTS "${MATLAB_MEX}" AND "${MatlabMex_FIND_REQUIRED}")
+
+SET(MATLAB_ROOT ${MATLAB_ROOT} CACHE FILEPATH "Matlab root directory")
 
 MARK_AS_ADVANCED(
   MATLAB_MEX

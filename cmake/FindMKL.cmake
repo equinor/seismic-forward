@@ -4,29 +4,48 @@
 # Currently only supports static linking, sequential running and compilation
 # for the Intel 64 architecture.
 #
-#  MKLROOT               - Intel MKL root directory
+#  MKL_ROOT               - Intel MKL root directory
 #  MKL_INCLUDE_DIRS      - where to find mkl headers
 #  MKL_FFTW_INCLUDE_DIRS - where to find MKL implementation of FFTW headers
 #  MKL_LIBRARIES         - MKL link options
 #  MKL_FOUND             - True if FFTW found.
 
-find_path(MKLROOT
-          NAMES include/mkl.h
-          PATHS 
-               ENV MKLROOT
-               /nr/prog/intel/Compiler/mkl
-          DOC "Root directory for Intel MKL."
-         )
+if(UNIX)
+    find_path(MKL_ROOT
+              NAMES include/mkl.h
+              PATHS 
+                   ENV MKLROOT
+                   /nr/prog/intel/Compiler/mkl
+              DOC "Root directory for Intel MKL."
+              )
+elseif(WIN32)
+    set(PROG_FILES_ENV "PROGRAMFILES(X86)") # Needed to handle parenthesis
+    find_path(MKL_ROOT
+              NAMES include/mkl.h
+              PATHS 
+                   ENV MKLROOT
+                   "$ENV{${PROG_FILES_ENV}}/Intel/Composer XE/mkl"
+                   "%ProgramFiles%/Intel/Composer XE/mkl"
+              DOC "Root directory for Intel MKL."
+              )
+else()
+    find_path(MKL_ROOT
+              NAMES include/mkl.h
+              PATHS 
+                   ENV MKLROOT
+              DOC "Root directory for Intel MKL."
+              )
+endif(UNIX)
 
-if(MKLROOT)
+if(MKL_ROOT)
    find_path(MKL_INCLUDE_DIRS
              NAMES mkl.h
-             PATHS ${MKLROOT}/include
+             PATHS ${MKL_ROOT}/include
              DOC "Intel MKL include directory."
              )
    find_path(MKL_FFTW_INCLUDE_DIRS
              NAMES fftw.h
-             PATHS ${MKLROOT}/include/fftw
+             PATHS ${MKL_ROOT}/include/fftw
              DOC "Include directory for FFTW interface to Intel MKL."
              )
 
@@ -34,16 +53,16 @@ if(MKLROOT)
       if(APPLE)
          find_library(MKL_INTERFACE_LIBRARY
                       NAME libmkl_intel_lp64.a
-                      PATHS ${MKLROOT}/lib)
+                      PATHS ${MKL_ROOT}/lib)
          find_library(MKL_THREADING_LIBRARY
                       NAME libmkl_sequential.a
-                      PATHS ${MKLROOT}/lib)
+                      PATHS ${MKL_ROOT}/lib)
          find_library(MKL_COMPUTATIONAL_LIBRARY
                       NAME libmkl_core.a
-                      PATHS ${MKLROOT}/lib)
-         set(MKL_LIBRARIES MKL_INTERFACE_LIBRARY MKL_THREADING_LIBRARY MKL_COMPUTATIONAL_LIBRARY pthread m)
+                      PATHS ${MKL_ROOT}/lib)
+         set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_COMPUTATIONAL_LIBRARY} pthread m)
       else() # Linux
-         set(MKL_LIB_PATH ${MKLROOT}/lib/intel64) 
+         set(MKL_LIB_PATH ${MKL_ROOT}/lib/intel64) 
          find_library(MKL_INTERFACE_LIBRARY
                       NAME libmkl_intel_lp64.a
                       PATHS ${MKL_LIB_PATH})
@@ -56,11 +75,20 @@ if(MKLROOT)
          set(MKL_LINK_GROUP "-Wl,--start-group ${MKL_INTERFACE_LIBRARY} ${MKL_COMPUTATIONAL_LIBRARY} ${MKL_THREADING_LIBRARY} -Wl,--end-group")
          set(MKL_LIBRARIES ${MKL_LINK_GROUP} pthread m dl)
       endif(APPLE)
+   elseif(WIN32)
+      set(MKL_LIB_PATH ${MKL_ROOT}/lib/intel64) 
+      find_library(MKL_INTERFACE_LIBRARY
+                   NAME mkl_intel_lp64.lib
+                   PATHS ${MKL_LIB_PATH})
+      find_library(MKL_THREADING_LIBRARY
+                   NAME mkl_sequential.lib
+                   PATHS ${MKL_LIB_PATH})
+      find_library(MKL_COMPUTATIONAL_LIBRARY
+                   NAME mkl_core.lib
+                   PATHS ${MKL_LIB_PATH})
+      set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_COMPUTATIONAL_LIBRARY})
    endif(UNIX)
-   if(WIN32)
-      set(MKL_LIBRARIES mkl_intel_lp64.lib mkl_core.lib mkl_sequential.lib)
-   endif(WIN32)
-endif(MKLROOT)
+endif(MKL_ROOT)
 
 
 # handle the QUIETLY and REQUIRED arguments and set MKL_FOUND to TRUE if

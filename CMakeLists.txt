@@ -20,6 +20,7 @@ find_package(MKL)
 if(MKL_FOUND)
     include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS})
     set(MATH_LIBRARIES ${MKL_LIBRARIES})
+    add_definitions(-DMKL)
 else()
     # Out-of-the-box on Unix Statoil systems this will not work and a path is required.
     # For example /prog/sdpsoft/gsl/lib/libgslcblas.a
@@ -39,7 +40,11 @@ set_property(GLOBAL PROPERTY SOURCE_FILES)
 set_property(GLOBAL PROPERTY INCLUDE_ROOTS)
 
 add_definitions(-DFLENS_FIRST_INDEX=0)
-add_definitions(-fPIC)
+if(MSVC)
+    add_definitions(-wd4996)
+else()
+    add_definitions(-fPIC)
+endif(MSVC)
 
 add_subdirectory(3rd-party)
 add_subdirectory(nr)
@@ -50,6 +55,26 @@ get_property(INCLUDE_ROOTS GLOBAL PROPERTY INCLUDE_ROOTS)
 include_directories(BEFORE "${INCLUDE_ROOTS}")
 
 add_library(geo2seis_object OBJECT ${SOURCE_FILES})
+
+foreach(FILE ${SOURCE_FILES}) 
+  get_filename_component(PARENT_DIR "${FILE}" PATH)
+
+  # skip src or include and changes /'s to \\'s
+  string(REGEX REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
+  string(REPLACE "/" "\\" GROUP "${GROUP}")
+
+  # group into "Source Files" and "Header Files"
+  if ("${FILE}" MATCHES ".*\\.cpp")
+    set(GROUP "Source Files\\${GROUP}")
+  elseif ("${FILE}" MATCHES ".*\\.cc")
+    set(GROUP "Source Files\\${GROUP}")
+  elseif("${FILE}" MATCHES ".*\\.h")
+    set(GROUP "Header Files\\${GROUP}")
+  endif()
+
+  source_group("${GROUP}" FILES "${FILE}")
+endforeach()
+
 add_library(geo2seis_static STATIC $<TARGET_OBJECTS:geo2seis_object>)
 
 add_executable(seismic_forward geo2seis/main.cpp $<TARGET_OBJECTS:geo2seis_object>)
@@ -60,4 +85,7 @@ if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)
 endif(BUILD_MATLAB_MEX)
 
-add_subdirectory(tests)
+#Temporary, until tests work on Windows.
+if(NOT WIN32)
+    add_subdirectory(tests)
+endif(NOT WIN32)
