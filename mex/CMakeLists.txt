@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.10) # Due to $<CONFIG:>
 
 project(mex)
 
@@ -106,12 +106,12 @@ endfunction()
 
 
 set(MEX_LINK_LIBRARIES
-    $<TARGET_FILE:geo2seis_static>
+    $<TARGET_FILE:geo2seis_lib>
     ${MATH_LIBRARIES}
 )
 
-mex_compile(g2s_model "${MEX_LINK_LIBRARIES}" geo2seis_static)
-mex_compile(surface_container "${MEX_LINK_LIBRARIES}" geo2seis_static)
+mex_compile(g2s_model "${MEX_LINK_LIBRARIES}" geo2seis_lib)
+mex_compile(surface_container "${MEX_LINK_LIBRARIES}" geo2seis_lib)
 
 set(MATLAB_SOURCE_FILES G2SModel.m ElasticParameters.m Angle.m Wavelet.m WhiteNoise.m OutputGrid.m SurfaceContainer.m)
 
