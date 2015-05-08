@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 
 project(G2S)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." ON)
 option( BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
