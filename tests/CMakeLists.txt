@@ -2,20 +2,28 @@ cmake_minimum_required(VERSION 2.8)
 
 project(Testing)
 
+set(SOURCE_FILES
+    main.cpp
+    test_test.cpp)
+
 enable_testing()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+# Turn of Boost auto-linking, due to link trouble.
+set (Boost_USE_STATIC_LIBS TRUE)
+add_definitions( -DBOOST_ALL_NO_LIB )
 
-function(build_and_test TEST_NAME SOURCE_FILES INCLUDES LINK_LIBRARIES)
-    add_executable(${TEST_NAME}_exe ${SOURCE_FILES} ${INCLUDES})
-    target_link_libraries(${TEST_NAME}_exe ${LINK_LIBRARIES})
+# Custom Boost Library dir on Windows
+if(WIN32)
+    if(NOT BOOST_LIBRARYDIR)
+        set(BOOST_LIBRARYDIR $ENV{BOOST_ROOT}/lib/x64)
+    endif(NOT BOOST_LIBRARYDIR)
+endif(WIN32)
 
-    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME}_exe WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../testdata)
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
 
-endfunction()
+add_executable(test_geo2seis ${SOURCE_FILES} $<TARGET_OBJECTS:geo2seis_object>)
+target_link_libraries(test_geo2seis ${MATH_LIBRARIES} ${Boost_LIBRARIES})
 
-set(LINK_LIBRARIES ${MATH_LIBRARIES})
-
-build_and_test(cutest test_cutest.cpp "" "${LINK_LIBRARIES}")
-build_and_test(cwd current_directory_test.cpp "$<TARGET_OBJECTS:geo2seis_object>" "${LINK_LIBRARIES}")
-
+add_test(NAME test_geo2seis COMMAND test_geo2seis)

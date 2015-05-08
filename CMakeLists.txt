@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(G2S)
 
 option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." ON)
+option( BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
 
 enable_testing()
 
@@ -85,7 +86,7 @@ if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)
 endif(BUILD_MATLAB_MEX)
 
-#Temporary, until tests work on Windows.
-if(NOT WIN32)
-    add_subdirectory(tests)
-endif(NOT WIN32)
+if(BUILD_UNIT_TESTS)
+add_subdirectory(tests)
+endif(BUILD_UNIT_TESTS)
+
