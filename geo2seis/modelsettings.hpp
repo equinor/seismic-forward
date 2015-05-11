@@ -388,23 +388,23 @@ class ModelSettings {
         nmo_corr_ = nmo;
     }
 
-    double SetVw(double value) {
+    void SetVw(double value) {
         v_w_ = value;
     }
 
-    double SetZw(double value) {
+    void SetZw(double value) {
         z_w_ = value;
     }
 
-    double SetOffset0(double value) {
+    void SetOffset0(double value) {
       offset_0_ = value;
     }
 
-    double SetDOffset(double value) {
+    void SetDOffset(double value) {
       doffset_ = value;
     }
 
-    double SetOffsetMax(double value) {
+    void SetOffsetMax(double value) {
       offset_max_ = value;
     }
 

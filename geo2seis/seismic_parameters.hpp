@@ -58,6 +58,10 @@ class SeismicParameters {
     double offset0()  { return offset_0_; }
     double dOffset()  { return doffset_; }
     size_t nOffset()  { return noffset_; }
+    
+    std::vector<double> twt_0();
+    std::vector<double> z_0();
+    std::vector<double> offset_vec();
 
     NRLib::RegularSurface<double> &topTime()       { return top_time_; };
     NRLib::RegularSurface<double> &bottomTime()    { return bot_time_; };
@@ -74,6 +78,7 @@ class SeismicParameters {
     NRLib::SegyGeometry* segyGeometry()    { return segy_geometry_; };
     Wavelet*             wavelet()         { return wavelet_; };
     double               waveletScale()    { return  wavelet_scale_; };
+    
 
   private:
     ModelSettings *model_settings_;
@@ -90,6 +95,7 @@ class SeismicParameters {
     double offset_0_;
     double doffset_;
     double offset_max_;
+    std::vector<double> offset_vec_;
 
     Wavelet *wavelet_;
     double wavelet_scale_;
@@ -118,6 +124,9 @@ class SeismicParameters {
     NRLib::StormContGrid *vrmsgrid_;
     NRLib::StormContGrid *twtxgrid_;
     NRLib::StormContGrid *thetagrid_;
+
+    std::vector<double> twt_0_;
+    std::vector<double> z_0_;
     
     void setupWavelet();
 
@@ -129,6 +138,8 @@ class SeismicParameters {
 
     void calculateAngleSpan();
     void calculateOffsetSpan();
+
+    
 
     void createGrids();
 };

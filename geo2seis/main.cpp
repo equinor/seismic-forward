@@ -53,9 +53,9 @@ int main(int argc, char *argv[]) {
     std::string inputfile(argv[1]);
     bool failedModelFile = false;
     std::cout << "************************************************************************ \n";
-    std::cout << "                 Seismic Forward Modeling ver 3.7                        \n";
-    std::cout << "                                                                         \n";
-    std::cout << "                   Norsk Regnesentral 2014 & Statoil                     \n";
+    std::cout << "                Seismic Forward Modeling / Geo2Seis                      \n";
+    std::cout << "                           ver 4.0  2015                                 \n";
+    std::cout << "                   Norsk Regnesentral & Statoil                          \n";
     std::cout << "************************************************************************ \n\n";
 
     XmlModelFile modelFile(inputfile);

@@ -71,6 +71,56 @@ void SeismicParameters::setupWavelet() {
     wavelet_scale_ = model_settings_->GetWaveletScale();
 }
 
+std::vector<double> SeismicParameters::twt_0(){
+  size_t i_max, j_max, k_max;
+  double x, y;
+  size_t nt                      = seismic_geometry_->nt();
+  double tmin                    = seismic_geometry_->t0();
+  double dt                      = seismic_geometry_->dt();
+  std::vector<double> constvp    = model_settings_->GetConstVp();
+
+  
+  double max_twt_value           = bot_time_.MaxNode(i_max, j_max);  
+  bot_time_.GetXY(i_max, j_max, x, y);
+  (*twtgrid_).FindIndex(x, y, bot_time_.GetZ(x,y), i_max, j_max, k_max);
+  //double max_twt_value           = (*twtgrid_)( i_max, j_max, (*twtgrid_).GetNK()-1); //need half wavelet for NMO correction
+  double vrms_max_t              = (*vrmsgrid_)(i_max, j_max, (*vrmsgrid_).GetNK()-1);  
+  double offset_max              = offset_0_+doffset_*noffset_;
+
+  double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 2000*2000*offset_max*offset_max/vrms_max_t);      
+  twtx_max                      += 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  
+  size_t nt_seis                 = nt;
+  if (twtx_max > tmin + nt*dt) {
+    nt_seis = std::ceil((twtx_max - tmin)/dt);
+  }
+  twt_0_.resize(nt_seis);
+  for (size_t i = 0; i < nt_seis; ++i){
+    twt_0_[i] = tmin + (0.5 + i)*dt;
+  }
+  return twt_0_;
+}
+
+std::vector<double>  SeismicParameters::z_0(){
+  size_t nz                      = seismic_geometry_->nz();
+  double zmin                    = seismic_geometry_->z0();
+  double dz                      = seismic_geometry_->dz();
+
+  z_0_.resize(nz); 
+  for (size_t i = 0; i < nz; ++i){
+    z_0_[i] = zmin + (0.5 + i)*dz;
+  }  
+  return z_0_;
+}
+
+std::vector<double> SeismicParameters::offset_vec(){
+  offset_vec_.resize(noffset_);
+  for (size_t i = 0; i < noffset_; ++i) {
+    offset_vec_[i] = offset_0_ + i*doffset_;
+  }
+  return offset_vec_;
+}
+
 void SeismicParameters::readEclipseGrid() {
     std::string filename = model_settings_->GetEclipseFileName();
 
@@ -308,9 +358,10 @@ void SeismicParameters::createGrids() {
   rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
   twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
   if (model_settings_->GetNMOCorr()){
-    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1); //dimensions??
+    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
     rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
     twtxgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+    thetagrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
   }
   else {
     rgridvec_ = new std::vector<NRLib::StormContGrid>(ntheta_);
@@ -340,6 +391,8 @@ void SeismicParameters::createGrids() {
         rgrid(i, j, k) = 0.0;
         if (model_settings_->GetNMOCorr()){
           (*twtxgrid_)(i, j, k) = 0.0;
+          (*thetagrid_)(i, j, k) = 0.0;
+          (*vrmsgrid_)(i, j, k) = 0.0;
         }
         for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
           (*extra_parameter_grid_)[epi](i, j, k) = static_cast<float>(extra_parameter_default_values[epi]);

@@ -48,6 +48,11 @@ class SeismicOutput {
     void writeNMOSeismicTimeStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset, bool is_stack = false);
 
     void writeNMOReflections(SeismicParameters &seismic_parameters, double offset, bool noise_added);
+    void writeTheta(SeismicParameters &seismic_parameters, double offset);
+    void writeVrms(SeismicParameters &seismic_parameters);
+
+    void printVector(std::vector<double> vec, std::string filename);
+    void printMatrix(std::vector<std::vector<double> > matrix, std::string filename);
 
   private:
     void generateParameterGridForOutput(NRLib::StormContGrid &input_grid, NRLib::StormContGrid &time_or_depth_grid, NRLib::StormContGrid &output_grid, double delta_time_or_depth, double zero_time_or_depth, NRLib::RegularSurface<double> &toptime);

@@ -51,7 +51,10 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   findTWT(vpgrid, vsgrid, twtgrid, zgrid, toptime, bottime, find_for_ps);
 
   if (seismic_parameters.modelSettings()->GetNMOCorr()){
+    printf("Finding vrms\n");
     findVrms(seismic_parameters);
+    printf("Vrms found\n");
+    seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
   }
 
   std::vector<double> constvp = seismic_parameters.modelSettings()->GetConstVp();
@@ -111,7 +114,7 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
 
 
   printf("remove grids\n");
-  seismic_parameters.deleteParameterGrids();
+  //seismic_parameters.deleteParameterGrids();
 
 }
 
@@ -166,19 +169,27 @@ void SeismicRegridding::findVrms(SeismicParameters &seismic_parameters){
   NRLib::StormContGrid &vrmsgrid          = seismic_parameters.vrmsGrid();
   NRLib::StormContGrid &vpgrid            = seismic_parameters.vpGrid();
 
-  double w_const = 2* v_w * z_w; //v_w * v_w * (2* z_w / v_w);
-
+  double w_const = 2000* v_w * z_w; //v_w^2*t_w = v_w * v_w * (2000* z_w / v_w); 
+  double tmp;
   for (size_t i = 0; i < vrmsgrid.GetNI(); ++i) {
     for (size_t j = 0; j < vrmsgrid.GetNJ(); ++j) {
-      for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
-        vrmsgrid(i,j,k) = w_const + vpgrid(i,j,0)* vpgrid(i,j,0)*(twtgrid(i,j,0) - 2*z_w/v_w);
-        for (size_t l = 1; i < k; ++l) {
-          vrmsgrid(i,j,k) += vpgrid(i,j,k)* vpgrid(i,j,k)*(twtgrid(i,j,k) - twtgrid(i,j,k-1));
+      if (twtgrid(i,j,0) == -999.0) {
+        for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
+          vrmsgrid(i,j,k) = -999.0;
         }
-        vrmsgrid(i,j,k) *= (1/twtgrid(i,j,k));
+      }
+      else {
+        for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {        
+          tmp = w_const + vpgrid(i,j,0)* vpgrid(i,j,0)*(twtgrid(i,j,0) - 2000*z_w/v_w);
+          for (size_t l = 1; l <= k; ++l) {
+            tmp += vpgrid(i,j,l)* vpgrid(i,j,l)*(twtgrid(i,j,l) - twtgrid(i,j,l-1));
+          }
+          tmp = tmp / twtgrid(i,j,k);
+          vrmsgrid(i,j,k) = tmp;
+        }
       }
     }
-  }
+  }  
 }
 
 
@@ -1872,6 +1883,19 @@ void SeismicRegridding::addNoiseToReflections(unsigned long seed, double std_dev
     }
   }
 }
+
+void SeismicRegridding::addNoiseToReflectionsPos(unsigned long seed, double std_dev, std::vector<std::vector<double> > &refl) {
+  NRLib::Random::Initialize(seed);
+  NRLib::Normal normal_distibrution(0, std_dev);
+
+  for (size_t i = 0; i < refl.size(); ++i) {
+    for (size_t j = 0; j < refl[0].size(); ++j) {
+      refl[i][j] += static_cast<float>(normal_distibrution.Draw());
+    }
+  }
+}
+
+
 
 
 void SeismicRegridding::findTWT(NRLib::StormContGrid &vpgrid, NRLib::StormContGrid &vsgrid, NRLib::StormContGrid &twtgrid, NRLib::StormContGrid &zgrid,NRLib::RegularSurface<double> &toptime, NRLib::RegularSurface<double> &bottime, bool ps_seismic) {
