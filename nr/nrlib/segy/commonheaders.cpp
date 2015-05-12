@@ -1,4 +1,4 @@
-// $Id: commonheaders.cpp 1152 2013-04-09 12:47:11Z perroe $
+// $Id: commonheaders.cpp 1279 2014-06-03 14:47:05Z hauge $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -234,35 +234,37 @@ BinaryHeader::Update(std::istream& file)
 void BinaryHeader::Write(std::ostream& file, SegyGeometry *geometry, double dz, size_t nz) const
 {
   int dummy = 9999;
-  WriteBinaryInt(file,dummy);
+  WriteBinaryInt(file,dummy); //1-4
   dummy = 1;
-  WriteBinaryInt(file,dummy);
+  WriteBinaryInt(file,dummy); //5-8
 
-  WriteBinaryInt(file,dummy);
+  WriteBinaryInt(file,dummy); //9-12
   short dummy2;
   if (geometry!=NULL)
     dummy2 = short(geometry->GetNx());
   else
     dummy2 = 0;
-  WriteBinaryShort(file,dummy2);
+  WriteBinaryShort(file,dummy2); //13-14
   dummy2 = 0;
-  WriteBinaryShort(file, dummy2);
-  WriteBinaryShort(file, static_cast<short>(1000*dz)); // Hdt
-  WriteBinaryShort(file, dummy2);
-  WriteBinaryShort(file, static_cast<short>(nz)); ///=nz Hns
-  WriteBinaryShort(file, dummy2);
+  WriteBinaryShort(file, dummy2); //15-16
+  WriteBinaryShort(file, static_cast<short>(1000*dz)); // Hdt 17-18
+  WriteBinaryShort(file, dummy2); //19-20
+  WriteBinaryShort(file, static_cast<short>(nz)); ///=nz Hns 21-22
+  WriteBinaryShort(file, dummy2); //23-24
   dummy2 = 1;
-  WriteBinaryShort(file, dummy2); // format
-  WriteBinaryShort(file, dummy2);
+  WriteBinaryShort(file, dummy2); // format 25-26
+  WriteBinaryShort(file, dummy2); // 27-28
   dummy2 = 4;
-  WriteBinaryShort(file, dummy2);
+  WriteBinaryShort(file, dummy2); //29-30
   dummy2 = 0;
   int i;
   for (i=0;i<12;i++)
-    WriteBinaryShort(file, dummy2);
+    WriteBinaryShort(file, dummy2); //31-54
   dummy2 = 1;
-  WriteBinaryShort(file, dummy2);
-  char buffer[344];
-  memset(buffer, 0, 344);
-  file.write(buffer,344);
+  WriteBinaryShort(file, dummy2); //55-56
+  char buffer[246];
+  memset(buffer, 0, 246);
+  file.write(buffer,246); //57-302
+  WriteBinaryShort(file, dummy2); //Constant tracelength, 303-304
+  file.write(buffer, 96); //305-400
 }

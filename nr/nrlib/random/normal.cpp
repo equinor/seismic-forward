@@ -1,4 +1,4 @@
-// $Id: normal.cpp 1220 2013-11-27 09:54:01Z hauge $
+// $Id: normal.cpp 1256 2014-03-05 14:10:07Z anner $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -23,7 +23,7 @@
 #include "normal.hpp"
 
 #include "../iotools/stringtools.hpp"
-#include "../math/mathutility.hpp"
+
 
 namespace NRLib {
 
@@ -307,7 +307,7 @@ double Normal::DrawLowerTruncatedAcceptReject(double mu,
   double ordinate = phi_lower + ru01 * (phi_upper - phi_lower);
   bool ok(false);
 
-  if(phi_upper == phi_lower)
+  if (IsEqual(phi_upper, phi_lower))
     out = lower;
   else {
     while(!ok && attempts < max_attempts) {
@@ -363,7 +363,7 @@ double Normal::DrawTwoSidedTruncatedAcceptReject(double mu,
   bool ok(false);
 
   double out(0.0);
-  if(phi_upper == phi_lower)
+  if(IsEqual(phi_upper,phi_lower))
     out = (upper + lower)/2.0;
   else {
     while(!ok && attempts < max_attempts) {

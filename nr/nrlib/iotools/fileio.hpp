@@ -1,4 +1,4 @@
-// $Id: fileio.hpp 1236 2014-02-05 08:19:39Z anner $
+// $Id: fileio.hpp 1254 2014-02-28 13:25:07Z vigsnes $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.

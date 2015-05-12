@@ -1,4 +1,4 @@
-// $Id: traceheader.cpp 1257 2014-03-06 13:55:54Z vigsnes $
+// $Id: traceheader.cpp 1279 2014-06-03 14:47:05Z hauge $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -377,7 +377,7 @@ TraceHeader::TraceHeader(const TraceHeaderFormat& format)
   : format_(format),
     status_(0),
     scal_co_(1),
-    scalcoinitial_(0)
+    scalcoinitial_(1)
 {
   memset(buffer_, 0, 240);
   rmissing_ = RMISSING;
