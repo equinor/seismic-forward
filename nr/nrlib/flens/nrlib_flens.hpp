@@ -1,12 +1,12 @@
-// $Id: nrlib_flens.hpp 1132 2012-12-21 13:15:42Z pdahle $
+// $Id: nrlib_flens.hpp 1282 2014-09-01 12:27:47Z enesvold $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// ï¿½  Redistributions of source code must retain the above copyright notice, this
+// •  Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
-// ï¿½  Redistributions in binary form must reproduce the above copyright notice, this list of
+// •  Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials
 //    provided with the distribution.
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
@@ -27,6 +27,7 @@
 #include "../exception/exception.hpp"
 
 namespace NRLib {
+  using flens::conjugateTranspose;
   using flens::transpose;
   using flens::_;
 
@@ -58,11 +59,14 @@ namespace NRLib {
   template <typename T>  void Set2DArrayFromMatrix(const Matrix &  A,
                                                    T            ** F);
 
-  void            InitializeMatrix(Matrix & A,
-                                   double   value);
+  void            InitializeMatrix(Matrix           & A,
+                                   double             value);
 
-  void            InitializeSymmetricMatrix(SymmetricMatrix & A,
-                                            double            value);
+  void            InitializeComplexMatrix(ComplexMatrix         & A,
+                                          std::complex<double>    value);
+
+  void            InitializeSymmetricMatrix(SymmetricMatrix     & A,
+                                            double                value);
 
   double          FindLargestElement(const NRLib::Vector & v);
 
@@ -89,9 +93,17 @@ namespace NRLib {
 
   void CholeskyInvert(SymmetricMatrix & A);
 
+
+  void CholeskyFactorize(SymmetricMatrix & A);
+
+
   void ComputeEigenVectors(Matrix & A,
                            Vector & eigen_values,
                            Matrix & eigen_vectors);
+
+  void ComputeEigenVectorsComplex(ComplexMatrix        & A,
+                                  ComplexVector        & eigen_values,
+                                  ComplexMatrix        & eigen_vectors);
 
   void ComputeEigenVectorsSymmetric(const SymmetricMatrix & A,
                                     Vector                & eigen_values,

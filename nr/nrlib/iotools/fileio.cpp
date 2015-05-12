@@ -1,4 +1,4 @@
-//$Id: fileio.cpp 1236 2014-02-05 08:19:39Z anner $
+//$Id: fileio.cpp 1279 2014-06-03 14:47:05Z hauge $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -345,26 +345,16 @@ int NRLib::FindGridFileType(const std::string& filename,
     throw IOError("Error opening " + filename);
   }
 
-  char buffer[162];
+  char buffer[3201];
   if (length > 161) {
-    file.read(buffer, 161);
-    buffer[161] = '\0';
+    file.read(buffer, 3200);
+    buffer[3200] = '\0';
   }
   else {
     file.read(buffer, static_cast<std::streamsize>(length));
     buffer[length] = '\0';
   }
-
-  if (length>161)
-  {
-    // Using character codes to prevent trouble with sourcefiles in Unicode.
-    // '\xc3' == 'Ã', '\xf1' == 'ñ'
-    if (buffer[0] == '\xc3' && buffer[2] == '\xf1'
-      && buffer[80] == '\xc3' && buffer[160] == '\xc3')// segyfile
-    {
-      return SEGY;
-    }
-  }
+  file.close();
   std::string stringbuffer = std::string(buffer);
   std::istringstream i(stringbuffer);
   std::string token;
@@ -394,14 +384,40 @@ int NRLib::FindGridFileType(const std::string& filename,
   else if (NRLib::IsType<double>(token)) {
     return PLAIN_ASCII;
   }
-  else {
-    file.close();
-   std::ifstream file2(filename.c_str(), std::ios::in | std::ios::binary);
+  else { //More complex checks, if we add more here, it should split into subroutines.
+         //Check for binary trend or SEGY.
+    //Binary trend: Check if three first numbers may be nx, ny and nz.
+    std::ifstream file2(filename.c_str(), std::ios::in | std::ios::binary);
     int nx = ReadBinaryInt(file2, file_format);
     int ny = ReadBinaryInt(file2, file_format);
     int nz = ReadBinaryInt(file2, file_format);
-    if(nx > 0 && nx < 1000 && ny > 0 && ny < 1000 && nz > 0 && nz< 1000)
+    file2.close();
+    if(nx > 0 && nx < 1000 && ny > 0 && ny < 1000 && nz > 0 && nz< 1000) {
       return BINARY_TREND;
+    }
+    else if (length>3600) //Check SEGY: Looking for EBCDIC header.
+    {
+      unsigned char * buf = reinterpret_cast<unsigned char *>(buffer);
+      std::vector<int> frequency(256,0);
+      int i;
+      for(i=0;i<3200;i++)
+        frequency[buf[i]]++;
+
+      bool segy_ok = true;
+      for(i=0;(i<64) && (segy_ok == true);i++) {
+        if(frequency[i] > 0) //Should not encounter any of these in EBCDIC
+          segy_ok = false;
+      }
+      i++;
+      for(;(i<256) && (segy_ok == true);i++) {
+        if(frequency[i] > frequency[64]) //Assumption is that EBCDIC 64 (space) is most common in header.
+          segy_ok = false;
+      }
+      if(segy_ok == true)
+      {
+        return SEGY;
+      }
+    }
   }
   return(UNKNOWN);
 }

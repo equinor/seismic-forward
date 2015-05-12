@@ -1,4 +1,4 @@
-// $Id: line.cpp 1036 2012-06-25 14:21:49Z anner $
+// $Id: line.cpp 1285 2014-09-22 13:29:26Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -21,6 +21,7 @@
 
 #include "line.hpp"
 #include "point.hpp"
+#include <cassert>
 #include <cmath>
 #include <limits>
 
@@ -29,15 +30,16 @@ using namespace NRLib;
 const double Line::min_ = 0.000001;
 
 Line::Line()
-  : p1_(),
-    p2_(),
-    end1_(false),
-    end2_(false)
+  : p1_(0.0, 0.0, 0.0),
+    p2_(0.0, 0.0, 0.0),
+    end1_(true),
+    end2_(true)
 {}
 
 
 Line::Line(const Point& p1_in, const Point& p2_in, bool end1_in, bool end2_in)
 {
+  assert((end1_in && end2_in) || p1_in != p2_in);  // Don't allow rays or infinite lines with no direction.
   p1_   = p1_in;
   p2_   = p2_in;
   end1_ = end1_in;
@@ -47,6 +49,7 @@ Line::Line(const Point& p1_in, const Point& p2_in, bool end1_in, bool end2_in)
 
 void Line::SetPt(const Point& p1_in, const Point& p2_in, bool end1_in, bool end2_in)
 {
+  assert((end1_in && end2_in) || p1_in != p2_in); // Don't allow rays or infinite lines with no direction.
   p1_   = p1_in;
   p2_   = p2_in;
   end1_ = end1_in;

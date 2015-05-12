@@ -1,4 +1,4 @@
-// $Id: grid.hpp 1237 2014-02-06 08:55:09Z vigsnes $
+// $Id: grid.hpp 1254 2014-02-28 13:25:07Z vigsnes $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.

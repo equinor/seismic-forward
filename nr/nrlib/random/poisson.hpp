@@ -1,4 +1,4 @@
-// $Id: poisson.hpp 1235 2014-02-05 06:45:53Z anner $
+// $Id: poisson.hpp 1238 2014-02-07 07:02:45Z anner $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -52,7 +52,6 @@ private:
   double b_;
   double inv_alpha_;
   double v_r_;
-  std::vector<double> poisson_table_;
 
 };
 
