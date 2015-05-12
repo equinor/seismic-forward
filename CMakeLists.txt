@@ -55,7 +55,9 @@ add_subdirectory(geo2seis)
 
 get_property(SOURCE_FILES GLOBAL PROPERTY SOURCE_FILES)
 get_property(INCLUDE_ROOTS GLOBAL PROPERTY INCLUDE_ROOTS)
-include_directories(BEFORE "${INCLUDE_ROOTS}")
+foreach(INCLUDE_ROOT ${INCLUDE_ROOTS})
+  include_directories(BEFORE "${INCLUDE_ROOT}")
+endforeach()
 
 add_library(geo2seis_lib ${SOURCE_FILES})
 #add_library(geo2seis_static STATIC $<TARGET_OBJECTS:geo2seis_object>)
@@ -81,7 +83,7 @@ endforeach()
 
 add_executable(seismic_forward geo2seis/main.cpp)
 
-target_link_libraries(seismic_forward ${MATH_LIBRARIES} geo2seis_lib)
+target_link_libraries(seismic_forward geo2seis_lib ${MATH_LIBRARIES})
 
 if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)
