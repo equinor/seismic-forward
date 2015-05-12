@@ -34,7 +34,7 @@
 
 #include <mkl.h>
 
-void* flens_malloc(size_t size) { return mkl_malloc(size, 16); }
+void* flens_malloc(size_t size) { return mkl_malloc(size, 64); }
 void  flens_free(void* p)       { mkl_free(p); }
 
 #else
