@@ -24,6 +24,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
 add_executable(test_geo2seis ${SOURCE_FILES})
-target_link_libraries(test_geo2seis ${MATH_LIBRARIES} ${Boost_LIBRARIES} geo2seis_lib)
+target_link_libraries(test_geo2seis geo2seis_lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
 
 add_test(NAME test_geo2seis COMMAND test_geo2seis)
