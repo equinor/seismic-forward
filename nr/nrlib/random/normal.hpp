@@ -1,4 +1,4 @@
-// $Id: normal.hpp 1228 2014-01-03 12:30:11Z gudmundh $
+// $Id: normal.hpp 1256 2014-03-05 14:10:07Z anner $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -25,6 +25,7 @@
 #include "distribution.hpp"
 #include "functions.hpp"
 #include "../math/constants.hpp"
+#include "../math/mathutility.hpp"
 #include "../exception/exception.hpp"
 #include <cassert>
 #include <cmath>
@@ -58,6 +59,7 @@ public:
   inline double Potential(double x) const; // -Log of pdf
   inline double PotentialTwoSidedTruncated(double x, double min, double max) const;
   inline double PotentialZeroTruncated(double x) const;
+  inline double PotentialLowerTruncated(double x, double min) const;
 
   /// Quantile for Normal(0, 1) distribution.
   inline static double Quantile01(double p);
@@ -140,7 +142,8 @@ double Normal::PotentialTwoSidedTruncated(double x, double min, double max) cons
   assert(max > min);
   double scale = Cdf(max)-Cdf(min);
   double potential;
-  if(scale !=0.0)
+  //if(scale !=0.0)
+  if (!IsZero(scale))
    potential = Potential(x)+log(scale);
   else
    potential = Potential(x)+log(max-min);
@@ -157,6 +160,18 @@ double Normal::PotentialZeroTruncated(double x) const
     potential += log(scale);
   return(potential);
 }
+
+
+double Normal::PotentialLowerTruncated(double x, double min) const
+{
+  assert (x > 0.0);
+  double scale = 1.0 - Cdf(min);
+  double potential = Potential(x);
+  if (scale > 0.0)
+    potential += log(scale);
+  return(potential);
+}
+
 
 double Normal::Quantile01(double p)
 {

@@ -1,4 +1,4 @@
-// $Id: eclipsefault.cpp 1105 2012-11-01 07:33:35Z georgsen $
+// $Id: eclipsefault.cpp 1288 2014-10-16 09:53:45Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -60,8 +60,11 @@ void EclipseFault::ReadSegments(const std::vector<std::string>& line_segment) {
 
   std::string face_str = line_segment[7];
   // Remove the 's
-  face_str.erase(face_str.size() - 1, 1);
-  face_str.erase(0, 1);
+  if (face_str[face_str.size() - 1] == '\'')
+    face_str.erase(face_str.size() - 1, 1);
+  if (face_str[0] == '\'')
+    face_str.erase(0, 1);
+
   if (face_str == "X" || face_str == "I") {
     segment.face = PosX;
   }
@@ -80,6 +83,8 @@ void EclipseFault::ReadSegments(const std::vector<std::string>& line_segment) {
   else if (face_str == "Z-" || face_str == "K-") {
     segment.face = NegZ;
   }
+  else
+    throw NRLib::FileFormatError("Error parsing FAULTS section: face description " + face_str + " not understood.");
   segments_.push_back(segment);
 }
 

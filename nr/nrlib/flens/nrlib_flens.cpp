@@ -1,4 +1,4 @@
-// $Id: nrlib_flens.cpp 1138 2013-01-30 08:32:38Z ulvmoen $
+// $Id: nrlib_flens.cpp 1283 2014-09-02 12:33:49Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -120,6 +120,30 @@ void NRLib::ComputeEigenVectors(Matrix &A,
   flens::ev(false, true, A, eigen_values, dummy_vec, dummy_mat, eigen_vectors);
 }
 
+void NRLib::ComputeEigenVectorsComplex(ComplexMatrix        & A,
+                                       ComplexVector        & eigen_values,
+                                       ComplexMatrix        & eigen_vectors)
+{
+  ComplexMatrix dummy_mat(A.numRows(), A.numCols());
+  flens::ev(false, true, A, eigen_values, dummy_mat, eigen_vectors);
+}
+
+void NRLib::CholeskyFactorize(SymmetricMatrix & A)
+{
+  int info = flens::potrf(A);
+
+  if (info != 0) {
+    std::ostringstream oss;
+     oss << "Error in Cholesky: The leading minor of order " << info
+          << " is not positive definite.";
+     throw Exception(oss.str());
+  }
+
+
+}
+
+
+
 void NRLib::ComputeEigenVectorsSymmetric(const SymmetricMatrix & A,
                                          Vector                & eigen_values,
                                          Matrix                & eigen_vectors)
@@ -153,6 +177,18 @@ void NRLib::InitializeMatrix(NRLib::Matrix & A,
   for (int i=0 ; i < A.numRows() ; i++) {
     for (int j=0 ; j < A.numCols() ; j++) {
       A(i,j) = value;
+    }
+  }
+}
+
+//--------------------------------------------------
+void NRLib::InitializeComplexMatrix(NRLib::ComplexMatrix  & A,
+                                    std::complex<double>    value)
+//--------------------------------------------------
+{
+  for (int i=0 ; i < A.numRows() ; i++) {
+    for (int j=0 ; j < A.numCols() ; j++) {
+      A(i, j) = value;
     }
   }
 }

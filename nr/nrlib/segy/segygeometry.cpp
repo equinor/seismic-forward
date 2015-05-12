@@ -1,4 +1,4 @@
-// $Id: segygeometry.cpp 1199 2013-10-02 08:24:02Z anner $
+// $Id: segygeometry.cpp 1289 2014-12-10 14:10:09Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -289,8 +289,12 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
     // If (min,max,step)(IL,XL) is directly available in this constructor, we can use this instead.
     FindILXLGeometry();
   }
-  else {
+  else if (traces.size() == 1) {
     SetupGeometrySingleTrace(traces[0]);
+  }
+  else {
+    // No traces
+    throw NRLib::Exception("Can not set up geometry: No traces in file.");
   }
 }
 

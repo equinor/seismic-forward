@@ -1,10 +1,8 @@
-// $Id: fileio_test.cpp 1209 2013-10-29 14:11:46Z perroe $
+// $Id: fileio_test.cpp 1255 2014-02-28 15:07:01Z vigsnes $
 
 /// \file Unit tests for the FileIO functions in the NRLib IOTools library.
 
 #include <nrlib/iotools/fileio.hpp>
-
-#define BOOST_TEST_MODULE iotools_fileio_test
 #include <boost/test/unit_test.hpp>
 
 using namespace NRLib;
