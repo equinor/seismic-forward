@@ -69,14 +69,28 @@ public:
   /// Constructor for writing
   /// \param[in] fileName  Name of file to write data to
   /// \throw IOError if the file can not be opened.
- SegY(const std::string       & fileName,
-      float                     z0,
-      size_t                    nz,
-      float                     dz,
-      const TextualHeader     & ebcdicHeader,
-      const TraceHeaderFormat & traceHeaderFormat = TraceHeaderFormat(TraceHeaderFormat::SEISWORKS));
+  SegY(const std::string       & fileName,
+       float                     z0,
+       size_t                    nz,
+       float                     dz,
+       const TextualHeader     & ebcdicHeader,
+       const TraceHeaderFormat & traceHeaderFormat = TraceHeaderFormat(TraceHeaderFormat::SEISWORKS));
+
+  /// Constructor for writing
+  /// Must be initialized 
+  SegY();
 
   ~SegY();
+
+  /// Initializing empty constructor for writing
+  void Initialize(const std::string       & fileName,
+                  float                     z0,
+                  size_t                    nz,
+                  float                     dz,
+                  const TextualHeader     & ebcdicHeader,
+                  const TraceHeaderFormat & traceHeaderFormat = TraceHeaderFormat(TraceHeaderFormat::SEISWORKS),
+                  short                     n_traces_per_ensamble = 1);
+
 
   //>>>Begin read all traces mode
   void                      ReadAllTraces(const NRLib::Volume * volume,
@@ -133,7 +147,7 @@ public:
   void                      SetGeometry(const SegyGeometry * geometry);
 
   void                      SetDelayRecTime(short value) { delay_rec_time_ = value;}
-
+  
   void                      StoreTrace(double                     x,
                                        double                     y,
                                        const std::vector<float>   data,
@@ -155,7 +169,8 @@ public:
                                        const NRLib::Volume    * volume,
                                        float                    topVal  = 0.0f,
                                        float                    baseVal = 0.0f,
-                                       short                    scalcoinitial = 1);
+                                       short                    scalcoinitial = 1,
+                                       short                    offset = 0);
   void                      WriteAllTracesToFile(short scalcoinitial = 1); ///< Use only after writeTrace with x and y as input is used for the whole cube
   //<<<End write mode
 
@@ -167,6 +182,7 @@ public:
   size_t                    GetNTraces() const { return n_traces_ ;}
   size_t                    GetNz()      const { return nz_       ;}
   float                     GetDz()      const { return dz_       ;}
+  float                     GetZ0()      const { return z0_       ;}
 
   enum                      OutsideModes{MISSING, ZERO, CLOSEST};
 
@@ -230,6 +246,7 @@ private:
   std::string               file_name_;
 
   float                     rmissing_;
+  size_t                    n_traces_per_ensamble_;
 
 };
 

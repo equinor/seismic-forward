@@ -110,6 +110,9 @@ public:
   /// Get delay recording time location
   int GetDelayRecTimeLoc() const {return delay_rec_time_loc_;}
 
+  /// Get offset location
+  int GetOffsetLoc() const { return offset_loc_;}
+
   /// Get coordinate system.
   coordSys_t GetCoordSys() const {return coord_sys_;}
 
@@ -153,6 +156,8 @@ private:
   int crossline_loc_;
   /// Location of delay Recording Time
   int delay_rec_time_loc_;
+  /// Location of offset
+  int offset_loc_;
   /// Coordinate system to use.
   coordSys_t coord_sys_;
   /// Standard type
@@ -236,6 +241,8 @@ public:
 
   void SetScalCo(short scalcoinitial);
 
+  void SetOffset(double offset) { offset_ = offset; };
+
   void SetDelayRecTime(short value);
 
   short GetDelayRecTime() const;
@@ -270,6 +277,7 @@ private:
   int imissing_;
   float rmissing_;
   short delay_rec_time_;
+  double offset_;
 
 
   bool useBinaryInline;

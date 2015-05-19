@@ -127,6 +127,7 @@ TraceHeaderFormat::TraceHeaderFormat(const TraceHeaderFormat & thf)
    scal_co_loc_   (thf.GetScalCoLoc()),
    utmx_loc_     (thf.GetUtmxLoc()),
    utmy_loc_     (thf.GetUtmyLoc()),
+   offset_loc_   (thf.GetOffsetLoc()),
    inline_loc_   (thf.GetInlineLoc()),
    crossline_loc_(thf.GetCrosslineLoc()),
    delay_rec_time_loc_(thf.GetDelayRecTimeLoc()),
@@ -170,6 +171,7 @@ TraceHeaderFormat::Init(int headerformat)
     crossline_loc_ = 193;
     coord_sys_     = UTM;
     delay_rec_time_loc_= DELAY_REC_TIME;
+    offset_loc_    = 37;
   }
   else if (headerformat == CHARISMA)
   {
@@ -531,7 +533,12 @@ int TraceHeader::Write(std::ostream& outFile)
       WriteBinaryShort(outFile, delay_rec_time_);
       i=i+2;
     }
-    else
+     else if (i==(format_.GetOffsetLoc()-1))
+    {
+      WriteBinaryInt(outFile, static_cast<int>(offset_));
+      i=i+4;
+    }
+   else
     {
       outFile.write(&(buffer_[i]), 2);
       i=i+2;

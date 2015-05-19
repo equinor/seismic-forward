@@ -231,29 +231,24 @@ BinaryHeader::Update(std::istream& file)
   file.read(buffer,374);
 }
 
-void BinaryHeader::Write(std::ostream& file, SegyGeometry *geometry, double dz, size_t nz) const
+void BinaryHeader::Write(std::ostream& file, double dz, size_t nz, short n_sam_per_ens) const
 {
   int dummy = 9999;
   WriteBinaryInt(file,dummy); //1-4
   dummy = 1;
   WriteBinaryInt(file,dummy); //5-8
-
   WriteBinaryInt(file,dummy); //9-12
-  short dummy2;
-  if (geometry!=NULL)
-    dummy2 = short(geometry->GetNx());
-  else
-    dummy2 = 0;
-  WriteBinaryShort(file,dummy2); //13-14
-  dummy2 = 0;
-  WriteBinaryShort(file, dummy2); //15-16
+
+  WriteBinaryShort(file, n_sam_per_ens); //13-14  
+  WriteBinaryShort(file, n_sam_per_ens); //15-16
   WriteBinaryShort(file, static_cast<short>(1000*dz)); // Hdt 17-18
+  short dummy2 = 0;
   WriteBinaryShort(file, dummy2); //19-20
   WriteBinaryShort(file, static_cast<short>(nz)); ///=nz Hns 21-22
   WriteBinaryShort(file, dummy2); //23-24
   dummy2 = 1;
   WriteBinaryShort(file, dummy2); // format 25-26
-  WriteBinaryShort(file, dummy2); // 27-28
+  WriteBinaryShort(file, n_sam_per_ens); // 27-28
   dummy2 = 4;
   WriteBinaryShort(file, dummy2); //29-30
   dummy2 = 0;

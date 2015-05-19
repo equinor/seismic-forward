@@ -296,9 +296,10 @@ SegY::SegY(const std::string       & fileName,
            const TraceHeaderFormat & traceHeaderFormat)
   : trace_header_format_(traceHeaderFormat)
 {
-  rmissing_ = segyRMISSING;
-  geometry_ = NULL;
-  binary_header_ = NULL;
+  rmissing_              = segyRMISSING;
+  geometry_              = NULL;
+  binary_header_         = NULL;
+  n_traces_per_ensamble_ = 1;
 
   /// \todo Replace with safe open function.
   //file_.open(fileName.c_str(), std::ios::out | std::ios::binary);
@@ -315,6 +316,11 @@ SegY::SegY(const std::string       & fileName,
   }
 }
 
+SegY::SegY() {
+  geometry_              = NULL;
+  binary_header_         = NULL;
+}
+
 SegY::~SegY()
 {
   if (geometry_!=NULL)
@@ -328,6 +334,36 @@ SegY::~SegY()
       delete traces_[i];
   }
   file_.close();
+}
+
+void SegY::Initialize(const std::string       & fileName,
+                      float                     z0,
+                      size_t                    nz,
+                      float                     dz,
+                      const TextualHeader     & ebcdicHeader,
+                      const TraceHeaderFormat & traceHeaderFormat,
+                      short                     n_traces_per_ensamble)
+{
+  trace_header_format_   = traceHeaderFormat;
+  rmissing_              = segyRMISSING;
+  geometry_              = NULL;
+  binary_header_         = NULL;
+  n_traces_per_ensamble_ = n_traces_per_ensamble;
+  file_name_             = fileName;
+
+  /// \todo Replace with safe open function.
+  //file_.open(fileName.c_str(), std::ios::out | std::ios::binary);
+  OpenWrite(file_,file_name_, std::ios::out | std::ios::binary);
+  if (!file_) {
+    throw new IOError("Error opening " + fileName);
+  }
+  else
+  {
+    z0_ = z0;
+    dz_ = dz;
+    nz_ = nz;
+    WriteMainHeader(ebcdicHeader);
+  }
 }
 
 SegYTrace *
@@ -1050,7 +1086,7 @@ SegY::WriteMainHeader(const TextualHeader& ebcdicHeader)
   if (binary_header_ != NULL)
     delete binary_header_;
   binary_header_ = new BinaryHeader();
-  binary_header_->Write(file_, geometry_, dz_, nz_);
+  binary_header_->Write(file_, dz_, nz_, n_traces_per_ensamble_);
 }
 
 void
@@ -1111,7 +1147,7 @@ SegY::StoreTrace(double x, double y, const std::vector<float> data, const Volume
 
 
 void
-SegY::WriteTrace(double x, double y, const std::vector<float> data, const Volume *volume, float topVal,float baseVal, short scalcoinitial)
+SegY::WriteTrace(double x, double y, const std::vector<float> data, const Volume *volume, float topVal,float baseVal, short scalcoinitial, short offset)
 {
   assert(file_);
   assert(geometry_ != 0);
@@ -1119,6 +1155,7 @@ SegY::WriteTrace(double x, double y, const std::vector<float> data, const Volume
   header.SetNSamples(nz_);
   header.SetDt(static_cast<unsigned short>(dz_*1000));
   header.SetScalCo(scalcoinitial);
+  header.SetOffset(offset);
 
   header.SetUtmx(x);
   header.SetUtmy(y);

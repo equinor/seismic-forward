@@ -68,7 +68,7 @@ public:
   BinaryHeader();
   /// Update variables
   void Update(std::istream& file);
-  void Write(std::ostream& file, SegyGeometry *geometry, double dz, size_t nz) const;
+  void Write(std::ostream& file, double dz, size_t nz, short n_sam_per_ens) const;
   short GetFormat() {return(format_);}
   int GetLino() {return(lino_);}
   short GetHns() {return(hns_);}
