@@ -6,6 +6,7 @@
 #include <vector>
 #include "modelsettings.hpp"
 #include "seismic_parameters.hpp"
+#include "nrlib/segy/segygeometry.hpp"
 
 
 #include <nrlib/surface/regularsurface.hpp>
@@ -17,6 +18,39 @@ class SeismicOutput {
   public:
     SeismicOutput(ModelSettings *model_settings);
 
+    void setSegyGeometry(SeismicParameters         &seismic_parameters,
+                                      const NRLib::Volume       &vol,
+                                      size_t                     nx,
+                                      size_t                     ny);
+
+    bool checkUTMPrecision(SeismicParameters         &seismic_parameters,
+                           const NRLib::Volume       &vol,
+                           size_t                     nx,
+                           size_t                     ny);
+    void getSegyXY(double            dx,
+                   double            dy,
+                   SeismicParameters &seismic_parameters,
+                   size_t            i,
+                   size_t            j,
+                   double            &x, 
+                   double            &y);
+
+    bool prepareSegy(NRLib::SegY         &segyout,
+                     const NRLib::Volume  &vol,
+                     std::vector<double>  twt_0,
+                     std::string          fileName,
+                     SeismicParameters   &seismic_parameters,
+                     size_t               n_traces,
+                     bool                 time);
+
+    void writeSegyGather(std::vector<std::vector<double> > data_gather,
+                         NRLib::SegY                      &segyout,
+                         std::vector<double>               twt_0,
+                         std::vector<double>               offset_vec,
+                         bool                              time,
+                         double                            x,
+                         double                            y);
+    
     void writeDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse);
 
     void writeReflections(SeismicParameters &seismic_parameters, bool noise_added);

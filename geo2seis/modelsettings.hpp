@@ -751,25 +751,27 @@ class ModelSettings {
         return z_w_;
     }
   private:
-    std::string eclipse_file_name_;
-    std::vector<std::string> parameter_names_;
+
     std::vector<double> constvp_;
     std::vector<double> constvs_;
     std::vector<double> constrho_;
+    std::vector<std::string> parameter_names_;
     double theta_0_, dtheta_, theta_max_;  // seismic angle
     double offset_0_, doffset_, offset_max_;  // seismic offset
+    //no default start
+    std::string eclipse_file_name_;
+    double x0_, y0_, lx_, ly_, angle_; // area parameters
     bool ricker_;
     bool area_given_;
     double peak_f_;
-    double x0_, y0_, lx_, ly_, angle_; // area parameters
-    //std::string top_surface_file_, bot_surface_file_;
     bool topsurface_, botsurface_;
-    //double constant_top_, constant_bot_;
+    //no default end
     std::string top_time_surface_;
     double top_time_constant_;
     double dx_, dy_, dz_, dt_; // cell size
     double wavelet_scale_;
     bool output_vp_, output_reflections_, output_zvalues_, output_seismic_time_, output_seismic_depth_, output_seismic_timeshift_;
+   
     bool output_time_surfaces_, output_depth_surfaces_, output_twt_;
     std::string nlayers_file_name_;
     std::string prefix_, suffix_;
@@ -777,16 +779,18 @@ class ModelSettings {
     bool output_time_segy_, output_depth_segy_, output_timeshift_segy_;
     bool use_cornerpoint_interpol_;
     std::string area_from_surface_;
-    double top_time_window_, bot_time_window_, top_depth_window_, bot_depth_window_;
-    bool time_window_specified_, depth_window_specified_;
 
     bool elastic_parameters_time_segy_, elastic_parameters_depth_segy_, extra_parameters_time_segy_, extra_parameters_depth_segy_;
+
     int inline_start_, xline_start_;
     std::string inline_direction_;
     int inline_step_, xline_step_;
+
+    //no default start
     std::string wavelet_file_format_, wavelet_file_name_;
     std::vector<std::string> extra_parameter_names_;
     std::vector<double> extra_parameter_default_values_;
+    //no default end
     bool seismic_stack_time_storm_, seismic_stack_time_shift_storm_, seismic_stack_depth_storm_, seismic_stack_time_segy_, seismic_stack_time_shift_segy_, seismic_stack_depth_segy_;
 
     bool white_noise_;
@@ -805,6 +809,8 @@ class ModelSettings {
     bool nmo_corr_;
     double v_w_, z_w_;
 
+    double top_time_window_, bot_time_window_, top_depth_window_, bot_depth_window_;
+    bool time_window_specified_, depth_window_specified_;
 };
 
 #endif

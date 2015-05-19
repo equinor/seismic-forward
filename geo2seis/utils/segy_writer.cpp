@@ -2,18 +2,18 @@
 
 #include "nrlib/segy/segy.hpp"
 
-void SEGY::writeSegy(NRLib::StormContGrid &data,
-                     std::string fileName,
-                     int inline_start,
-                     int xline_start,
-                     bool xline_x_axis,
-                     int inline_step,
-                     int xline_step,
+void SEGY::writeSegy(NRLib::StormContGrid      &data,
+                     std::string                fileName,
+                     int                        inline_start,
+                     int                        xline_start,
+                     bool                       xline_x_axis,
+                     int                        inline_step,
+                     int                        xline_step,
                      const NRLib::SegyGeometry *geometry_in,
-                     short scalco,
-                     double top_window,
-                     double bot_window,
-                     bool window_specified) 
+                     short                      scalco,
+                     double                     top_window,
+                     double                     bot_window,
+                     bool                       window_specified) 
 {
 
   size_t i, j;
@@ -89,9 +89,9 @@ void SEGY::writeSegy(NRLib::StormContGrid &data,
 
   double z_min = data.GetZMin();
   double z_max = data.GetZMax();
-  double dz = float(data.GetLZ() / data.GetNK());
-  double z0 = 0.0;
-  int nz = static_cast<int>(ceil(data.GetZMax()) / dz);
+  double dz     = float(data.GetLZ() / data.GetNK());
+  double z0     = 0.0;
+  int    nz     = static_cast<int>(ceil(data.GetZMax()) / dz);
   if (window_specified) {
     if (top_window > z_max) {
       printf("Top window is below grid. No Segy file written.\n");
@@ -124,8 +124,8 @@ void SEGY::writeSegy(NRLib::StormContGrid &data,
   datavec.resize(nz);
   bool above_zero = false;
   double x, y, xt, yt, z;
-  for (j = 0; j < ny; j++)
-    for (i = 0; i < nx; i++) {
+  for (size_t j = 0; j < ny; j++) {
+    for (size_t i = 0; i < nx; i++) {
       xt = double((i + 0.5) * dx);
       yt = double((j + 0.5) * dy);
       x = double(geometry->GetX0() + xt * geometry->GetCosRot() - yt * geometry->GetSinRot());
@@ -183,6 +183,7 @@ void SEGY::writeSegy(NRLib::StormContGrid &data,
       }
       segyout.WriteTrace(x, y, datavec, NULL, 0.0, 0.0, scalco);
     }
-    //segyout.WriteAllTracesToFile();
-    delete geometry;
+  }
+  //segyout.WriteAllTracesToFile();
+  delete geometry;
 }

@@ -54,6 +54,7 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
     printf("Finding vrms\n");
     findVrms(seismic_parameters);
     printf("Vrms found\n");
+    //if write vrms...
     seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
   }
 
@@ -113,7 +114,7 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   }
 
 
-  printf("remove grids\n");
+  //printf("remove grids\n");
   //seismic_parameters.deleteParameterGrids();
 
 }

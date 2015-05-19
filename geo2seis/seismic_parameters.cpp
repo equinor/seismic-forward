@@ -13,8 +13,7 @@ SeismicParameters::SeismicParameters(ModelSettings *model_settings) {
     this->model_settings_ = model_settings;
 
     seismic_geometry_ = new SeismicGeometry();
-    seismic_output_ = new SeismicOutput(model_settings_);
-
+    
     if (model_settings->GetNMOCorr()) {
       calculateOffsetSpan();
     }
@@ -27,6 +26,8 @@ SeismicParameters::SeismicParameters(ModelSettings *model_settings) {
     setupWavelet();
     readEclipseGrid();
     findGeometry();
+
+    seismic_output_ = new SeismicOutput(model_settings_);
     findSurfaceGeometry();
 
     createGrids();
@@ -57,6 +58,10 @@ void SeismicParameters::calculateOffsetSpan() {
         noffset_ = size_t((offset_max_ - offset_0_) / doffset_) + 1;
         doffset_ = (offset_max_ - offset_0_) / (noffset_ - 1);
     }
+    offset_vec_.resize(noffset_);
+    for (size_t i = 0; i < noffset_; ++i) {
+      offset_vec_[i] = offset_0_ + i*doffset_;
+    }
 }
 
 void SeismicParameters::setupWavelet() {
@@ -69,6 +74,11 @@ void SeismicParameters::setupWavelet() {
         wavelet_ = new Wavelet(wavelet_file_name, wavelet_file_format);
     }
     wavelet_scale_ = model_settings_->GetWaveletScale();
+}
+
+void SeismicParameters::setSegyGeometry(const NRLib::SegyGeometry &geometry)
+{ 
+  segy_geometry_ = new NRLib::SegyGeometry(geometry); 
 }
 
 std::vector<double> SeismicParameters::twt_0(){
@@ -111,14 +121,6 @@ std::vector<double>  SeismicParameters::z_0(){
     z_0_[i] = zmin + (0.5 + i)*dz;
   }  
   return z_0_;
-}
-
-std::vector<double> SeismicParameters::offset_vec(){
-  offset_vec_.resize(noffset_);
-  for (size_t i = 0; i < noffset_; ++i) {
-    offset_vec_[i] = offset_0_ + i*doffset_;
-  }
-  return offset_vec_;
 }
 
 void SeismicParameters::readEclipseGrid() {
@@ -165,7 +167,7 @@ void SeismicParameters::deleteParameterGrids() {
 void SeismicParameters::deleteZandRandTWTGrids() {
   delete twtgrid_;
   delete zgrid_;
-  delete rgridvec_;
+  //delete rgridvec_;
   delete vrmsgrid_;
 }
 
@@ -174,7 +176,7 @@ void SeismicParameters::deleteWavelet() {
 }
 
 void SeismicParameters::deleteGeometryAndOutput() {
-  delete seismic_geometry_;
+  //delete seismic_geometry_;
   delete segy_geometry_;
   delete seismic_output_;
   delete model_settings_;

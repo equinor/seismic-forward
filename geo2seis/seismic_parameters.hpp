@@ -50,18 +50,19 @@ class SeismicParameters {
     void deleteWavelet();
     void deleteGeometryAndOutput();
 
-    size_t topK()    { return top_k_; }
-    size_t bottomK() { return bottom_k_; }
-    double theta0()  { return theta_0_; }
-    double dTheta()  { return dtheta_; }
-    size_t nTheta()  { return ntheta_; }
-    double offset0()  { return offset_0_; }
-    double dOffset()  { return doffset_; }
-    size_t nOffset()  { return noffset_; }
-    
+    size_t topK()                    { return top_k_; }
+    size_t bottomK()                 { return bottom_k_; }
+    double theta0()                  { return theta_0_; }
+    double dTheta()                  { return dtheta_; }
+    size_t nTheta()                  { return ntheta_; }
+    double offset0()                 { return offset_0_; }
+    double dOffset()                 { return doffset_; }
+    size_t nOffset()                 { return noffset_; }
+    std::vector<double> offset_vec() { return offset_vec_; }
+
     std::vector<double> twt_0();
     std::vector<double> z_0();
-    std::vector<double> offset_vec();
+    
 
     NRLib::RegularSurface<double> &topTime()       { return top_time_; };
     NRLib::RegularSurface<double> &bottomTime()    { return bot_time_; };
@@ -75,9 +76,12 @@ class SeismicParameters {
     SeismicOutput*       seismicOutput()   { return seismic_output_; };
     SeismicGeometry*     seismicGeometry() { return seismic_geometry_; };
 
-    NRLib::SegyGeometry* segyGeometry()    { return segy_geometry_; };
+    
     Wavelet*             wavelet()         { return wavelet_; };
     double               waveletScale()    { return  wavelet_scale_; };
+    NRLib::SegyGeometry* segyGeometry()    { return segy_geometry_; };
+
+    void setSegyGeometry(const NRLib::SegyGeometry &geometry);
     
 
   private:
@@ -133,6 +137,7 @@ class SeismicParameters {
     void readEclipseGrid();
 
     void findGeometry();
+    
 
     void findSurfaceGeometry();
 

@@ -77,7 +77,13 @@ class SeismicForward {
                             std::vector<double> &tvec);
     //static void   findRegularVrms(SeismicParameters &seismic_parameters, NRLib::StormContGrid &vrms_reg, std::vector<double> t0);
 
-    
+    static void   convertSeis(std::vector<double>               twt_vec,
+                              std::vector<double>               twt_0, 
+                              std::vector<double>               zgrid, 
+                              std::vector<double>               z_0, 
+                              std::vector<std::vector<double> > seismic,
+                              std::vector<std::vector<double> > &conv_seismic);
+
     static void   regSamplInterpol1(NRLib::StormContGrid &t_in, 
                                     NRLib::StormContGrid &data_in, 
                                     std::vector<double>   t_out, 
