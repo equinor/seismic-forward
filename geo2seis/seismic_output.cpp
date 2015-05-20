@@ -324,13 +324,6 @@ void SeismicOutput::writeNMOReflections(SeismicParameters &seismic_parameters, d
   rgridvec[0].WriteToFile(filename);  
 }
 
-void SeismicOutput::writeTheta(SeismicParameters &seismic_parameters, double offset) {
-  NRLib::StormContGrid &thetagrid = seismic_parameters.thetaGrid();
-
-  printf("Write theta grid on Storm format.\n");
-  std::string filename = prefix_ + "theta_" + NRLib::ToString(offset) + suffix_ + ".storm";
-  thetagrid.WriteToFile(filename);  
-}
 
 void SeismicOutput::writeVrms(SeismicParameters &seismic_parameters) {
   NRLib::StormContGrid &vrmsgrid = seismic_parameters.vrmsGrid();
@@ -549,14 +542,39 @@ void SeismicOutput::writeNMOSeismicTimeSegy(SeismicParameters &seismic_parameter
 void SeismicOutput::writeNMOSeismicTimeStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset, bool is_stack) {
   printf("Write seismic in time on Storm format\n");
   ModelSettings *model_settings = seismic_parameters.modelSettings();
-  std::string filename = prefix_ + "NMO_seismic_time_" + NRLib::ToString(offset) + suffix_ + ".storm";
-  if (is_stack == false && (model_settings->GetOutputSeismicStackTimeStorm() || model_settings->GetOutputSeismicStackTimeSegy())) {
-    STORM::writeStorm(timegrid, filename, top_time_window_, bot_time_window_, time_window_, true);
-  } else {
-    STORM::writeStorm(timegrid, filename, top_time_window_, bot_time_window_, time_window_);
-  }  
+  std::string filename;
+  if (is_stack == false) {
+    filename = prefix_ + "seismic_time_" + NRLib::ToString(offset) + suffix_ + ".storm";
+  }
+  else {
+    filename = prefix_ + "seismic_time_stack" + suffix_ + ".storm";
+  }
+  STORM::writeStorm(timegrid, filename, top_time_window_, bot_time_window_, time_window_);    
 }
-
+void SeismicOutput::writeNMOSeismicDepthStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &depthgrid, double offset, bool is_stack) {
+  printf("Write seismic in depth on Storm format\n");
+  ModelSettings *model_settings = seismic_parameters.modelSettings();
+  std::string filename;
+  if (is_stack == false) {
+    filename = prefix_ + "seismic_depth_" + NRLib::ToString(offset) + suffix_ + ".storm";
+  }
+  else {
+    filename = prefix_ + "seismic_depth_stack" + suffix_ + ".storm";
+  }
+  STORM::writeStorm(depthgrid, filename, top_depth_window_, bot_depth_window_, depth_window_);    
+}
+void SeismicOutput::writeNMOSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack) {
+  printf("Write seismic in timeshift on Storm format\n");
+  ModelSettings *model_settings = seismic_parameters.modelSettings();
+  std::string filename;
+  if (is_stack == false) {
+    filename = prefix_ + "seismic_timeshift_" + NRLib::ToString(offset) + suffix_ + ".storm";
+  }
+  else {
+    filename = prefix_ + "seismic_timeshift_stack" + suffix_ + ".storm";
+  }
+  STORM::writeStorm(timeshiftgrid, filename, top_time_window_, bot_time_window_, time_window_);    
+}
 
 void SeismicOutput::writeSeismicTimeSegy(SeismicParameters &seismic_parameters, std::vector<NRLib::StormContGrid> &timegridvec) {
   printf("Write seismic in time on Segy format\n");

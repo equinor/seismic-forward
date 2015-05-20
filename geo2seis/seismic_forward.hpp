@@ -16,7 +16,7 @@ class SeismicForward {
     static void seismicForward(SeismicParameters &seismic_parameters);
 
   private:
-    static void generateSeismicOLD(std::vector<NRLib::StormContGrid> &rgridvec,
+    static void generateSeismic(std::vector<NRLib::StormContGrid> &rgridvec,
                                 NRLib::StormContGrid &twtgrid,
                                 NRLib::StormContGrid &zgrid,
                                 NRLib::StormContGrid &twt_timeshift,
@@ -34,15 +34,6 @@ class SeismicForward {
                                 bool depth_output,
                                 bool timeshift_output);
     
-    static void generateSeismic(std::vector<NRLib::StormContGrid> &timegridvec,
-                                std::vector<NRLib::StormContGrid> &rgridvec,
-                                NRLib::StormContGrid              &twtgrid,
-                                NRLib::StormContGrid              &zgrid,                                     
-                                NRLib::RegularSurface<double>     &toptime,
-                                Wavelet *wavelet,
-                                double waveletScale,
-                                double t0,
-                                double dt);
     static void generateSeismicPos(std::vector<std::vector<double> > &timegrid_pos,
                                    std::vector<std::vector<double> > refl_pos,
                                    std::vector<std::vector<double> > twtx_pos,
@@ -84,16 +75,6 @@ class SeismicForward {
                               std::vector<std::vector<double> > seismic,
                               std::vector<std::vector<double> > &conv_seismic);
 
-    static void   regSamplInterpol1(NRLib::StormContGrid &t_in, 
-                                    NRLib::StormContGrid &data_in, 
-                                    std::vector<double>   t_out, 
-                                    NRLib::StormContGrid &data_out);
-
-    static void   nmoCorrInterpol1(std::vector<double>  &t_in, 
-                                   NRLib::StormContGrid &data_in, 
-                                   NRLib::StormContGrid  t_out, 
-                                   NRLib::StormContGrid &data_out);
-
     static void   nmoCorrInterpol1Pos(std::vector<double>                t_in, 
                                       std::vector<std::vector<double> >  data_in, 
                                       std::vector<std::vector<double> >  t_out, 
@@ -106,8 +87,6 @@ class SeismicForward {
     static size_t findNearestNeighbourIndex(double              x, 
                                             std::vector<double> x_in);
 
-    static void   findReflections(SeismicParameters &seismic_parameters);
-
     static void   findReflectionsPos(SeismicParameters                &seismic_parameters,  
                                     std::vector<std::vector<double> > &r_vec, 
                                     std::vector<std::vector<double> >  theta_vec, 
@@ -115,33 +94,20 @@ class SeismicForward {
                                     size_t                             i, 
                                     size_t                             j);
 
-    static void   findTheta(SeismicParameters &seismic_parameters, 
-                            double             offset);
+
 
     static void   findThetaPos(std::vector<std::vector<double> > &thetagrid, 
                                std::vector<double>                twt_vec, 
                                std::vector<double>                vrms_vec, 
                                std::vector<double>                offset);
 
-    static void   findRegTWTx(NRLib::StormContGrid &twtxgrid, 
-                              NRLib::StormContGrid &vrmsgrid, 
-                              std::vector<double>  twt, 
-                              double               offset);
-
-    static void   findRegTWTxPos(std::vector<std::vector<double> > &twtx_pos_reg, 
-                                 std::vector<double>                twt_vec, 
-                                 std::vector<double>                vrms_vec, 
-                                 std::vector<double>                offset);
 
     static void   findTWTxPos(std::vector<std::vector<double> > &twtx_grid,  
                               std::vector<double>                twt_vec, 
                               std::vector<double>                vrms_vec, 
                               std::vector<double>                offset);
 
-    static void   findTWTx(NRLib::StormContGrid &twtxgrid,  
-                           NRLib::StormContGrid &vrmsgrid, 
-                           NRLib::StormContGrid &twtgrid, 
-                           double                offset);
+
     
 };
 

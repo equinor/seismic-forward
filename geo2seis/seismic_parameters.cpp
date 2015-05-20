@@ -167,7 +167,7 @@ void SeismicParameters::deleteParameterGrids() {
 void SeismicParameters::deleteZandRandTWTGrids() {
   delete twtgrid_;
   delete zgrid_;
-  //delete rgridvec_;
+  delete rgridvec_;
   delete vrmsgrid_;
 }
 
@@ -176,7 +176,7 @@ void SeismicParameters::deleteWavelet() {
 }
 
 void SeismicParameters::deleteGeometryAndOutput() {
-  //delete seismic_geometry_;
+  delete seismic_geometry_;
   delete segy_geometry_;
   delete seismic_output_;
   delete model_settings_;
@@ -362,8 +362,7 @@ void SeismicParameters::createGrids() {
   if (model_settings_->GetNMOCorr()){
     vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
     rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
-    twtxgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
-    thetagrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+
   }
   else {
     rgridvec_ = new std::vector<NRLib::StormContGrid>(ntheta_);
@@ -392,8 +391,6 @@ void SeismicParameters::createGrids() {
         (*twtgrid_)(i, j, k) = 0.0;
         rgrid(i, j, k) = 0.0;
         if (model_settings_->GetNMOCorr()){
-          (*twtxgrid_)(i, j, k) = 0.0;
-          (*thetagrid_)(i, j, k) = 0.0;
           (*vrmsgrid_)(i, j, k) = 0.0;
         }
         for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
@@ -409,10 +406,7 @@ void SeismicParameters::createGrids() {
       }
     }
   }
-  if (model_settings_->GetNMOCorr()){
-    (*rgridvec_)[0] = rgrid;
-  }
-  else {
+  if (model_settings_->GetNMOCorr() == false){
     for (size_t i = 0; i < ntheta_; i++) {
       (*rgridvec_)[i] = rgrid;
     }

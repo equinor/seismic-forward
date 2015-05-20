@@ -80,9 +80,10 @@ class SeismicOutput {
 
     void writeNMOSeismicTimeSegy(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegridvec, double offset);
     void writeNMOSeismicTimeStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset, bool is_stack = false);
+    void writeNMOSeismicDepthStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &depthgrid, double offset, bool is_stack = false);
+    void writeNMOSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack = false);
 
     void writeNMOReflections(SeismicParameters &seismic_parameters, double offset, bool noise_added);
-    void writeTheta(SeismicParameters &seismic_parameters, double offset);
     void writeVrms(SeismicParameters &seismic_parameters);
 
     void printVector(std::vector<double> vec, std::string filename);
