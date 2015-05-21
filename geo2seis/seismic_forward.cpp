@@ -52,11 +52,9 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
                         || model_settings->GetOutputSeismicStackTimeStorm()      || model_settings->GetOutputSeismicStackTimeSegy()
                                                                                  || model_settings->GetOutputPrenmoTimeSegy());
   bool depth_output     = (model_settings->GetOutputSeismicDepth()               || model_settings->GetOutputDepthSegy() 
-                        || model_settings->GetOutputSeismicStackDepthStorm()     || model_settings->GetOutputSeismicStackDepthSegy()
-                                                                                 || model_settings->GetOutputPrenmoDepthSegy()); 
+                        || model_settings->GetOutputSeismicStackDepthStorm()     || model_settings->GetOutputSeismicStackDepthSegy()); 
   bool timeshift_output = (model_settings->GetOutputSeismicTimeshift()           || model_settings->GetOutputTimeshiftSegy()
-                        || model_settings->GetOutputSeismicStackTimeShiftStorm() || model_settings->GetOutputSeismicStackTimeShiftSegy()
-                                                                                 || model_settings->GetOutputPrenmoTimeshiftSegy());
+                        || model_settings->GetOutputSeismicStackTimeShiftStorm() || model_settings->GetOutputSeismicStackTimeShiftSegy());
   bool stack_output     = (model_settings->GetOutputSeismicStackTimeStorm()      || model_settings->GetOutputSeismicStackTimeSegy()
                         || model_settings->GetOutputSeismicStackTimeShiftStorm() || model_settings->GetOutputSeismicStackTimeShiftSegy()
                         || model_settings->GetOutputSeismicStackDepthStorm()     || model_settings->GetOutputSeismicStackDepthSegy());  
@@ -67,9 +65,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
                         || model_settings->GetOutputSeismicStackDepthSegy()
                         || model_settings->GetOutputTimeshiftSegy()
                         || model_settings->GetOutputSeismicStackTimeShiftSegy()
-                        || model_settings->GetOutputPrenmoTimeSegy()
-                        || model_settings->GetOutputPrenmoDepthSegy()
-                        || model_settings->GetOutputPrenmoTimeshiftSegy());
+                        || model_settings->GetOutputPrenmoTimeSegy());
 
   bool time_storm_output      = (model_settings->GetOutputSeismicTime()      || model_settings->GetOutputSeismicStackTimeStorm());
   bool depth_storm_output     = (model_settings->GetOutputSeismicDepth()     || model_settings->GetOutputSeismicStackDepthStorm());
