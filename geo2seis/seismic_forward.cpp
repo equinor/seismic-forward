@@ -49,25 +49,30 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
 
 
   bool time_output      = (model_settings->GetOutputSeismicTime()                || model_settings->GetOutputTimeSegy()  
-                        || model_settings->GetOutputSeismicStackTimeStorm()       || model_settings->GetOutputSeismicStackTimeSegy());
+                        || model_settings->GetOutputSeismicStackTimeStorm()      || model_settings->GetOutputSeismicStackTimeSegy()
+                                                                                 || model_settings->GetOutputPrenmoTimeSegy());
   bool depth_output     = (model_settings->GetOutputSeismicDepth()               || model_settings->GetOutputDepthSegy() 
-                        || model_settings->GetOutputSeismicStackDepthStorm()      || model_settings->GetOutputSeismicStackDepthSegy());
+                        || model_settings->GetOutputSeismicStackDepthStorm()     || model_settings->GetOutputSeismicStackDepthSegy()
+                                                                                 || model_settings->GetOutputPrenmoDepthSegy()); 
   bool timeshift_output = (model_settings->GetOutputSeismicTimeshift()           || model_settings->GetOutputTimeshiftSegy()
-                        || model_settings->GetOutputSeismicStackTimeShiftStorm()  || model_settings->GetOutputSeismicStackTimeShiftSegy());  
+                        || model_settings->GetOutputSeismicStackTimeShiftStorm() || model_settings->GetOutputSeismicStackTimeShiftSegy()
+                                                                                 || model_settings->GetOutputPrenmoTimeshiftSegy());
   bool stack_output     = (model_settings->GetOutputSeismicStackTimeStorm()      || model_settings->GetOutputSeismicStackTimeSegy()
-                        || model_settings->GetOutputSeismicStackTimeShiftStorm()  || model_settings->GetOutputSeismicStackTimeShiftSegy()
-                        || model_settings->GetOutputSeismicStackDepthStorm()      || model_settings->GetOutputSeismicStackDepthSegy());  
+                        || model_settings->GetOutputSeismicStackTimeShiftStorm() || model_settings->GetOutputSeismicStackTimeShiftSegy()
+                        || model_settings->GetOutputSeismicStackDepthStorm()     || model_settings->GetOutputSeismicStackDepthSegy());  
+
   bool segy_output      = (model_settings->GetOutputTimeSegy()  
                         || model_settings->GetOutputSeismicStackTimeSegy()
                         || model_settings->GetOutputDepthSegy() 
                         || model_settings->GetOutputSeismicStackDepthSegy()
                         || model_settings->GetOutputTimeshiftSegy()
                         || model_settings->GetOutputSeismicStackTimeShiftSegy()
-                        || model_settings->GetOutputSeismicStackTimeSegy()
-                        || model_settings->GetOutputSeismicStackTimeShiftSegy()
-                        || model_settings->GetOutputSeismicStackDepthSegy());
-  bool time_storm_output      = (model_settings->GetOutputSeismicTime() || model_settings->GetOutputSeismicStackTimeStorm());
-  bool depth_storm_output     = (model_settings->GetOutputSeismicDepth() || model_settings->GetOutputSeismicStackDepthStorm());
+                        || model_settings->GetOutputPrenmoTimeSegy()
+                        || model_settings->GetOutputPrenmoDepthSegy()
+                        || model_settings->GetOutputPrenmoTimeshiftSegy());
+
+  bool time_storm_output      = (model_settings->GetOutputSeismicTime()      || model_settings->GetOutputSeismicStackTimeStorm());
+  bool depth_storm_output     = (model_settings->GetOutputSeismicDepth()     || model_settings->GetOutputSeismicStackDepthStorm());
   bool timeshift_storm_output = (model_settings->GetOutputSeismicTimeshift() || model_settings->GetOutputSeismicStackTimeShiftStorm());
 
   NRLib::StormContGrid *twt_timeshift;
@@ -135,7 +140,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
         }
       }
 
-      //setup grid if output of seismic in storm i requested
+      //prepare grid if output of seismic in storm i requested
       NRLib::StormContGrid timegrid(0, 0, 0);
       if (time_storm_output) {
         timegrid = NRLib::StormContGrid(volume_t, nx, ny, nt);
@@ -149,7 +154,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
         depthgrid = NRLib::StormContGrid(volume, nx, ny, nz);
       }
 
-      //make segy files:
+      //prepare segy files:
       bool        segy_ok                     = false;
       NRLib::SegY nmo_time_segy;
       bool        nmo_time_segy_ok            = false;
@@ -159,48 +164,51 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       bool        nmo_time_stack_segy_ok      = false;
       NRLib::SegY nmo_depth_segy;
       bool        nmo_depth_segy_ok           = false;
-      NRLib::SegY prenmo_depth_segy;
-      bool        prenmo_depth_segy_ok        = false;
       NRLib::SegY nmo_depth_stack_segy;
       bool        nmo_depth_stack_segy_ok     = false;
       NRLib::SegY nmo_timeshift_segy;
       bool        nmo_timeshift_segy_ok       = false;
-      NRLib::SegY prenmo_timeshift_segy;
-      bool        prenmo_timeshift_segy_ok    = false;
       NRLib::SegY nmo_timeshift_stack_segy;
       bool        nmo_timeshift_stack_segy_ok = false;        
+      NRLib::SegY twtx_segy;
+      bool        twtx_segy_ok                = false;  
 
       if (segy_output) {
         seismic_parameters.seismicOutput()->setSegyGeometry(seismic_parameters, volume_t, nx, ny);
         segy_ok = seismic_parameters.seismicOutput()->checkUTMPrecision(seismic_parameters, volume_t, nx, ny);
       }
       if (segy_ok && model_settings->GetOutputTimeSegy()) {
-        std::string filename = "seismic_time";
-        nmo_time_segy_ok     = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec.size(), true); 
-        filename = "prenmo_seismic_time";
+        std::string filename        = "seismic_time";
+        nmo_time_segy_ok            = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec.size(), true); 
+      }
+      if (segy_ok && model_settings->GetOutputPrenmoTimeSegy()) {
+        std::string filename        = "prenmo_seismic_time";
         prenmo_time_segy_ok         = seismic_parameters.seismicOutput()->prepareSegy(prenmo_time_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec.size(), true); 
       }
       if (segy_ok && model_settings->GetOutputSeismicStackTimeSegy()) {
-        std::string filename   = "seismic_time_stack";
-        nmo_time_stack_segy_ok = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_stack_segy, volume_t, twt_0, filename, seismic_parameters, 1, true); 
+        std::string filename        = "seismic_time_stack";
+        nmo_time_stack_segy_ok      = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_stack_segy, volume_t, twt_0, filename, seismic_parameters, 1, true); 
       }
       if (segy_ok && model_settings->GetOutputDepthSegy()) {
-        std::string filename = "seismic_depth";
-        nmo_depth_segy_ok    = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_segy, volume, z_0, filename, seismic_parameters, offset_vec.size(), false); 
+        std::string filename        = "seismic_depth";
+        nmo_depth_segy_ok           = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_segy, volume, z_0, filename, seismic_parameters, offset_vec.size(), false); 
       }
       if (segy_ok && model_settings->GetOutputSeismicStackDepthSegy()) {
-        std::string filename    = "seismic_depth_stack";
-        nmo_depth_stack_segy_ok = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_stack_segy, volume, z_0, filename, seismic_parameters, 1, false); 
+        std::string filename        = "seismic_depth_stack";
+        nmo_depth_stack_segy_ok     = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_stack_segy, volume, z_0, filename, seismic_parameters, 1, false); 
       }
       if (segy_ok && model_settings->GetOutputTimeshiftSegy()) {
-        std::string filename  = "seismic_timeshift";
-        nmo_timeshift_segy_ok = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec.size(), true); 
+        std::string filename        = "seismic_timeshift";
+        nmo_timeshift_segy_ok       = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec.size(), true); 
       }
       if (segy_ok && model_settings->GetOutputSeismicStackTimeShiftSegy()) {
         std::string filename        = "seismic_timeshift_stack";
         nmo_timeshift_stack_segy_ok = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_stack_segy, volume_t, twt_0, filename, seismic_parameters, 1, true); 
       }
-
+      if (segy_ok && model_settings->GetOutputTwtOffset()) {
+        std::string filename        = "twt_offset";
+        twtx_segy_ok                = seismic_parameters.seismicOutput()->prepareSegy(twtx_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec.size(), true); 
+      }
 
       printf("\nComputing synthetic seismic:");
       float monitorSize = std::max(1.0f, static_cast<float>(nx * ny) * 0.02f);
@@ -233,13 +241,22 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
             //find reflection coeff - for each reflection for each offset:
             findReflectionsPos(seismic_parameters, refl_pos, theta_pos, offset_vec, i, j);
 
+            //keep reflections for zero offset if output on storm
+            if (model_settings->GetOutputReflections()){
+              for (size_t k = 0; k < nzrefl; ++k) {
+                rgridvec[0](i,j,k) = refl_pos[k][0];
+              }
+            }
             //add noise to reflections
             if (model_settings->GetWhiteNoise()) {
               SeismicRegridding::addNoiseToReflectionsPos(seed+i, deviation, refl_pos); //nb, make unique seed when i and j loop is made
+              //keep reflections for zero offset if output on storm and white noise
+              if (seismic_parameters.modelSettings()->GetOutputReflections()) {
+                for (size_t k = 0; k < nzrefl; ++k) {
+                  rgridvec[1](i,j,k) = refl_pos[k][0];
+                }
+              }
             }
-            //if (seismic_parameters.modelSettings()->GetOutputReflections() && seismic_parameters.modelSettings()->GetWhiteNoise()){
-            //keep both...
-            //}
 
             //find twtx ------------- for each reflection for each offset:
             findTWTxPos(twtx_pos, twt_vec, vrms_vec, offset_vec);
@@ -276,7 +293,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
               }
             }
           }
-          else {              
+          else { //zero trace where twt is missing     
             for (size_t k = 0; k < twt_0.size(); ++k) {
               nmo_timegrid_stack_pos[k][0] = 0.0;
               for (size_t off = 0; off < offset_vec.size(); ++off) {
@@ -285,48 +302,54 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
               }
             }
           }
-          if (model_settings->GetOutputTimeSegy()) {
-            if (nmo_time_segy_ok){
-              seismic_parameters.seismicOutput()->writeSegyGather(nmo_timegrid_pos, nmo_time_segy, twt_0, offset_vec, true, x,y);
-            }
-            if (prenmo_time_segy_ok){
-              seismic_parameters.seismicOutput()->writeSegyGather(timegrid_pos, prenmo_time_segy, twt_0, offset_vec, true, x,y);
-            }
+
+          //write to segy files
+          if (nmo_time_segy_ok){
+            seismic_parameters.seismicOutput()->writeSegyGather(nmo_timegrid_pos, nmo_time_segy, twt_0, offset_vec, true, x,y);
           }
-          if (nmo_time_stack_segy_ok && model_settings->GetOutputSeismicStackTimeSegy()) {          
+          if (prenmo_time_segy_ok){
+            seismic_parameters.seismicOutput()->writeSegyGather(timegrid_pos, prenmo_time_segy, twt_0, offset_vec, true, x,y);
+          }
+          if (nmo_time_stack_segy_ok) {
             seismic_parameters.seismicOutput()->writeSegyGather(nmo_timegrid_stack_pos, nmo_time_stack_segy, twt_0, zero_vec, true, x,y);
           }
-
-          if (depth_output) {
+          if (nmo_depth_segy_ok || nmo_depth_stack_segy_ok || depth_storm_output) {
             std::vector<double> zgrid_vec(nzrefl);
             for (size_t k = 0; k < nzrefl; ++k) {
               zgrid_vec[k]   = zgrid(i,j,k);
             }
-            convertSeis(twt_vec, twt_0, zgrid_vec, z_0, nmo_timegrid_pos, nmo_depthgrid_pos);
-            if (nmo_depth_segy_ok && model_settings->GetOutputDepthSegy()){
-              seismic_parameters.seismicOutput()->writeSegyGather(nmo_depthgrid_pos, nmo_depth_segy, z_0, offset_vec, true, x,y);
+            if (nmo_depth_segy_ok) {
+              convertSeis(twt_vec, twt_0, zgrid_vec, z_0, nmo_timegrid_pos, nmo_depthgrid_pos);
+              seismic_parameters.seismicOutput()->writeSegyGather(nmo_depthgrid_pos, nmo_depth_segy, z_0, offset_vec, false, x,y);
             }
-            if (nmo_depth_stack_segy_ok && model_settings->GetOutputSeismicStackDepthSegy()){
+            if (nmo_depth_stack_segy_ok || depth_storm_output){
               convertSeis(twt_vec, twt_0, zgrid_vec, z_0, nmo_timegrid_stack_pos, nmo_depthgrid_stack_pos);
-              seismic_parameters.seismicOutput()->writeSegyGather(nmo_depthgrid_stack_pos, nmo_depth_stack_segy, z_0, zero_vec, true, x,y);
+            }
+            if (nmo_depth_stack_segy_ok) {
+              seismic_parameters.seismicOutput()->writeSegyGather(nmo_depthgrid_stack_pos, nmo_depth_stack_segy, z_0, zero_vec, false, x,y);
             }
           }
-
-          if (timeshift_output) {
+          if (nmo_timeshift_segy_ok || nmo_timeshift_stack_segy_ok || timeshift_storm_output) {
             std::vector<double> timeshiftgrid_vec(nzrefl);
             for (size_t k = 0; k < nzrefl; ++k) {
               timeshiftgrid_vec[k]   = (*twt_timeshift)(i,j,k);
             }
-            convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twt_0, nmo_timegrid_pos, nmo_timeshiftgrid_pos);
-            if (nmo_timeshift_segy_ok && model_settings->GetOutputTimeshiftSegy()){
+            if (nmo_timeshift_segy_ok) {
+              convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twt_0, nmo_timegrid_pos, nmo_timeshiftgrid_pos);
               seismic_parameters.seismicOutput()->writeSegyGather(nmo_timeshiftgrid_pos, nmo_timeshift_segy, twt_0, offset_vec, true, x,y);
             }
-            if (nmo_timeshift_stack_segy_ok && model_settings->GetOutputSeismicStackTimeShiftSegy()){
+            if (nmo_timeshift_stack_segy_ok || timeshift_storm_output){
               convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twt_0, nmo_timegrid_stack_pos, nmo_timeshiftgrid_stack_pos);
+            }
+            if (nmo_timeshift_stack_segy_ok){
               seismic_parameters.seismicOutput()->writeSegyGather(nmo_timeshiftgrid_stack_pos, nmo_timeshift_stack_segy, twt_0, zero_vec, true, x,y);
             }
           }
+          if (twtx_segy_ok) {
+            seismic_parameters.seismicOutput()->writeSegyGather(twtx_pos_reg, twtx_segy, twt_0, offset_vec, true, x,y);
+          }
 
+          //save to storm grid for output
           if (time_storm_output) {
             for (size_t k = 0; k < nt; ++k){
               timegrid(i, j, k) = nmo_timegrid_stack_pos[k][0];
@@ -380,6 +403,10 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
         seismic_parameters.seismicOutput()->writeNMOSeismicTimeshiftStorm(seismic_parameters, timeshiftgrid, 0, true);
         timeshiftgrid = NRLib::StormContGrid(0, 0, 0);
       }
+      if (seismic_parameters.modelSettings()->GetOutputReflections()) {
+        seismic_parameters.seismicOutput()->writeNMOReflections(seismic_parameters, 0.0);
+      }
+       
 
       seismic_parameters.deleteZandRandTWTGrids();
       seismic_parameters.deleteParameterGrids();

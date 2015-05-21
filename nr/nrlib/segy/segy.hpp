@@ -77,7 +77,7 @@ public:
        const TraceHeaderFormat & traceHeaderFormat = TraceHeaderFormat(TraceHeaderFormat::SEISWORKS));
 
   /// Constructor for writing
-  /// Must be initialized 
+  /// Must be initialized
   SegY();
 
   ~SegY();
@@ -147,7 +147,7 @@ public:
   void                      SetGeometry(const SegyGeometry * geometry);
 
   void                      SetDelayRecTime(short value) { delay_rec_time_ = value;}
-  
+
   void                      StoreTrace(double                     x,
                                        double                     y,
                                        const std::vector<float>   data,

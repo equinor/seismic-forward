@@ -226,13 +226,13 @@ void SeismicParameters::findGeometry() {
     segy_geometry_->WriteGeometry();
     segy_geometry_->WriteILXL();
 
-    double x0 = temp_segy_geometry->GetX0();
-    double y0 = temp_segy_geometry->GetY0();
-    double lx = temp_segy_geometry->Getlx();
-    double ly = temp_segy_geometry->Getly();
+    double x0    = temp_segy_geometry->GetX0();
+    double y0    = temp_segy_geometry->GetY0();
+    double lx    = temp_segy_geometry->Getlx();
+    double ly    = temp_segy_geometry->Getly();
     double angle = temp_segy_geometry->GetAngle();
-    double dx = temp_segy_geometry->GetDx();
-    double dy = temp_segy_geometry->GetDy();
+    double dx    = temp_segy_geometry->GetDx();
+    double dy    = temp_segy_geometry->GetDy();
 
     seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
     seismic_geometry_->setDxDy(dx, dy);
@@ -361,11 +361,14 @@ void SeismicParameters::createGrids() {
   twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
   if (model_settings_->GetNMOCorr()){
     vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
-    rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
-
+    if (model_settings_->GetWhiteNoise())
+      rgridvec_ = new std::vector<NRLib::StormContGrid>(2);
+    else 
+      rgridvec_ = new std::vector<NRLib::StormContGrid>(1);  
   }
   else {
     rgridvec_ = new std::vector<NRLib::StormContGrid>(ntheta_);
+    vrmsgrid_ = new NRLib::StormContGrid(0, 0, 0);
   }
   NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl);
   
@@ -406,7 +409,16 @@ void SeismicParameters::createGrids() {
       }
     }
   }
-  if (model_settings_->GetNMOCorr() == false){
+  if (model_settings_->GetNMOCorr()){
+    if (model_settings_->GetWhiteNoise()){
+      (*rgridvec_)[0] = rgrid;
+      (*rgridvec_)[1] = rgrid;
+    }
+    else {
+      (*rgridvec_)[0] = rgrid;
+    }
+  }
+  else {
     for (size_t i = 0; i < ntheta_; i++) {
       (*rgridvec_)[i] = rgrid;
     }

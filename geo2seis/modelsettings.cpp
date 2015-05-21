@@ -45,12 +45,14 @@ ModelSettings::ModelSettings(void) {
     output_vp_ = false;
     output_reflections_ = false;
     output_zvalues_ = false;
-    output_seismic_time_ = true;
-    output_seismic_depth_ = true;
+    output_seismic_time_ = false; //true when not nmo seismic
+    output_seismic_depth_ = false;//true when not nmo seismic
     output_seismic_timeshift_ = false;
     output_time_surfaces_ = false;
     output_depth_surfaces_ = false;
     output_twt_ = false;
+    output_vrms_ = false;
+    output_twt_offset_ = false;
     nlayers_file_name_ = "";
     prefix_ = "";
     suffix_ = "";
@@ -58,6 +60,7 @@ ModelSettings::ModelSettings(void) {
     output_time_segy_ = false;
     output_depth_segy_ = false;
     output_timeshift_segy_ = false;
+    output_prenmo_time_segy_ = false;
     use_cornerpoint_interpol_ = false;
     area_from_surface_ = "";
     elastic_parameters_time_segy_ = false;

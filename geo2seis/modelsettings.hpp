@@ -199,6 +199,14 @@ class ModelSettings {
         output_twt_ = value;
     }
 
+    void SetOutputVrms(bool value) {
+      output_vrms_ = value;
+    }
+
+    void SetOutputTwtOffset(bool value) {
+      output_twt_offset_ = value;
+    }
+
     void SetNLayersFile(std::string val) {
         nlayers_file_name_ = val;
     }
@@ -225,6 +233,10 @@ class ModelSettings {
 
     void SetOutputDepthSegy(bool value) {
         output_depth_segy_ = value;
+    }
+
+    void SetOutputPrenmoTimeSegy(bool value) {
+        output_prenmo_time_segy_ = value;
     }
 
     void SetUseCornerpointInterpol(bool value) {
@@ -643,6 +655,14 @@ class ModelSettings {
         return output_twt_;
     }
 
+    bool GetOutputVrms() {
+        return output_vrms_;
+    }
+
+    bool GetOutputTwtOffset() {
+        return output_twt_offset_;
+    }
+
     std::string GetNLayersFileName() {
         return nlayers_file_name_;
     }
@@ -669,6 +689,10 @@ class ModelSettings {
 
     bool GetOutputDepthSegy() {
         return output_depth_segy_;
+    }
+
+    bool GetOutputPrenmoTimeSegy() {
+        return output_prenmo_time_segy_;
     }
 
     bool GetUseCornerpointInterpol() {
@@ -772,11 +796,12 @@ class ModelSettings {
     double wavelet_scale_;
     bool output_vp_, output_reflections_, output_zvalues_, output_seismic_time_, output_seismic_depth_, output_seismic_timeshift_;
    
-    bool output_time_surfaces_, output_depth_surfaces_, output_twt_;
+    bool output_time_surfaces_, output_depth_surfaces_, output_twt_, output_vrms_, output_twt_offset_;
     std::string nlayers_file_name_;
     std::string prefix_, suffix_;
     double zero_thickness_limit_;
     bool output_time_segy_, output_depth_segy_, output_timeshift_segy_;
+    bool output_prenmo_time_segy_;
     bool use_cornerpoint_interpol_;
     std::string area_from_surface_;
 

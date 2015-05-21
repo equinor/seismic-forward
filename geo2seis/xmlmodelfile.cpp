@@ -334,7 +334,7 @@ bool XmlModelFile::ParseNMOStretch(TiXmlNode *node, std::string &errTxt) {
 
     std::vector<std::string> legalCommands;
     legalCommands.push_back("seafloor-depth");
-    legalCommands.push_back("velocity-in-water");
+    legalCommands.push_back("velocity-water");
     legalCommands.push_back("offset");
 
     double value;
@@ -343,7 +343,7 @@ bool XmlModelFile::ParseNMOStretch(TiXmlNode *node, std::string &errTxt) {
     } else {
       errTxt += "Value for seafloor depth is not given.\n";
     }
-    if (ParseValue(root, "velocity-in-water", value, errTxt) == true) {
+    if (ParseValue(root, "velocity-water", value, errTxt) == true) {
       modelSettings_->SetVw(value);
     } else {
       errTxt += "Value for velocity in water is not given.\n";
@@ -824,6 +824,8 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("time-surfaces");
     legalCommands.push_back("depth-surfaces");
     legalCommands.push_back("twt");
+    legalCommands.push_back("vrms");
+    legalCommands.push_back("twt-offset");
     legalCommands.push_back("prefix");
     legalCommands.push_back("suffix");
     legalCommands.push_back("seismic-time-segy");
@@ -834,6 +836,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("extra-parameters-time-segy");
     legalCommands.push_back("extra-parameters-depth-segy");
     legalCommands.push_back("seismic-stack");
+    legalCommands.push_back("prenmo-seismic-time-segy");
 
     bool value;
     if (ParseBool(root, "elastic-parameters", value, errTxt) == true) {
@@ -848,6 +851,9 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetOutputReflections(value);
     }
 
+    if (modelSettings_->GetNMOCorr() == false) {
+        modelSettings_->SetOutputSeismicTime(true);
+    }
     if (ParseBool(root, "seismic-time", value, errTxt) == true) {
         modelSettings_->SetOutputSeismicTime(value);
     }
@@ -859,10 +865,14 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
             modelSettings_->SetOutputSeismicTimeshift(value);
         }
     }
+
+    if (modelSettings_->GetNMOCorr() == false) {
+        modelSettings_->SetOutputSeismicDepth(true);
+    }
     if (ParseBool(root, "seismic-depth", value, errTxt) == true) {
         modelSettings_->SetOutputSeismicDepth(value);
     }
-
+    
     if (ParseBool(root, "time-surfaces", value, errTxt) == true) {
         modelSettings_->SetOutputTimeSurfaces(value);
     }
@@ -873,6 +883,14 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
 
     if (ParseBool(root, "twt", value, errTxt) == true) {
         modelSettings_->SetOutputTwt(value);
+    }
+
+    if (ParseBool(root, "vrms", value, errTxt) == true) {
+        modelSettings_->SetOutputVrms(value);
+    }
+
+    if (ParseBool(root, "twt-offset", value, errTxt) == true) {
+        modelSettings_->SetOutputTwtOffset(value);
     }
 
     std::string val;
@@ -917,6 +935,10 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     }
 
     ParseSeismicStack(root, errTxt);
+
+    if (ParseBool(root, "prenmo-seismic-time-segy", value, errTxt) == true) {
+      modelSettings_->SetOutputPrenmoTimeSegy(value);
+    }
 
     CheckForJunk(root, errTxt, legalCommands);
 

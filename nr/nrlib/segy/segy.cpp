@@ -1086,7 +1086,7 @@ SegY::WriteMainHeader(const TextualHeader& ebcdicHeader)
   if (binary_header_ != NULL)
     delete binary_header_;
   binary_header_ = new BinaryHeader();
-  binary_header_->Write(file_, dz_, nz_, n_traces_per_ensamble_);
+  binary_header_->Write(file_, dz_, nz_, short(n_traces_per_ensamble_));
 }
 
 void

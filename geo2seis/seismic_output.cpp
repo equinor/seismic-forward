@@ -309,19 +309,19 @@ void SeismicOutput::writeReflections(SeismicParameters &seismic_parameters, bool
   }
 }
 
-void SeismicOutput::writeNMOReflections(SeismicParameters &seismic_parameters, double offset, bool noise_added) {
+void SeismicOutput::writeNMOReflections(SeismicParameters &seismic_parameters, double offset) {
   std::vector<NRLib::StormContGrid> &rgridvec = seismic_parameters.rGrids();
 
+  printf("Write reflections on Storm format.\n");
   std::string reflection_string = "reflections_";
-  if (noise_added) {
-    printf("Write reflections with noise on Storm format.\n");
-    reflection_string = reflection_string + "noise_";
-  } 
-  else {
-    printf("Write reflections on Storm format");
-  }
   std::string filename = prefix_ + reflection_string + NRLib::ToString(offset) + suffix_ + ".storm";
-  rgridvec[0].WriteToFile(filename);  
+  rgridvec[0].WriteToFile(filename); 
+  if (rgridvec.size() == 2){  
+    //printf("Write reflections with noise on Storm format.\n");
+    reflection_string = reflection_string + "noise_";
+    std::string filename = prefix_ + reflection_string + NRLib::ToString(offset) + suffix_ + ".storm";
+    rgridvec[1].WriteToFile(filename);  
+  } 
 }
 
 
@@ -533,11 +533,6 @@ size_t SeismicOutput::findCellIndex(size_t i, size_t j, double target_k, NRLib::
   return found_k;
 }
 
-void SeismicOutput::writeNMOSeismicTimeSegy(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset) {
-  printf("Write NMO corrected seismic in time on Segy format\n");
-  NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
-  SEGY::writeSegy(timegrid, prefix_ + "NMO_seismic_time_" + NRLib::ToString(offset) + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);  
-}
 
 void SeismicOutput::writeNMOSeismicTimeStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset, bool is_stack) {
   printf("Write seismic in time on Storm format\n");

@@ -54,8 +54,9 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
     printf("Finding vrms\n");
     findVrms(seismic_parameters);
     printf("Vrms found\n");
-    //if write vrms...
-    seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
+    if (seismic_parameters.modelSettings()->GetOutputVrms()){
+      seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
+    }
   }
 
   std::vector<double> constvp = seismic_parameters.modelSettings()->GetConstVp();

@@ -239,7 +239,7 @@ void BinaryHeader::Write(std::ostream& file, double dz, size_t nz, short n_sam_p
   WriteBinaryInt(file,dummy); //5-8
   WriteBinaryInt(file,dummy); //9-12
 
-  WriteBinaryShort(file, n_sam_per_ens); //13-14  
+  WriteBinaryShort(file, n_sam_per_ens); //13-14
   WriteBinaryShort(file, n_sam_per_ens); //15-16
   WriteBinaryShort(file, static_cast<short>(1000*dz)); // Hdt 17-18
   short dummy2 = 0;
