@@ -214,8 +214,8 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
         << "\n  |    |    |    |    |    |    |    |    |    |    |  "
         << "\n  ^";
         
-      for (size_t i = 0; i < 10; ++i) {
-        for (size_t j = 0; j < 10; ++j) {
+      for (size_t i = 0; i < nx; ++i) {
+        for (size_t j = 0; j < ny; ++j) {
           //----------------------BEGIN GEN SEIS WITH NMO FOR I,J---------------------------------
           double x, y;
           if (segy_ok) {
@@ -245,7 +245,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
             }
             //add noise to reflections
             if (model_settings->GetWhiteNoise()) {
-              SeismicRegridding::addNoiseToReflectionsPos(seed+i, deviation, refl_pos); //nb, make unique seed when i and j loop is made
+              SeismicRegridding::addNoiseToReflectionsPos(seed+long(i+nx*j), deviation, refl_pos); //nb, make unique seed when i and j loop is made
               //keep reflections for zero offset if output on storm and white noise
               if (seismic_parameters.modelSettings()->GetOutputReflections()) {
                 for (size_t k = 0; k < nzrefl; ++k) {
