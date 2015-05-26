@@ -94,7 +94,8 @@ class XmlModelFile {
             std::string &errTxt);
 
     bool ParseSegyIndexes(TiXmlNode *node,
-            std::string &errTxt);
+            std::string &errTxt,
+            bool area_from_segy);
 
     bool ParseWhiteNoise(TiXmlNode *node,
             std::string &errTxt);

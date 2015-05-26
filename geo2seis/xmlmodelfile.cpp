@@ -528,9 +528,7 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode *node, std::string &errTxt) {
 
     ParseDepth(root, errTxt);
     ParseCellSize(root, errTxt, area_from_segy);
-    if (ParseSegyIndexes(root, errTxt) == true) if (area_from_segy == true) {
-        printf("WARNING:: Both <area-from-segy> and <segy-indexes> are given. Indexes are taken from segy file, and values given in <segy-indexes> are not used.\n\n");
-    }
+    ParseSegyIndexes(root, errTxt, area_from_segy);
 
     double utm_prec;
     if (ParseValue(root, "utm-precision", utm_prec, errTxt)) {
@@ -711,19 +709,23 @@ bool XmlModelFile::ParseCellSize(TiXmlNode *node, std::string &errTxt, bool &are
     legalCommands.push_back("dt");
 
     double value;
-    if (ParseValue(root, "dx", value, errTxt) == true) {
-        modelSettings_->SetDx(value);
+    if (ParseValue(root, "dx", value, errTxt) == true) {        
         if (area_from_segy == true) {
-            printf("WARNING:: Both <dx> and <area-from-segy> is specified, and dx will be taken from segy file. \n\n");
+          printf("WARNING:: Both <dx> and <area-from-segy> is specified, and dx will be taken from segy file. \n\n");
+        }
+        else {
+          modelSettings_->SetDx(value);
         }
     }
     // else
     //   errTxt += "Value for dx is not given.\n";
 
     if (ParseValue(root, "dy", value, errTxt) == true) {
-        modelSettings_->SetDy(value);
         if (area_from_segy == true) {
             printf("WARNING:: Both <dy> and <area-from-segy> is specified, and dy will be taken from segy file. \n\n");
+        }
+        else {
+          modelSettings_->SetDy(value);
         }
     }
     // else
@@ -945,7 +947,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     return true;
 }
 
-bool XmlModelFile::ParseSegyIndexes(TiXmlNode *node, std::string &errTxt) {
+bool XmlModelFile::ParseSegyIndexes(TiXmlNode *node, std::string &errTxt, bool area_from_segy) {
     TiXmlNode *root = node->FirstChildElement("segy-indexes");
     if (root == 0) {
         return (false);
@@ -958,26 +960,34 @@ bool XmlModelFile::ParseSegyIndexes(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("inline-step");
     legalCommands.push_back("xline-step");
 
-    int inline_start, xline_start;
-    std::string inline_direction;
-    if (ParseValue(root, "inline-start", inline_start, errTxt) && ParseValue(root, "xline-start", xline_start, errTxt) && ParseValue(root, "inline-direction", inline_direction, errTxt)) {
-        modelSettings_->SetSegyInlineStart(inline_start);
-        modelSettings_->SetSegyXlineStart(xline_start);
-        if (NRLib::Uppercase(inline_direction) == "X" || NRLib::Uppercase(inline_direction) == "Y") {
-            modelSettings_->SetSegyInlineDirection(inline_direction);
-        } else
-            errTxt += "\"" + inline_direction + "\" is not a legal operation under keyword <inline-direction>, under command <" + root->ValueStr() + ">  on line " + NRLib::ToString(root->Row()) + ", column "
-                    + NRLib::ToString(root->Column()) + ".\n";
-    } else
-        errTxt += "One or more keyword under command <" + root->ValueStr() + ">  on line " + NRLib::ToString(root->Row()) + ", column "
-                + NRLib::ToString(root->Column()) + " is not legal or missing. Three keywords; <inline-start>, <xline-start> and <inline-direction> are required.\n";
+      int inline_start, xline_start;
+      std::string inline_direction;
+      if (ParseValue(root, "inline-start", inline_start, errTxt) && ParseValue(root, "xline-start", xline_start, errTxt) && ParseValue(root, "inline-direction", inline_direction, errTxt)) {
+        if (area_from_segy == false) {
+          modelSettings_->SetSegyInlineStart(inline_start);
+          modelSettings_->SetSegyXlineStart(xline_start);
+          if (NRLib::Uppercase(inline_direction) == "X" || NRLib::Uppercase(inline_direction) == "Y") {
+              modelSettings_->SetSegyInlineDirection(inline_direction);
+          } else
+              errTxt += "\"" + inline_direction + "\" is not a legal operation under keyword <inline-direction>, under command <" + root->ValueStr() + ">  on line " + NRLib::ToString(root->Row()) + ", column "
+                      + NRLib::ToString(root->Column()) + ".\n";
+        }
+      } 
+      else
+        if (area_from_segy == false)
+          errTxt += "One or more keyword under command <" + root->ValueStr() + ">  on line " + NRLib::ToString(root->Row()) + ", column "
+                  + NRLib::ToString(root->Column()) + " is not legal or missing. Three keywords; <inline-start>, <xline-start> and <inline-direction> are required.\n";
 
-    int inline_step, xline_step;
-    if (ParseValue(root, "inline-step", inline_step, errTxt)) {
-        modelSettings_->SetSegyInlineStep(inline_step);
-    }
-    if (ParseValue(root, "xline-step", xline_step, errTxt)) {
-        modelSettings_->SetSegyXlineStep(xline_step);
+      int inline_step, xline_step;
+      if (ParseValue(root, "inline-step", inline_step, errTxt) && area_from_segy == false) {
+          modelSettings_->SetSegyInlineStep(inline_step);
+      }
+      if (ParseValue(root, "xline-step", xline_step, errTxt) && area_from_segy == false) {
+          modelSettings_->SetSegyXlineStep(xline_step);
+      }
+    
+    if (area_from_segy)  {
+      printf("WARNING:: Both <area-from-segy> and <segy-indexes> are given. Indexes are taken from segy file, and values given in <segy-indexes> are not used.\n\n");
     }
 
     CheckForJunk(root, errTxt, legalCommands);
