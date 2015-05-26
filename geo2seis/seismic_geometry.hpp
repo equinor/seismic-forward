@@ -20,6 +20,7 @@ class SeismicGeometry {
     double y0();
     double z0();
     double t0();
+    double tmax();
 
     double xlength();
     double ylength();

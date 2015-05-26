@@ -181,9 +181,10 @@ void SEGY::writeSegy(NRLib::StormContGrid      &data,
         }
         //segyout.StoreTrace(x,y,datavec,NULL);
       }
-      segyout.WriteTrace(x, y, datavec, NULL, 0.0, 0.0, scalco);
+      segyout.StoreTrace(x,y, datavec, NULL);
+      //segyout.WriteTrace(x, y, datavec, NULL, 0.0, 0.0, scalco);
     }
   }
-  //segyout.WriteAllTracesToFile();
+  segyout.WriteAllTracesToFile(scalco);
   delete geometry;
 }

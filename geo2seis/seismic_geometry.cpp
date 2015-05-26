@@ -185,6 +185,10 @@ double SeismicGeometry::t0() {
   return t0_;
 }
 
+double SeismicGeometry::tmax() {
+  return t_max_;
+}
+
 void SeismicGeometry::setTRange(double t_min, double t_max) {
   t0_ = t_min;
   t_max_ = t_max;

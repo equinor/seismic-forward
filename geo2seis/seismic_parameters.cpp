@@ -81,6 +81,35 @@ void SeismicParameters::setSegyGeometry(const NRLib::SegyGeometry &geometry)
   segy_geometry_ = new NRLib::SegyGeometry(geometry); 
 }
 
+void SeismicParameters::getSeisLimits(size_t               n_twt_0,
+                                      std::vector<double>  vrms_vec,
+                                      std::vector<double>  offset_vec,
+                                      std::vector<size_t> &n_min,
+                                      std::vector<size_t> &n_max)
+{
+  size_t nt                      = seismic_geometry_->nt();
+  double dt                      = seismic_geometry_->dt();
+  double tmin                    = seismic_geometry_->t0();
+  double tmax                    = seismic_geometry_->tmax();
+  std::vector<double> constvp    = model_settings_->GetConstVp();
+  double vrms_nk = vrms_vec[vrms_vec.size() - 1];
+  double vrms_0  = vrms_vec[0];
+
+  for (size_t i = 0; i < offset_vec.size(); ++i) {
+    double offset = offset_vec[i];    
+    double twtx_max                = std::sqrt(tmax*tmax + 2000*2000*offset*offset/vrms_nk);      
+    //twtx_max                      += 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();    
+    double twtx_min                = std::sqrt(tmin*tmin + 2000*2000*offset*offset/vrms_0);      
+    //twtx_min                      -= 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+    if (twtx_min > tmin){
+      double test = (twtx_min - tmin)/dt;
+      n_min[i] = static_cast<size_t>((twtx_min - tmin)/dt); //static_cast cuts decimal. Ok, because target is (x - 0.5).
+    }
+    double test = (twtx_max - tmin)/dt;
+    n_max[i] = std::min(static_cast<size_t>((twtx_max - tmin)/dt),n_twt_0-1);
+  }
+}
+
 std::vector<double> SeismicParameters::twt_0(){
   size_t i_max, j_max, k_max;
   double x, y;
@@ -98,7 +127,7 @@ std::vector<double> SeismicParameters::twt_0(){
   double offset_max              = offset_0_+doffset_*noffset_;
 
   double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 2000*2000*offset_max*offset_max/vrms_max_t);      
-  twtx_max                      += 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  //twtx_max                      += 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
   
   size_t nt_seis                 = nt;
   if (twtx_max > tmin + nt*dt) {

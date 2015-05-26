@@ -60,6 +60,12 @@ class SeismicParameters {
 
     std::vector<double> twt_0();
     std::vector<double> z_0();
+
+    void getSeisLimits(size_t               n_twt_0,
+                      std::vector<double>  vrms_vec,
+                      std::vector<double>  offset_vec,
+                      std::vector<size_t> &n_min,
+                      std::vector<size_t> &n_max);
     
 
     NRLib::RegularSurface<double> &topTime()       { return top_time_; };

@@ -9,6 +9,7 @@
 
 #include <nrlib/stormgrid/stormcontgrid.hpp>
 #include <nrlib/surface/regularsurface.hpp>
+//#include "nrlib/geometry/interpolation.hpp"
 
 
 class SeismicForward {
@@ -34,7 +35,7 @@ class SeismicForward {
                                 bool depth_output,
                                 bool timeshift_output);
     
-    static void generateSeismicPos(std::vector<std::vector<double> > &timegrid_pos,
+    static void generateSeismicPosOld(std::vector<std::vector<double> > &timegrid_pos,
                                    std::vector<std::vector<double> > refl_pos,
                                    std::vector<std::vector<double> > twtx_pos,
                                    NRLib::StormContGrid              &zgrid,
@@ -46,6 +47,22 @@ class SeismicForward {
                                    double                            dt,
                                    size_t                            i,
                                    size_t                            j);
+
+    static void generateSeismicPos(std::vector<std::vector<double> > &timegrid_pos,
+                                   std::vector<std::vector<double> > refl_pos,
+                                   std::vector<std::vector<double> > twtx_pos,
+                                   NRLib::StormContGrid              &zgrid,
+                                   NRLib::RegularSurface<double>     &toptime,
+                                   Wavelet                           *wavelet,
+                                   double                            waveletScale,
+                                   std::vector<double>               offset,
+                                   double                            t0,
+                                   double                            dt,
+                                   size_t                            i,
+                                   size_t                            j, 
+                                   std::vector<size_t>               n_min,
+                                   std::vector<size_t>               n_max);
+
 
     static void generateSeismicOnFile(std::vector<NRLib::StormContGrid> &rgridvec,
                                       NRLib::StormContGrid &twtgrid,

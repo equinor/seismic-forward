@@ -8,6 +8,7 @@
 #include <physics/zoeppritz.hpp>
 #include <physics/zoeppritz_ps.hpp>
 #include <physics/zoeppritz_pp.hpp>
+//#include "nrlib/geometry/interpolation.hpp"
 
 
 
@@ -100,7 +101,10 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       std::vector<double> z_0        = seismic_parameters.z_0();
       std::vector<double> offset_vec = seismic_parameters.offset_vec();
 
-      size_t nzrefl = twtgrid.GetNK();
+      size_t nzrefl                  = twtgrid.GetNK();
+      //
+      std::vector<size_t> n_min(offset_vec.size());
+      std::vector<size_t> n_max(offset_vec.size());
 
       //setup vectors for twt, vrms, theta, refl and seismic
       std::vector<double>               twt_vec(nzrefl),   vrms_vec(nzrefl);
@@ -115,6 +119,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       std::vector<std::vector<double> > nmo_timegrid_pos(twt_0.size()),      nmo_timegrid_stack_pos(twt_0.size());
       std::vector<std::vector<double> > nmo_timeshiftgrid_pos(twt_0.size()), nmo_timeshiftgrid_stack_pos(twt_0.size());
       std::vector<double>               zero_vec(1);
+      std::vector<double>               vrms_vec_reg(twt_0.size());
       zero_vec[0] = 0;
       for (size_t k = 0; k < twt_0.size(); ++k) {
         twtx_pos_reg[k]                = n_offset; 
@@ -216,6 +221,8 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
         
       for (size_t i = 0; i < nx; ++i) {
         for (size_t j = 0; j < ny; ++j) {
+      //for (size_t i = 260; i < 261; ++i) {
+        //for (size_t j = 550; j < 551; ++j) {
           //----------------------BEGIN GEN SEIS WITH NMO FOR I,J---------------------------------
           double x, y;
           if (segy_ok) {
@@ -228,8 +235,12 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
               vrms_vec[k]  = vrmsgrid(i,j,k);
             }
 
+            //find min and max sample for seismic - for each offset.
+            seismic_parameters.getSeisLimits(twt_0.size(), vrms_vec, offset_vec, n_min, n_max);
+
             //sample vrms to regular grid:
-            std::vector<double> vrms_vec_reg = interpol1(twt_vec, vrms_vec, twt_0);
+            vrms_vec_reg = interpol1(twt_vec, vrms_vec, twt_0);
+            //std::vector<double> vrms_vec_reg2 = NRLib::Interpolation::Interpolate1D(twt_vec, vrms_vec, twt_0, "linear");
 
             //find theta ------------ for each reflection for each offset:
             findThetaPos(theta_pos, twt_vec, vrms_vec, offset_vec);
@@ -257,19 +268,22 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
             //find twtx ------------- for each reflection for each offset:
             findTWTxPos(twtx_pos, twt_vec, vrms_vec, offset_vec);
 
+
             //generate seismic
             generateSeismicPos(timegrid_pos,
-                              refl_pos,
-                              twtx_pos,
-                              zgrid,
-                              toptime,
-                              wavelet,
-                              wavelet_scale,
-                              offset_vec,
-                              tmin,
-                              dt,
-                              i,
-                              j);
+                               refl_pos,
+                               twtx_pos,
+                               zgrid,
+                               toptime,
+                               wavelet,
+                               wavelet_scale,
+                               offset_vec,
+                               tmin,
+                               dt,
+                               i,
+                               j,
+                               n_min,
+                               n_max);
 
             //sample twtx to regular grid - for each reflection for each offset:
             findTWTxPos(twtx_pos_reg, twt_0, vrms_vec_reg, offset_vec);
@@ -281,8 +295,9 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
             if (stack_output || time_storm_output || depth_storm_output || timeshift_storm_output) {
               if (model_settings->GetOutputSeismicStackTimeSegy() || model_settings->GetOutputSeismicStackTimeStorm()) {
                 float noffset_inv = static_cast<float>(1.0 / offset_vec.size());
-                for (size_t off = 0; off < offset_vec.size(); ++off) {
-                  for (size_t k = 0; k < twt_0.size(); ++k) {
+                for (size_t k = 0; k < twt_0.size(); ++k) {
+                  nmo_timegrid_stack_pos[k][0] = 0.0;
+                  for (size_t off = 0; off < offset_vec.size(); ++off) {                  
                     nmo_timegrid_stack_pos[k][0] += noffset_inv * nmo_timegrid_pos[k][off];
                   }
                 }
@@ -577,6 +592,7 @@ void SeismicForward::convertSeis(std::vector<double>               twt,
       seismic_vec[k] = seismic[k][off];
     }
     conv_seismic_vec = interpol1(zt_reg, seismic_vec, z_0);
+    //std::vector<double> conv_seismic_vec_2 = NRLib::Interpolation::Interpolate1D(zt_reg, seismic_vec, z_0, "spline");
     for (size_t k = 0; k < conv_seismic.size(); k++) {
       conv_seismic[k][off] = conv_seismic_vec[k];
     }
@@ -730,10 +746,69 @@ void SeismicForward::findTWTxPos(std::vector<std::vector<double> > &twtx_grid,
   }
 }
 
-
-
-
 void SeismicForward::generateSeismicPos(std::vector<std::vector<double> > &timegrid_pos,
+                                        std::vector<std::vector<double> > refl_pos,
+                                        std::vector<std::vector<double> > twtx_pos,
+                                        NRLib::StormContGrid              &zgrid,
+                                        NRLib::RegularSurface<double>     &toptime,
+                                        Wavelet                           *wavelet,
+                                        double                            waveletScale,
+                                        std::vector<double>               offset,
+                                        double                            t0,
+                                        double                            dt,
+                                        size_t                            i,
+                                        size_t                            j,
+                                        std::vector<size_t>               n_min,
+                                        std::vector<size_t>               n_max)
+{
+
+  size_t nt = timegrid_pos.size();
+  size_t nc = refl_pos.size();
+  double seis;
+  double x, y, z;
+  double topt        = 0.0;
+  double rickerLimit = wavelet->GetDepthAdjustmentFactor();
+
+  size_t count_out = 0;
+  size_t count_in = 0;
+  zgrid.FindCenterOfCell(i, j, 0, x, y, z);
+  topt = toptime.GetZ(x, y);
+  if (toptime.IsMissing(topt) == false) {
+    for (size_t off = 0; off < offset.size(); off++) {
+      double t = t0 + 0.5 * dt;
+
+      for (size_t k = 0; k < nt; k++) {
+        if (k > n_min[off] && k < n_max[off]) {
+          ++count_in;
+          seis = 0.0;
+          for (size_t kk = 0; kk < nc; kk++) {
+            if (fabs(twtx_pos[kk][off] - t) < rickerLimit) {
+              double ricker = waveletScale * wavelet->FindWaveletPoint(twtx_pos[kk][off] - t);
+              seis += refl_pos[kk][off] * ricker; 
+            }
+          }
+          timegrid_pos[k][off] = static_cast<float>(seis);
+        }
+        else {
+          timegrid_pos[k][off] = 0.0;
+          ++count_out;
+        }
+        t = t + dt;
+      }
+    } 
+  }
+  else {
+    for (size_t k = 0; k < nt; k++){
+      for (size_t off = 0; off < offset.size(); off++) {
+        timegrid_pos[k][off] = 0.0;
+      }
+    }
+  }
+  //std::cout << "in = " << count_in << ", out = " << count_out << "\n";
+}
+
+
+void SeismicForward::generateSeismicPosOld(std::vector<std::vector<double> > &timegrid_pos,
                                         std::vector<std::vector<double> > refl_pos,
                                         std::vector<std::vector<double> > twtx_pos,
                                         NRLib::StormContGrid              &zgrid,
