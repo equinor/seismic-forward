@@ -107,7 +107,7 @@ endfunction()
 
 set(MEX_LINK_LIBRARIES
     $<TARGET_FILE:geo2seis_lib>
-    ${MATH_LIBRARIES}
+    ${FFT_LIBRARIES}
 )
 
 mex_compile(g2s_model "${MEX_LINK_LIBRARIES}" geo2seis_lib)
