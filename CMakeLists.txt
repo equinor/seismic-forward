@@ -22,7 +22,7 @@ include(cmake/AddSource.cmake)
 option( USE_MKL "Use MKL for FFT, BLAS and LAPACK." ON )
 find_package(MKL)
 if(NOT MKL_FOUND)
-    set(USE_MKL OFF CACHE)
+ option(USE_MKL OFF)
 endif(NOT MKL_FOUND)
 
 if(USE_MKL)
