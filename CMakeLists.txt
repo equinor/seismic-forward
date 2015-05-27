@@ -19,8 +19,13 @@ set(CMAKE_BUILD_TYPE RELEASE)
 
 include(cmake/AddSource.cmake)
 
+option( USE_MKL "Use MKL for FFT, BLAS and LAPACK." ON )
 find_package(MKL)
-if(MKL_FOUND)
+if(NOT MKL_FOUND)
+    set(USE_MKL OFF CACHE)
+endif(NOT MKL_FOUND)
+
+if(USE_MKL)
     include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS})
     set(FFT_LIBRARIES ${MKL_LIBRARIES})
     set(MATH_LIBRARIES ${MKL_LIBRARIES})
@@ -39,7 +44,7 @@ else()
 
     set(FFT_LIBRARIES ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
     set(MATH_LIBRARIES ${CBLAS_LIBRARY} lapack ${FFT_LIBRARIES})
-endif(MKL_FOUND)
+endif(USE_MKL)
 
 set_property(GLOBAL PROPERTY SOURCE_FILES)
 set_property(GLOBAL PROPERTY INCLUDE_ROOTS)
