@@ -83,7 +83,6 @@ class SeismicForward {
     static double findTFromZ(double z, 
                             std::vector<double> &zvec, 
                             std::vector<double> &tvec);
-    //static void   findRegularVrms(SeismicParameters &seismic_parameters, NRLib::StormContGrid &vrms_reg, std::vector<double> t0);
 
     static void   convertSeis(std::vector<double>               twt_vec,
                               std::vector<double>               twt_0, 
@@ -97,12 +96,6 @@ class SeismicForward {
                                       std::vector<std::vector<double> >  t_out, 
                                       std::vector<std::vector<double> > &data_out);
 
-    static std::vector<double> interpol1(std::vector<double> t_in, 
-                                         std::vector<double> data_in, 
-                                         std::vector<double> t_out);
-
-    static size_t findNearestNeighbourIndex(double              x, 
-                                            std::vector<double> x_in);
 
     static void   findReflectionsPos(SeismicParameters                &seismic_parameters,  
                                     std::vector<std::vector<double> > &r_vec, 

@@ -13,12 +13,13 @@
 #include <seismic_geometry.hpp>
 
 void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters) {
-  printf("Start finding Zvalues\n");
+  printf("Start finding Zvalues.\n");
   findZValues(seismic_parameters);
   printf("Zvalues found.\n");
 
+  printf("Start finding elastic parameters.\n");
   findVpAndR(seismic_parameters);
-  printf("Reflections calculated.\n");
+  printf("Elastic parameters found.\n");
 
 
   seismic_parameters.deleteEclipseGrid();
@@ -51,9 +52,9 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   findTWT(vpgrid, vsgrid, twtgrid, zgrid, toptime, bottime, find_for_ps);
 
   if (seismic_parameters.modelSettings()->GetNMOCorr()){
-    printf("Finding vrms\n");
+    printf("Start finding rms velocity.\n");
     findVrms(seismic_parameters);
-    printf("Vrms found\n");
+    printf("Rms velocity found.\n");
     if (seismic_parameters.modelSettings()->GetOutputVrms()){
       seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
     }
@@ -171,8 +172,9 @@ void SeismicRegridding::findVrms(SeismicParameters &seismic_parameters){
   NRLib::StormContGrid &vrmsgrid          = seismic_parameters.vrmsGrid();
   NRLib::StormContGrid &vpgrid            = seismic_parameters.vpGrid();
 
-  double w_const = 2000* v_w * z_w; //v_w^2*t_w = v_w * v_w * (2000* z_w / v_w); 
-  double tmp;
+  double v_over;
+  double twt_w = 2000*z_w/v_w;
+  double tmp, tmp0;
   for (size_t i = 0; i < vrmsgrid.GetNI(); ++i) {
     for (size_t j = 0; j < vrmsgrid.GetNJ(); ++j) {
       if (twtgrid(i,j,0) == -999.0) {
@@ -180,14 +182,16 @@ void SeismicRegridding::findVrms(SeismicParameters &seismic_parameters){
           vrmsgrid(i,j,k) = -999.0;
         }
       }
-      else {
-        for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {        
-          tmp = w_const + vpgrid(i,j,0)* vpgrid(i,j,0)*(twtgrid(i,j,0) - 2000*z_w/v_w);
+      else {        
+        v_over = 2000*(zgrid(i,j,0) - z_w)/(twtgrid(i,j,0) - 2000*z_w/v_w);
+        tmp0 = v_w*v_w*twt_w + v_over*v_over*(twtgrid(i,j,0) - twt_w);          
+        for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
+          tmp = tmp0;
           for (size_t l = 1; l <= k; ++l) {
             tmp += vpgrid(i,j,l)* vpgrid(i,j,l)*(twtgrid(i,j,l) - twtgrid(i,j,l-1));
           }
           tmp = tmp / twtgrid(i,j,k);
-          vrmsgrid(i,j,k) = tmp;
+          vrmsgrid(i,j,k) = float(std::sqrt(tmp));
         }
       }
     }

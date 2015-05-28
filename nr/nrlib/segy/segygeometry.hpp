@@ -90,6 +90,13 @@ public:
   double GetXLStepX()      const { return xl_stepX_   ;}
   double GetXLStepY()      const { return xl_stepY_   ;}
 
+  int    GetMinIL()        const { return minIL_      ;}
+  int    GetMaxIL()        const { return maxIL_      ;}
+  int    GetILStep()       const { return ILStep_     ;}
+  int    GetMinXL()        const { return minXL_      ;}
+  int    GetMaxXL()        const { return maxXL_      ;}
+  int    GetXLStep()       const { return XLStep_     ;}
+
   void   WriteGeometry() const;
   void   WriteILXL(bool errorMode = false) const;
 
@@ -101,11 +108,10 @@ public:
   SegyGeometry * GetILXLSubGeometry(const std::vector<int> & ilxl, bool & interpolation, bool & aligned);
 
   std::vector<int> findAreaILXL(SegyGeometry * templateGeometry);
-
-
-private:
+  
   void   FindILXLGeometry();       ///< minIL, maxIL, stepIL, minXL, ...
 
+private:
   void   Regularize(double   x0,   double   y0,
                     double   x1,   double   y1,
                     double   dIL,  double   dXL,

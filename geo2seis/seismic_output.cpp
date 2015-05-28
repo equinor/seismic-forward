@@ -125,21 +125,6 @@ bool SeismicOutput::checkUTMPrecision(SeismicParameters   &seismic_parameters,
   return true;
 }
 
-void SeismicOutput::getSegyXY(double             dx,
-                              double             dy,
-                              SeismicParameters &seismic_parameters,
-                              size_t             i,
-                              size_t             j,
-                              double            &x, 
-                              double            &y)
-{
-  NRLib::SegyGeometry *geometry     = seismic_parameters.segyGeometry();
-  double xt = double((i + 0.5) * dx);
-  double yt = double((j + 0.5) * dy);
-  x = double(geometry->GetX0() + xt * geometry->GetCosRot() - yt * geometry->GetSinRot());
-  y = double(geometry->GetY0() + yt * geometry->GetCosRot() + xt * geometry->GetSinRot());
-}
-
 bool SeismicOutput::prepareSegy(NRLib::SegY         &segyout,
                                 const NRLib::Volume &vol,
                                 std::vector<double>  twt_0,
@@ -195,10 +180,10 @@ bool SeismicOutput::prepareSegy(NRLib::SegY         &segyout,
   std::string filename_out = prefix_ + fileName + suffix_ + ".segy";
   NRLib::TraceHeaderFormat thf(2);
   NRLib::TextualHeader header = NRLib::TextualHeader::standardHeader(); //nb - må endres!!
-  segyout.Initialize(filename_out, z0, nz, dz, header, thf, short(n_traces));
+  segyout.Initialize(filename_out, float(z0), static_cast<size_t>(nz), float(dz), header, thf, short(n_traces));
   NRLib::SegyGeometry *geometry     = seismic_parameters.segyGeometry();
   segyout.SetGeometry(geometry);
-  segyout.SetDelayRecTime(z0);
+  segyout.SetDelayRecTime(short(z0));
   return true;
 }
 void SeismicOutput::writeSegyGather(std::vector<std::vector<double> > data_gather,
@@ -257,7 +242,7 @@ void SeismicOutput::writeSegyGather(std::vector<std::vector<double> > data_gathe
         firstData = 0;
       }
       if (endData > nz) {
-        endData = nz;
+        endData = int(nz);
       }
       for (k = 0; k < firstData; k++) {
         datavec[k] = 0.0;
@@ -295,10 +280,10 @@ void SeismicOutput::writeReflections(SeismicParameters &seismic_parameters, bool
 
   std::string reflection_string = "reflections_";
   if (noise_added) {
-    printf("Write reflections with noise on Storm format");
+    printf("Write reflections with noise on Storm format.");
     reflection_string = reflection_string + "noise_";
   } else {
-    printf("Write reflections on Storm format");
+    printf("Write reflections on Storm format.");
   }
 
   double theta = theta_0;
@@ -357,19 +342,19 @@ void SeismicOutput::writeElasticParametersTimeSegy(SeismicParameters &seismic_pa
   generateParameterGridForOutput(vsgrid, twtgrid, vs_time_grid, dt, t_min, toptime);
   generateParameterGridForOutput(rhogrid, twtgrid, rho_time_grid, dt, t_min, toptime);
 
-  printf("Write vp in time on Segy format\n");
+  printf("Write vp in time on Segy format.\n");
   SEGY::writeSegy(vp_time_grid, prefix_ + "vp_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
 
-  printf("Write vs in time on Segy format\n");
+  printf("Write vs in time on Segy format.\n");
   SEGY::writeSegy(vs_time_grid, prefix_ + "vs_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
 
-  printf("Write rho in time on Segy format\n");
+  printf("Write rho in time on Segy format.\n");
   SEGY::writeSegy(rho_time_grid, prefix_ + "rho_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
 
 }
 
 void SeismicOutput::writeExtraParametersTimeSegy(SeismicParameters &seismic_parameters) {
-  printf("Write extra parameters in time on Segy format\n");
+  printf("Write extra parameters in time on Segy format.\n");
   size_t nx = seismic_parameters.seismicGeometry()->nx();
   size_t ny = seismic_parameters.seismicGeometry()->ny();
   size_t nt = seismic_parameters.seismicGeometry()->nt();
@@ -399,7 +384,7 @@ void SeismicOutput::writeTimeSurfaces(SeismicParameters &seismic_parameters) {
   NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
   NRLib::RegularSurface<double> &bottime = seismic_parameters.bottomTime();
 
-  printf("Write time surfaces on Storm format\n");
+  printf("Write time surfaces on Storm format.\n");
   bottime.WriteToFile(prefix_ + "bottime" + suffix_ + ".storm");
   toptime.WriteToFile(prefix_ + "toptime" + suffix_ + ".storm");
 }
@@ -428,18 +413,18 @@ void SeismicOutput::writeElasticParametersDepthSegy(SeismicParameters &seismic_p
   generateParameterGridForOutput(vpgrid, zgrid, vp_depth_grid, dz, z0, toptime);
   generateParameterGridForOutput(vsgrid, zgrid, vs_depth_grid, dz, z0, toptime);
   generateParameterGridForOutput(rhogrid, zgrid, rho_depth_grid, dz, z0, toptime);
-  printf("Write vp in depth on Segy format\n");
+  printf("Write vp in depth on Segy format.\n");
   SEGY::writeSegy(vp_depth_grid, prefix_ + "vp_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
 
-  printf("Write vs in depth on Segy format\n");
+  printf("Write vs in depth on Segy format.\n");
   SEGY::writeSegy(vs_depth_grid, prefix_ + "vs_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
 
-  printf("Write rho in depth on Segy format\n");
+  printf("Write rho in depth on Segy format.\n");
   SEGY::writeSegy(rho_depth_grid, prefix_ + "rho_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
 }
 
 void SeismicOutput::writeExtraParametersDepthSegy(SeismicParameters &seismic_parameters) {
-  printf("Write extra parameters in depth on Segy format\n");
+  printf("Write extra parameters in depth on Segy format.\n");
   size_t nx                              = seismic_parameters.seismicGeometry()->nx();
   size_t ny                              = seismic_parameters.seismicGeometry()->ny();
   size_t nz                              = seismic_parameters.seismicGeometry()->nz();
@@ -468,7 +453,7 @@ void SeismicOutput::writeVpVsRho(SeismicParameters &seismic_parameters) {
   NRLib::StormContGrid &vsgrid  = seismic_parameters.vsGrid();
   NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
 
-  printf("Write elastic parameters on Storm format\n");
+  printf("Write elastic parameters on Storm format.\n");
   std::string filename = prefix_ + "vp" + suffix_ + ".storm";
   vpgrid.WriteToFile(filename);
   filename = prefix_ + "vs" + suffix_ + ".storm";
@@ -481,7 +466,7 @@ void SeismicOutput::writeZValues(SeismicParameters &seismic_parameters) {
   NRLib::StormContGrid &zgrid = seismic_parameters.zGrid();
   std::string filename = prefix_ + "zgrid" + suffix_ + ".storm";
 
-  printf("Write zvalues on Storm format\n");
+  printf("Write zvalues on Storm format.\n");
   zgrid.WriteToFile(filename);
 }
 
@@ -489,7 +474,7 @@ void SeismicOutput::writeTwt(SeismicParameters &seismic_parameters) {
   NRLib::StormContGrid &twtgrid = seismic_parameters.twtGrid();
   std::string filename = prefix_ + "twt" + suffix_ + ".storm";
 
-  printf("Write two way time on Storm format\n");
+  printf("Write two way time on Storm format.\n");
   twtgrid.WriteToFile(filename);
 }
 
@@ -535,7 +520,7 @@ size_t SeismicOutput::findCellIndex(size_t i, size_t j, double target_k, NRLib::
 
 
 void SeismicOutput::writeNMOSeismicTimeStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset, bool is_stack) {
-  printf("Write seismic in time on Storm format\n");
+  printf("Write seismic in time on Storm format.\n");
   ModelSettings *model_settings = seismic_parameters.modelSettings();
   std::string filename;
   if (is_stack == false) {
@@ -547,7 +532,7 @@ void SeismicOutput::writeNMOSeismicTimeStorm(SeismicParameters &seismic_paramete
   STORM::writeStorm(timegrid, filename, top_time_window_, bot_time_window_, time_window_);    
 }
 void SeismicOutput::writeNMOSeismicDepthStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &depthgrid, double offset, bool is_stack) {
-  printf("Write seismic in depth on Storm format\n");
+  printf("Write seismic in depth on Storm format.\n");
   ModelSettings *model_settings = seismic_parameters.modelSettings();
   std::string filename;
   if (is_stack == false) {
@@ -559,7 +544,7 @@ void SeismicOutput::writeNMOSeismicDepthStorm(SeismicParameters &seismic_paramet
   STORM::writeStorm(depthgrid, filename, top_depth_window_, bot_depth_window_, depth_window_);    
 }
 void SeismicOutput::writeNMOSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack) {
-  printf("Write seismic in timeshift on Storm format\n");
+  printf("Write seismic in timeshift on Storm format.\n");
   ModelSettings *model_settings = seismic_parameters.modelSettings();
   std::string filename;
   if (is_stack == false) {
@@ -572,10 +557,10 @@ void SeismicOutput::writeNMOSeismicTimeshiftStorm(SeismicParameters &seismic_par
 }
 
 void SeismicOutput::writeSeismicTimeSegy(SeismicParameters &seismic_parameters, std::vector<NRLib::StormContGrid> &timegridvec) {
-  printf("Write seismic in time on Segy format\n");
+  printf("Write seismic in time on Segy format.\n");
   NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
   double theta                       = seismic_parameters.theta0();
-  double ntheta                      = seismic_parameters.nTheta();
+  size_t ntheta                      = seismic_parameters.nTheta();
   double dtheta                      = seismic_parameters.dTheta();
   for (size_t i = 0; i < ntheta; i++) {
     SEGY::writeSegy(timegridvec[i], prefix_ + "seismic_time_" + NRLib::ToString(NRLib::Radian * theta) + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
@@ -584,10 +569,10 @@ void SeismicOutput::writeSeismicTimeSegy(SeismicParameters &seismic_parameters, 
 }
 
 void SeismicOutput::writeSeismicTimeStorm(SeismicParameters &seismic_parameters, std::vector<NRLib::StormContGrid> &timegridvec) {
-  printf("Write seismic in time on Storm format\n");
+  printf("Write seismic in time on Storm format.\n");
   ModelSettings *model_settings = seismic_parameters.modelSettings();
   double theta                  = seismic_parameters.theta0();
-  double ntheta                 = seismic_parameters.nTheta();
+  size_t ntheta                 = seismic_parameters.nTheta();
   double dtheta                 = seismic_parameters.dTheta();
   for (size_t i = 0; i < ntheta; i++) {
     std::string filename = prefix_ + "seismic_time_" + NRLib::ToString(NRLib::Radian * theta) + suffix_ + ".storm";
@@ -601,9 +586,9 @@ void SeismicOutput::writeSeismicTimeStorm(SeismicParameters &seismic_parameters,
 }
 
 void SeismicOutput::writeSeismicTimeshiftSegy(SeismicParameters &seismic_parameters, std::vector<NRLib::StormContGrid> &timeshiftgridvec) {
-  printf("Write seismic shifted in time on Segy format\n");
+  printf("Write seismic shifted in time on Segy format.\n");
   double theta                       = seismic_parameters.theta0();
-  double ntheta                      = seismic_parameters.nTheta();
+  size_t ntheta                      = seismic_parameters.nTheta();
   double dtheta                      = seismic_parameters.dTheta();
   NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
   for (size_t i = 0; i < ntheta; i++) {
@@ -613,10 +598,10 @@ void SeismicOutput::writeSeismicTimeshiftSegy(SeismicParameters &seismic_paramet
 }
 
 void SeismicOutput::writeSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, std::vector<NRLib::StormContGrid> &timeshiftgridvec) {
-  printf("Write seismic shifted in time on Storm format\n");
+  printf("Write seismic shifted in time on Storm format.\n");
   ModelSettings *model_settings = seismic_parameters.modelSettings();
   double theta                  = seismic_parameters.theta0();
-  double ntheta                 = seismic_parameters.nTheta();
+  size_t ntheta                 = seismic_parameters.nTheta();
   double dtheta                 = seismic_parameters.dTheta();
   for (size_t i = 0; i < ntheta; i++) {
     std::string filename = prefix_ + "seismic_timeshift_" + NRLib::ToString(NRLib::Radian * theta) + suffix_ + ".storm";
@@ -630,9 +615,9 @@ void SeismicOutput::writeSeismicTimeshiftStorm(SeismicParameters &seismic_parame
 }
 
 void SeismicOutput::writeSeismicDepthSegy(SeismicParameters &seismic_parameters, std::vector<NRLib::StormContGrid> &depthgridvec) {
-  printf("Write seismic in depth on Segy format\n");
+  printf("Write seismic in depth on Segy format.\n");
   double theta                       = seismic_parameters.theta0();
-  double ntheta                      = seismic_parameters.nTheta();
+  size_t ntheta                      = seismic_parameters.nTheta();
   double dtheta                      = seismic_parameters.dTheta();
   NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
   for (size_t i = 0; i < ntheta; i++) {
@@ -642,10 +627,10 @@ void SeismicOutput::writeSeismicDepthSegy(SeismicParameters &seismic_parameters,
 }
 
 void SeismicOutput::writeSeismicDepthStorm(SeismicParameters &seismic_parameters, std::vector<NRLib::StormContGrid> &depthgridvec) {
-  printf("Write seismic in depth on Storm format\n");
+  printf("Write seismic in depth on Storm format.\n");
   ModelSettings *model_settings = seismic_parameters.modelSettings();
   double theta  = seismic_parameters.theta0();
-  double ntheta = seismic_parameters.nTheta();
+  size_t ntheta = seismic_parameters.nTheta();
   double dtheta = seismic_parameters.dTheta();
   for (size_t i = 0; i < ntheta; i++) {
     std::string filename = prefix_ + "seismic_depth_" + NRLib::ToString(NRLib::Radian * theta) + suffix_ + ".storm";
@@ -681,13 +666,13 @@ void SeismicOutput::writeSeismicStackTime(SeismicParameters &seismic_parameters,
 
   //print out seismic stack in time, in storm and segy
   if (model_settings->GetOutputSeismicStackTimeSegy()) {
-    printf("Write seismic stack in time on Segy format\n");
+    printf("Write seismic stack in time on Segy format.\n");
     NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
     std::string filename = prefix_ + "seismic_time_stack" + suffix_ + ".segy";
     SEGY::writeSegy(stack_timegridvec, filename, inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
   }
   if (model_settings->GetOutputSeismicStackTimeStorm()) {
-    printf("Write seismic stack in time on Storm format\n");
+    printf("Write seismic stack in time on Storm format.\n");
     std::string filename = prefix_ + "seismic_time_stack" + suffix_ + ".storm";
     STORM::writeStorm(stack_timegridvec, filename, top_time_window_, bot_time_window_, time_window_);
   }
@@ -716,13 +701,13 @@ void SeismicOutput::writeSeismicStackTimeshift(SeismicParameters &seismic_parame
 
   //print out seismic stack shifted in time, in storm and segy
   if (model_settings->GetOutputSeismicStackTimeShiftSegy()) {
-    printf("Write seismic stack shifted in time on Segy format\n");
+    printf("Write seismic stack shifted in time on Segy format.\n");
     NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
     std::string filename = prefix_ + "seismic_timeshift_stack" + suffix_ + ".segy";
     SEGY::writeSegy(stack_timeshiftgridvec, filename, inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
   }
   if (model_settings->GetOutputSeismicStackTimeShiftStorm()) {
-    printf("Write seismic stack shifted in time on Storm format\n");
+    printf("Write seismic stack shifted in time on Storm format.\n");
     std::string filename = prefix_ + "seismic_timeshift_stack" + suffix_ + ".storm";
     STORM::writeStorm(stack_timeshiftgridvec, filename, top_time_window_, bot_time_window_, time_window_);
   }
@@ -751,13 +736,13 @@ void SeismicOutput::writeSeismicStackDepth(SeismicParameters &seismic_parameters
 
   //print out seismic stack in depth, in storm and segy
   if (model_settings->GetOutputSeismicStackDepthSegy()) {
-    printf("Write seismic stack in depth on Segy format\n");
+    printf("Write seismic stack in depth on Segy format.\n");
     NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
     std::string filename = prefix_ + "seismic_depth_stack" + suffix_ + ".segy";
     SEGY::writeSegy(stack_depthgrid, filename, inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
   }
   if (model_settings->GetOutputSeismicStackDepthStorm()) {
-    printf("Write seismic stack in depth on Storm format\n");
+    printf("Write seismic stack in depth on Storm format.\n");
     std::string filename = prefix_ + "seismic_depth_stack" + suffix_ + ".storm";
     STORM::writeStorm(stack_depthgrid, filename, top_depth_window_, bot_depth_window_, depth_window_);
   }
@@ -773,7 +758,7 @@ void SeismicOutput::writeSeismicTimeSeismicOnFile(SeismicParameters &seismic_par
   NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
 
   double theta_0    = seismic_parameters.theta0();
-  double ntheta     = seismic_parameters.nTheta();
+  size_t ntheta     = seismic_parameters.nTheta();
   double dtheta     = seismic_parameters.dTheta();
   float  ntheta_inv = static_cast<float>(1.0 / ntheta);
 
@@ -812,12 +797,12 @@ void SeismicOutput::writeSeismicTimeSeismicOnFile(SeismicParameters &seismic_par
       file.close();
       NRLib::RemoveFile(filename);
       if (model_settings->GetOutputTimeSegy()) {
-        printf("Write seismic in time on Segy format\n");
+        printf("Write seismic in time on Segy format.\n");
         double theta = theta_0 + l * dtheta;
         SEGY::writeSegy(*timegrid, prefix_ + "seismic_time_" + NRLib::ToString(NRLib::Radian * theta) + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
       }
       if (model_settings->GetOutputSeismicTime()) {
-        printf("Write seismic in time on Storm format\n");
+        printf("Write seismic in time on Storm format.\n");
         double theta = theta_0 + l * dtheta;
         std::string filename_out = prefix_ + "seismic_time_" + NRLib::ToString(NRLib::Radian * theta) + suffix_ + ".storm";
         if (model_settings->GetOutputSeismicTimeshift() || model_settings->GetOutputTimeshiftSegy()) {
@@ -828,11 +813,11 @@ void SeismicOutput::writeSeismicTimeSeismicOnFile(SeismicParameters &seismic_par
       }
     }
     if (model_settings->GetOutputSeismicStackTimeSegy()) {
-      printf("Write seismic stack in time on Segy format\n");
+      printf("Write seismic stack in time on Segy format.\n");
       SEGY::writeSegy(*stack_timegrid, prefix_ + "seismic_time_stack" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
     }
     if (model_settings->GetOutputSeismicStackTimeStorm()) {
-      printf("Write seismic stack in time on Storm format\n");
+      printf("Write seismic stack in time on Storm format.\n");
       std::string filename_out = prefix_ + "seismic_time_stack" + suffix_ + ".storm";
       if (model_settings->GetOutputSeismicStackTimeShiftStorm() || model_settings->GetOutputSeismicStackTimeShiftSegy()) {
         STORM::writeStorm(*stack_timegrid, filename_out, top_time_window_, bot_time_window_, time_window_, true);
@@ -873,7 +858,7 @@ void SeismicOutput::writeSeismicTimeSeismicOnFile(SeismicParameters &seismic_par
       file.close();
       NRLib::RemoveFile(filename);
       if (model_settings->GetOutputTimeSegy()) {
-        printf("Write seismic shifted in time on Segy format\n");
+        printf("Write seismic shifted in time on Segy format.\n");
         double theta = theta_0 + l * dtheta;
         SEGY::writeSegy(*timegrid, prefix_ + "seismic_timeshift_" + NRLib::ToString(NRLib::Radian * theta) + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
       }
@@ -885,11 +870,11 @@ void SeismicOutput::writeSeismicTimeSeismicOnFile(SeismicParameters &seismic_par
       }
     }
     if (model_settings->GetOutputSeismicStackTimeShiftSegy()) {
-      printf("Write seismic stack shifted in time on Segy format\n");
+      printf("Write seismic stack shifted in time on Segy format.\n");
       SEGY::writeSegy(*stack_timegrid, prefix_ + "seismic_timeshift_stack" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
     }
     if (model_settings->GetOutputSeismicStackTimeShiftStorm() == true) {
-      printf("Write seismic stack shifted in time on Storm format\n");
+      printf("Write seismic stack shifted in time on Storm format.\n");
       std::string filename_out = prefix_ + "seismic_timeshift_stack" + suffix_ + ".storm";
       STORM::writeStorm(*stack_timegrid, filename_out, top_time_window_, bot_time_window_, time_window_);
     }
@@ -914,7 +899,7 @@ void SeismicOutput::writeSeismicDepthSeismicOnFile(SeismicParameters &seismic_pa
   NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
 
   double theta_0    = seismic_parameters.theta0();
-  double ntheta     = seismic_parameters.nTheta();
+  size_t ntheta     = seismic_parameters.nTheta();
   double dtheta     = seismic_parameters.dTheta();
   float  ntheta_inv = static_cast<float>(1.0 / ntheta);
 
@@ -953,23 +938,23 @@ void SeismicOutput::writeSeismicDepthSeismicOnFile(SeismicParameters &seismic_pa
       file.close();
       NRLib::RemoveFile(filename);
       if (model_settings->GetOutputDepthSegy() == true) {
-        printf("Write seismic in depth on Segy format\n");
+        printf("Write seismic in depth on Segy format.\n");
         double theta = theta_0 + l * dtheta;
         SEGY::writeSegy(*depthgrid, prefix_ + "seismic_depth_" + NRLib::ToString(NRLib::Radian * theta) + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
       }
       if (model_settings->GetOutputSeismicDepth() == true) {
-        printf("Write seismic in depth on Storm format\n");
+        printf("Write seismic in depth on Storm format.\n");
         double theta = theta_0 + l * dtheta;
         std::string filename_out = prefix_ + "seismic_depth_" + NRLib::ToString(NRLib::Radian * theta) + suffix_ + ".storm";
         STORM::writeStorm(*depthgrid, filename_out, top_depth_window_, bot_depth_window_, depth_window_);
       }
     }
     if (model_settings->GetOutputSeismicStackDepthSegy() == true) {
-      printf("Write seismic stack in depth on Segy format\n");
+      printf("Write seismic stack in depth on Segy format.\n");
       SEGY::writeSegy(*stack_depthgrid, prefix_ + "seismic_depth_stack" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
     }
     if (model_settings->GetOutputSeismicStackDepthStorm() == true) {
-      printf("Write seismic stack in depth on Storm format\n");
+      printf("Write seismic stack in depth on Storm format.\n");
       std::string filename_out = prefix_ + "seismic_depth_stack" + suffix_ + ".storm";
       STORM::writeStorm(*stack_depthgrid, filename_out, top_depth_window_, bot_depth_window_, depth_window_);
     }

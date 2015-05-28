@@ -27,13 +27,6 @@ class SeismicOutput {
                            const NRLib::Volume       &vol,
                            size_t                     nx,
                            size_t                     ny);
-    void getSegyXY(double            dx,
-                   double            dy,
-                   SeismicParameters &seismic_parameters,
-                   size_t            i,
-                   size_t            j,
-                   double            &x, 
-                   double            &y);
 
     bool prepareSegy(NRLib::SegY         &segyout,
                      const NRLib::Volume  &vol,

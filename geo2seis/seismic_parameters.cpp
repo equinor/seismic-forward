@@ -97,9 +97,9 @@ void SeismicParameters::getSeisLimits(size_t               n_twt_0,
 
   for (size_t i = 0; i < offset_vec.size(); ++i) {
     double offset = offset_vec[i];    
-    double twtx_max                = std::sqrt(tmax*tmax + 2000*2000*offset*offset/vrms_nk);      
+    double twtx_max                = std::sqrt(tmax*tmax + 1000*1000*offset*offset/(vrms_nk*vrms_nk));      
     //twtx_max                      += 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();    
-    double twtx_min                = std::sqrt(tmin*tmin + 2000*2000*offset*offset/vrms_0);      
+    double twtx_min                = std::sqrt(tmin*tmin + 1000*1000*offset*offset/(vrms_0*vrms_0));      
     //twtx_min                      -= 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
     if (twtx_min > tmin){
       double test = (twtx_min - tmin)/dt;
@@ -126,12 +126,12 @@ std::vector<double> SeismicParameters::twt_0(){
   double vrms_max_t              = (*vrmsgrid_)(i_max, j_max, (*vrmsgrid_).GetNK()-1);  
   double offset_max              = offset_0_+doffset_*noffset_;
 
-  double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 2000*2000*offset_max*offset_max/vrms_max_t);      
+  double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 1000*1000*offset_max*offset_max/(vrms_max_t*vrms_max_t));      
   //twtx_max                      += 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
   
   size_t nt_seis                 = nt;
   if (twtx_max > tmin + nt*dt) {
-    nt_seis = std::ceil((twtx_max - tmin)/dt);
+    nt_seis = static_cast<size_t>(std::ceil((twtx_max - tmin)/dt));
   }
   twt_0_.resize(nt_seis);
   for (size_t i = 0; i < nt_seis; ++i){
@@ -155,7 +155,7 @@ std::vector<double>  SeismicParameters::z_0(){
 void SeismicParameters::readEclipseGrid() {
     std::string filename = model_settings_->GetEclipseFileName();
 
-    printf("Start reading Eclipsegrid from file\n");
+    printf("Start reading Eclipsegrid from file.\n");
     eclipse_grid_ = new NRLib::EclipseGrid(filename);
     printf("Eclipsegrid read.\n");
 
