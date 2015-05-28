@@ -19,9 +19,15 @@ set(CMAKE_BUILD_TYPE RELEASE)
 
 include(cmake/AddSource.cmake)
 
+option( USE_MKL "Use MKL for FFT, BLAS and LAPACK." ON )
 find_package(MKL)
-if(MKL_FOUND)
+if(NOT MKL_FOUND)
+ option(USE_MKL OFF)
+endif(NOT MKL_FOUND)
+
+if(USE_MKL)
     include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS})
+    set(FFT_LIBRARIES ${MKL_LIBRARIES})
     set(MATH_LIBRARIES ${MKL_LIBRARIES})
     add_definitions(-DMKL)
 else()
@@ -36,8 +42,9 @@ else()
         message(FATAL_ERROR "Unable to find FFTW library.")
     endif(FFTW_FOUND)
 
-    set(MATH_LIBRARIES ${CBLAS_LIBRARY} lapack ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
-endif(MKL_FOUND)
+    set(FFT_LIBRARIES ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
+    set(MATH_LIBRARIES ${CBLAS_LIBRARY} lapack ${FFT_LIBRARIES})
+endif(USE_MKL)
 
 set_property(GLOBAL PROPERTY SOURCE_FILES)
 set_property(GLOBAL PROPERTY INCLUDE_ROOTS)
@@ -59,8 +66,7 @@ foreach(INCLUDE_ROOT ${INCLUDE_ROOTS})
   include_directories(BEFORE "${INCLUDE_ROOT}")
 endforeach()
 
-add_library(geo2seis_lib ${SOURCE_FILES})
-#add_library(geo2seis_static STATIC $<TARGET_OBJECTS:geo2seis_object>)
+add_library(geo2seis_lib STATIC ${SOURCE_FILES})
 
 foreach(FILE ${SOURCE_FILES}) 
   get_filename_component(PARENT_DIR "${FILE}" PATH)
