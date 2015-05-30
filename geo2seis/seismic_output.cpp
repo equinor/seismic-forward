@@ -314,7 +314,7 @@ void SeismicOutput::writeVrms(SeismicParameters &seismic_parameters) {
   NRLib::StormContGrid &vrmsgrid = seismic_parameters.vrmsGrid();
 
   printf("Write vrms grid on Storm format.\n");
-  std::string filename = prefix_ + "vrms_" + suffix_ + ".storm";
+  std::string filename = prefix_ + "vrms" + suffix_ + ".storm";
   vrmsgrid.WriteToFile(filename);  
 }
 

@@ -121,7 +121,8 @@ std::vector<double> SeismicParameters::twt_0(){
   
   double max_twt_value           = bot_time_.MaxNode(i_max, j_max);  
   bot_time_.GetXY(i_max, j_max, x, y);
-  (*twtgrid_).FindIndex(x, y, bot_time_.GetZ(x,y), i_max, j_max, k_max);
+  double bot_y_value_twt = bot_time_.GetZ(x,y) -  2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  (*twtgrid_).FindIndex(x, y, bot_y_value_twt, i_max, j_max, k_max);
   //double max_twt_value           = (*twtgrid_)( i_max, j_max, (*twtgrid_).GetNK()-1); //need half wavelet for NMO correction
   double vrms_max_t              = (*vrmsgrid_)(i_max, j_max, (*vrmsgrid_).GetNK()-1);  
   double offset_max              = offset_0_+doffset_*noffset_;

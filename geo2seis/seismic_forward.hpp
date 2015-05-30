@@ -34,19 +34,7 @@ class SeismicForward {
                                 bool time_output,
                                 bool depth_output,
                                 bool timeshift_output);
-    
-    static void generateSeismicPosOld(std::vector<std::vector<double> > &timegrid_pos,
-                                   std::vector<std::vector<double> > refl_pos,
-                                   std::vector<std::vector<double> > twtx_pos,
-                                   NRLib::StormContGrid              &zgrid,
-                                   NRLib::RegularSurface<double>     &toptime,
-                                   Wavelet                           *wavelet,
-                                   double                            waveletScale,
-                                   std::vector<double>               offset,
-                                   double                            t0,
-                                   double                            dt,
-                                   size_t                            i,
-                                   size_t                            j);
+
 
     static void generateSeismicPos(std::vector<std::vector<double> > &timegrid_pos,
                                    std::vector<std::vector<double> > refl_pos,
@@ -118,6 +106,15 @@ class SeismicForward {
                               std::vector<double>                offset);
 
 
+    static void   findLoopIndeces(SeismicParameters &seismic_parameters,
+                                  int               &n_xl,
+                                  int               &il_min,
+                                  int               &il_max,
+                                  int               &il_step,
+                                  int               &xl_min,
+                                  int               &xl_max,
+                                  int               &xl_step,
+                                  bool              &segy);
     
 };
 

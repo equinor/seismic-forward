@@ -174,9 +174,10 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       NRLib::SegY twtx_segy;
       bool        twtx_segy_ok                = false;  
 
-
-      seismic_parameters.seismicOutput()->setSegyGeometry(seismic_parameters, volume_t, nx, ny);
-      segy_ok = seismic_parameters.seismicOutput()->checkUTMPrecision(seismic_parameters, volume_t, nx, ny);
+      if (segy_output) {
+        seismic_parameters.seismicOutput()->setSegyGeometry(seismic_parameters, volume_t, nx, ny);
+        segy_ok = seismic_parameters.seismicOutput()->checkUTMPrecision(seismic_parameters, volume_t, nx, ny);
+      }
       if (segy_ok && model_settings->GetOutputTimeSegy()) {
         std::string filename        = "seismic_time";
         nmo_time_segy_ok            = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec.size(), true); 
@@ -217,29 +218,37 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
         << "\n  0%       20%       40%       60%       80%      100%"
         << "\n  |    |    |    |    |    |    |    |    |    |    |  "
         << "\n  ^";
-        
-      NRLib::SegyGeometry *geometry   = seismic_parameters.segyGeometry();
-      geometry->FindILXLGeometry();
+      
+      int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
+      bool ilxl_loop = false;
+      findLoopIndeces(seismic_parameters, n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step, ilxl_loop);
+      NRLib::SegyGeometry *geometry = seismic_parameters.segyGeometry();
       int il_steps = 0;
       int xl_steps = 0;
-      int n_xl = (geometry->GetMaxXL() - geometry->GetMinXL() + 1) / geometry->GetXLStep();
-
-      //std::cout << geometry->GetMinIL() << " " << geometry->GetMaxIL() << " " << geometry->GetMinXL() << " " << geometry->GetMaxXL() << "\n";
-      //std::cout << nx << " " << ny << "\n";
-
-      //for (int il = 1366; il < 1367; il += geometry->GetILStep()) {
-      //  for (int xl = 1832; xl < 1833; xl += geometry->GetXLStep()) {
-      for (int il = geometry->GetMinIL(); il < geometry->GetMaxIL(); il += geometry->GetILStep()) {
+      //std::cout << n_xl << " " << il_min << " " << il_max << " " << il_step << " " << xl_min << " " << xl_max << " " << xl_step << " " << nx << " " << ny <<  " \n";
+      //for (int il = 1366; il < 1367; il += il_step) {
+        //for (int xl = 1832; xl < 1833; xl += xl_step) {
+      for (int il = il_min; il < il_max; il += il_step) {
         ++il_steps;
-        for (int xl = geometry->GetMinXL(); xl < geometry->GetMaxXL(); xl += geometry->GetXLStep()) {
+        xl_steps = 0;
+        for (int xl = xl_min; xl < xl_max; xl +=xl_step) {
           ++xl_steps;
-          size_t i, j;
-          float x_f, y_f;
-          geometry->FindXYFromILXL(il, xl, x_f, y_f);
-          double x = static_cast<double>(x_f);
-          double y = static_cast<double>(y_f);
-          geometry->FindIndex(x, y, i, j);
-
+          //std::cout << il << " " << xl << " " << il_steps << " " << xl_steps << "\n ";
+          size_t i, j;          
+          double x, y;
+          if (ilxl_loop) {
+            float x_f, y_f;
+            geometry->FindXYFromILXL(il, xl, x_f, y_f);
+            x = static_cast<double>(x_f);
+            y = static_cast<double>(y_f);
+            geometry->FindIndex(x, y, i, j);
+          }
+          else {
+            i = il;
+            j = xl;
+            x = 0;
+            y = 0;
+          }
           //----------------------BEGIN GEN SEIS WITH NMO FOR I,J---------------------------------
 
           if (twtgrid(i, j, 0) != -999.0) {
@@ -409,10 +418,11 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
           //  seismic_parameters.seismicOutput()->printVector(z_0, "z_0.txt");  
           //}
 
-          
+          //int size_loop = n_xl * il_steps + xl_steps + 1;
           if (n_xl * il_steps + xl_steps + 1 >= static_cast<size_t>(nextMonitor)) {
             nextMonitor += monitorSize;
             std::cout << "^";
+            //std::cout << size_loop << " " << nextMonitor << " " << il << " " << xl << " " << il_steps << " " << xl_steps << " \n";
             fflush(stdout);
           }
         }
@@ -719,6 +729,40 @@ void SeismicForward::findTWTxPos(std::vector<std::vector<double> > &twtx_grid,
   }
 }
 
+void   SeismicForward::findLoopIndeces(SeismicParameters &seismic_parameters,
+                                       int               &n_xl,
+                                       int               &il_min,
+                                       int               &il_max,
+                                       int               &il_step,
+                                       int               &xl_min,
+                                       int               &xl_max,
+                                       int               &xl_step,
+                                       bool              &segy)
+{
+  NRLib::SegyGeometry *geometry   = seismic_parameters.segyGeometry();
+  if (geometry == NULL) {
+    il_min  = 0;
+    il_max  = seismic_parameters.seismicGeometry()->nx();
+    il_step = 1;
+    xl_min  = 0;
+    xl_max  = seismic_parameters.seismicGeometry()->ny();
+    xl_step = 1;
+    n_xl = xl_max;
+    segy = false;
+  }
+  else {
+    geometry->FindILXLGeometry();
+    il_min  = geometry->GetMinIL();
+    il_max  = geometry->GetMaxIL();
+    il_step = geometry->GetILStep();
+    xl_min  = geometry->GetMinXL();
+    xl_max  = geometry->GetMaxXL();
+    xl_step = geometry->GetXLStep();
+    n_xl = (xl_max - xl_min + 1) / xl_step;
+    segy = true;
+  }
+}
+
 void SeismicForward::generateSeismicPos(std::vector<std::vector<double> > &timegrid_pos,
                                         std::vector<std::vector<double> > refl_pos,
                                         std::vector<std::vector<double> > twtx_pos,
@@ -780,62 +824,6 @@ void SeismicForward::generateSeismicPos(std::vector<std::vector<double> > &timeg
   //std::cout << "in = " << count_in << ", out = " << count_out << "\n";
 }
 
-
-void SeismicForward::generateSeismicPosOld(std::vector<std::vector<double> > &timegrid_pos,
-                                        std::vector<std::vector<double> > refl_pos,
-                                        std::vector<std::vector<double> > twtx_pos,
-                                        NRLib::StormContGrid              &zgrid,
-                                        NRLib::RegularSurface<double>     &toptime,
-                                        Wavelet                           *wavelet,
-                                        double                            waveletScale,
-                                        std::vector<double>               offset,
-                                        double                            t0,
-                                        double                            dt,
-                                        size_t                            i,
-                                        size_t                            j)
-{
-
-  size_t nt = timegrid_pos.size(); //hold, sjekk
-  size_t nc = refl_pos.size();     // hold, sjekk
-  double seis;
-  double x, y, z;
-  double topt        = 0.0; //does this need to be set to zero?
-  double rickerLimit = wavelet->GetDepthAdjustmentFactor();
-
-  //std::cout << "nc = " << nc << " nt = " << nt << "\n";
-
-  zgrid.FindCenterOfCell(i, j, 0, x, y, z);
-  topt = toptime.GetZ(x, y);
-  if (toptime.IsMissing(topt) == false) {
-    for (size_t off = 0; off < offset.size(); off++) {
-     //std::cout << "offset= " << offset[off] << "\n";
-      double t = t0 + 0.5 * dt;
-
-      for (size_t k = 0; k < nt; k++) {
-        seis = 0.0;
-        for (size_t kk = 0; kk < nc; kk++) {
-          //std::cout << twtx_pos[kk][off] << " " << kk << " " << off << " " << t << "\n";
-          if (fabs(twtx_pos[kk][off] - t) < rickerLimit) {            
-            double ricker = waveletScale * wavelet->FindWaveletPoint(twtx_pos[kk][off] - t);
-            seis += refl_pos[kk][off] * ricker;    
-            //std::cout << "ricker = " << ricker << "\n";
-          }
-        }
-        //std::cout << "seis = " << seis <<  "\n";
-        timegrid_pos[k][off] = static_cast<float>(seis);
-        //std::cout << " k= " << k << " nt= " << nt << "\n";
-        t = t + dt;
-      }
-    } 
-  }
-  else {
-    for (size_t k = 0; k < nt; k++){
-      for (size_t off = 0; off < offset.size(); off++) {
-        timegrid_pos[k][off] = 0.0;
-      }
-    }
-  }
-}
 
 
 void SeismicForward::generateSeismic(std::vector<NRLib::StormContGrid> &rgridvec,
