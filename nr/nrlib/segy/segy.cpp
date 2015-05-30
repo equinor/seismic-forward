@@ -1297,6 +1297,7 @@ SegY::WriteAllTracesToFile(short scalcoinitial)
       header.SetUtmy(static_cast<double>(y));
       header.SetInline(traces_[i]->GetInline());
       header.SetCrossline(traces_[i]->GetCrossline());
+      header.SetDelayRecTime(delay_rec_time_);
       header.Write(file_);
       WriteBinaryIbmFloatArray(file_,trace.begin(),trace.end());
     }
