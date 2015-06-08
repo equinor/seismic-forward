@@ -228,10 +228,10 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       //std::cout << n_xl << " " << il_min << " " << il_max << " " << il_step << " " << xl_min << " " << xl_max << " " << xl_step << " " << nx << " " << ny <<  " \n";
       //for (int il = 1366; il < 1367; il += il_step) {
         //for (int xl = 1832; xl < 1833; xl += xl_step) {
-      for (int il = il_min; il < il_max; il += il_step) {
+      for (int il = il_min; il <= il_max; il += il_step) {
         ++il_steps;
         xl_steps = 0;
-        for (int xl = xl_min; xl < xl_max; xl +=xl_step) {
+        for (int xl = xl_min; xl <= xl_max; xl +=xl_step) {
           ++xl_steps;
           //std::cout << il << " " << xl << " " << il_steps << " " << xl_steps << "\n ";
           size_t i, j;          

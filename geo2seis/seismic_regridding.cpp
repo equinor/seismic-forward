@@ -68,7 +68,7 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   
   double tmin = toptime.Min();
   double tmax = bottime.Max();
-  size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.seismicGeometry()->dt()));
+  size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.seismicGeometry()->dt()+0.5));
   if (seismic_parameters.modelSettings()->GetNLayersFileName() != "") {
     NRLib::StormContGrid tmpgrid(seismic_parameters.modelSettings()->GetNLayersFileName());
     nt = tmpgrid.GetNK();
