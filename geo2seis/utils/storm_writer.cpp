@@ -182,8 +182,7 @@ void STORM::writeStorm(NRLib::StormContGrid &grid,
           }
           NRLib::Volume *vol = static_cast<NRLib::Volume *>(&grid);
           *vol = volume_new;
-
-          grid.ResizeK((k_bot - k_top + 1));
+          grid.ResizeK((k_bot - k_top));
           grid.WriteToFile(filename);
         }
       }

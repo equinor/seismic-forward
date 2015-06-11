@@ -745,7 +745,7 @@ void   SeismicForward::findLoopIndeces(SeismicParameters &seismic_parameters,
     il_max  = seismic_parameters.seismicGeometry()->nx();
     il_step = 1;
     xl_min  = 0;
-    xl_max  = seismic_parameters.seismicGeometry()->ny();
+    xl_max  = seismic_parameters.seismicGeometry()->ny()-1;
     xl_step = 1;
     n_xl = xl_max;
     segy = false;

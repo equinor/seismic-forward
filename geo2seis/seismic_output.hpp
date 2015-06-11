@@ -43,6 +43,10 @@ class SeismicOutput {
                          bool                              time,
                          double                            x,
                          double                            y);
+
+    void ResampleDataGather(std::vector<double>  twt_0, 
+                            std::vector<std::vector<double> > & data_gather, 
+                            std::vector<double> twt_0_resampl);
     
     void writeDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse);
 

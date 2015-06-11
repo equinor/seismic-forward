@@ -4,6 +4,7 @@
 #include "utils/segy_writer.hpp"
 #include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
+#include "nrlib/geometry/interpolation.hpp"
 
 SeismicOutput::SeismicOutput(ModelSettings *model_settings) {
   top_time_window_  = model_settings->GetTopTimeWindow();
@@ -203,6 +204,12 @@ void SeismicOutput::writeSegyGather(std::vector<std::vector<double> > data_gathe
   int k;
   int firstData = static_cast<int>(floor((twt_0[0])              / dz));
   int endData   = static_cast<int>(floor((twt_0[twt_0.size()-1]) / dz));
+  std::vector<double> twt_0_resampl(endData-firstData + 1);
+  for (size_t i = firstData; i < endData+1; ++i) {
+    twt_0_resampl[i-firstData] = i*dz;
+  }
+  ResampleDataGather(twt_0, data_gather, twt_0_resampl);
+
   int windowTop, windowBot;
   if ((time == true && time_window_) || (time == false && depth_window_)) {
     if (time == true ) {
@@ -262,7 +269,22 @@ void SeismicOutput::writeSegyGather(std::vector<std::vector<double> > data_gathe
     //get correct parameters. offset. place in trace-header. 37!
   }
 }
+void SeismicOutput::ResampleDataGather(std::vector<double>  twt_0, 
+                                       std::vector<std::vector<double> > & data_gather, 
+                                       std::vector<double> twt_0_resampl) 
+{
+  std::vector<double> data_vec(twt_0.size());
 
+  for (size_t off = 0; off < data_gather[0].size(); ++off) {
+    for (size_t k = 0; k < data_gather.size(); ++k) {
+      data_vec[k] = data_gather[k][off];
+    }
+    data_vec = NRLib::Interpolation::Interpolate1D(twt_0, data_vec, twt_0_resampl, "linear");
+    for (size_t k = 0; k < data_gather.size(); ++k) {
+      data_gather[k][off] = data_vec[k];
+    }
+  }
+}
 
 void SeismicOutput::writeDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse) {
   printf("Write depth surfaces on Storm format\n");
