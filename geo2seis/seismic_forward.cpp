@@ -619,13 +619,13 @@ bool SeismicForward::generateTraceOk(SeismicParameters &seismic_parameters,
 
   for (size_t k = 1; k < nk - 1 ; k++) {
     if (generate_ok == false) {
-      if (vpgrid(i, j, k) < const_vp || vpgrid(i, j, k) > const_vp){
+      if (vpgrid(i, j, k) != const_vp){
         generate_ok = true;
       }
-      if (vsgrid(i, j, k) < const_vs || vsgrid(i, j, k) > const_vs){
+      if (vsgrid(i, j, k) != const_vs){
         generate_ok = true;
       }
-      if (rhogrid(i, j, k) < const_rho || rhogrid(i, j, k) > const_rho){
+      if (rhogrid(i, j, k) != const_rho){
         generate_ok = true;
       }
     }
