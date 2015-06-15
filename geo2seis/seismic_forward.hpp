@@ -115,6 +115,9 @@ class SeismicForward {
                                   int               &xl_max,
                                   int               &xl_step,
                                   bool              &segy);
+    static bool   generateTraceOk(SeismicParameters &seismic_parameters,
+                                  size_t i,
+                                  size_t j);
     
 };
 

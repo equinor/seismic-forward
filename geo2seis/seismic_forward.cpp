@@ -251,7 +251,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
           }
           //----------------------BEGIN GEN SEIS WITH NMO FOR I,J---------------------------------
 
-          if (twtgrid(i, j, 0) != -999.0) {
+          if (generateTraceOk(seismic_parameters, i, j)) {
             
             for (size_t k = 0; k < nzrefl; ++k) {
               twt_vec[k]   = twtgrid(i,j,k);
@@ -600,6 +600,40 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
     seismic_parameters.deleteWavelet();
     seismic_parameters.deleteGeometryAndOutput();
   }
+}
+
+bool SeismicForward::generateTraceOk(SeismicParameters &seismic_parameters,
+                                   size_t i,
+                                   size_t j)
+{
+  bool generate_ok = false;
+  double const_vp  = seismic_parameters.modelSettings()->GetConstVp()[1];
+  double const_vs  = seismic_parameters.modelSettings()->GetConstVs()[1];
+  double const_rho = seismic_parameters.modelSettings()->GetConstRho()[1];
+
+  NRLib::StormContGrid &vpgrid    = seismic_parameters.vpGrid();
+  NRLib::StormContGrid &vsgrid    = seismic_parameters.vsGrid();
+  NRLib::StormContGrid &rhogrid   = seismic_parameters.rhoGrid();
+
+  size_t nk = vpgrid.GetNK();
+
+  for (size_t k = 1; k < nk - 1 ; k++) {
+    if (generate_ok == false) {
+      if (vpgrid(i, j, k) < const_vp || vpgrid(i, j, k) > const_vp){
+        generate_ok = true;
+      }
+      if (vsgrid(i, j, k) < const_vs || vsgrid(i, j, k) > const_vs){
+        generate_ok = true;
+      }
+      if (rhogrid(i, j, k) < const_rho || rhogrid(i, j, k) > const_rho){
+        generate_ok = true;
+      }
+    }
+    else{
+      break;
+    }
+  }
+  return generate_ok;
 }
 
 void SeismicForward::convertSeis(std::vector<double>               twt,
