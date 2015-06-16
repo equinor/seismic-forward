@@ -347,16 +347,15 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
             seismic_parameters.seismicOutput()->writeSegyGather(nmo_timegrid_stack_pos, nmo_time_stack_segy, twt_0, zero_vec, true, x,y);
           }
           if (nmo_depth_segy_ok || nmo_depth_stack_segy_ok || depth_storm_output) {
-            std::vector<double> zgrid_vec(nzrefl);
-            for (size_t k = 0; k < nzrefl; ++k) {
-              zgrid_vec[k]   = zgrid(i,j,k);
-            }
+            std::vector<double> zgrid_vec_extrapol(nzrefl+2);
+            std::vector<double> twt_vec_extrapol(nzrefl+2);
+            prepareZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, bottom_eclipse.GetZ(x,y), constvp[2], i, j);
             if (nmo_depth_segy_ok) {
-              convertSeis(twt_vec, twt_0, zgrid_vec, z_0, nmo_timegrid_pos, nmo_depthgrid_pos);
+              convertSeis(twt_vec_extrapol, twt_0, zgrid_vec_extrapol, z_0, nmo_timegrid_pos, nmo_depthgrid_pos);
               seismic_parameters.seismicOutput()->writeSegyGather(nmo_depthgrid_pos, nmo_depth_segy, z_0, offset_vec, false, x,y);
             }
             if (nmo_depth_stack_segy_ok || depth_storm_output){
-              convertSeis(twt_vec, twt_0, zgrid_vec, z_0, nmo_timegrid_stack_pos, nmo_depthgrid_stack_pos);
+              convertSeis(twt_vec_extrapol, twt_0, zgrid_vec_extrapol, z_0, nmo_timegrid_stack_pos, nmo_depthgrid_stack_pos);
             }
             if (nmo_depth_stack_segy_ok) {
               seismic_parameters.seismicOutput()->writeSegyGather(nmo_depthgrid_stack_pos, nmo_depth_stack_segy, z_0, zero_vec, false, x,y);
@@ -364,9 +363,15 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
           }
           if (nmo_timeshift_segy_ok || nmo_timeshift_stack_segy_ok || timeshift_storm_output) {
             std::vector<double> timeshiftgrid_vec(nzrefl);
-            for (size_t k = 0; k < nzrefl; ++k) {
-              timeshiftgrid_vec[k]   = (*twt_timeshift)(i,j,k);
+            timeshiftgrid_vec[0]   = (*twt_timeshift)(i,j,0);
+            size_t index = 1;
+            for (size_t k = 1; k < nzrefl; ++k) {
+              if (twt_vec[k] != twt_vec[k-1]) {
+                timeshiftgrid_vec[index]   = (*twt_timeshift)(i,j,k);
+                ++index;
+              }
             }
+            timeshiftgrid_vec.resize(index);
             if (nmo_timeshift_segy_ok) {
               convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twt_0, nmo_timegrid_pos, nmo_timeshiftgrid_pos);
               seismic_parameters.seismicOutput()->writeSegyGather(nmo_timeshiftgrid_pos, nmo_timeshift_segy, twt_0, offset_vec, true, x,y);
@@ -634,6 +639,34 @@ bool SeismicForward::generateTraceOk(SeismicParameters &seismic_parameters,
     }
   }
   return generate_ok;
+}
+
+void SeismicForward::prepareZandTwtVec(std::vector<double>  &zgrid_vec_extrapol, 
+                                       std::vector<double>   &twt_vec_extrapol, 
+                                       std::vector<double>   twt_vec, 
+                                       NRLib::StormContGrid &zgrid,
+                                       double                z_bot,
+                                       double                constvp,
+                                       size_t                i,
+                                       size_t                j)
+{
+  size_t nzrefl = zgrid_vec_extrapol.size() - 2;
+  zgrid_vec_extrapol[0] = 0;
+  twt_vec_extrapol[0]   = 0;
+  zgrid_vec_extrapol[1] = zgrid(i,j,0);
+  twt_vec_extrapol[1]   = twt_vec[0];
+  size_t index = 2;
+  for (size_t k = 1; k < nzrefl; ++k) {
+    if (twt_vec[k] != twt_vec[k-1]) {
+      twt_vec_extrapol[index] = twt_vec[k];
+      zgrid_vec_extrapol[index] = zgrid(i, j, k);
+      ++index;
+    }    
+  }
+  zgrid_vec_extrapol[index] = z_bot;
+  twt_vec_extrapol[index]   = twt_vec_extrapol[index-1] + 2000* (zgrid_vec_extrapol[index] - zgrid_vec_extrapol[index-1]) / constvp;
+  zgrid_vec_extrapol.resize(index+1);
+  twt_vec_extrapol.resize(index+1);
 }
 
 void SeismicForward::convertSeis(std::vector<double>               twt,
