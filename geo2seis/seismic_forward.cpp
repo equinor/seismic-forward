@@ -363,21 +363,25 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
           }
           if (nmo_timeshift_segy_ok || nmo_timeshift_stack_segy_ok || timeshift_storm_output) {
             std::vector<double> timeshiftgrid_vec(nzrefl);
+            std::vector<double> twt_vec_shift(nzrefl);
             timeshiftgrid_vec[0]   = (*twt_timeshift)(i,j,0);
+            twt_vec_shift[0]     = twt_vec[0];
             size_t index = 1;
             for (size_t k = 1; k < nzrefl; ++k) {
               if (twt_vec[k] != twt_vec[k-1]) {
                 timeshiftgrid_vec[index]   = (*twt_timeshift)(i,j,k);
+                twt_vec_shift[index]     = twt_vec[k];
                 ++index;
               }
             }
             timeshiftgrid_vec.resize(index);
+            twt_vec_shift.resize(index);
             if (nmo_timeshift_segy_ok) {
-              convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twt_0, nmo_timegrid_pos, nmo_timeshiftgrid_pos);
+              convertSeis(twt_vec_shift, twt_0, timeshiftgrid_vec, twt_0, nmo_timegrid_pos, nmo_timeshiftgrid_pos);
               seismic_parameters.seismicOutput()->writeSegyGather(nmo_timeshiftgrid_pos, nmo_timeshift_segy, twt_0, offset_vec, true, x,y);
             }
             if (nmo_timeshift_stack_segy_ok || timeshift_storm_output){
-              convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twt_0, nmo_timegrid_stack_pos, nmo_timeshiftgrid_stack_pos);
+              convertSeis(twt_vec_shift, twt_0, timeshiftgrid_vec, twt_0, nmo_timegrid_stack_pos, nmo_timeshiftgrid_stack_pos);
             }
             if (nmo_timeshift_stack_segy_ok){
               seismic_parameters.seismicOutput()->writeSegyGather(nmo_timeshiftgrid_stack_pos, nmo_timeshift_stack_segy, twt_0, zero_vec, true, x,y);
