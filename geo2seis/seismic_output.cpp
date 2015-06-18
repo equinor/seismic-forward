@@ -269,6 +269,25 @@ void SeismicOutput::writeSegyGather(std::vector<std::vector<double> > data_gathe
     //get correct parameters. offset. place in trace-header. 37!
   }
 }
+
+void SeismicOutput::writeZeroSegyGather(NRLib::SegY                      &segyout,
+                                        std::vector<double>               offset_vec,
+                                        double                            x,
+                                        double                            y)
+{
+  float z0  = segyout.GetZ0();
+  float dz  = segyout.GetDz();
+  size_t nz = segyout.GetNz();
+
+  std::vector<float> datavec(nz);
+  for (size_t k = 0; k < nz; ++k) {
+    datavec[k] = 0.0;
+  }
+  for (size_t off = 0; off < offset_vec.size(); ++off) {
+    segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(offset_vec[off]));
+  }
+}
+
 void SeismicOutput::ResampleDataGather(std::vector<double>  twt_0, 
                                        std::vector<std::vector<double> > & data_gather, 
                                        std::vector<double> twt_0_resampl) 
