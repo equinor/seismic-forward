@@ -119,22 +119,24 @@ class SeismicForward {
                                   size_t i,
                                   size_t j);
     
-    static void   prepareZandTwtVec(std::vector<double>  &zgrid_vec_extrapol, 
-                                    std::vector<double>  &twt_vec_extrapol, 
-                                    std::vector<double>   twt_vec, 
-                                    NRLib::StormContGrid &zgrid,
-                                    double                z_bot,
-                                    double                constvp,
-                                    size_t                i,
-                                    size_t                j);
+    static void   extrapolZandTwtVec(std::vector<double>  &zgrid_vec_extrapol, 
+                                     std::vector<double>  &twt_vec_extrapol, 
+                                     std::vector<double>   twt_vec, 
+                                     NRLib::StormContGrid &zgrid,
+                                     double                z_bot,
+                                     double                constvp,
+                                     size_t                i,
+                                     size_t                j);
 
-    static void   prepareTimeshiftAndTwtVec(std::vector<double>  &timeshiftgrid_vec, 
-                                            std::vector<double>  &twt_vec_shift, 
-                                            std::vector<double>   twt_vec, 
-                                            NRLib::StormContGrid &twt_timeshift,
-                                            size_t                i,
-                                            size_t                j);
+    static std::vector<double>   LinInterp1D(std::vector<double>  x_in, 
+                                             std::vector<double>  y_in,
+                                             std::vector<double>  x_out);
 
+
+    static std::vector<double>   SplineInterp1D(std::vector<double>  x_in, 
+                                                std::vector<double>  y_in,
+                                                std::vector<double>  x_out,
+                                                double               extrap_value);
 };
 
 #endif

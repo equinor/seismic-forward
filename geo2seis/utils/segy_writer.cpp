@@ -128,8 +128,8 @@ void SEGY::writeSegy(NRLib::StormContGrid      &data,
     for (size_t i = 0; i < nx; i++) {
       xt = double((i + 0.5) * dx);
       yt = double((j + 0.5) * dy);
-      x = double(geometry->GetX0() + xt * geometry->GetCosRot() - yt * geometry->GetSinRot());
-      y = double(geometry->GetY0() + yt * geometry->GetCosRot() + xt * geometry->GetSinRot());
+      x = static_cast<float>(geometry->GetX0() + xt * geometry->GetCosRot() - yt * geometry->GetSinRot());
+      y = static_cast<float>(geometry->GetY0() + yt * geometry->GetCosRot() + xt * geometry->GetSinRot());
 
       double zbot = data.GetBotSurface().GetZ(x, y);
       double ztop = data.GetTopSurface().GetZ(x, y);

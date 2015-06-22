@@ -131,7 +131,7 @@ bool SeismicOutput::prepareSegy(NRLib::SegY         &segyout,
                                 std::vector<double>  twt_0,
                                 std::string          fileName,
                                 SeismicParameters   &seismic_parameters,
-                                size_t               n_traces,
+                                std::vector<double>  offset_vec,
                                 bool                 time)
 {
   double z_min = twt_0[0];
@@ -154,6 +154,7 @@ bool SeismicOutput::prepareSegy(NRLib::SegY         &segyout,
       }
       if (bot_time_window_ != -9999) {
         nz = static_cast<int>(ceil(bot_time_window_ - z0) / dz);
+        z_max = bot_time_window_;
       } 
     }
     else {
@@ -170,6 +171,7 @@ bool SeismicOutput::prepareSegy(NRLib::SegY         &segyout,
       }
       if (bot_depth_window_ != -9999) {
         nz = static_cast<int>(ceil(bot_depth_window_ - z0) / dz);
+        z_max = bot_depth_window_;
       }
     }
   }
@@ -178,11 +180,29 @@ bool SeismicOutput::prepareSegy(NRLib::SegY         &segyout,
     return false;
   }
 
+  NRLib::SegyGeometry *geometry     = seismic_parameters.segyGeometry();
+  geometry->FindILXLGeometry();
   std::string filename_out = prefix_ + fileName + suffix_ + ".segy";
   NRLib::TraceHeaderFormat thf(2);
-  NRLib::TextualHeader header = NRLib::TextualHeader::standardHeader(); //nb - må endres!!
-  segyout.Initialize(filename_out, float(z0), static_cast<size_t>(nz), float(dz), header, thf, short(n_traces));
-  NRLib::SegyGeometry *geometry     = seismic_parameters.segyGeometry();
+  //Textual header:
+  NRLib::TextualHeader header = NRLib::TextualHeader();
+  header.SetLine(0, "SEGY OUTPUT FROM Seismic Forward Modeling / Geo2Seis, ver 4.0  2015");
+  std::string line = "Name: " + filename_out;
+  header.SetLine(1, line);
+  line = "  First inline: " + NRLib::ToString(geometry->GetMinIL()) + "      Last inline: " + NRLib::ToString(geometry->GetMaxIL());
+  header.SetLine(2, "CDP:");
+  header.SetLine(3, line);
+  line = "  First xline:  " + NRLib::ToString(geometry->GetMinXL()) + "      Last xline: " + NRLib::ToString(geometry->GetMaxXL());
+  header.SetLine(4, line);
+  line = "Offset (m)    min: " + NRLib::ToString(offset_vec[0]) + "    max: " + NRLib::ToString(offset_vec[offset_vec.size() - 1]);
+  header.SetLine(5, line);
+  if (time)
+    line = "Time (ms)     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);
+  else
+    line = "Depth (m)     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);
+  header.SetLine(6, line);
+  
+  segyout.Initialize(filename_out, float(z0), static_cast<size_t>(nz), float(dz), header, thf, short(offset_vec.size()));  
   segyout.SetGeometry(geometry);
   segyout.SetDelayRecTime(short(z0));
   return true;

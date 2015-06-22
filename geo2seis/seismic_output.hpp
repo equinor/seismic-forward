@@ -33,7 +33,7 @@ class SeismicOutput {
                      std::vector<double>  twt_0,
                      std::string          fileName,
                      SeismicParameters   &seismic_parameters,
-                     size_t               n_traces,
+                     std::vector<double>  offset_vec,
                      bool                 time);
 
     void writeSegyGather(std::vector<std::vector<double> > data_gather,
