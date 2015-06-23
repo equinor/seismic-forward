@@ -472,7 +472,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
 
 
       seismic_parameters.deleteZandRandTWTGrids();
-      seismic_parameters.deleteParameterGrids();
+      seismic_parameters.deleteElasticParameterGrids();
       seismic_parameters.deleteWavelet();
       seismic_parameters.deleteGeometryAndOutput();
       if (twt_timeshift != NULL) {

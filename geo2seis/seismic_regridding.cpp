@@ -117,7 +117,7 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
 
 
   //printf("remove grids\n");
-  //seismic_parameters.deleteParameterGrids();
+  seismic_parameters.deleteExtraParameterGrids();
 
 }
 

@@ -18,7 +18,6 @@ void SEGY::writeSegy(NRLib::StormContGrid      &data,
 
   size_t i, j;
   int k;
-  NRLib::TextualHeader header = NRLib::TextualHeader::standardHeader();
   size_t nx = data.GetNI();
   size_t ny = data.GetNJ();
   double xlstepx, xlstepy, ilstepx, ilstepy;
@@ -42,7 +41,7 @@ void SEGY::writeSegy(NRLib::StormContGrid      &data,
   xlstepx *= xline_step;
   xlstepy *= xline_step;
 
-  const NRLib::SegyGeometry *geometry;
+  NRLib::SegyGeometry *geometry;
   if (geometry_in == NULL)
     geometry = new NRLib::SegyGeometry(data.GetXMin(), data.GetYMin(), dx, dy,
     nx, ny, inline_start - 0.5, xline_start - 0.5, ilstepx, ilstepy, xlstepx, xlstepy, rot);
@@ -108,11 +107,24 @@ void SEGY::writeSegy(NRLib::StormContGrid      &data,
     }
     if (bot_window != -9999) {
       nz = static_cast<int>(ceil(bot_window - z0) / dz);
+      z_max = bot_window;
     }
   } else if (nz < 0) {
     printf("Maximum depth is negative. No Segy file written.\n");
     return;
   }
+  NRLib::TextualHeader header = NRLib::TextualHeader();
+  geometry->FindILXLGeometry();
+  header.SetLine(0, "SEGY OUTPUT FROM Seismic Forward Modeling / Geo2Seis, ver 4.0  2015");
+  std::string line = "Name: " + fileName;
+  header.SetLine(1, line);
+  line = "  First inline: " + NRLib::ToString(geometry->GetMinIL()) + "      Last inline: " + NRLib::ToString(geometry->GetMaxIL());
+  header.SetLine(2, "CDP:");
+  header.SetLine(3, line);
+  line = "  First xline:  " + NRLib::ToString(geometry->GetMinXL()) + "      Last xline: " + NRLib::ToString(geometry->GetMaxXL());
+  header.SetLine(4, line);
+  line = "Window     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);
+  header.SetLine(6, line);
 
   NRLib::TraceHeaderFormat thf(2);
   NRLib::SegY segyout(fileName, z0, nz, dz, header, thf);

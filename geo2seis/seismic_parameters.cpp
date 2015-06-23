@@ -184,10 +184,13 @@ void SeismicParameters::deleteEclipseGrid() {
   delete eclipse_grid_;
 }
 
-void SeismicParameters::deleteParameterGrids() {
+void SeismicParameters::deleteElasticParameterGrids() {
   delete vpgrid_;
   delete vsgrid_;
-  delete rhogrid_;
+  delete rhogrid_;  
+}
+
+void SeismicParameters::deleteExtraParameterGrids() {
   delete extra_parameter_grid_;
 }
 

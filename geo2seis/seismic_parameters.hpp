@@ -43,7 +43,8 @@ class SeismicParameters {
 
 
     void deleteEclipseGrid();
-    void deleteParameterGrids();
+    void deleteElasticParameterGrids();
+    void deleteExtraParameterGrids();
     void deleteZandRandTWTGrids();
     void deleteWavelet();
     void deleteGeometryAndOutput();
