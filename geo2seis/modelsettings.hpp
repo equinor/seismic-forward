@@ -795,7 +795,7 @@ class ModelSettings {
     double dx_, dy_, dz_, dt_; // cell size
     double wavelet_scale_;
     bool output_vp_, output_reflections_, output_zvalues_, output_seismic_time_, output_seismic_depth_, output_seismic_timeshift_;
-   
+
     bool output_time_surfaces_, output_depth_surfaces_, output_twt_, output_vrms_, output_twt_offset_;
     std::string nlayers_file_name_;
     std::string prefix_, suffix_;

@@ -71,7 +71,7 @@ ModelSettings::ModelSettings(void) {
     xline_start_ = 0;
     inline_direction_ = "y";
     inline_step_ = 1;
-    xline_step_ = 1;    
+    xline_step_ = 1;
     seismic_stack_time_storm_ = false;
     seismic_stack_time_shift_storm_ = false;
     seismic_stack_depth_storm_ = false;

@@ -709,7 +709,7 @@ bool XmlModelFile::ParseCellSize(TiXmlNode *node, std::string &errTxt, bool &are
     legalCommands.push_back("dt");
 
     double value;
-    if (ParseValue(root, "dx", value, errTxt) == true) {        
+    if (ParseValue(root, "dx", value, errTxt) == true) {
         if (area_from_segy == true) {
           printf("WARNING:: Both <dx> and <area-from-segy> is specified, and dx will be taken from segy file. \n\n");
         }
@@ -874,7 +874,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     if (ParseBool(root, "seismic-depth", value, errTxt) == true) {
         modelSettings_->SetOutputSeismicDepth(value);
     }
-    
+
     if (ParseBool(root, "time-surfaces", value, errTxt) == true) {
         modelSettings_->SetOutputTimeSurfaces(value);
     }
@@ -972,7 +972,7 @@ bool XmlModelFile::ParseSegyIndexes(TiXmlNode *node, std::string &errTxt, bool a
               errTxt += "\"" + inline_direction + "\" is not a legal operation under keyword <inline-direction>, under command <" + root->ValueStr() + ">  on line " + NRLib::ToString(root->Row()) + ", column "
                       + NRLib::ToString(root->Column()) + ".\n";
         }
-      } 
+      }
       else
         if (area_from_segy == false)
           errTxt += "One or more keyword under command <" + root->ValueStr() + ">  on line " + NRLib::ToString(root->Row()) + ", column "
@@ -985,7 +985,7 @@ bool XmlModelFile::ParseSegyIndexes(TiXmlNode *node, std::string &errTxt, bool a
       if (ParseValue(root, "xline-step", xline_step, errTxt) && area_from_segy == false) {
           modelSettings_->SetSegyXlineStep(xline_step);
       }
-    
+
     if (area_from_segy)  {
       printf("WARNING:: Both <area-from-segy> and <segy-indexes> are given. Indexes are taken from segy file, and values given in <segy-indexes> are not used.\n\n");
     }

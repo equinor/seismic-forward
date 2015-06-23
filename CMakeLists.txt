@@ -68,7 +68,7 @@ endforeach()
 
 add_library(geo2seis_lib STATIC ${SOURCE_FILES})
 
-foreach(FILE ${SOURCE_FILES}) 
+foreach(FILE ${SOURCE_FILES})
   get_filename_component(PARENT_DIR "${FILE}" PATH)
 
   # skip src or include and changes /'s to \\'s

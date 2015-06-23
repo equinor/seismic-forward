@@ -109,7 +109,7 @@ double Wavelet::FindAbsMaxOfVector(std::vector<double> vector) {
   return max_value;
 }
 
-double Wavelet::FindDepthAdjustmentFactor(std::vector<double> wavelet, double time_sampling_in_ms) 
+double Wavelet::FindDepthAdjustmentFactor(std::vector<double> wavelet, double time_sampling_in_ms)
 {
   double return_value;
   size_t start = 0;
@@ -132,7 +132,7 @@ double Wavelet::FindDepthAdjustmentFactor(std::vector<double> wavelet, double ti
 }
 
 
-double Wavelet::FindWaveletPoint(double t) 
+double Wavelet::FindWaveletPoint(double t)
 {
   double return_value;
   if (is_ricker_) {
@@ -167,7 +167,7 @@ double Wavelet::FindWaveletPoint(double t)
 }
 
 
-void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &wavelet_out, size_t scale_factor) 
+void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &wavelet_out, size_t scale_factor)
 {
   //
   // Transform to Fourier domain

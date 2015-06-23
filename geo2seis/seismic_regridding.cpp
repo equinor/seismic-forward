@@ -65,7 +65,7 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
 
   toptime.Add(-2000 / constvp[0] * wavelet->GetDepthAdjustmentFactor()); // add one wavelet length to bot and subtract from top
   bottime.Add(2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor());
-  
+
   double tmin = toptime.Min();
   double tmax = bottime.Max();
   size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.seismicGeometry()->dt()+0.5));
@@ -182,9 +182,9 @@ void SeismicRegridding::findVrms(SeismicParameters &seismic_parameters){
           vrmsgrid(i,j,k) = -999.0;
         }
       }
-      else {        
+      else {
         v_over = 2000*(zgrid(i,j,0) - z_w)/(twtgrid(i,j,0) - 2000*z_w/v_w);
-        tmp0 = v_w*v_w*twt_w + v_over*v_over*(twtgrid(i,j,0) - twt_w);          
+        tmp0 = v_w*v_w*twt_w + v_over*v_over*(twtgrid(i,j,0) - twt_w);
         for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
           tmp = tmp0;
           for (size_t l = 1; l <= k; ++l) {
@@ -195,7 +195,7 @@ void SeismicRegridding::findVrms(SeismicParameters &seismic_parameters){
         }
       }
     }
-  }  
+  }
 }
 
 
