@@ -49,20 +49,20 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
   NRLib::RegularSurface<double> &bottom_eclipse = seismic_parameters.bottomEclipse();
 
 
-  bool time_output      = (model_settings->GetOutputSeismicTime()                || model_settings->GetOutputTimeSegy()  
+  bool time_output      = (model_settings->GetOutputSeismicTime()                || model_settings->GetOutputTimeSegy()
                         || model_settings->GetOutputSeismicStackTimeStorm()      || model_settings->GetOutputSeismicStackTimeSegy()
                                                                                  || model_settings->GetOutputPrenmoTimeSegy());
-  bool depth_output     = (model_settings->GetOutputSeismicDepth()               || model_settings->GetOutputDepthSegy() 
-                        || model_settings->GetOutputSeismicStackDepthStorm()     || model_settings->GetOutputSeismicStackDepthSegy()); 
+  bool depth_output     = (model_settings->GetOutputSeismicDepth()               || model_settings->GetOutputDepthSegy()
+                        || model_settings->GetOutputSeismicStackDepthStorm()     || model_settings->GetOutputSeismicStackDepthSegy());
   bool timeshift_output = (model_settings->GetOutputSeismicTimeshift()           || model_settings->GetOutputTimeshiftSegy()
                         || model_settings->GetOutputSeismicStackTimeShiftStorm() || model_settings->GetOutputSeismicStackTimeShiftSegy());
   bool stack_output     = (model_settings->GetOutputSeismicStackTimeStorm()      || model_settings->GetOutputSeismicStackTimeSegy()
                         || model_settings->GetOutputSeismicStackTimeShiftStorm() || model_settings->GetOutputSeismicStackTimeShiftSegy()
-                        || model_settings->GetOutputSeismicStackDepthStorm()     || model_settings->GetOutputSeismicStackDepthSegy());  
+                        || model_settings->GetOutputSeismicStackDepthStorm()     || model_settings->GetOutputSeismicStackDepthSegy());
 
-  bool segy_output      = (model_settings->GetOutputTimeSegy()  
+  bool segy_output      = (model_settings->GetOutputTimeSegy()
                         || model_settings->GetOutputSeismicStackTimeSegy()
-                        || model_settings->GetOutputDepthSegy() 
+                        || model_settings->GetOutputDepthSegy()
                         || model_settings->GetOutputSeismicStackDepthSegy()
                         || model_settings->GetOutputTimeshiftSegy()
                         || model_settings->GetOutputSeismicStackTimeShiftSegy()
@@ -95,7 +95,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       double        deviation        = seismic_parameters.modelSettings()->GetStandardDeviation();
 
       NRLib::StormContGrid &vrmsgrid = seismic_parameters.vrmsGrid();
-      
+
       //find max twt for seismic grid - should handle the largest offset.
       std::vector<double> twt_0      = seismic_parameters.twt_0();
       std::vector<double> z_0        = seismic_parameters.z_0();
@@ -122,7 +122,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       std::vector<double>               vrms_vec_reg(twt_0.size());
       zero_vec[0] = 0;
       for (size_t k = 0; k < twt_0.size(); ++k) {
-        twtx_pos_reg[k]                = n_offset; 
+        twtx_pos_reg[k]                = n_offset;
         timegrid_pos[k]                = n_offset;
         nmo_timegrid_pos[k]            = n_offset;
         nmo_timegrid_stack_pos[k]      = zero_vec;
@@ -170,9 +170,9 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       NRLib::SegY nmo_timeshift_segy;
       bool        nmo_timeshift_segy_ok       = false;
       NRLib::SegY nmo_timeshift_stack_segy;
-      bool        nmo_timeshift_stack_segy_ok = false;        
+      bool        nmo_timeshift_stack_segy_ok = false;
       NRLib::SegY twtx_segy;
-      bool        twtx_segy_ok                = false;  
+      bool        twtx_segy_ok                = false;
 
       if (segy_output) {
         seismic_parameters.seismicOutput()->setSegyGeometry(seismic_parameters, volume_t, nx, ny);
@@ -180,35 +180,35 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       }
       if (segy_ok && model_settings->GetOutputTimeSegy()) {
         std::string filename        = "seismic_time";
-        nmo_time_segy_ok            = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec, true); 
+        nmo_time_segy_ok            = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec, true);
       }
       if (segy_ok && model_settings->GetOutputPrenmoTimeSegy()) {
         std::string filename        = "prenmo_seismic_time";
-        prenmo_time_segy_ok         = seismic_parameters.seismicOutput()->prepareSegy(prenmo_time_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec, true); 
+        prenmo_time_segy_ok         = seismic_parameters.seismicOutput()->prepareSegy(prenmo_time_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec, true);
       }
       if (segy_ok && model_settings->GetOutputSeismicStackTimeSegy()) {
         std::string filename        = "seismic_time_stack";
-        nmo_time_stack_segy_ok      = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_stack_segy, volume_t, twt_0, filename, seismic_parameters, zero_vec, true); 
+        nmo_time_stack_segy_ok      = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_stack_segy, volume_t, twt_0, filename, seismic_parameters, zero_vec, true);
       }
       if (segy_ok && model_settings->GetOutputDepthSegy()) {
         std::string filename        = "seismic_depth";
-        nmo_depth_segy_ok           = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_segy, volume, z_0, filename, seismic_parameters, offset_vec, false); 
+        nmo_depth_segy_ok           = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_segy, volume, z_0, filename, seismic_parameters, offset_vec, false);
       }
       if (segy_ok && model_settings->GetOutputSeismicStackDepthSegy()) {
         std::string filename        = "seismic_depth_stack";
-        nmo_depth_stack_segy_ok     = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_stack_segy, volume, z_0, filename, seismic_parameters, zero_vec, false); 
+        nmo_depth_stack_segy_ok     = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_stack_segy, volume, z_0, filename, seismic_parameters, zero_vec, false);
       }
       if (segy_ok && model_settings->GetOutputTimeshiftSegy()) {
         std::string filename        = "seismic_timeshift";
-        nmo_timeshift_segy_ok       = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec, true); 
+        nmo_timeshift_segy_ok       = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec, true);
       }
       if (segy_ok && model_settings->GetOutputSeismicStackTimeShiftSegy()) {
         std::string filename        = "seismic_timeshift_stack";
-        nmo_timeshift_stack_segy_ok = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_stack_segy, volume_t, twt_0, filename, seismic_parameters, zero_vec, true); 
+        nmo_timeshift_stack_segy_ok = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_stack_segy, volume_t, twt_0, filename, seismic_parameters, zero_vec, true);
       }
       if (segy_ok && model_settings->GetOutputTwtOffset()) {
         std::string filename        = "twt_offset";
-        twtx_segy_ok                = seismic_parameters.seismicOutput()->prepareSegy(twtx_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec, true); 
+        twtx_segy_ok                = seismic_parameters.seismicOutput()->prepareSegy(twtx_segy, volume_t, twt_0, filename, seismic_parameters, offset_vec, true);
       }
 
       printf("\nComputing synthetic seismic:");
@@ -218,7 +218,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
         << "\n  0%       20%       40%       60%       80%      100%"
         << "\n  |    |    |    |    |    |    |    |    |    |    |  "
         << "\n  ^";
-      
+
       int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
       bool ilxl_loop = false;
       //find index min and max and whether loop over i,j or il,xl:
@@ -227,20 +227,17 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       int il_steps = 0;
       int xl_steps = 0;
       //----------------------LOOP OVER I,J OR IL,XL---------------------------------
-      //for (int il = 1366; il < 1367; il += il_step) {        
+      //for (int il = 1366; il < 1367; il += il_step) {
       for (int il = il_min; il <= il_max; il += il_step) {
         ++il_steps;
         xl_steps = 0;
         for (int xl = xl_min; xl <= xl_max; xl +=xl_step) {
         //for (int xl = 1832; xl < 1833; xl += xl_step) {
           ++xl_steps;
-          size_t i, j;          
+          size_t i, j;
           double x, y;
           if (ilxl_loop) { //loop over il,xl, find corresponding x,y,i,j
-            float x_f, y_f;
-            geometry->FindXYFromILXL(il, xl, x_f, y_f);
-            x = static_cast<double>(x_f);
-            y = static_cast<double>(y_f);
+            geometry->FindXYFromILXL(il, xl, x, y);
             geometry->FindIndex(x, y, i, j);
           }
           else { //loop over i,j, no segy output
@@ -251,7 +248,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
           }
           //----------------------BEGIN GEN SEIS WITH NMO FOR I,J---------------------------------
           if (generateTraceOk(seismic_parameters, i, j)) {
-            
+
             for (size_t k = 0; k < nzrefl; ++k) {
               twt_vec[k]   = twtgrid(i,j,k);
               vrms_vec[k]  = vrmsgrid(i,j,k);
@@ -317,7 +314,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
               float noffset_inv = static_cast<float>(1.0 / offset_vec.size());
               for (size_t k = 0; k < twt_0.size(); ++k) {
                 nmo_timegrid_stack_pos[k][0] = 0.0;
-                for (size_t off = 0; off < offset_vec.size(); ++off) {                  
+                for (size_t off = 0; off < offset_vec.size(); ++off) {
                   nmo_timegrid_stack_pos[k][0] += noffset_inv * nmo_timegrid_pos[k][off];
                 }
               }
@@ -388,7 +385,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
             }
           }
           //-----------------OUTSIDE ECLIPSE GRID, WHERE NO SEISMIC GENERATED, ZERO TRACE-----------------
-          else { 
+          else {
             if (nmo_time_segy_ok){
               seismic_parameters.seismicOutput()->writeZeroSegyGather(nmo_time_segy, offset_vec, x,y);
             }
@@ -431,10 +428,10 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
           }
 
           //////debug print
-          //seismic_parameters.seismicOutput()->printVector(twt_0, "twt_0.txt");  
-          //seismic_parameters.seismicOutput()->printVector(twt_vec, "twt_vec.txt");  
-          //seismic_parameters.seismicOutput()->printVector(vrms_vec, "vrms_vec.txt");  
-          //seismic_parameters.seismicOutput()->printVector(vrms_vec_reg, "vrms_vec_reg.txt");   
+          //seismic_parameters.seismicOutput()->printVector(twt_0, "twt_0.txt");
+          //seismic_parameters.seismicOutput()->printVector(twt_vec, "twt_vec.txt");
+          //seismic_parameters.seismicOutput()->printVector(vrms_vec, "vrms_vec.txt");
+          //seismic_parameters.seismicOutput()->printVector(vrms_vec_reg, "vrms_vec_reg.txt");
           //seismic_parameters.seismicOutput()->printMatrix(theta_pos, "theta_pos.txt");
           //seismic_parameters.seismicOutput()->printMatrix(refl_pos, "refl_pos.txt");
           //seismic_parameters.seismicOutput()->printMatrix(twtx_pos, "twtx_pos.txt");
@@ -443,7 +440,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
           //seismic_parameters.seismicOutput()->printMatrix(nmo_timegrid_pos, "nmo_timegrid_pos.txt");
           //if (nmo_depth_segy_ok) {
           //  seismic_parameters.seismicOutput()->printMatrix(nmo_depthgrid_pos, "nmo_depthgrid_pos.txt");
-          //  seismic_parameters.seismicOutput()->printVector(z_0, "z_0.txt");  
+          //  seismic_parameters.seismicOutput()->printVector(z_0, "z_0.txt");
           //}
 
           //int size_loop = n_xl * il_steps + xl_steps + 1;
@@ -472,7 +469,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       if (seismic_parameters.modelSettings()->GetOutputReflections()) {
         seismic_parameters.seismicOutput()->writeNMOReflections(seismic_parameters, 0.0);
       }
-       
+
 
       seismic_parameters.deleteZandRandTWTGrids();
       seismic_parameters.deleteParameterGrids();
@@ -480,7 +477,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
       seismic_parameters.deleteGeometryAndOutput();
       if (twt_timeshift != NULL) {
         delete twt_timeshift;
-      }      
+      }
     }
   }
   else {
@@ -663,7 +660,7 @@ bool SeismicForward::generateTraceOk(SeismicParameters &seismic_parameters,
   return generate_ok;
 }
 
-std::vector<double> SeismicForward::LinInterp1D(std::vector<double>  x_in, 
+std::vector<double> SeismicForward::LinInterp1D(std::vector<double>  x_in,
                                                   std::vector<double>  y_in,
                                                   std::vector<double>  x_out)
 
@@ -681,7 +678,7 @@ std::vector<double> SeismicForward::LinInterp1D(std::vector<double>  x_in,
   return NRLib::Interpolation::Interpolate1D(x_in, y_in, x_out, "linear");
 }
 
-std::vector<double> SeismicForward::SplineInterp1D(std::vector<double>  x_in, 
+std::vector<double> SeismicForward::SplineInterp1D(std::vector<double>  x_in,
                                                    std::vector<double>  y_in,
                                                    std::vector<double>  x_out,
                                                    double               extrap_value)
@@ -700,9 +697,9 @@ std::vector<double> SeismicForward::SplineInterp1D(std::vector<double>  x_in,
   return NRLib::Interpolation::Interpolate1D(x_in, y_in, x_out, "spline", extrap_value);
 }
 
-void SeismicForward::extrapolZandTwtVec(std::vector<double>  &zgrid_vec_extrapol, 
-                                        std::vector<double>  &twt_vec_extrapol, 
-                                        std::vector<double>   twt_vec, 
+void SeismicForward::extrapolZandTwtVec(std::vector<double>  &zgrid_vec_extrapol,
+                                        std::vector<double>  &twt_vec_extrapol,
+                                        std::vector<double>   twt_vec,
                                         NRLib::StormContGrid &zgrid,
                                         double                z_bot,
                                         double                constvp,
@@ -722,9 +719,9 @@ void SeismicForward::extrapolZandTwtVec(std::vector<double>  &zgrid_vec_extrapol
 
 
 void SeismicForward::convertSeis(std::vector<double>               twt,
-                                 std::vector<double>               twt_0, 
-                                 std::vector<double>               zgrid, 
-                                 std::vector<double>               z_0, 
+                                 std::vector<double>               twt_0,
+                                 std::vector<double>               zgrid,
+                                 std::vector<double>               z_0,
                                  std::vector<std::vector<double> > seismic,
                                  std::vector<std::vector<double> > &conv_seismic)
 {
@@ -748,11 +745,11 @@ void SeismicForward::convertSeis(std::vector<double>               twt,
 
 
 
-void SeismicForward::nmoCorrInterpol1Pos(std::vector<double>                t_in, 
-                                         std::vector<std::vector<double> >  data_in, 
-                                         std::vector<std::vector<double> >  t_out, 
+void SeismicForward::nmoCorrInterpol1Pos(std::vector<double>                t_in,
+                                         std::vector<std::vector<double> >  data_in,
+                                         std::vector<std::vector<double> >  t_out,
                                          std::vector<std::vector<double> > &data_out){
-  
+
   std::vector<double> data_vec_in(data_in.size()), t_vec_out(data_in.size()), data_vec_out(data_in.size());
 
   for (size_t off = 0; off < data_in[0].size(); off++) {
@@ -769,11 +766,11 @@ void SeismicForward::nmoCorrInterpol1Pos(std::vector<double>                t_in
 
 
 //move to seismic_parameters.cpp
-void SeismicForward::findReflectionsPos(SeismicParameters &seismic_parameters,  
-                                        std::vector<std::vector<double> > &r_vec, 
-                                        std::vector<std::vector<double> > theta_vec, 
-                                        std::vector<double> offset, 
-                                        size_t i, 
+void SeismicForward::findReflectionsPos(SeismicParameters &seismic_parameters,
+                                        std::vector<std::vector<double> > &r_vec,
+                                        std::vector<std::vector<double> > theta_vec,
+                                        std::vector<double> offset,
+                                        size_t i,
                                         size_t j){
 
   NRLib::StormContGrid &vpgrid             = seismic_parameters.vpGrid();
@@ -795,12 +792,12 @@ void SeismicForward::findReflectionsPos(SeismicParameters &seismic_parameters,
   std::vector<double> vp_vec(botk-topk+3), vs_vec(botk-topk+3), rho_vec(botk-topk+3);
 
   for (size_t off = 0; off < offset.size(); ++off) {
-    for (size_t k = topk; k <= botk + 2; k++) {         
+    for (size_t k = topk; k <= botk + 2; k++) {
       vp_vec[k - topk]  = vpgrid(i, j, (k - topk));
       vs_vec[k - topk]  = vsgrid(i, j, (k - topk));
       rho_vec[k - topk] = rhogrid(i, j, (k - topk));
     }
-    for (size_t k = topk; k <= botk + 1; k++) { 
+    for (size_t k = topk; k <= botk + 1; k++) {
       diffvp  =         vp_vec[k-topk + 1] - vp_vec[k-topk];
       meanvp  = 0.5 *  (vp_vec[k-topk + 1] + vp_vec[k-topk]);
       diffvs  =         vs_vec[k-topk + 1] - vs_vec[k-topk];
@@ -820,9 +817,9 @@ void SeismicForward::findReflectionsPos(SeismicParameters &seismic_parameters,
 }
 
 
-void SeismicForward::findThetaPos(std::vector<std::vector<double> > & thetagrid, 
-                                  std::vector<double>                 twt_vec, 
-                                  std::vector<double>                 vrms_vec, 
+void SeismicForward::findThetaPos(std::vector<std::vector<double> > & thetagrid,
+                                  std::vector<double>                 twt_vec,
+                                  std::vector<double>                 vrms_vec,
                                   std::vector<double>                 offset){
 
   for (size_t off = 0; off < offset.size(); off++) {
@@ -834,17 +831,17 @@ void SeismicForward::findThetaPos(std::vector<std::vector<double> > & thetagrid,
 }
 
 
-void SeismicForward::findTWTxPos(std::vector<std::vector<double> > &twtx_grid,  
-                                 std::vector<double>                twt_vec, 
-                                 std::vector<double>                vrms_vec, 
+void SeismicForward::findTWTxPos(std::vector<std::vector<double> > &twtx_grid,
+                                 std::vector<double>                twt_vec,
+                                 std::vector<double>                vrms_vec,
                                  std::vector<double>                offset){
   double twtx;
   for (size_t off = 0; off < offset.size(); ++off) {
     for (size_t k = 0; k < twt_vec.size(); ++k) {
       twtx = twt_vec[k]*twt_vec[k] + 1000*1000*(offset[off]*offset[off]/(vrms_vec[k]*vrms_vec[k]));
-      twtx_grid[k][off] = std::sqrt(twtx); 
+      twtx_grid[k][off] = std::sqrt(twtx);
       //twtx_grid[k][off] = twt_vec[k]; //NBNB test for not NMO corr
-    }    
+    }
   }
 }
 
@@ -920,7 +917,7 @@ void SeismicForward::generateSeismicPos(std::vector<std::vector<double> > &timeg
           for (size_t kk = 0; kk < nc; kk++) {
             if (fabs(twtx_pos[kk][off] - t) < rickerLimit) {
               double ricker = waveletScale * wavelet->FindWaveletPoint(twtx_pos[kk][off] - t);
-              seis += refl_pos[kk][off] * ricker; 
+              seis += refl_pos[kk][off] * ricker;
             }
           }
           timegrid_pos[k][off] = static_cast<float>(seis);
@@ -931,7 +928,7 @@ void SeismicForward::generateSeismicPos(std::vector<std::vector<double> > &timeg
         }
         t = t + dt;
       }
-    } 
+    }
   }
   else {
     for (size_t k = 0; k < nt; k++){
@@ -961,7 +958,7 @@ void SeismicForward::generateSeismic(std::vector<NRLib::StormContGrid> &rgridvec
                                      double waveletScale,
                                      bool time_output,
                                      bool depth_output,
-                                     bool timeshift_output) 
+                                     bool timeshift_output)
 {
   size_t nt = timegridvec[0].GetNK();
   size_t nc = rgridvec[0].GetNK();
@@ -1020,7 +1017,7 @@ void SeismicForward::generateSeismic(std::vector<NRLib::StormContGrid> &rgridvec
             }
             t = t + dt;
           }
-        } 
+        }
         else {
           for (size_t k = 0; k < nt; k++){
             for (size_t l = 0; l < rgridvec.size(); l++) {
@@ -1108,7 +1105,7 @@ void SeismicForward::generateSeismic(std::vector<NRLib::StormContGrid> &rgridvec
             tt = tt + dt;
 
           }
-        } 
+        }
         else {
           for (size_t k = 0; k < nt; k++) {
             for (size_t l = 0; l < rgridvec.size(); l++) {
@@ -1147,7 +1144,7 @@ void SeismicForward::generateSeismicOnFile(std::vector<NRLib::StormContGrid> &rg
                                            double waveletScale,
                                            bool time_output,
                                            bool depth_output,
-                                           bool timeshift_output) 
+                                           bool timeshift_output)
 {
 
   //size_t nt = timegridvec[0].GetNK();
@@ -1340,9 +1337,9 @@ void SeismicForward::generateSeismicOnFile(std::vector<NRLib::StormContGrid> &rg
   // printf("Time: %f \n", par_time);
 }
 
-double SeismicForward::findTFromZ(double               z, 
-                                  std::vector<double> &zvec, 
-                                  std::vector<double> &tvec) 
+double SeismicForward::findTFromZ(double               z,
+                                  std::vector<double> &zvec,
+                                  std::vector<double> &tvec)
 {
   double t;
   size_t i = 0;

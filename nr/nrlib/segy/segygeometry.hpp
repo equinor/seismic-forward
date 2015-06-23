@@ -59,17 +59,17 @@ public:
 
   bool   IsInside(double x, double y) const;
 
-  size_t FindIndex(float x, float y) const;
+  size_t FindIndex(double x, double y) const;
   void   FindIndex(double x, double y, size_t &i, size_t  &j) const;               ///< Return grid index for i and j
   void   FindIndex(int IL, int XL, size_t &i, size_t &j) const;
   bool   FindContIndex(double x, double y, float &xind, float  &yind) const; ///< Compute decimal index, to give location in cell. Return true if inside grid.
   void   FindILXL(float x, float y, int &IL, int &XL) const;
   void   FindILXL(double x, double y, int &IL, int &XL) const;
   void   FindILXL(size_t i, size_t j, int &IL, int &XL) const;
-  void   FindContILXL(float x, float y, double &IL, double &XL) const;
-  void   FindXYFromIJ(size_t i, size_t j, float &x, float &y) const;
-  void   FindXYFromILXL(int IL, int XL, float &x, float &y) const;
-  void   FindXYFromContILXL(float IL, float XL, float &x, float &y) const;
+  void   FindContILXL(double x, double y, double &IL, double &XL) const;
+  void   FindXYFromIJ(size_t i, size_t j, double &x, double &y) const;
+  void   FindXYFromILXL(int IL, int XL, double &x, double &y) const;
+  void   FindXYFromContILXL(float IL, float XL, double &x, double &y) const;
 
   size_t GetNx()           const { return nx_        ;}            ///< return nx
   size_t GetNy()           const { return ny_        ;}            ///< return ny
@@ -108,7 +108,7 @@ public:
   SegyGeometry * GetILXLSubGeometry(const std::vector<int> & ilxl, bool & interpolation, bool & aligned);
 
   std::vector<int> findAreaILXL(SegyGeometry * templateGeometry);
-  
+
   void   FindILXLGeometry();       ///< minIL, maxIL, stepIL, minXL, ...
 
 private:

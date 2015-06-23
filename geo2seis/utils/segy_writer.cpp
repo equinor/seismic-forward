@@ -13,7 +13,7 @@ void SEGY::writeSegy(NRLib::StormContGrid      &data,
                      short                      scalco,
                      double                     top_window,
                      double                     bot_window,
-                     bool                       window_specified) 
+                     bool                       window_specified)
 {
 
   size_t i, j;
@@ -126,10 +126,7 @@ void SEGY::writeSegy(NRLib::StormContGrid      &data,
   double x, y, xt, yt, z;
   for (size_t j = 0; j < ny; j++) {
     for (size_t i = 0; i < nx; i++) {
-      xt = double((i + 0.5) * dx);
-      yt = double((j + 0.5) * dy);
-      x = static_cast<float>(geometry->GetX0() + xt * geometry->GetCosRot() - yt * geometry->GetSinRot());
-      y = static_cast<float>(geometry->GetY0() + yt * geometry->GetCosRot() + xt * geometry->GetSinRot());
+      geometry->FindXYFromIJ(i, j, x, y);
 
       double zbot = data.GetBotSurface().GetZ(x, y);
       double ztop = data.GetTopSurface().GetZ(x, y);

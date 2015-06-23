@@ -232,7 +232,7 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
           double x = traces[k]->GetX();
           double y = traces[k]->GetY();
 
-          float cx, cy;
+          double cx, cy;
           this->FindXYFromILXL(til, txl, cx, cy);
           double dtx  = x - cx;
           double dty  = y - cy;
@@ -905,7 +905,7 @@ SegyGeometry::IsInside(double x, double y) const
 }
 
 size_t
-SegyGeometry::FindIndex(float x, float y) const
+SegyGeometry::FindIndex(double x, double y) const
 {
   size_t i, j;
   FindIndex(x, y, i, j);
@@ -933,7 +933,7 @@ SegyGeometry::FindIndex(double x, double y, size_t &i, size_t &j) const
 void
 SegyGeometry::FindIndex(int IL, int XL, size_t &i, size_t &j) const
 {
-  float x,y;
+  double x,y;
   FindXYFromILXL(IL, XL, x, y);
   FindIndex(x,y,i,j);
 }
@@ -970,35 +970,35 @@ SegyGeometry::FindILXL(double x, double y, int &IL, int &XL) const
 void
 SegyGeometry::FindILXL(size_t i, size_t j, int &IL, int &XL) const
 {
-  float x,y;
+  double x,y;
   FindXYFromIJ(i, j, x, y);
   FindILXL(x,y,IL,XL);
 }
 
 void
-SegyGeometry::FindContILXL(float x, float y, double &IL, double &XL) const
+SegyGeometry::FindContILXL(double x, double y, double &IL, double &XL) const
 {
   IL = in_line0_    + (x-x0_)*il_stepX_ + (y-y0_)*il_stepY_;
   XL = cross_line0_ + (x-x0_)*xl_stepX_ + (y-y0_)*xl_stepY_;
 }
 
 void
-SegyGeometry::FindXYFromIJ(size_t i, size_t j, float &x, float &y) const
+SegyGeometry::FindXYFromIJ(size_t i, size_t j, double &x, double &y) const
 {
   double xind = 0.5+static_cast<double>(i);
   double yind = 0.5+static_cast<double>(j);
-  x = static_cast<float>(x0_+xind*dx_*cos_rot_-yind*dy_*sin_rot_);
-  y = static_cast<float>(y0_+xind*dx_*sin_rot_+yind*dy_*cos_rot_);
+  x = x0_+xind*dx_*cos_rot_-yind*dy_*sin_rot_;
+  y = y0_+xind*dx_*sin_rot_+yind*dy_*cos_rot_;
 }
 
 void
-SegyGeometry::FindXYFromILXL(int IL, int XL, float &x, float &y) const
+SegyGeometry::FindXYFromILXL(int IL, int XL, double &x, double &y) const
 {
   FindXYFromContILXL(static_cast<float>(IL), static_cast<float>(XL), x, y);
 }
 
 void
-SegyGeometry::FindXYFromContILXL(float IL, float XL, float &x, float &y) const
+SegyGeometry::FindXYFromContILXL(float IL, float XL, double &x, double &y) const
 {
   double xd, yd;
   if (xl_stepX_ == 0.0 && xl_stepY_ == 0.0) {//inline only
@@ -1029,8 +1029,8 @@ SegyGeometry::FindXYFromContILXL(float IL, float XL, float &x, float &y) const
     yd = y0_+(XL-cross_line0_-(IL-in_line0_)*xl_stepX_/il_stepX_)/(xl_stepY_-il_stepY_*xl_stepX_/il_stepX_);
     xd = x0_+(IL-in_line0_-il_stepY_*(yd-y0_))/il_stepX_;
   }
-  x = static_cast<float>(xd);
-  y = static_cast<float>(yd);
+  x = xd;
+  y = yd;
 }
 
 
@@ -1284,7 +1284,7 @@ SegyGeometry::GetILXLSubGeometry(const std::vector<int> & ilxl,
     subXL0 = maxSubXL+0.5f*subXLStep;
   }
 
-  float subX0, subY0;
+  double subX0, subY0;
   FindXYFromContILXL(subIL0, subXL0, subX0, subY0);
 
   LogKit::LogFormatted(LogKit::Low, "\n                  Inline                Crossline    ");
@@ -1327,10 +1327,10 @@ SegyGeometry::findAreaILXL(SegyGeometry * tempGeometry)
   //
   double il0, il1, il2, il3;
   double xl0, xl1, xl2, xl3;
-  FindContILXL(static_cast<float> (x0), static_cast<float> (y0), il0, xl0);
-  FindContILXL(static_cast<float> (x1), static_cast<float> (y1), il1, xl1);
-  FindContILXL(static_cast<float> (x2), static_cast<float> (y2), il2, xl2);
-  FindContILXL(static_cast<float> (x3), static_cast<float> (y3), il3, xl3);
+  FindContILXL(x0, y0, il0, xl0);
+  FindContILXL(x1, y1, il1, xl1);
+  FindContILXL(x2, y2, il2, xl2);
+  FindContILXL(x3, y3, il3, xl3);
 
   //
   // Find smallest and largest IL and XL values

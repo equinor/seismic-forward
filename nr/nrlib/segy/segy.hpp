@@ -131,8 +131,8 @@ public:
                                          int                  XL,
                                          std::vector<float> & result,
                                          const Volume       * volume = NULL);   // Only makes sense after FindAndSetGridGeometry.
-  void                      GetTraceData(float                x,
-                                         float                y,
+  void                      GetTraceData(double               x,
+                                         double               y,
                                          std::vector<float> & result,
                                          const Volume       * volume = NULL);   // Only makes sense after FindAndSetGridGeometry.
   void                      GetTraceData(std::streampos       pos,
@@ -140,7 +140,7 @@ public:
                                          float                z_top = -1,       // Does not check pos, z_top or z_bot for validity.
                                          float                z_bot = -1);      // Top/bot = -1 means start from top/go to bottom
   std::streampos            GetFilePos(int IL, int XL) const;                   // Only makes sense after FindAndSetGridGeometry. Returns 0 for invalid trace.
-  std::streampos            GetFilePos(float x, float y) const;                 // Only makes sense after FindAndSetGridGeometry. Returns 0 for invalid trace.
+  std::streampos            GetFilePos(double x, double y) const;                 // Only makes sense after FindAndSetGridGeometry. Returns 0 for invalid trace.
   //<<<End read single trace mode
 
   //>>>Begin write mode

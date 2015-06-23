@@ -392,13 +392,13 @@ SegY::GetTraceData(int IL, int XL, std::vector<float> & result, const Volume * v
   if(geometry_ == NULL)
     throw Exception("Can not find data without geometry set.\n");
 
-  float x,y;
+  double x,y;
   geometry_->FindXYFromILXL(IL, XL, x, y);
   GetTraceData(x, y, result, volume);
 }
 
 void
-SegY::GetTraceData(float x, float y, std::vector<float> & result, const Volume * volume)
+SegY::GetTraceData(double x, double y, std::vector<float> & result, const Volume * volume)
 {
   if(geometry_ == NULL)
     throw Exception("Can not find data without geometry set.\n");
@@ -469,7 +469,7 @@ SegY::GetFilePos(int IL, int XL) const
 }
 
 std::streampos
-SegY::GetFilePos(float x, float y) const
+SegY::GetFilePos(double x, double y) const
 {
   if(geometry_ == NULL)
     throw Exception("Can not find file position without geometry set.\n");
