@@ -5,7 +5,7 @@ void STORM::writeStorm(NRLib::StormContGrid &grid,
                        double top_window,
                        double bot_window,
                        bool window_specified,
-                       bool keep_grid) 
+                       bool keep_grid)
 {
 
   if (window_specified == false) {

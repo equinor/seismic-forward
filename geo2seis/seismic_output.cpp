@@ -155,7 +155,7 @@ bool SeismicOutput::prepareSegy(NRLib::SegY         &segyout,
       if (bot_time_window_ != -9999) {
         nz = static_cast<int>(ceil(bot_time_window_ - z0) / dz);
         z_max = bot_time_window_;
-      } 
+      }
     }
     else {
       if (top_depth_window_ > z_max) {
@@ -201,8 +201,8 @@ bool SeismicOutput::prepareSegy(NRLib::SegY         &segyout,
   else
     line = "Depth (m)     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);
   header.SetLine(6, line);
-  
-  segyout.Initialize(filename_out, float(z0), static_cast<size_t>(nz), float(dz), header, thf, short(offset_vec.size()));  
+
+  segyout.Initialize(filename_out, float(z0), static_cast<size_t>(nz), float(dz), header, thf, short(offset_vec.size()));
   segyout.SetGeometry(geometry);
   segyout.SetDelayRecTime(short(z0));
   return true;
@@ -248,7 +248,7 @@ void SeismicOutput::writeSegyGather(std::vector<std::vector<double> > data_gathe
         for (k = windowTop; k < firstData; k++) {
           datavec[k - windowTop] = 0.0;
         }
-      } 
+      }
       else {
         firstData = windowTop;
       }
@@ -263,7 +263,7 @@ void SeismicOutput::writeSegyGather(std::vector<std::vector<double> > data_gathe
           datavec[k - windowTop] = 0.0;
         }
       }
-    } 
+    }
     else {
       if (firstData < 0) {
         firstData = 0;
@@ -284,7 +284,7 @@ void SeismicOutput::writeSegyGather(std::vector<std::vector<double> > data_gathe
     //std::cout << "\nfinished offset: " << off << ", n_traces = " <<  " ";
     segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(offset_vec[off]));
     //int n_traces_segy = segyout->FindNumberOfTraces();
-    
+
     //write single trace? or store trace?
     //get correct parameters. offset. place in trace-header. 37!
   }
@@ -308,9 +308,9 @@ void SeismicOutput::writeZeroSegyGather(NRLib::SegY                      &segyou
   }
 }
 
-void SeismicOutput::ResampleDataGather(std::vector<double>  twt_0, 
-                                       std::vector<std::vector<double> > & data_gather, 
-                                       std::vector<double> twt_0_resampl) 
+void SeismicOutput::ResampleDataGather(std::vector<double>  twt_0,
+                                       std::vector<std::vector<double> > & data_gather,
+                                       std::vector<double> twt_0_resampl)
 {
   std::vector<double> data_vec(twt_0.size());
 
@@ -361,13 +361,13 @@ void SeismicOutput::writeNMOReflections(SeismicParameters &seismic_parameters, d
   printf("Write reflections on Storm format.\n");
   std::string reflection_string = "reflections_";
   std::string filename = prefix_ + reflection_string + NRLib::ToString(offset) + suffix_ + ".storm";
-  rgridvec[0].WriteToFile(filename); 
-  if (rgridvec.size() == 2){  
+  rgridvec[0].WriteToFile(filename);
+  if (rgridvec.size() == 2){
     //printf("Write reflections with noise on Storm format.\n");
     reflection_string = reflection_string + "noise_";
     std::string filename = prefix_ + reflection_string + NRLib::ToString(offset) + suffix_ + ".storm";
-    rgridvec[1].WriteToFile(filename);  
-  } 
+    rgridvec[1].WriteToFile(filename);
+  }
 }
 
 
@@ -376,7 +376,7 @@ void SeismicOutput::writeVrms(SeismicParameters &seismic_parameters) {
 
   printf("Write vrms grid on Storm format.\n");
   std::string filename = prefix_ + "vrms" + suffix_ + ".storm";
-  vrmsgrid.WriteToFile(filename);  
+  vrmsgrid.WriteToFile(filename);
 }
 
 void SeismicOutput::writeElasticParametersTimeSegy(SeismicParameters &seismic_parameters) {
@@ -590,7 +590,7 @@ void SeismicOutput::writeNMOSeismicTimeStorm(SeismicParameters &seismic_paramete
   else {
     filename = prefix_ + "seismic_time_stack" + suffix_ + ".storm";
   }
-  STORM::writeStorm(timegrid, filename, top_time_window_, bot_time_window_, time_window_);    
+  STORM::writeStorm(timegrid, filename, top_time_window_, bot_time_window_, time_window_);
 }
 void SeismicOutput::writeNMOSeismicDepthStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &depthgrid, double offset, bool is_stack) {
   printf("Write seismic in depth on Storm format.\n");
@@ -602,7 +602,7 @@ void SeismicOutput::writeNMOSeismicDepthStorm(SeismicParameters &seismic_paramet
   else {
     filename = prefix_ + "seismic_depth_stack" + suffix_ + ".storm";
   }
-  STORM::writeStorm(depthgrid, filename, top_depth_window_, bot_depth_window_, depth_window_);    
+  STORM::writeStorm(depthgrid, filename, top_depth_window_, bot_depth_window_, depth_window_);
 }
 void SeismicOutput::writeNMOSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack) {
   printf("Write seismic in timeshift on Storm format.\n");
@@ -614,7 +614,7 @@ void SeismicOutput::writeNMOSeismicTimeshiftStorm(SeismicParameters &seismic_par
   else {
     filename = prefix_ + "seismic_timeshift_stack" + suffix_ + ".storm";
   }
-  STORM::writeStorm(timeshiftgrid, filename, top_time_window_, bot_time_window_, time_window_);    
+  STORM::writeStorm(timeshiftgrid, filename, top_time_window_, bot_time_window_, time_window_);
 }
 
 void SeismicOutput::writeSeismicTimeSegy(SeismicParameters &seismic_parameters, std::vector<NRLib::StormContGrid> &timegridvec) {
@@ -1034,7 +1034,7 @@ void SeismicOutput::printVector(std::vector<double> vec, std::string filename) {
   NRLib::OpenWrite(fout, filename);
   for (size_t i = 0; i < vec.size(); ++i) {
     fout << vec[i] << std::endl;
-  }  
+  }
   fout.close();
 }
 
@@ -1046,6 +1046,6 @@ void SeismicOutput::printMatrix(std::vector<std::vector<double> > matrix, std::s
       fout << matrix[i][j] << "  ";
     }
     fout << std::endl;
-  }  
+  }
   fout.close();
 }

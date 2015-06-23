@@ -13,7 +13,7 @@ SeismicParameters::SeismicParameters(ModelSettings *model_settings) {
     this->model_settings_ = model_settings;
 
     seismic_geometry_ = new SeismicGeometry();
-    
+
     if (model_settings->GetNMOCorr()) {
       calculateOffsetSpan();
     }
@@ -77,8 +77,8 @@ void SeismicParameters::setupWavelet() {
 }
 
 void SeismicParameters::setSegyGeometry(const NRLib::SegyGeometry &geometry)
-{ 
-  segy_geometry_ = new NRLib::SegyGeometry(geometry); 
+{
+  segy_geometry_ = new NRLib::SegyGeometry(geometry);
 }
 
 void SeismicParameters::getSeisLimits(size_t               n_twt_0,
@@ -95,9 +95,9 @@ void SeismicParameters::getSeisLimits(size_t               n_twt_0,
   double vrms_0  = vrms_vec[0];
 
   for (size_t i = 0; i < offset_vec.size(); ++i) {
-    double offset = offset_vec[i];    
-    double twtx_max                = std::sqrt(tmax*tmax + 1000*1000*offset*offset/(vrms_nk*vrms_nk));      
-    double twtx_min                = std::sqrt(tmin*tmin + 1000*1000*offset*offset/(vrms_0*vrms_0));      
+    double offset = offset_vec[i];
+    double twtx_max                = std::sqrt(tmax*tmax + 1000*1000*offset*offset/(vrms_nk*vrms_nk));
+    double twtx_min                = std::sqrt(tmin*tmin + 1000*1000*offset*offset/(vrms_0*vrms_0));
     if (twtx_min > tmin){
       double test = (twtx_min - tmin)/dt;
       n_min[i] = static_cast<size_t>((twtx_min - tmin)/dt); //static_cast cuts decimal. Ok, because target is (x - 0.5).
@@ -115,18 +115,18 @@ std::vector<double> SeismicParameters::twt_0(){
   double dt                      = seismic_geometry_->dt();
   std::vector<double> constvp    = model_settings_->GetConstVp();
 
-  
-  double max_twt_value           = bot_time_.MaxNode(i_max, j_max);  
+
+  double max_twt_value           = bot_time_.MaxNode(i_max, j_max);
   bot_time_.GetXY(i_max, j_max, x, y);
   double bot_y_value_twt = bot_time_.GetZ(x,y) -  2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
   (*twtgrid_).FindIndex(x, y, bot_y_value_twt, i_max, j_max, k_max);
   //double max_twt_value           = (*twtgrid_)( i_max, j_max, (*twtgrid_).GetNK()-1); //need half wavelet for NMO correction
-  double vrms_max_t              = (*vrmsgrid_)(i_max, j_max, (*vrmsgrid_).GetNK()-1);  
+  double vrms_max_t              = (*vrmsgrid_)(i_max, j_max, (*vrmsgrid_).GetNK()-1);
   double offset_max              = offset_0_+doffset_*noffset_;
 
-  double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 1000*1000*offset_max*offset_max/(vrms_max_t*vrms_max_t));      
+  double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 1000*1000*offset_max*offset_max/(vrms_max_t*vrms_max_t));
   //twtx_max                      += 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
-  
+
   size_t nt_seis                 = nt;
   if (twtx_max > tmin + nt*dt) {
     nt_seis = static_cast<size_t>(std::ceil((twtx_max - tmin)/dt));
@@ -143,10 +143,10 @@ std::vector<double>  SeismicParameters::z_0(){
   double zmin                    = seismic_geometry_->z0();
   double dz                      = seismic_geometry_->dz();
 
-  z_0_.resize(nz); 
+  z_0_.resize(nz);
   for (size_t i = 0; i < nz; ++i){
     z_0_[i] = zmin + (0.5 + i)*dz;
-  }  
+  }
   return z_0_;
 }
 
@@ -224,7 +224,7 @@ void SeismicParameters::findGeometry() {
     double angle = model_settings_->GetAngle();
     seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
 
-  } 
+  }
   else if (model_settings_->GetAreaFromSurface() != "") {
     NRLib::RegularSurfaceRotated<double> toptime_rot = NRLib::RegularSurfaceRotated<double>(model_settings_->GetAreaFromSurface());
     double x0 = toptime_rot.GetXRef();
@@ -234,7 +234,7 @@ void SeismicParameters::findGeometry() {
     double angle = toptime_rot.GetAngle();
     seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
 
-  } 
+  }
   else if (model_settings_->GetAreaFromSegy() != "") {
     int scalcoloc = 71;
     NRLib::TraceHeaderFormat::coordSys_t coord = NRLib::TraceHeaderFormat::UTM;
@@ -264,7 +264,7 @@ void SeismicParameters::findGeometry() {
     seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
     seismic_geometry_->setDxDy(dx, dy);
 
-  } 
+  }
   else {
     double x0, y0, lx, ly, angle;
     geometry.FindEnclosingVolume(x0, y0, lx, ly, angle);
@@ -390,15 +390,15 @@ void SeismicParameters::createGrids() {
     vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
     if (model_settings_->GetWhiteNoise())
       rgridvec_ = new std::vector<NRLib::StormContGrid>(2);
-    else 
-      rgridvec_ = new std::vector<NRLib::StormContGrid>(1);  
+    else
+      rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
   }
   else {
     rgridvec_ = new std::vector<NRLib::StormContGrid>(ntheta_);
     vrmsgrid_ = new NRLib::StormContGrid(0, 0, 0);
   }
   NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl);
-  
+
   std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
 
   std::vector<double> extra_parameter_default_values = model_settings_->GetExtraParameterDefaultValues();

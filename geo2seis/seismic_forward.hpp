@@ -47,7 +47,7 @@ class SeismicForward {
                                    double                            t0,
                                    double                            dt,
                                    size_t                            i,
-                                   size_t                            j, 
+                                   size_t                            j,
                                    std::vector<size_t>               n_min,
                                    std::vector<size_t>               n_max);
 
@@ -68,41 +68,41 @@ class SeismicForward {
                                       bool depth_output,
                                       bool timeshift_output);
 
-    static double findTFromZ(double z, 
-                            std::vector<double> &zvec, 
+    static double findTFromZ(double z,
+                            std::vector<double> &zvec,
                             std::vector<double> &tvec);
 
     static void   convertSeis(std::vector<double>               twt_vec,
-                              std::vector<double>               twt_0, 
-                              std::vector<double>               zgrid, 
-                              std::vector<double>               z_0, 
+                              std::vector<double>               twt_0,
+                              std::vector<double>               zgrid,
+                              std::vector<double>               z_0,
                               std::vector<std::vector<double> > seismic,
                               std::vector<std::vector<double> > &conv_seismic);
 
-    static void   nmoCorrInterpol1Pos(std::vector<double>                t_in, 
-                                      std::vector<std::vector<double> >  data_in, 
-                                      std::vector<std::vector<double> >  t_out, 
+    static void   nmoCorrInterpol1Pos(std::vector<double>                t_in,
+                                      std::vector<std::vector<double> >  data_in,
+                                      std::vector<std::vector<double> >  t_out,
                                       std::vector<std::vector<double> > &data_out);
 
 
-    static void   findReflectionsPos(SeismicParameters                &seismic_parameters,  
-                                    std::vector<std::vector<double> > &r_vec, 
-                                    std::vector<std::vector<double> >  theta_vec, 
-                                    std::vector<double>                offset, 
-                                    size_t                             i, 
+    static void   findReflectionsPos(SeismicParameters                &seismic_parameters,
+                                    std::vector<std::vector<double> > &r_vec,
+                                    std::vector<std::vector<double> >  theta_vec,
+                                    std::vector<double>                offset,
+                                    size_t                             i,
                                     size_t                             j);
 
 
 
-    static void   findThetaPos(std::vector<std::vector<double> > &thetagrid, 
-                               std::vector<double>                twt_vec, 
-                               std::vector<double>                vrms_vec, 
+    static void   findThetaPos(std::vector<std::vector<double> > &thetagrid,
+                               std::vector<double>                twt_vec,
+                               std::vector<double>                vrms_vec,
                                std::vector<double>                offset);
 
 
-    static void   findTWTxPos(std::vector<std::vector<double> > &twtx_grid,  
-                              std::vector<double>                twt_vec, 
-                              std::vector<double>                vrms_vec, 
+    static void   findTWTxPos(std::vector<std::vector<double> > &twtx_grid,
+                              std::vector<double>                twt_vec,
+                              std::vector<double>                vrms_vec,
                               std::vector<double>                offset);
 
 
@@ -118,22 +118,22 @@ class SeismicForward {
     static bool   generateTraceOk(SeismicParameters &seismic_parameters,
                                   size_t i,
                                   size_t j);
-    
-    static void   extrapolZandTwtVec(std::vector<double>  &zgrid_vec_extrapol, 
-                                     std::vector<double>  &twt_vec_extrapol, 
-                                     std::vector<double>   twt_vec, 
+
+    static void   extrapolZandTwtVec(std::vector<double>  &zgrid_vec_extrapol,
+                                     std::vector<double>  &twt_vec_extrapol,
+                                     std::vector<double>   twt_vec,
                                      NRLib::StormContGrid &zgrid,
                                      double                z_bot,
                                      double                constvp,
                                      size_t                i,
                                      size_t                j);
 
-    static std::vector<double>   LinInterp1D(std::vector<double>  x_in, 
+    static std::vector<double>   LinInterp1D(std::vector<double>  x_in,
                                              std::vector<double>  y_in,
                                              std::vector<double>  x_out);
 
 
-    static std::vector<double>   SplineInterp1D(std::vector<double>  x_in, 
+    static std::vector<double>   SplineInterp1D(std::vector<double>  x_in,
                                                 std::vector<double>  y_in,
                                                 std::vector<double>  x_out,
                                                 double               extrap_value);

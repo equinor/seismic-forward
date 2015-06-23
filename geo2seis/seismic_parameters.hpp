@@ -29,7 +29,7 @@ class SeismicParameters {
     ~SeismicParameters() {
     };
 
-    
+
     NRLib::StormContGrid &vpGrid()                             { return *vpgrid_; };
     NRLib::StormContGrid &vsGrid()                             { return *vsgrid_; };
     NRLib::StormContGrid &rhoGrid()                            { return *rhogrid_; };
@@ -40,7 +40,7 @@ class SeismicParameters {
     NRLib::EclipseGrid &eclipseGrid()                          { return *eclipse_grid_; };
 
     NRLib::StormContGrid &vrmsGrid()                           { return *vrmsgrid_; };
-    
+
 
     void deleteEclipseGrid();
     void deleteParameterGrids();
@@ -66,7 +66,7 @@ class SeismicParameters {
                       std::vector<double>  offset_vec,
                       std::vector<size_t> &n_min,
                       std::vector<size_t> &n_max);
-    
+
 
     NRLib::RegularSurface<double> &topTime()       { return top_time_; };
     NRLib::RegularSurface<double> &bottomTime()    { return bot_time_; };
@@ -80,13 +80,13 @@ class SeismicParameters {
     SeismicOutput*       seismicOutput()   { return seismic_output_; };
     SeismicGeometry*     seismicGeometry() { return seismic_geometry_; };
 
-    
+
     Wavelet*             wavelet()         { return wavelet_; };
     double               waveletScale()    { return wavelet_scale_; };
     NRLib::SegyGeometry* segyGeometry()    { return segy_geometry_; };
 
     void setSegyGeometry(const NRLib::SegyGeometry &geometry);
-    
+
 
   private:
     ModelSettings *model_settings_;
@@ -134,17 +134,17 @@ class SeismicParameters {
 
     std::vector<double> twt_0_;
     std::vector<double> z_0_;
-    
+
     void setupWavelet();
 
     void readEclipseGrid();
 
-    void findGeometry();    
+    void findGeometry();
 
     void findSurfaceGeometry();
 
     void calculateAngleSpan();
-    void calculateOffsetSpan();    
+    void calculateOffsetSpan();
 
     void createGrids();
 };

@@ -43,16 +43,16 @@ class SeismicOutput {
                          bool                              time,
                          double                            x,
                          double                            y);
-    
+
     void writeZeroSegyGather(NRLib::SegY                      &segyout,
                              std::vector<double>               offset_vec,
                              double                            x,
                              double                            y);
 
-    void ResampleDataGather(std::vector<double>  twt_0, 
-                            std::vector<std::vector<double> > & data_gather, 
+    void ResampleDataGather(std::vector<double>  twt_0,
+                            std::vector<std::vector<double> > & data_gather,
                             std::vector<double> twt_0_resampl);
-    
+
     void writeDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse);
 
     void writeReflections(SeismicParameters &seismic_parameters, bool noise_added);
@@ -84,7 +84,7 @@ class SeismicOutput {
     void writeNMOSeismicDepthStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &depthgrid, double offset, bool is_stack = false);
     void writeNMOSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack = false);
     void writeNMOReflections(SeismicParameters &seismic_parameters, double offset);
-    
+
     void writeVrms(SeismicParameters &seismic_parameters);
 
     void printVector(std::vector<double> vec, std::string filename);
