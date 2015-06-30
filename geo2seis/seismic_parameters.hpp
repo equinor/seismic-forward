@@ -46,6 +46,7 @@ class SeismicParameters {
     void deleteElasticParameterGrids();
     void deleteExtraParameterGrids();
     void deleteZandRandTWTGrids();
+    void deleteVrmsGrid();
     void deleteWavelet();
     void deleteGeometryAndOutput();
 
@@ -57,16 +58,21 @@ class SeismicParameters {
     double offset0()                 { return offset_0_; }
     double dOffset()                 { return doffset_; }
     size_t nOffset()                 { return noffset_; }
-    std::vector<double> offset_vec() { return offset_vec_; }
+    std::vector<double> & offset_vec() { return offset_vec_; }
 
-    std::vector<double> twt_0();
-    std::vector<double> z_0();
+    std::vector<double> generateTWT_0();
+    std::vector<double> generateZ_0();
 
     void getSeisLimits(size_t               n_twt_0,
                       std::vector<double>  vrms_vec,
                       std::vector<double>  offset_vec,
                       std::vector<size_t> &n_min,
                       std::vector<size_t> &n_max);
+
+   void   findVrmsPos(std::vector<double> &vrms_vec,
+                             size_t               i,
+                             size_t               j);
+
 
 
     NRLib::RegularSurface<double> &topTime()       { return top_time_; };
@@ -88,6 +94,15 @@ class SeismicParameters {
 
     void setSegyGeometry(const NRLib::SegyGeometry &geometry);
 
+    bool GetTimeOutput();
+    bool GetDepthOutput();
+    bool GetTimeshiftOutput();
+    bool GetStackOutput();
+    bool GetSegyOutput();
+    bool GetTimeStormOutput();
+    bool GetDepthStormOutput();
+    bool GetTimeshiftStormOutput();
+    bool GetStormOutput();
 
   private:
     ModelSettings *model_settings_;

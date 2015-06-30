@@ -7,6 +7,7 @@
 #include "modelsettings.hpp"
 #include <seismic_parameters.hpp>
 
+
 #include <nrlib/stormgrid/stormcontgrid.hpp>
 #include <nrlib/surface/regularsurface.hpp>
 //#include "nrlib/geometry/interpolation.hpp"
@@ -17,6 +18,10 @@ class SeismicForward {
     static void seismicForward(SeismicParameters &seismic_parameters);
 
   private:
+
+    static void makeNMOSeismic(SeismicParameters &seismic_parameters);
+    static void makeSeismic(SeismicParameters &seismic_parameters);
+
     static void generateSeismic(std::vector<NRLib::StormContGrid> &rgridvec,
                                 NRLib::StormContGrid &twtgrid,
                                 NRLib::StormContGrid &zgrid,
@@ -35,21 +40,33 @@ class SeismicForward {
                                 bool depth_output,
                                 bool timeshift_output);
 
+    static void generateNMOSeismic(SeismicParameters             &seismic_parameters,
+                                   const std::vector<double>     &twt_vec,
+                                   const std::vector<double>     &twt_0,
+                                   const std::vector<double>     &offset_vec,
+                                   NRLib::Grid2D<double>         &timegrid_pos,
+                                   NRLib::Grid2D<double>         &nmo_timegrid_pos,
+                                   NRLib::Grid2D<double>         &twtx_reg,
+                                   size_t                         i,
+                                   size_t                         j,
+                                   unsigned long                  seed,
+                                   const NRLib::StormContGrid    &zgrid,
+                                   std::vector<NRLib::StormContGrid> &rgridvec);
 
-    static void generateSeismicPos(std::vector<std::vector<double> > &timegrid_pos,
-                                   std::vector<std::vector<double> > refl_pos,
-                                   std::vector<std::vector<double> > twtx_pos,
-                                   NRLib::StormContGrid              &zgrid,
-                                   NRLib::RegularSurface<double>     &toptime,
-                                   Wavelet                           *wavelet,
-                                   double                            waveletScale,
-                                   std::vector<double>               offset,
-                                   double                            t0,
-                                   double                            dt,
-                                   size_t                            i,
-                                   size_t                            j,
-                                   std::vector<size_t>               n_min,
-                                   std::vector<size_t>               n_max);
+    static void seisConvolutionNMO(NRLib::Grid2D<double>               &timegrid_pos,
+                                   NRLib::Grid2D<double>               &refl_pos,
+                                   NRLib::Grid2D<double>               &twtx,
+                                   const NRLib::StormContGrid          &zgrid,
+                                   const NRLib::RegularSurface<double> &toptime,
+                                   Wavelet                             *wavelet,
+                                   double                               waveletScale,
+                                   const std::vector<double>           &offset,
+                                   double                               t0,
+                                   double                               dt,
+                                   size_t                               i,
+                                   size_t                               j,
+                                   std::vector<size_t>                  n_min,
+                                   std::vector<size_t>                  n_max);
 
 
     static void generateSeismicOnFile(std::vector<NRLib::StormContGrid> &rgridvec,
@@ -69,41 +86,42 @@ class SeismicForward {
                                       bool timeshift_output);
 
     static double findTFromZ(double z,
-                            std::vector<double> &zvec,
-                            std::vector<double> &tvec);
+                             std::vector<double> &zvec,
+                             std::vector<double> &tvec);
 
-    static void   convertSeis(std::vector<double>               twt_vec,
-                              std::vector<double>               twt_0,
-                              std::vector<double>               zgrid,
-                              std::vector<double>               z_0,
-                              std::vector<std::vector<double> > seismic,
-                              std::vector<std::vector<double> > &conv_seismic);
-
-    static void   nmoCorrInterpol1Pos(std::vector<double>                t_in,
-                                      std::vector<std::vector<double> >  data_in,
-                                      std::vector<std::vector<double> >  t_out,
-                                      std::vector<std::vector<double> > &data_out);
+    static void   convertSeis(const std::vector<double>   &twt_vec,
+                              const std::vector<double>   &twt_0,
+                              const std::vector<double>   &zgrid_vec,
+                              const std::vector<double>   &z_0,
+                              const NRLib::Grid2D<double> &seismic,
+                              NRLib::Grid2D<double>       &conv_seismic);
 
 
-    static void   findReflectionsPos(SeismicParameters                &seismic_parameters,
-                                    std::vector<std::vector<double> > &r_vec,
-                                    std::vector<std::vector<double> >  theta_vec,
-                                    std::vector<double>                offset,
-                                    size_t                             i,
-                                    size_t                             j);
+    static void   NMOCorrect(const std::vector<double>   &t_in,
+                             const NRLib::Grid2D<double> &data_in,
+                             const NRLib::Grid2D<double> &t_out,
+                             NRLib::Grid2D<double>       &data_out);
+
+
+    static void   findNMOReflections(SeismicParameters           &seismic_parameters,
+                                     NRLib::Grid2D<double>       &r_vec,
+                                     const NRLib::Grid2D<double> &theta_vec,
+                                     const std::vector<double>   &offset,
+                                     size_t                       i,
+                                     size_t                       j);
 
 
 
-    static void   findThetaPos(std::vector<std::vector<double> > &thetagrid,
-                               std::vector<double>                twt_vec,
-                               std::vector<double>                vrms_vec,
-                               std::vector<double>                offset);
+    static void   findNMOTheta(NRLib::Grid2D<double>     &thetagrid,
+                               const std::vector<double> &twt_vec,
+                               const std::vector<double> &vrms_vec,
+                               const std::vector<double> &offset);
 
 
-    static void   findTWTxPos(std::vector<std::vector<double> > &twtx_grid,
-                              std::vector<double>                twt_vec,
-                              std::vector<double>                vrms_vec,
-                              std::vector<double>                offset);
+    static void   findTWTx(NRLib::Grid2D<double>     &twtx_grid,
+                           const std::vector<double> &twt_vec,
+                           const std::vector<double> &vrms_vec,
+                           const std::vector<double> &offset);
 
 
     static void   findLoopIndeces(SeismicParameters &seismic_parameters,
@@ -115,28 +133,42 @@ class SeismicForward {
                                   int               &xl_max,
                                   int               &xl_step,
                                   bool              &segy);
+
     static bool   generateTraceOk(SeismicParameters &seismic_parameters,
                                   size_t i,
                                   size_t j);
 
-    static void   extrapolZandTwtVec(std::vector<double>  &zgrid_vec_extrapol,
-                                     std::vector<double>  &twt_vec_extrapol,
-                                     std::vector<double>   twt_vec,
-                                     NRLib::StormContGrid &zgrid,
-                                     double                z_bot,
-                                     double                constvp,
-                                     size_t                i,
-                                     size_t                j);
+    static void   extrapolZandTwtVec(std::vector<double>        &zgrid_vec_extrapol,
+                                     std::vector<double>        &twt_vec_extrapol,
+                                     const std::vector<double>  &twt_vec,
+                                     const NRLib::StormContGrid &zgrid,
+                                     double                      z_bot,
+                                     double                      constvp,
+                                     size_t                      i,
+                                     size_t                      j);
 
-    static std::vector<double>   LinInterp1D(std::vector<double>  x_in,
-                                             std::vector<double>  y_in,
-                                             std::vector<double>  x_out);
+    static std::vector<double>   linInterp1D(const std::vector<double> &x_in,
+                                             const std::vector<double> &y_in,
+                                             const std::vector<double> &x_out);
 
 
-    static std::vector<double>   SplineInterp1D(std::vector<double>  x_in,
-                                                std::vector<double>  y_in,
-                                                std::vector<double>  x_out,
-                                                double               extrap_value);
+    static std::vector<double>   splineInterp1D(const std::vector<double> &x_in,
+                                                const std::vector<double> &y_in,
+                                                const std::vector<double> &x_out,
+                                                double                     extrap_value);
+    static void monitorInitialize(size_t nx,
+                                  size_t ny,
+                                  float &monitor_size,
+                                  float &next_monitor);
+
+    static void monitor(size_t n_xl,
+                        size_t il_steps,
+                        size_t xl_steps,
+                        float monitor_size,
+                        float &next_monitor);
+
+    static void printTime();
+
 };
 
 #endif

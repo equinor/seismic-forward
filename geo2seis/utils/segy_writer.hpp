@@ -7,7 +7,7 @@
 
 class SEGY {
   public:
-    static void writeSegy(NRLib::StormContGrid &data,
+    static void writeSegy(const NRLib::StormContGrid &data,
                           std::string fileName,
                           int inline_start,
                           int xline_start,

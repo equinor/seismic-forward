@@ -13,7 +13,9 @@ class SeismicRegridding {
   public:
     static void seismicRegridding(SeismicParameters &seismic_parameters);
     static void addNoiseToReflections(unsigned long seed, double std_dev, std::vector<NRLib::StormContGrid> &grid_vec);
-    static void addNoiseToReflectionsPos(unsigned long seed, double std_dev, std::vector<std::vector<double> > &refl);
+    static void addNoiseToReflectionsPos(unsigned long         seed, 
+                                         double                std_dev, 
+                                         NRLib::Grid2D<double> &refl);
 
   private:
     static void findZValues(SeismicParameters &seismic_parameters);

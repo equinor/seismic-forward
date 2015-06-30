@@ -78,6 +78,9 @@ void SeismicParameters::setupWavelet() {
 
 void SeismicParameters::setSegyGeometry(const NRLib::SegyGeometry &geometry)
 {
+  if (segy_geometry_ != NULL) {
+    delete segy_geometry_;
+  }
   segy_geometry_ = new NRLib::SegyGeometry(geometry);
 }
 
@@ -107,7 +110,37 @@ void SeismicParameters::getSeisLimits(size_t               n_twt_0,
   }
 }
 
-std::vector<double> SeismicParameters::twt_0(){
+
+void SeismicParameters::findVrmsPos(std::vector<double> &vrms_vec,
+                                    size_t               i,
+                                    size_t               j)
+{
+  double v_w = model_settings_->GetVw();
+  double z_w = model_settings_->GetZw();
+
+  double v_over;
+  double twt_w = 2000*z_w/v_w;
+  double tmp, tmp0;
+
+  if ((*twtgrid_)(i,j,0) == -999.0) {
+    for (size_t k = 0; k < (*twtgrid_).GetNK(); ++k) {
+      vrms_vec[k] = -999.0;
+    }
+  }
+  else {
+    v_over = 2000*((*zgrid_)(i,j,0) - z_w)/((*twtgrid_)(i,j,0) - 2000*z_w/v_w);
+    tmp0 = v_w*v_w*twt_w + v_over*v_over*((*twtgrid_)(i,j,0) - twt_w);
+    for (size_t k = 0; k < (*twtgrid_).GetNK(); ++k) {
+      tmp = tmp0;
+      for (size_t l = 1; l <= k; ++l) {
+        tmp += (*vpgrid_)(i,j,l)* (*vpgrid_)(i,j,l)*((*twtgrid_)(i,j,l) - (*twtgrid_)(i,j,l-1));
+      }
+      vrms_vec[k] = std::sqrt(tmp / (*twtgrid_)(i,j,k));
+    }
+  }
+}
+
+std::vector<double> SeismicParameters::generateTWT_0(){
   size_t i_max, j_max, k_max;
   double x, y;
   size_t nt                      = seismic_geometry_->nt();
@@ -115,18 +148,18 @@ std::vector<double> SeismicParameters::twt_0(){
   double dt                      = seismic_geometry_->dt();
   std::vector<double> constvp    = model_settings_->GetConstVp();
 
-
+  //find max TWT for highest offset in order to find the highest TWT value to sample seismic
   double max_twt_value           = bot_time_.MaxNode(i_max, j_max);
   bot_time_.GetXY(i_max, j_max, x, y);
   double bot_y_value_twt = bot_time_.GetZ(x,y) -  2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
   (*twtgrid_).FindIndex(x, y, bot_y_value_twt, i_max, j_max, k_max);
-  //double max_twt_value           = (*twtgrid_)( i_max, j_max, (*twtgrid_).GetNK()-1); //need half wavelet for NMO correction
-  double vrms_max_t              = (*vrmsgrid_)(i_max, j_max, (*vrmsgrid_).GetNK()-1);
+  std::vector<double> vrms_vec((*twtgrid_).GetNK());
+  findVrmsPos(vrms_vec, i_max, j_max);
+  double vrms_max_t              = vrms_vec[vrms_vec.size() - 1];
   double offset_max              = offset_0_+doffset_*noffset_;
 
   double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 1000*1000*offset_max*offset_max/(vrms_max_t*vrms_max_t));
-  //twtx_max                      += 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
-
+  //std::cout << "twtx_max " << twtx_max << "\n";
   size_t nt_seis                 = nt;
   if (twtx_max > tmin + nt*dt) {
     nt_seis = static_cast<size_t>(std::ceil((twtx_max - tmin)/dt));
@@ -138,7 +171,7 @@ std::vector<double> SeismicParameters::twt_0(){
   return twt_0_;
 }
 
-std::vector<double>  SeismicParameters::z_0(){
+std::vector<double>  SeismicParameters::generateZ_0(){
   size_t nz                      = seismic_geometry_->nz();
   double zmin                    = seismic_geometry_->z0();
   double dz                      = seismic_geometry_->dz();
@@ -198,6 +231,9 @@ void SeismicParameters::deleteZandRandTWTGrids() {
   delete twtgrid_;
   delete zgrid_;
   delete rgridvec_;
+}
+
+void SeismicParameters::deleteVrmsGrid() {
   delete vrmsgrid_;
 }
 
@@ -211,6 +247,58 @@ void SeismicParameters::deleteGeometryAndOutput() {
   delete seismic_output_;
   delete model_settings_;
 }
+
+bool SeismicParameters::GetTimeOutput() {
+  bool output = (model_settings_->GetOutputSeismicTime()
+              || model_settings_->GetOutputTimeSegy()
+              || model_settings_->GetOutputSeismicStackTimeStorm()      
+              || model_settings_->GetOutputSeismicStackTimeSegy()
+              || model_settings_->GetOutputPrenmoTimeSegy());
+  return output;
+}
+
+bool SeismicParameters::GetDepthOutput() {
+  return (model_settings_->GetOutputSeismicDepth()               
+       || model_settings_->GetOutputDepthSegy()
+       || model_settings_->GetOutputSeismicStackDepthStorm()     
+       || model_settings_->GetOutputSeismicStackDepthSegy());
+}
+
+bool SeismicParameters::GetTimeshiftOutput() {
+  return (model_settings_->GetOutputSeismicTimeshift()           
+       || model_settings_->GetOutputTimeshiftSegy()
+       || model_settings_->GetOutputSeismicStackTimeShiftStorm() 
+       || model_settings_->GetOutputSeismicStackTimeShiftSegy());
+}
+bool SeismicParameters::GetStackOutput() {
+  return (model_settings_->GetOutputSeismicStackTimeStorm()      || model_settings_->GetOutputSeismicStackTimeSegy()
+       || model_settings_->GetOutputSeismicStackTimeShiftStorm() || model_settings_->GetOutputSeismicStackTimeShiftSegy()
+       || model_settings_->GetOutputSeismicStackDepthStorm()     || model_settings_->GetOutputSeismicStackDepthSegy());
+}
+bool SeismicParameters::GetSegyOutput() {
+  return (model_settings_->GetOutputTimeSegy()
+       || model_settings_->GetOutputSeismicStackTimeSegy()
+       || model_settings_->GetOutputDepthSegy()
+       || model_settings_->GetOutputSeismicStackDepthSegy()
+       || model_settings_->GetOutputTimeshiftSegy()
+       || model_settings_->GetOutputSeismicStackTimeShiftSegy()
+       || model_settings_->GetOutputPrenmoTimeSegy());
+}
+bool SeismicParameters::GetTimeStormOutput() {
+  return (model_settings_->GetOutputSeismicTime()      || model_settings_->GetOutputSeismicStackTimeStorm());
+}
+bool SeismicParameters::GetDepthStormOutput() {
+  return (model_settings_->GetOutputSeismicDepth()     || model_settings_->GetOutputSeismicStackDepthStorm());
+}
+bool SeismicParameters::GetTimeshiftStormOutput() {
+  return (model_settings_->GetOutputSeismicTimeshift() || model_settings_->GetOutputSeismicStackTimeShiftStorm());
+}
+
+bool SeismicParameters::GetStormOutput() {
+  return (GetTimeStormOutput() || GetTimeshiftStormOutput() || GetDepthStormOutput());
+}
+
+
 
 void SeismicParameters::findGeometry() {
   seismic_geometry_->setDxDy(model_settings_->GetDx(), model_settings_->GetDy());
@@ -398,7 +486,7 @@ void SeismicParameters::createGrids() {
   }
   else {
     rgridvec_ = new std::vector<NRLib::StormContGrid>(ntheta_);
-    vrmsgrid_ = new NRLib::StormContGrid(0, 0, 0);
+    vrmsgrid_ = NULL;
   }
   NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl);
 

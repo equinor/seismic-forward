@@ -16,6 +16,7 @@ set(CPP_FILES
 
     utils/segy_writer.cpp
     utils/storm_writer.cpp
+    utils/nmo_output.cpp
 )
 
 set(H_FILES
@@ -34,6 +35,7 @@ set(H_FILES
 
     utils/segy_writer.hpp
     utils/storm_writer.hpp
+    utils/nmo_output.hpp
 )
 
 

@@ -51,13 +51,14 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   bool find_for_ps = seismic_parameters.modelSettings()->GetPSSeismic();
   findTWT(vpgrid, vsgrid, twtgrid, zgrid, toptime, bottime, find_for_ps);
 
-  if (seismic_parameters.modelSettings()->GetNMOCorr()){
-    printf("Start finding rms velocity.\n");
-    findVrms(seismic_parameters);
-    printf("Rms velocity found.\n");
+  if (seismic_parameters.modelSettings()->GetNMOCorr()){  
     if (seismic_parameters.modelSettings()->GetOutputVrms()){
+      findVrms(seismic_parameters);
+      printf("Write rms velocity.\n");
       seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
+      seismic_parameters.deleteVrmsGrid();
     }
+    seismic_parameters.deleteVrmsGrid();
   }
 
   std::vector<double> constvp = seismic_parameters.modelSettings()->GetConstVp();
@@ -75,8 +76,7 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   }
   seismic_parameters.seismicGeometry()->setNt(nt);
   seismic_parameters.seismicGeometry()->setTRange(tmin, tmax);
-
-
+  
 
   //---------------Print toptime and bottime------------------------
   if (seismic_parameters.modelSettings()->GetOutputTimeSurfaces()) {
@@ -1890,13 +1890,15 @@ void SeismicRegridding::addNoiseToReflections(unsigned long seed, double std_dev
   }
 }
 
-void SeismicRegridding::addNoiseToReflectionsPos(unsigned long seed, double std_dev, std::vector<std::vector<double> > &refl) {
+void SeismicRegridding::addNoiseToReflectionsPos(unsigned long         seed, 
+                                                 double                std_dev, 
+                                                 NRLib::Grid2D<double> &refl) {
   NRLib::Random::Initialize(seed);
   NRLib::Normal normal_distibrution(0, std_dev);
 
-  for (size_t i = 0; i < refl.size(); ++i) {
-    for (size_t j = 0; j < refl[0].size(); ++j) {
-      refl[i][j] += static_cast<float>(normal_distibrution.Draw());
+  for (size_t i = 0; i < refl.GetNI(); ++i) {
+    for (size_t j = 0; j < refl.GetNJ(); ++j) {
+      refl(i, j) += static_cast<float>(normal_distibrution.Draw());
     }
   }
 }
