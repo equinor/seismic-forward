@@ -113,11 +113,11 @@ void SeismicParameters::getSeisLimits(size_t               n_twt_0,
 
 
 void SeismicParameters::findVrmsPos(std::vector<double>       &vrms_vec,
-                                     std::vector<double>       &vrms_vec_reg,
-                                     const std::vector<double> &twt_0,
-                                     size_t                    i,
-                                     size_t                    j,
-                                     bool                      include_regular)
+                                    std::vector<double>       &vrms_vec_reg,
+                                    const std::vector<double> &twt_0,
+                                    size_t                    i,
+                                    size_t                    j,
+                                    bool                      include_regular)
 {
   double v_w = model_settings_->GetVw();
   double z_w = model_settings_->GetZw();
@@ -161,7 +161,7 @@ void SeismicParameters::findVrmsPos(std::vector<double>       &vrms_vec,
     vrms_vec_in[1] = vrms_vec[0];
     size_t index   = 2;
     for (size_t k = 0; k < nk; ++k) {
-      if (twt_vec_in[k] != twt_vec_in[i-1]) {
+      if ((*twtgrid_)(i,j,k) != twt_vec_in[index-1]) {
         twt_vec_in[index]  = (*twtgrid_)(i,j,k);
         vrms_vec_in[index] = vrms_vec[k];
         ++index;
