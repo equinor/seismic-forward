@@ -6,6 +6,7 @@
 #include <nrlib/surface/regularsurfacerotated.hpp>
 #include <nrlib/segy/segygeometry.hpp>
 #include <nrlib/stormgrid/stormcontgrid.hpp>
+#include "nrlib/geometry/interpolation.hpp"
 #include "seismic_geometry.hpp"
 
 
@@ -111,9 +112,12 @@ void SeismicParameters::getSeisLimits(size_t               n_twt_0,
 }
 
 
-void SeismicParameters::findVrmsPos(std::vector<double> &vrms_vec,
-                                    size_t               i,
-                                    size_t               j)
+void SeismicParameters::findVrmsPos(std::vector<double>       &vrms_vec,
+                                     std::vector<double>       &vrms_vec_reg,
+                                     const std::vector<double> &twt_0,
+                                     size_t                    i,
+                                     size_t                    j,
+                                     bool                      include_regular)
 {
   double v_w = model_settings_->GetVw();
   double z_w = model_settings_->GetZw();
@@ -121,7 +125,9 @@ void SeismicParameters::findVrmsPos(std::vector<double> &vrms_vec,
   double v_over;
   double twt_w = 2000*z_w/v_w;
   double tmp, tmp0;
+  size_t nk = (*twtgrid_).GetNK();
 
+  //generate vrms_vec - only for each layer in reservoir
   if ((*twtgrid_)(i,j,0) == -999.0) {
     for (size_t k = 0; k < (*twtgrid_).GetNK(); ++k) {
       vrms_vec[k] = -999.0;
@@ -130,13 +136,43 @@ void SeismicParameters::findVrmsPos(std::vector<double> &vrms_vec,
   else {
     v_over = 2000*((*zgrid_)(i,j,0) - z_w)/((*twtgrid_)(i,j,0) - 2000*z_w/v_w);
     tmp0 = v_w*v_w*twt_w + v_over*v_over*((*twtgrid_)(i,j,0) - twt_w);
-    for (size_t k = 0; k < (*twtgrid_).GetNK(); ++k) {
+    for (size_t k = 0; k < nk; ++k) {
       tmp = tmp0;
       for (size_t l = 1; l <= k; ++l) {
         tmp += (*vpgrid_)(i,j,l)* (*vpgrid_)(i,j,l)*((*twtgrid_)(i,j,l) - (*twtgrid_)(i,j,l-1));
       }
       vrms_vec[k] = std::sqrt(tmp / (*twtgrid_)(i,j,k));
     }
+  }
+  
+  if (include_regular) {
+    //generate vrms_vec_reg - including overburden and underburden
+    std::vector<double> constvp    = model_settings_->GetConstVp();
+    double twt_wavelet = 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();  
+    double vrms_under  = vrms_vec[nk-1]*vrms_vec[nk-1]*(*twtgrid_)(i,j,(nk-1)) + constvp[2]*constvp[2]*twt_wavelet;
+    vrms_under        *= (1/((*twtgrid_)(i,j,(nk-1))+twt_wavelet));
+    vrms_under        = std::sqrt(vrms_under);
+
+    //sample vrms regularly:
+    std::vector<double> twt_vec_in(nk+2), vrms_vec_in(nk+2);
+    twt_vec_in[0]  = twt_w;
+    vrms_vec_in[0] = v_w;
+    twt_vec_in[1]  = (*twtgrid_)(i,j,0);
+    vrms_vec_in[1] = vrms_vec[0];
+    size_t index   = 2;
+    for (size_t k = 0; k < nk; ++k) {
+      if (twt_vec_in[k] != twt_vec_in[i-1]) {
+        twt_vec_in[index]  = (*twtgrid_)(i,j,k);
+        vrms_vec_in[index] = vrms_vec[k];
+        ++index;
+      }
+    }
+    twt_vec_in.resize(index+1);
+    vrms_vec_in.resize(index+1);
+    twt_vec_in[index]  = twt_vec_in[index-1]+twt_wavelet;
+    vrms_vec_in[index] = vrms_under;
+
+    vrms_vec_reg = NRLib::Interpolation::Interpolate1D(twt_vec_in, vrms_vec_in, twt_0, "linear");
   }
 }
 
@@ -153,8 +189,8 @@ std::vector<double> SeismicParameters::generateTWT_0(){
   bot_time_.GetXY(i_max, j_max, x, y);
   double bot_y_value_twt = bot_time_.GetZ(x,y) -  2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
   (*twtgrid_).FindIndex(x, y, bot_y_value_twt, i_max, j_max, k_max);
-  std::vector<double> vrms_vec((*twtgrid_).GetNK());
-  findVrmsPos(vrms_vec, i_max, j_max);
+  std::vector<double> vrms_vec((*twtgrid_).GetNK()), vrms_dummy, twt_0_dummy;
+  findVrmsPos(vrms_vec, vrms_dummy, twt_0_dummy, i_max, j_max, false);
   double vrms_max_t              = vrms_vec[vrms_vec.size() - 1];
   double offset_max              = offset_0_+doffset_*noffset_;
 

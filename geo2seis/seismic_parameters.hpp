@@ -69,11 +69,13 @@ class SeismicParameters {
                       std::vector<size_t> &n_min,
                       std::vector<size_t> &n_max);
 
-   void   findVrmsPos(std::vector<double> &vrms_vec,
-                             size_t               i,
-                             size_t               j);
 
-
+   void   findVrmsPos(std::vector<double>       &vrms_vec,
+                       std::vector<double>       &vrms_vec_reg,
+                       const std::vector<double> &twt_0,
+                       size_t                    i,
+                       size_t                    j,
+                       bool                      include_regular = true);
 
     NRLib::RegularSurface<double> &topTime()       { return top_time_; };
     NRLib::RegularSurface<double> &bottomTime()    { return bot_time_; };

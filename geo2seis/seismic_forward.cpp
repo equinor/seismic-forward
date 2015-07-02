@@ -434,14 +434,11 @@ void SeismicForward::generateNMOSeismic(SeismicParameters             &seismic_p
   NRLib::RegularSurface<double>     &toptime        = seismic_parameters.topTime();
   
 
-  //calculate vrms per reflection
-  seismic_parameters.findVrmsPos(vrms_vec, i, j);
+  //calculate vrms per reflection and regularly sampled  
+  seismic_parameters.findVrmsPos(vrms_vec, vrms_vec_reg, twt_0, i, j);
 
   //find min and max sample for seismic - for each offset.
   seismic_parameters.getSeisLimits(twt_0.size(), vrms_vec, offset_vec, n_min, n_max);
-
-  //sample vrms regularly:
-  vrms_vec_reg = linInterp1D(twt_vec, vrms_vec, twt_0);
 
   //find theta - for each layer for each offset:
   findNMOTheta(theta_pos, twt_vec, vrms_vec, offset_vec);
@@ -596,7 +593,9 @@ std::vector<double> SeismicForward::linInterp1D(const std::vector<double> &x_in,
 {
   std::vector<double> x_in_copy(x_in.size());
   std::vector<double> y_in_copy(y_in.size());
-  size_t index = 1;
+  x_in_copy[0] = x_in[0];
+  y_in_copy[0] = y_in[0];
+  size_t index = 1; //sjekk om denne skal være 0???
   for (size_t i = 1; i < x_in.size(); ++i){
     if (x_in[i] != x_in[i-1]){
       x_in_copy[index] = x_in[i];
