@@ -135,6 +135,7 @@ bool SeismicOutput::prepareSegy(NRLib::SegY               &segyout,
                                 std::string                fileName,
                                 SeismicParameters         &seismic_parameters,
                                 const std::vector<double> &offset_vec,
+                                size_t                     n_traces_per_ensamble,
                                 bool                       time)
 {
   double z_min = twt_0[0];
@@ -205,7 +206,7 @@ bool SeismicOutput::prepareSegy(NRLib::SegY               &segyout,
     line = "Depth (m)     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);
   header.SetLine(6, line);
 
-  segyout.Initialize(filename_out, float(z0), static_cast<size_t>(nz), float(dz), header, thf, short(offset_vec.size()));
+  segyout.Initialize(filename_out, float(z0), static_cast<size_t>(nz), float(dz), header, thf, short(n_traces_per_ensamble));
   segyout.SetGeometry(geometry);
   segyout.SetDelayRecTime(short(z0));
   return true;
@@ -1029,6 +1030,15 @@ void SeismicOutput::writeSeismicDepthSeismicOnFile(SeismicParameters &seismic_pa
 }
 
 void SeismicOutput::printVector(std::vector<double> vec, std::string filename) {
+  std::ofstream fout;
+  NRLib::OpenWrite(fout, filename);
+  for (size_t i = 0; i < vec.size(); ++i) {
+    fout << vec[i] << std::endl;
+  }
+  fout.close();
+}
+
+void SeismicOutput::printVectorSizeT(std::vector<size_t> vec, std::string filename) {
   std::ofstream fout;
   NRLib::OpenWrite(fout, filename);
   for (size_t i = 0; i < vec.size(); ++i) {

@@ -51,7 +51,8 @@ class SeismicForward {
                                    size_t                         j,
                                    unsigned long                  seed,
                                    const NRLib::StormContGrid    &zgrid,
-                                   std::vector<NRLib::StormContGrid> &rgridvec);
+                                   std::vector<NRLib::StormContGrid> &rgridvec,
+                                   size_t                        &max_sample);
 
     static void seisConvolutionNMO(NRLib::Grid2D<double>               &timegrid_pos,
                                    NRLib::Grid2D<double>               &refl_pos,
@@ -65,8 +66,8 @@ class SeismicForward {
                                    double                               dt,
                                    size_t                               i,
                                    size_t                               j,
-                                   std::vector<size_t>                  n_min,
-                                   std::vector<size_t>                  n_max);
+                                   const std::vector<size_t>           &n_min,
+                                   const std::vector<size_t>           &n_max);
 
 
     static void generateSeismicOnFile(std::vector<NRLib::StormContGrid> &rgridvec,
@@ -94,13 +95,17 @@ class SeismicForward {
                               const std::vector<double>   &zgrid_vec,
                               const std::vector<double>   &z_0,
                               const NRLib::Grid2D<double> &seismic,
-                              NRLib::Grid2D<double>       &conv_seismic);
+                              NRLib::Grid2D<double>       &conv_seismic,
+                              const size_t                &max_sample);
 
 
     static void   NMOCorrect(const std::vector<double>   &t_in,
                              const NRLib::Grid2D<double> &data_in,
                              const NRLib::Grid2D<double> &t_out,
-                             NRLib::Grid2D<double>       &data_out);
+                             NRLib::Grid2D<double>       &data_out,
+                             const std::vector<size_t>   &n_min,
+                             const std::vector<size_t>   &n_max,
+                             size_t                      &max_sample);
 
 
     static void   findNMOReflections(SeismicParameters           &seismic_parameters,

@@ -28,10 +28,6 @@ NMOOutput::NMOOutput(SeismicParameters &seismic_parameters,
   NRLib::Volume volume   = seismic_parameters.seismicGeometry()->createDepthVolume();
   NRLib::Volume volume_t = seismic_parameters.seismicGeometry()->createTimeVolume();
 
-  //fjerne?
-  std::vector<double>               zero_vec(1);
-  zero_vec[0] = 0;
-
   if (seismic_parameters.GetSegyOutput()) {
     seismic_parameters.seismicOutput()->setSegyGeometry(seismic_parameters, volume_t, nx, ny);
     segy_ok_ = seismic_parameters.seismicOutput()->checkUTMPrecision(seismic_parameters, volume_t, nx, ny);
@@ -39,35 +35,35 @@ NMOOutput::NMOOutput(SeismicParameters &seismic_parameters,
   if (segy_ok_) {
     if (seismic_parameters.modelSettings()->GetOutputTimeSegy()) {
       std::string filename        = "seismic_time";
-      nmo_time_segy_ok_            = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, true);
+      nmo_time_segy_ok_            = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, offset_vec.size(), true);
     }
     if (seismic_parameters.modelSettings()->GetOutputPrenmoTimeSegy()) {
       std::string filename        = "prenmo_seismic_time";
-      prenmo_time_segy_ok_         = seismic_parameters.seismicOutput()->prepareSegy(prenmo_time_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, true);
+      prenmo_time_segy_ok_         = seismic_parameters.seismicOutput()->prepareSegy(prenmo_time_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, offset_vec.size(), true);
     }
     if (seismic_parameters.modelSettings()->GetOutputSeismicStackTimeSegy()) {
       std::string filename        = "seismic_time_stack";
-      nmo_time_stack_segy_ok_      = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_stack_segy_, volume_t, twt_0_, filename, seismic_parameters, zero_vec, true);
+      nmo_time_stack_segy_ok_      = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_stack_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, 1, true);
     }
     if (seismic_parameters.modelSettings()->GetOutputDepthSegy()) {
       std::string filename        = "seismic_depth";
-      nmo_depth_segy_ok_           = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_segy_, volume, z_0_, filename, seismic_parameters, offset_vec, false);
+      nmo_depth_segy_ok_           = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_segy_, volume, z_0_, filename, seismic_parameters, offset_vec, offset_vec.size(), false);
     }
     if (seismic_parameters.modelSettings()->GetOutputSeismicStackDepthSegy()) {
       std::string filename        = "seismic_depth_stack";
-      nmo_depth_stack_segy_ok_     = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_stack_segy_, volume, z_0_, filename, seismic_parameters, zero_vec, false);
+      nmo_depth_stack_segy_ok_     = seismic_parameters.seismicOutput()->prepareSegy(nmo_depth_stack_segy_, volume, z_0_, filename, seismic_parameters, offset_vec, 1, false);
     }
     if (seismic_parameters.modelSettings()->GetOutputTimeshiftSegy()) {
       std::string filename        = "seismic_timeshift";
-      nmo_timeshift_segy_ok_       = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, true);
+      nmo_timeshift_segy_ok_       = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, offset_vec.size(), true);
     }
     if (seismic_parameters.modelSettings()->GetOutputSeismicStackTimeShiftSegy()) {
       std::string filename        = "seismic_timeshift_stack";
-      nmo_timeshift_stack_segy_ok_ = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_stack_segy_, volume_t, twt_0_, filename, seismic_parameters, zero_vec, true);
+      nmo_timeshift_stack_segy_ok_ = seismic_parameters.seismicOutput()->prepareSegy(nmo_timeshift_stack_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, 1, true);
     }
     if (seismic_parameters.modelSettings()->GetOutputTwtOffset()) {
       std::string filename        = "twt_offset";
-      twtx_segy_ok_                = seismic_parameters.seismicOutput()->prepareSegy(twtx_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, true);
+      twtx_segy_ok_                = seismic_parameters.seismicOutput()->prepareSegy(twtx_segy_, volume_t, twt_0_, filename, seismic_parameters, offset_vec, offset_vec.size(), true);
     }
   }
   

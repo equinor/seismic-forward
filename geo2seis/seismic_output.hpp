@@ -34,6 +34,7 @@ class SeismicOutput {
                      std::string                fileName,
                      SeismicParameters         &seismic_parameters,
                      const std::vector<double> &offset_vec,
+                     size_t                     n_traces_per_ensamble,
                      bool                       time);
 
     void writeSegyGather(NRLib::Grid2D<double>     &data_gather,
@@ -88,6 +89,7 @@ class SeismicOutput {
     void writeVrms(SeismicParameters &seismic_parameters);
 
     void printVector(std::vector<double> vec, std::string filename);
+    void printVectorSizeT(std::vector<size_t> vec, std::string filename);
     void printMatrix(NRLib::Grid2D<double> matrix, std::string filename);
 
   private:
