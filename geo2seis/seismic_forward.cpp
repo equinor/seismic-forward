@@ -616,6 +616,8 @@ std::vector<double> SeismicForward::splineInterp1D(const std::vector<double> &x_
 {
   std::vector<double> x_in_copy(x_in.size());
   std::vector<double> y_in_copy(y_in.size());
+  x_in_copy[0] = x_in[0];
+  y_in_copy[0] = y_in[0];
   size_t index = 1;
   for (size_t i = 1; i < x_in.size(); ++i){
     if (x_in[i] != x_in[i-1]){
