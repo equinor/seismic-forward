@@ -690,7 +690,7 @@ void SeismicForward::NMOCorrect(const std::vector<double>   &t_in,
   size_t nt   = data_in.GetNI();
   size_t noff = data_in.GetNJ();
   std::vector<double> data_vec_in(nt), t_vec_in(nt), t_vec_out(nt), data_vec_out(nt);
-  for (size_t off = 0; off < noff; off++) {    
+  for (size_t off = 0; off < noff; off++) {
     size_t n_min_max = (n_max[off]-n_min[off]+1);
     data_vec_in.resize(n_min_max);
     t_vec_in.resize(n_min_max);
@@ -702,10 +702,15 @@ void SeismicForward::NMOCorrect(const std::vector<double>   &t_in,
       t_vec_in[k - n_min[off]]    = t_in[k];
     }
     //not necessary to interpolate AT values higher than max t
+    //t_out not monotonously increasing, must check that we are inside
+    bool inside = false;
     for (size_t k = 0; k < nt; k++) {
       t_vec_out[k]   = t_out(k, off);
+      if (inside == false && (t_vec_out[k] > t_vec_in[0] && t_vec_out[k] < t_vec_in[n_min_max - 1])){
+        inside = true;
+      }
       ++index;
-      if (t_vec_out[k] > t_vec_in[n_min_max-1]){
+      if (inside == true && t_vec_out[k] > t_vec_in[n_min_max-1]){
         break;
       }
     }

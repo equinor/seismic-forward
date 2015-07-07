@@ -58,7 +58,9 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
       seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
       seismic_parameters.deleteVrmsGrid();
     }
-    seismic_parameters.deleteVrmsGrid();
+    else {
+      seismic_parameters.deleteVrmsGrid();
+    }
   }
 
   std::vector<double> constvp = seismic_parameters.modelSettings()->GetConstVp();
