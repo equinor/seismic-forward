@@ -35,7 +35,8 @@ class SeismicOutput {
                      SeismicParameters         &seismic_parameters,
                      const std::vector<double> &offset_vec,
                      size_t                     n_traces_per_ensamble,
-                     bool                       time);
+                     bool                       time,
+                     bool                       nmo);
 
     void writeSegyGather(NRLib::Grid2D<double>     &data_gather,
                          NRLib::SegY               &segyout,

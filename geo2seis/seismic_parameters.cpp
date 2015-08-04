@@ -8,6 +8,9 @@
 #include <nrlib/stormgrid/stormcontgrid.hpp>
 #include "nrlib/geometry/interpolation.hpp"
 #include "seismic_geometry.hpp"
+#include <physics/zoeppritz.hpp>
+#include <physics/zoeppritz_ps.hpp>
+#include <physics/zoeppritz_pp.hpp>
 
 
 SeismicParameters::SeismicParameters(ModelSettings *model_settings) {
@@ -44,6 +47,10 @@ void SeismicParameters::calculateAngleSpan() {
     } else {
         ntheta_ = size_t((theta_max_ - theta_0_) / dtheta_) + 1;
         dtheta_ = (theta_max_ - theta_0_) / (ntheta_ - 1);
+    }
+    theta_vec_.resize(ntheta_);
+    for (size_t i = 0; i < ntheta_; ++i) {
+      theta_vec_[i] = theta_0_ + i*dtheta_;
     }
 }
 
@@ -175,6 +182,87 @@ void SeismicParameters::findVrmsPos(std::vector<double>       &vrms_vec,
     vrms_vec_reg = NRLib::Interpolation::Interpolate1D(twt_vec_in, vrms_vec_in, twt_0, "linear");
   }
 }
+
+
+
+void SeismicParameters::findReflections(NRLib::Grid2D<double>       &r_vec,
+                                        const std::vector<double>   &theta_vec,
+                                        size_t                       i,
+                                        size_t                       j){
+
+
+
+  bool ps_seis   = model_settings_->GetPSSeismic();
+
+  Zoeppritz *zoeppritz = NULL;
+  if (ps_seis) {
+    zoeppritz = new ZoeppritzPS();
+  } else {
+    zoeppritz = new ZoeppritzPP();
+  }
+
+  double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
+  std::vector<double> vp_vec(bottom_k_-top_k_+3), vs_vec(bottom_k_-top_k_+3), rho_vec(bottom_k_-top_k_+3);
+
+  for (size_t theta = 0; theta < theta_vec.size(); ++theta) {
+    for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {
+      vp_vec[k - top_k_]  = (*vpgrid_)(i, j, (k - top_k_));
+      vs_vec[k - top_k_]  = (*vsgrid_)(i, j, (k - top_k_));
+      rho_vec[k - top_k_] = (*rhogrid_)(i, j, (k - top_k_));
+    }
+    zoeppritz->ComputeConstants(theta_vec[theta]);
+    for (size_t k = top_k_; k <= bottom_k_ + 1; k++) {
+      diffvp  =         vp_vec[k-top_k_ + 1] - vp_vec[k-top_k_];
+      meanvp  = 0.5 *  (vp_vec[k-top_k_ + 1] + vp_vec[k-top_k_]);
+      diffvs  =         vs_vec[k-top_k_ + 1] - vs_vec[k-top_k_];
+      meanvs  = 0.5 *  (vs_vec[k-top_k_ + 1] + vs_vec[k-top_k_]);
+      diffrho =        rho_vec[k-top_k_ + 1] - rho_vec[k-top_k_];
+      meanrho = 0.5 * (rho_vec[k-top_k_ + 1] + rho_vec[k-top_k_]);
+      r_vec(k - top_k_, theta) = static_cast<float>(zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+    }
+  }
+  delete zoeppritz;
+}
+
+
+void SeismicParameters::findNMOReflections(NRLib::Grid2D<double>       &r_vec,
+                                           const NRLib::Grid2D<double> &theta_vec,
+                                           const std::vector<double>   &offset_vec,
+                                           size_t                       i,
+                                           size_t                       j){
+
+  bool ps_seis   = model_settings_->GetPSSeismic();
+
+  Zoeppritz *zoeppritz = NULL;
+  if (ps_seis) {
+    zoeppritz = new ZoeppritzPS();
+  } else {
+    zoeppritz = new ZoeppritzPP();
+  }
+
+  double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
+  std::vector<double> vp_vec(bottom_k_-top_k_+3), vs_vec(bottom_k_-top_k_+3), rho_vec(bottom_k_-top_k_+3);
+
+  for (size_t off = 0; off < offset_vec.size(); ++off) {
+    for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {
+      vp_vec[k - top_k_]  = (*vpgrid_)(i, j, (k - top_k_));
+      vs_vec[k - top_k_]  = (*vsgrid_)(i, j, (k - top_k_));
+      rho_vec[k - top_k_] = (*rhogrid_)(i, j, (k - top_k_));
+    }
+    for (size_t k = top_k_; k <= bottom_k_ + 1; k++) {
+      diffvp  =         vp_vec[k-top_k_ + 1] - vp_vec[k-top_k_];
+      meanvp  = 0.5 *  (vp_vec[k-top_k_ + 1] + vp_vec[k-top_k_]);
+      diffvs  =         vs_vec[k-top_k_ + 1] - vs_vec[k-top_k_];
+      meanvs  = 0.5 *  (vs_vec[k-top_k_ + 1] + vs_vec[k-top_k_]);
+      diffrho =        rho_vec[k-top_k_ + 1] - rho_vec[k-top_k_];
+      meanrho = 0.5 * (rho_vec[k-top_k_ + 1] + rho_vec[k-top_k_]);
+      zoeppritz->ComputeConstants(theta_vec(k, off));
+      r_vec(k - top_k_, off) = static_cast<float>(zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+    }
+  }
+  delete zoeppritz;
+}
+
 
 std::vector<double> SeismicParameters::generateTWT_0(){
   size_t i_max, j_max, k_max;

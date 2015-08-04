@@ -21,6 +21,7 @@ class SeismicForward {
 
     static void makeNMOSeismic(SeismicParameters &seismic_parameters);
     static void makeSeismic(SeismicParameters &seismic_parameters);
+    static void makeSeismicOLD(SeismicParameters &seismic_parameters);
 
     static void generateSeismic(std::vector<NRLib::StormContGrid> &rgridvec,
                                 NRLib::StormContGrid &twtgrid,
@@ -40,19 +41,31 @@ class SeismicForward {
                                 bool depth_output,
                                 bool timeshift_output);
 
-    static void generateNMOSeismic(SeismicParameters             &seismic_parameters,
-                                   const std::vector<double>     &twt_vec,
-                                   const std::vector<double>     &twt_0,
-                                   const std::vector<double>     &offset_vec,
-                                   NRLib::Grid2D<double>         &timegrid_pos,
-                                   NRLib::Grid2D<double>         &nmo_timegrid_pos,
-                                   NRLib::Grid2D<double>         &twtx_reg,
-                                   size_t                         i,
-                                   size_t                         j,
-                                   unsigned long                  seed,
-                                   const NRLib::StormContGrid    &zgrid,
-                                   std::vector<NRLib::StormContGrid> &rgridvec,
-                                   size_t                        &max_sample);
+    static void generateSeismicTrace(SeismicParameters             &seismic_parameters,
+                                     const std::vector<double>     &twt_vec,
+                                     const std::vector<double>     &twt_0,
+                                     const std::vector<double>     &theta_vec,
+                                     NRLib::Grid2D<double>         &timegrid_pos,
+                                     size_t                         i,
+                                     size_t                         j,
+                                     unsigned long                  seed,
+                                     const NRLib::StormContGrid    &zgrid,
+                                     std::vector<NRLib::StormContGrid> &rgridvec);
+
+
+    static void generateNMOSeismicTrace(SeismicParameters             &seismic_parameters,
+                                        const std::vector<double>     &twt_vec,
+                                        const std::vector<double>     &twt_0,
+                                        const std::vector<double>     &offset_vec,
+                                        NRLib::Grid2D<double>         &timegrid_pos,
+                                        NRLib::Grid2D<double>         &nmo_timegrid_pos,
+                                        NRLib::Grid2D<double>         &twtx_reg,
+                                        size_t                         i,
+                                        size_t                         j,
+                                        unsigned long                  seed,
+                                        const NRLib::StormContGrid    &zgrid,
+                                        std::vector<NRLib::StormContGrid> &rgridvec,
+                                        size_t                        &max_sample);
 
     static void seisConvolutionNMO(NRLib::Grid2D<double>               &timegrid_pos,
                                    NRLib::Grid2D<double>               &refl_pos,
@@ -69,6 +82,20 @@ class SeismicForward {
                                    const std::vector<size_t>           &n_min,
                                    const std::vector<size_t>           &n_max);
 
+    static void seisConvolution(NRLib::Grid2D<double>               &timegrid_pos,
+                                NRLib::Grid2D<double>               &refl_pos,
+                                const std::vector<double>           &twt,
+                                const NRLib::StormContGrid          &zgrid,
+                                const NRLib::RegularSurface<double> &toptime,
+                                Wavelet                             *wavelet,
+                                double                               waveletScale,
+                                const std::vector<double>           &theta_vec,
+                                double                               t0,
+                                double                               dt,
+                                size_t                               i,
+                                size_t                               j,
+                                size_t           n_min,
+                                  size_t           n_max);
 
     static void generateSeismicOnFile(std::vector<NRLib::StormContGrid> &rgridvec,
                                       NRLib::StormContGrid &twtgrid,
@@ -106,16 +133,6 @@ class SeismicForward {
                              const std::vector<size_t>   &n_min,
                              const std::vector<size_t>   &n_max,
                              size_t                      &max_sample);
-
-
-    static void   findNMOReflections(SeismicParameters           &seismic_parameters,
-                                     NRLib::Grid2D<double>       &r_vec,
-                                     const NRLib::Grid2D<double> &theta_vec,
-                                     const std::vector<double>   &offset,
-                                     size_t                       i,
-                                     size_t                       j);
-
-
 
     static void   findNMOTheta(NRLib::Grid2D<double>     &thetagrid,
                                const std::vector<double> &twt_vec,

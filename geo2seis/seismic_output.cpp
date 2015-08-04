@@ -136,7 +136,8 @@ bool SeismicOutput::prepareSegy(NRLib::SegY               &segyout,
                                 SeismicParameters         &seismic_parameters,
                                 const std::vector<double> &offset_vec,
                                 size_t                     n_traces_per_ensamble,
-                                bool                       time)
+                                bool                       time,
+                                bool                       nmo)
 {
   double z_min = twt_0[0];
   double z_max = twt_0[twt_0.size()-1];
@@ -198,7 +199,10 @@ bool SeismicOutput::prepareSegy(NRLib::SegY               &segyout,
   header.SetLine(3, line);
   line = "  First xline:  " + NRLib::ToString(geometry->GetMinXL()) + "      Last xline: " + NRLib::ToString(geometry->GetMaxXL());
   header.SetLine(4, line);
-  line = "Offset (m)    min: " + NRLib::ToString(offset_vec[0]) + "    max: " + NRLib::ToString(offset_vec[offset_vec.size() - 1]);
+  if (nmo)
+    line = "Offset (m)    min: " + NRLib::ToString(offset_vec[0]) + "    max: " + NRLib::ToString(offset_vec[offset_vec.size() - 1]);
+  else
+    line = "Angle  (m)    min: " + NRLib::ToString(offset_vec[0]/NRLib::Degree) + "    max: " + NRLib::ToString(offset_vec[offset_vec.size() - 1]/NRLib::Degree);
   header.SetLine(5, line);
   if (time)
     line = "Time (ms)     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);

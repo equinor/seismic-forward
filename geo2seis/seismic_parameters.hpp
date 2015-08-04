@@ -55,10 +55,12 @@ class SeismicParameters {
     double theta0()                  { return theta_0_; }
     double dTheta()                  { return dtheta_; }
     size_t nTheta()                  { return ntheta_; }
+    std::vector<double> & theta_vec() { return theta_vec_; }
     double offset0()                 { return offset_0_; }
     double dOffset()                 { return doffset_; }
     size_t nOffset()                 { return noffset_; }
     std::vector<double> & offset_vec() { return offset_vec_; }
+    
 
     std::vector<double> generateTWT_0();
     std::vector<double> generateZ_0();
@@ -76,6 +78,17 @@ class SeismicParameters {
                        size_t                    i,
                        size_t                    j,
                        bool                      include_regular = true);
+
+   void   findNMOReflections(NRLib::Grid2D<double>       &r_vec,
+                             const NRLib::Grid2D<double> &theta_vec,
+                             const std::vector<double>   &offset_vec,
+                             size_t                       i,
+                             size_t                       j);
+
+   void   findReflections(NRLib::Grid2D<double>       &r_vec,
+                          const std::vector<double>   &theta_vec,
+                          size_t                       i,
+                          size_t                       j);
 
     NRLib::RegularSurface<double> &topTime()       { return top_time_; };
     NRLib::RegularSurface<double> &bottomTime()    { return bot_time_; };
@@ -116,6 +129,7 @@ class SeismicParameters {
     double theta_0_;
     double dtheta_;
     double theta_max_;
+    std::vector<double> theta_vec_;
 
     size_t noffset_;
     double offset_0_;
