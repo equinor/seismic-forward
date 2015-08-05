@@ -25,7 +25,8 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
   }
 }
 
-void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters) {
+void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters) 
+{
   if (seismic_parameters.GetTimeOutput() || seismic_parameters.GetDepthOutput() || seismic_parameters.GetTimeshiftOutput()) {
   
     ModelSettings * model_settings = seismic_parameters.modelSettings();
@@ -54,9 +55,19 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters) {
     }
 
 
-    //find max twt for seismic grid - should handle the largest offset.
-    std::vector<double> twt_0        = seismic_parameters.generateTWT_0();
-    std::vector<double> z_0          = seismic_parameters.generateZ_0();
+    //find twt_0 and z_0
+    double tmin = seismic_parameters.seismicGeometry()->t0();
+    double dt   = seismic_parameters.seismicGeometry()->dt();
+    std::vector<double> twt_0(nt);
+    for (size_t i = 0; i < nt; ++i){
+      twt_0[i] = tmin + (0.5 + i)*dt;
+    }
+    double zmin = seismic_parameters.seismicGeometry()->z0();
+    double dz   = seismic_parameters.seismicGeometry()->dz();
+    std::vector<double> z_0(nz);
+    for (size_t i = 0; i < nz; ++i){
+      z_0[i] = zmin + (0.5 + i)*dz;
+    }
     std::vector<double> & theta_vec  = seismic_parameters.theta_vec(); 
     
     //setup vectors for twt, vrms, theta, refl and seismic
@@ -178,7 +189,7 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters) {
                               timeshiftgrid_pos,
                               timeshiftgrid_stack_pos,
                               x, y, i, j);
-        }
+          }
         //-----------------OUTSIDE ECLIPSE GRID, WHERE NO SEISMIC GENERATED, ZERO TRACE-----------------
         else {
           //print zero trace to segy and store zero trace in storm grid
@@ -205,7 +216,8 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters) {
   }
 }
 
-void SeismicForward::makeSeismicOLD(SeismicParameters &seismic_parameters) {
+void SeismicForward::makeSeismicOLD(SeismicParameters &seismic_parameters) 
+{
 
   ModelSettings * model_settings = seismic_parameters.modelSettings();
   size_t nx     = seismic_parameters.seismicGeometry()->nx();
@@ -390,7 +402,8 @@ void SeismicForward::makeSeismicOLD(SeismicParameters &seismic_parameters) {
 
 
 
-void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters){
+void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
+{
   if (seismic_parameters.GetTimeOutput() || seismic_parameters.GetDepthOutput() || seismic_parameters.GetTimeshiftOutput()) {
   
     ModelSettings * model_settings = seismic_parameters.modelSettings();
@@ -451,7 +464,7 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters){
     NMOOutput nmo_output(seismic_parameters, twt_0, z_0);
 
     printTime();
-    
+
 
     float monitor_size, next_monitor;
     monitorInitialize(nx, ny, monitor_size, next_monitor);
@@ -555,7 +568,7 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters){
                               nmo_timeshiftgrid_stack_pos,
                               twtx_reg,
                               x, y, i, j);
-        }
+          }
         //-----------------OUTSIDE ECLIPSE GRID, WHERE NO SEISMIC GENERATED, ZERO TRACE-----------------
         else {
           //print zero trace to segy and store zero trace in storm grid
@@ -596,7 +609,7 @@ void SeismicForward::generateNMOSeismicTrace(SeismicParameters             &seis
 {
   size_t nx     = seismic_parameters.seismicGeometry()->nx();
   double dt     = seismic_parameters.seismicGeometry()->dt();
-  double tmin   = seismic_parameters.seismicGeometry()->t0();
+  double tmin   = twt_0[0];
   size_t nzrefl = seismic_parameters.seismicGeometry()->zreflectorcount();
 
   std::vector<size_t> n_min(offset_vec.size());
@@ -619,7 +632,7 @@ void SeismicForward::generateNMOSeismicTrace(SeismicParameters             &seis
   seismic_parameters.findVrmsPos(vrms_vec, vrms_vec_reg, twt_0, i, j);
 
   //find min and max sample for seismic - for each offset.
-  seismic_parameters.getSeisLimits(twt_0.size(), vrms_vec, offset_vec, n_min, n_max);
+  seismic_parameters.getSeisLimits(twt_0, vrms_vec, offset_vec, n_min, n_max);
 
   //find theta - for each layer for each offset:
   findNMOTheta(theta_pos, twt_vec, vrms_vec, offset_vec);
@@ -697,7 +710,7 @@ void SeismicForward::generateSeismicTrace(SeismicParameters             &seismic
   size_t nx     = seismic_parameters.seismicGeometry()->nx();
   size_t nt     = seismic_parameters.seismicGeometry()->nt();
   double dt     = seismic_parameters.seismicGeometry()->dt();
-  double tmin   = seismic_parameters.seismicGeometry()->t0();
+  double tmin   = twt_0[0];
   size_t nzrefl = seismic_parameters.seismicGeometry()->zreflectorcount();
 
   size_t n_min = 0;

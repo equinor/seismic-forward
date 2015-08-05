@@ -65,11 +65,11 @@ class SeismicParameters {
     std::vector<double> generateTWT_0();
     std::vector<double> generateZ_0();
 
-    void getSeisLimits(size_t               n_twt_0,
-                      std::vector<double>  vrms_vec,
-                      std::vector<double>  offset_vec,
-                      std::vector<size_t> &n_min,
-                      std::vector<size_t> &n_max);
+    void getSeisLimits(std::vector<double>  twt_0,
+                       std::vector<double>  vrms_vec,
+                       std::vector<double>  offset_vec,
+                       std::vector<size_t> &n_min,
+                       std::vector<size_t> &n_max);
 
 
    void   findVrmsPos(std::vector<double>       &vrms_vec,

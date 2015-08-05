@@ -92,16 +92,17 @@ void SeismicParameters::setSegyGeometry(const NRLib::SegyGeometry &geometry)
   segy_geometry_ = new NRLib::SegyGeometry(geometry);
 }
 
-void SeismicParameters::getSeisLimits(size_t               n_twt_0,
+void SeismicParameters::getSeisLimits(std::vector<double>  twt_0,
                                       std::vector<double>  vrms_vec,
                                       std::vector<double>  offset_vec,
                                       std::vector<size_t> &n_min,
                                       std::vector<size_t> &n_max)
 {
-  size_t nt                      = seismic_geometry_->nt();
-  double dt                      = seismic_geometry_->dt();
-  double tmin                    = seismic_geometry_->t0();
-  double tmax                    = seismic_geometry_->tmax();
+  size_t nt      = seismic_geometry_->nt();
+  double dt      = seismic_geometry_->dt();
+  double tmin    = twt_0[0];
+  size_t n_twt_0 = twt_0.size();
+  double tmax    = seismic_geometry_->tmax();
   double vrms_nk = vrms_vec[vrms_vec.size() - 1];
   double vrms_0  = vrms_vec[0];
 
@@ -268,7 +269,6 @@ std::vector<double> SeismicParameters::generateTWT_0(){
   size_t i_max, j_max, k_max;
   double x, y;
   size_t nt                      = seismic_geometry_->nt();
-  double tmin                    = seismic_geometry_->t0();
   double dt                      = seismic_geometry_->dt();
   std::vector<double> constvp    = model_settings_->GetConstVp();
 
@@ -282,6 +282,11 @@ std::vector<double> SeismicParameters::generateTWT_0(){
   double vrms_max_t              = vrms_vec[vrms_vec.size() - 1];
   double offset_max              = offset_0_+doffset_*(noffset_ - 1);
   double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 1000*1000*offset_max*offset_max/(vrms_max_t*vrms_max_t));
+
+  //find tmin
+  double factor = 2 * twtx_max / seismic_geometry_->tmax();
+  double tmin = seismic_geometry_->t0() - factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  
   size_t nt_seis                 = nt;
   if (twtx_max > tmin + nt*dt) {
     nt_seis = static_cast<size_t>(std::ceil((twtx_max - tmin)/dt));
@@ -302,12 +307,13 @@ std::vector<double>  SeismicParameters::generateZ_0(){
   double twt_0_max               = twt_0_[twt_0_.size()-1];
   double factor                  = 2 * twt_0_max / tmax;
   double max_z                   = zmin + (nz-1)*dz + factor * wavelet_->GetDepthAdjustmentFactor();
-
-  size_t nz_seis                 = static_cast<size_t>(std::ceil((max_z - zmin)/dz));
+  double min_z                   = zmin             - factor * wavelet_->GetDepthAdjustmentFactor();
+  
+  size_t nz_seis                 = static_cast<size_t>(std::ceil((max_z - min_z)/dz));
 
   z_0_.resize(nz_seis);
   for (size_t i = 0; i < nz_seis; ++i){
-    z_0_[i] = zmin + (0.5 + i)*dz;
+    z_0_[i] = min_z + (0.5 + i)*dz;
   }
   return z_0_;
 }
