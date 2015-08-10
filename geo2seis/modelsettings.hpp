@@ -400,6 +400,10 @@ class ModelSettings {
         nmo_corr_ = nmo;
     }
 
+    void SetOldModelling(bool old) {
+      old_mod_ = old;
+    }
+
     void SetVw(double value) {
         v_w_ = value;
     }
@@ -767,6 +771,10 @@ class ModelSettings {
         return nmo_corr_;
     }
 
+    bool GetOldModelling() {
+        return old_mod_;
+    }
+
     double GetVw() {
         return v_w_;
     }
@@ -830,7 +838,7 @@ class ModelSettings {
     std::string twt_file_name_;
 
     bool ps_seismic_;
-
+    bool old_mod_;
     bool nmo_corr_;
     double v_w_, z_w_;
 

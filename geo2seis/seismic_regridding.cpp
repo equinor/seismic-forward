@@ -20,23 +20,38 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   printf("Start finding elastic parameters.\n");
   findVpAndR(seismic_parameters);
   printf("Elastic parameters found.\n");
-
-
+  
   seismic_parameters.deleteEclipseGrid();
+  
+  //resample, write and delete extra parameter grids
+  if (seismic_parameters.modelSettings()->GetOutputExtraParametersTimeSegy()) {
+    seismic_parameters.seismicOutput()->writeExtraParametersTimeSegy(seismic_parameters);
+  }
+  if (seismic_parameters.modelSettings()->GetOutputExtraParametersDepthSegy()) {
+    seismic_parameters.seismicOutput()->writeExtraParametersDepthSegy(seismic_parameters);
+  }
+  seismic_parameters.deleteExtraParameterGrids();
+ 
+  //resample and write elastic parameters in segy
+  if (seismic_parameters.modelSettings()->GetOutputElasticParametersTimeSegy()) {
+    seismic_parameters.seismicOutput()->writeElasticParametersTimeSegy(seismic_parameters);
+  }
+  if (seismic_parameters.modelSettings()->GetOutputElasticParametersDepthSegy()) {
+    seismic_parameters.seismicOutput()->writeElasticParametersDepthSegy(seismic_parameters);
+  }
 
+  //write reflections and add white noise if requested (not for NMO seis)
   if (seismic_parameters.modelSettings()->GetNMOCorr() == false) {
     // if we are adding noise to reflection write noise-free reflections to file before adding noise
     if (seismic_parameters.modelSettings()->GetOutputReflections()) {
       seismic_parameters.seismicOutput()->writeReflections(seismic_parameters, false);
     }
-
     //-----------------Add white noise to reflections----------------------------
     if (seismic_parameters.modelSettings()->GetWhiteNoise()) {
       unsigned long seed = seismic_parameters.modelSettings()->GetSeed();
       double deviation = seismic_parameters.modelSettings()->GetStandardDeviation();
       addNoiseToReflections(seed, deviation, seismic_parameters.rGrids());
     }
-
     if (seismic_parameters.modelSettings()->GetOutputReflections() && seismic_parameters.modelSettings()->GetWhiteNoise()) {
       seismic_parameters.seismicOutput()->writeReflections(seismic_parameters, true);
     }
@@ -48,24 +63,22 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   NRLib::StormContGrid &vsgrid           = seismic_parameters.vsGrid();
   NRLib::StormContGrid &twtgrid          = seismic_parameters.twtGrid();
   NRLib::StormContGrid &zgrid            = seismic_parameters.zGrid();
-  bool find_for_ps = seismic_parameters.modelSettings()->GetPSSeismic();
+  bool find_for_ps                       = seismic_parameters.modelSettings()->GetPSSeismic();
+  std::vector<double> constvp            = seismic_parameters.modelSettings()->GetConstVp();
+  Wavelet* wavelet                       = seismic_parameters.wavelet();
+
+  //find twt grid
   findTWT(vpgrid, vsgrid, twtgrid, zgrid, toptime, bottime, find_for_ps);
 
-  if (seismic_parameters.modelSettings()->GetNMOCorr()){  
-    if (seismic_parameters.modelSettings()->GetOutputVrms()){
-      findVrms(seismic_parameters);
-      printf("Write rms velocity.\n");
-      seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
-      seismic_parameters.deleteVrmsGrid();
-    }
-    else {
-      seismic_parameters.deleteVrmsGrid();
-    }
+  //generate, write and delete vrms grid if writing is requested
+  if (seismic_parameters.modelSettings()->GetNMOCorr() && seismic_parameters.modelSettings()->GetOutputVrms()){
+    findVrms(seismic_parameters);
+    printf("Write rms velocity.\n");
+    seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
+    seismic_parameters.deleteVrmsGrid();
   }
 
-  std::vector<double> constvp = seismic_parameters.modelSettings()->GetConstVp();
-  Wavelet* wavelet = seismic_parameters.wavelet();
-
+  //add wavelet above and below toptime and bottime
   toptime.Add(-2000 / constvp[0] * wavelet->GetDepthAdjustmentFactor()); // add one wavelet length to bot and subtract from top
   bottime.Add(2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor());
 
@@ -77,50 +90,23 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
     nt = tmpgrid.GetNK();
   }
   seismic_parameters.seismicGeometry()->setNt(nt);
-  seismic_parameters.seismicGeometry()->setTRange(tmin, tmax);
-  
+  seismic_parameters.seismicGeometry()->setTRange(tmin, tmax);  
 
-  //---------------Print toptime and bottime------------------------
+  //write toptime and bottime
   if (seismic_parameters.modelSettings()->GetOutputTimeSurfaces()) {
     seismic_parameters.seismicOutput()->writeTimeSurfaces(seismic_parameters);
   }
 
-  //----------generating grid for output in segy format-----------------
-
-  //time grid:
-  if (seismic_parameters.modelSettings()->GetOutputElasticParametersTimeSegy()) {
-    seismic_parameters.seismicOutput()->writeElasticParametersTimeSegy(seismic_parameters);
-  }
-
-  if (seismic_parameters.modelSettings()->GetOutputExtraParametersTimeSegy()) {
-    seismic_parameters.seismicOutput()->writeExtraParametersTimeSegy(seismic_parameters);
-  }
-
-  //depth grid:
-  if (seismic_parameters.modelSettings()->GetOutputElasticParametersDepthSegy()) {
-    seismic_parameters.seismicOutput()->writeElasticParametersDepthSegy(seismic_parameters);
-  }
-
-  if (seismic_parameters.modelSettings()->GetOutputExtraParametersDepthSegy()) {
-    seismic_parameters.seismicOutput()->writeExtraParametersDepthSegy(seismic_parameters);
-  }
-
+  //write elastic parameters, z values and twt on storm format
   if (seismic_parameters.modelSettings()->GetOutputVp()) {
     seismic_parameters.seismicOutput()->writeVpVsRho(seismic_parameters);
   }
-
   if (seismic_parameters.modelSettings()->GetOutputZvalues()) {
     seismic_parameters.seismicOutput()->writeZValues(seismic_parameters);
   }
-
   if (seismic_parameters.modelSettings()->GetOutputTwt()) {
     seismic_parameters.seismicOutput()->writeTwt(seismic_parameters);
   }
-
-
-  //printf("remove grids\n");
-  seismic_parameters.deleteExtraParameterGrids();
-
 }
 
 

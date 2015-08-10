@@ -146,15 +146,6 @@ class SeismicForward {
                            const std::vector<double> &offset);
 
 
-    static void   findLoopIndeces(SeismicParameters &seismic_parameters,
-                                  int               &n_xl,
-                                  int               &il_min,
-                                  int               &il_max,
-                                  int               &il_step,
-                                  int               &xl_min,
-                                  int               &xl_max,
-                                  int               &xl_step,
-                                  bool              &segy);
 
     static bool   generateTraceOk(SeismicParameters &seismic_parameters,
                                   size_t i,

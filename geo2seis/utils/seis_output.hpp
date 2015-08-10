@@ -7,7 +7,8 @@ class SeisOutput {
   public:
     SeisOutput(SeismicParameters &seismic_parameters,
                std::vector<double> twt_0,
-               std::vector<double> z_0);
+               std::vector<double> z_0,
+               std::vector<double> twts_0);
 
     void AddTrace(SeismicParameters     &seismic_parameters,
                   NRLib::Grid2D<double> &timegrid_pos,
@@ -52,6 +53,7 @@ private:
       NRLib::StormContGrid *depthgrid_;
       std::vector<double> twt_0_;
       std::vector<double> z_0_;
+      std::vector<double> twts_0_;
 
 
 

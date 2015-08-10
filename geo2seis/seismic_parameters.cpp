@@ -92,6 +92,39 @@ void SeismicParameters::setSegyGeometry(const NRLib::SegyGeometry &geometry)
   segy_geometry_ = new NRLib::SegyGeometry(geometry);
 }
 
+void SeismicParameters::findLoopIndeces(int               &n_xl,
+                                        int               &il_min,
+                                        int               &il_max,
+                                        int               &il_step,
+                                        int               &xl_min,
+                                        int               &xl_max,
+                                        int               &xl_step,
+                                        bool              &segy)
+{
+  if (segy_geometry_ == NULL) {
+    il_min  = 0;
+    il_max  = seismic_geometry_->nx();
+    il_step = 1;
+    xl_min  = 0;
+    xl_max  = seismic_geometry_->ny()-1;
+    xl_step = 1;
+    n_xl = xl_max;
+    segy = false;
+  }
+  else {
+    segy_geometry_->FindILXLGeometry();
+    il_min  = segy_geometry_->GetMinIL();
+    il_max  = segy_geometry_->GetMaxIL();
+    il_step = segy_geometry_->GetILStep();
+    xl_min  = segy_geometry_->GetMinXL();
+    xl_max  = segy_geometry_->GetMaxXL();
+    xl_step = segy_geometry_->GetXLStep();
+    n_xl = (xl_max - xl_min + 1) / xl_step;
+    segy = true;
+  }
+}
+
+
 void SeismicParameters::getSeisLimits(std::vector<double>  twt_0,
                                       std::vector<double>  vrms_vec,
                                       std::vector<double>  offset_vec,
@@ -265,28 +298,38 @@ void SeismicParameters::findNMOReflections(NRLib::Grid2D<double>       &r_vec,
 }
 
 
-std::vector<double> SeismicParameters::generateTWT_0(){
+std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_samples){
   size_t i_max, j_max, k_max;
   double x, y;
   size_t nt                      = seismic_geometry_->nt();
   double dt                      = seismic_geometry_->dt();
   std::vector<double> constvp    = model_settings_->GetConstVp();
 
-  //find max TWT for highest offset in order to find the highest TWT value to sample seismic
+  //--find max TWT for highest offset in order to find the highest TWT value to sample seismic
+  //find max twt value from bottime
   double max_twt_value           = bot_time_.MaxNode(i_max, j_max);
+  //find index
   bot_time_.GetXY(i_max, j_max, x, y);
   double bot_y_value_twt = bot_time_.GetZ(x,y) -  2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
   (*twtgrid_).FindIndex(x, y, bot_y_value_twt, i_max, j_max, k_max);
+  //find max vrms in index
   std::vector<double> vrms_vec((*twtgrid_).GetNK()), vrms_dummy, twt_0_dummy;
   findVrmsPos(vrms_vec, vrms_dummy, twt_0_dummy, i_max, j_max, false);
   double vrms_max_t              = vrms_vec[vrms_vec.size() - 1];
+  //find max offset
   double offset_max              = offset_0_+doffset_*(noffset_ - 1);
+  //calculate max twtx
   double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 1000*1000*offset_max*offset_max/(vrms_max_t*vrms_max_t));
 
   //find tmin
   double factor = 2 * twtx_max / seismic_geometry_->tmax();
   double tmin = seismic_geometry_->t0() - factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
-  
+
+  //find number of samples required for nmo corrected seismic
+  double tmax_nmo = seismic_geometry_->tmax() + factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  time_stretch_samples = static_cast<size_t>(std::ceil((tmax_nmo - tmin) /dt));
+
+  //make twt_0
   size_t nt_seis                 = nt;
   if (twtx_max > tmin + nt*dt) {
     nt_seis = static_cast<size_t>(std::ceil((twtx_max - tmin)/dt));
@@ -295,10 +338,14 @@ std::vector<double> SeismicParameters::generateTWT_0(){
   for (size_t i = 0; i < nt_seis; ++i){
     twt_0_[i] = tmin + (0.5 + i)*dt;
   }
+  if (time_stretch_samples > twt_0_.size()){
+    time_stretch_samples = twt_0_.size();
+  }
+
   return twt_0_;
 }
 
-std::vector<double>  SeismicParameters::generateZ_0(){
+std::vector<double>  SeismicParameters::GenerateZ0ForNMO(){
   size_t nz                      = seismic_geometry_->nz();
   double zmin                    = seismic_geometry_->z0();
   double dz                      = seismic_geometry_->dz();
@@ -316,6 +363,55 @@ std::vector<double>  SeismicParameters::generateZ_0(){
     z_0_[i] = min_z + (0.5 + i)*dz;
   }
   return z_0_;
+}
+
+
+std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
+                                                          size_t n_samples)
+{
+  //endre slik at jeg finner i,j og k max her inne istedet for utenfor...
+  std::vector<double> constvp = model_settings_->GetConstVp();
+  size_t i_max, j_max, k_max;
+  double x,y;
+
+  //find max twt value from bottime
+  double max_twt_value           = bot_time_.MaxNode(i_max, j_max);
+  //find index
+  bot_time_.GetXY(i_max, j_max, x, y);
+  double bot_y_value_twt = bot_time_.GetZ(x,y) -  2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  (*twtgrid_).FindIndex(x, y, bot_y_value_twt, i_max, j_max, k_max);
+
+  double ts_0   = (*twt_timeshift_)(i_max, j_max, 0);
+  double ts_max = (*twt_timeshift_)(i_max, j_max, k_max);
+  double t_0    = (*twtgrid_)(i_max, j_max, 0);
+  double t_max  = (*twtgrid_)(i_max, j_max, k_max);
+
+  double dt                      = seismic_geometry_->dt();
+  std::vector<double> twt_0_s;
+
+  double delta_top = ts_0 - t_0;
+  double delta_bot = ts_max - t_max;
+  
+  size_t n_samples_top = 0;
+  size_t n_samples_bot = 0;
+  if (delta_top < 0) { //shift oppover...må ta med mer i toppen
+    n_samples_top = static_cast<size_t>(std::ceil((-1*delta_top)/dt));
+  }
+  if (delta_bot > 0) { //shift nedover, må ta med mer i bunnen
+    n_samples_bot = static_cast<size_t>(std::ceil(delta_bot/dt));
+  }
+
+  size_t n_samples_tot = n_samples_bot + n_samples + n_samples_top;
+  double twts_min = twt_0_min - n_samples_top *dt;
+
+  //std::cout << " n_samples, n_samples_top, n_samples_bot" << n_samples << " " << n_samples_top << " " << n_samples_bot << "\n";
+
+  twt_0_s.resize(n_samples_tot);
+
+  for (size_t k = 0; k < n_samples_tot; ++k){
+    twt_0_s[k] = twts_min + k*dt;
+  }
+  return twt_0_s;
 }
 
 void SeismicParameters::readEclipseGrid() {
@@ -355,7 +451,7 @@ void SeismicParameters::deleteEclipseGrid() {
 void SeismicParameters::deleteElasticParameterGrids() {
   delete vpgrid_;
   delete vsgrid_;
-  delete rhogrid_;  
+  delete rhogrid_;
 }
 
 void SeismicParameters::deleteExtraParameterGrids() {
@@ -366,6 +462,8 @@ void SeismicParameters::deleteZandRandTWTGrids() {
   delete twtgrid_;
   delete zgrid_;
   delete rgridvec_;
+  if (twt_timeshift_ != NULL)
+    delete twt_timeshift_;
 }
 
 void SeismicParameters::deleteVrmsGrid() {
@@ -613,7 +711,10 @@ void SeismicParameters::createGrids() {
   rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
   twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
   if (model_settings_->GetNMOCorr()){
-    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
+    if (model_settings_->GetOutputVrms())
+      vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
+    else 
+      vrmsgrid_ = NULL;
     if (model_settings_->GetWhiteNoise())
       rgridvec_ = new std::vector<NRLib::StormContGrid>(2);
     else
@@ -646,7 +747,7 @@ void SeismicParameters::createGrids() {
         (*rhogrid_)(i, j, k) = static_cast<float>(const_rho[1]);
         (*twtgrid_)(i, j, k) = 0.0;
         rgrid(i, j, k) = 0.0;
-        if (model_settings_->GetNMOCorr()){
+        if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()){
           (*vrmsgrid_)(i, j, k) = 0.0;
         }
         for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
@@ -676,4 +777,16 @@ void SeismicParameters::createGrids() {
       (*rgridvec_)[i] = rgrid;
     }
   }
+
+  if (model_settings_->GetTwtFileName() != "") {
+    twt_timeshift_ = new NRLib::StormContGrid(model_settings_->GetTwtFileName());
+    if ((*twt_timeshift_).GetNI() != nx || (*twt_timeshift_).GetNJ() != ny || (*twt_timeshift_).GetNK() != nzrefl) {
+      printf("TWT timeshift from file has wrong dimension. Aborting. \n");
+      exit(1);
+    }
+  }
+  else {
+      twt_timeshift_ = NULL;
+  }
+
 }

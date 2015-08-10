@@ -29,7 +29,6 @@ class SeismicOutput {
                            size_t                     ny);
 
     bool prepareSegy(NRLib::SegY               &segyout,
-                     const NRLib::Volume       &vol,
                      const std::vector<double> &twt_0,
                      std::string                fileName,
                      SeismicParameters         &seismic_parameters,

@@ -90,6 +90,7 @@ ModelSettings::ModelSettings(void) {
     memory_limit_ = 8000000000.0;
     twt_file_name_ = "";
     ps_seismic_ = false;
+    old_mod_ = false;
     nmo_corr_ = false;
     v_w_ = 0.0;
     z_w_ = 0.0;

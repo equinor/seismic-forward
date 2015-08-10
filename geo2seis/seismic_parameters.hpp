@@ -35,6 +35,7 @@ class SeismicParameters {
     NRLib::StormContGrid &rhoGrid()                            { return *rhogrid_; };
     NRLib::StormContGrid &zGrid()                              { return *zgrid_; };
     NRLib::StormContGrid &twtGrid()                            { return *twtgrid_; };
+    NRLib::StormContGrid &twtShiftGrid()                       { return *twt_timeshift_; };
     std::vector<NRLib::StormContGrid> &rGrids()                { return *rgridvec_; };
     std::vector<NRLib::StormContGrid> &extraParametersGrids()  { return *extra_parameter_grid_; };
     NRLib::EclipseGrid &eclipseGrid()                          { return *eclipse_grid_; };
@@ -55,15 +56,27 @@ class SeismicParameters {
     double theta0()                  { return theta_0_; }
     double dTheta()                  { return dtheta_; }
     size_t nTheta()                  { return ntheta_; }
-    std::vector<double> & theta_vec() { return theta_vec_; }
+    std::vector<double> & GetThetaVec() { return theta_vec_; }
     double offset0()                 { return offset_0_; }
     double dOffset()                 { return doffset_; }
     size_t nOffset()                 { return noffset_; }
-    std::vector<double> & offset_vec() { return offset_vec_; }
+    std::vector<double> & GetOffsetVec() { return offset_vec_; }
     
 
-    std::vector<double> generateTWT_0();
-    std::vector<double> generateZ_0();
+    void   findLoopIndeces(int               &n_xl,
+                           int               &il_min,
+                           int               &il_max,
+                           int               &il_step,
+                           int               &xl_min,
+                           int               &xl_max,
+                           int               &xl_step,
+                           bool              &segy);
+
+    std::vector<double> GenerateTwt0ForNMO(size_t & time_stretch_samples);
+    std::vector<double> GenerateZ0ForNMO();
+
+    std::vector<double> GenerateTWT0Shift(double twt_0_min,
+                                          size_t n_samples);
 
     void getSeisLimits(std::vector<double>  twt_0,
                        std::vector<double>  vrms_vec,
@@ -162,6 +175,8 @@ class SeismicParameters {
     std::vector<NRLib::StormContGrid> *extra_parameter_grid_;
 
     NRLib::StormContGrid *vrmsgrid_;
+
+    NRLib::StormContGrid *twt_timeshift_;
 
 
     std::vector<double> twt_0_;

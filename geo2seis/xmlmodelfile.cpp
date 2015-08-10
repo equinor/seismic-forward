@@ -108,7 +108,12 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("memory-limit");
     legalCommands.push_back("timeshift-twt");
     legalCommands.push_back("ps-seismic");
+    legalCommands.push_back("old-modelling");
 
+    bool bolval;
+    if (ParseBool(root, "old-modelling", bolval, errTxt) == true) {
+        modelSettings_->SetOldModelling(bolval);
+    }
     if (ParseNMOStretch(root, errTxt)){
       modelSettings_->SetNMOCorr(true);
     }

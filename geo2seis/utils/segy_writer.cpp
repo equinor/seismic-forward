@@ -136,9 +136,17 @@ void SEGY::writeSegy(const NRLib::StormContGrid &data,
   datavec.resize(nz);
   bool above_zero = false;
   double x, y, xt, yt, z;
-  for (size_t j = 0; j < ny; j++) {
-    for (size_t i = 0; i < nx; i++) {
-      geometry->FindXYFromIJ(i, j, x, y);
+  int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
+  il_min  = geometry->GetMinIL();
+  il_max  = geometry->GetMaxIL();
+  il_step = geometry->GetILStep();
+  xl_min  = geometry->GetMinXL();
+  xl_max  = geometry->GetMaxXL();
+  xl_step = geometry->GetXLStep();
+  for (int il = il_min; il <= il_max; il += il_step) {
+    for (int xl = xl_min; xl <= xl_max; xl +=xl_step) {
+
+      geometry->FindXYFromILXL(il, xl, x, y);
 
       double zbot = data.GetBotSurface().GetZ(x, y);
       double ztop = data.GetTopSurface().GetZ(x, y);
@@ -188,12 +196,11 @@ void SEGY::writeSegy(const NRLib::StormContGrid &data,
         for (k = endData; k < nz; k++) {
           datavec[k] = 0.0;
         }
-        //segyout.StoreTrace(x,y,datavec,NULL);
       }
-      segyout.StoreTrace(x,y, datavec, NULL);
-      //segyout.WriteTrace(x, y, datavec, NULL, 0.0, 0.0, scalco);
+      //segyout.StoreTrace(x,y, datavec, NULL);
+      segyout.WriteTrace(x, y, datavec, NULL, 0.0, 0.0, scalco);
     }
   }
-  segyout.WriteAllTracesToFile(scalco);
+  //segyout.WriteAllTracesToFile(scalco);
   delete geometry;
 }

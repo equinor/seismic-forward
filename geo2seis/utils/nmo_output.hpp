@@ -7,7 +7,9 @@ class NMOOutput {
   public:
     NMOOutput(SeismicParameters &seismic_parameters,
             std::vector<double> twt_0,
-            std::vector<double> z_0);
+            std::vector<double> z_0,
+            std::vector<double> twts_0,
+            size_t time_samples_stretch);
 
     void AddTrace(SeismicParameters     &seismic_parameters,
                   NRLib::Grid2D<double> &timegrid_pos,
@@ -54,6 +56,7 @@ class NMOOutput {
       NRLib::StormContGrid *depthgrid_;
       std::vector<double> twt_0_;
       std::vector<double> z_0_;
+      std::vector<double> twts_0_;
 
       //NRLib::Grid2D<double> nmo_timegrid_stack_pos_;
       //NRLib::Grid2D<double> nmo_timeshiftgrid_pos_;

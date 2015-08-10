@@ -130,7 +130,6 @@ bool SeismicOutput::checkUTMPrecision(SeismicParameters   &seismic_parameters,
 }
 
 bool SeismicOutput::prepareSegy(NRLib::SegY               &segyout,
-                                const NRLib::Volume       &vol,
                                 const std::vector<double> &twt_0,
                                 std::string                fileName,
                                 SeismicParameters         &seismic_parameters,
@@ -403,23 +402,18 @@ void SeismicOutput::writeElasticParametersTimeSegy(SeismicParameters &seismic_pa
   NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
   NRLib::StormContGrid &twtgrid = seismic_parameters.twtGrid();
 
-  NRLib::StormContGrid vp_time_grid(volume_time, nx, ny, nt);
-  generateParameterGridForOutput(vpgrid, twtgrid, vp_time_grid, dt, t_min, toptime);
+  NRLib::StormContGrid resample_grid(volume_time, nx, ny, nt);
+  generateParameterGridForOutput(vpgrid, twtgrid, resample_grid, dt, t_min, toptime);
   printf("Write vp in time on Segy format.\n");
-  SEGY::writeSegy(vp_time_grid, prefix_ + "vp_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
-  vp_time_grid = NRLib::StormContGrid(0,0,0);
+  SEGY::writeSegy(resample_grid, prefix_ + "vp_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
   
-  NRLib::StormContGrid vs_time_grid(volume_time, nx, ny, nt);
-  generateParameterGridForOutput(vsgrid, twtgrid, vs_time_grid, dt, t_min, toptime);
+  generateParameterGridForOutput(vsgrid, twtgrid, resample_grid, dt, t_min, toptime);
   printf("Write vs in time on Segy format.\n");
-  SEGY::writeSegy(vs_time_grid, prefix_ + "vs_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
-  vs_time_grid = NRLib::StormContGrid(0,0,0);
+  SEGY::writeSegy(resample_grid, prefix_ + "vs_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
   
-  NRLib::StormContGrid rho_time_grid(volume_time, nx, ny, nt);
-  generateParameterGridForOutput(rhogrid, twtgrid, rho_time_grid, dt, t_min, toptime);
+  generateParameterGridForOutput(rhogrid, twtgrid, resample_grid, dt, t_min, toptime);
   printf("Write rho in time on Segy format.\n");
-  SEGY::writeSegy(rho_time_grid, prefix_ + "rho_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
-  rho_time_grid = NRLib::StormContGrid(0,0,0);  
+  SEGY::writeSegy(resample_grid, prefix_ + "rho_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
 }
 
 void SeismicOutput::writeExtraParametersTimeSegy(SeismicParameters &seismic_parameters) {
@@ -470,23 +464,18 @@ void SeismicOutput::writeElasticParametersDepthSegy(SeismicParameters &seismic_p
   NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
   NRLib::StormContGrid &zgrid   = seismic_parameters.zGrid();
 
-  NRLib::StormContGrid vp_depth_grid(volume, nx, ny, nz);
-  generateParameterGridForOutput(vpgrid, zgrid, vp_depth_grid, dz, z0, toptime);
+  NRLib::StormContGrid resample_grid(volume, nx, ny, nz);
+  generateParameterGridForOutput(vpgrid, zgrid, resample_grid, dz, z0, toptime);
   printf("Write vp in depth on Segy format.\n");
-  SEGY::writeSegy(vp_depth_grid, prefix_ + "vp_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
-  vp_depth_grid = NRLib::StormContGrid(0,0,0);
-
-  NRLib::StormContGrid vs_depth_grid(volume, nx, ny, nz);
-  generateParameterGridForOutput(vsgrid, zgrid, vs_depth_grid, dz, z0, toptime);
+  SEGY::writeSegy(resample_grid, prefix_ + "vp_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
+  
+  generateParameterGridForOutput(vsgrid, zgrid, resample_grid, dz, z0, toptime);
   printf("Write vs in depth on Segy format.\n");
-  SEGY::writeSegy(vs_depth_grid, prefix_ + "vs_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
-  vs_depth_grid = NRLib::StormContGrid(0,0,0);
-
-  NRLib::StormContGrid rho_depth_grid(volume, nx, ny, nz);
-  generateParameterGridForOutput(rhogrid, zgrid, rho_depth_grid, dz, z0, toptime);
+  SEGY::writeSegy(resample_grid, prefix_ + "vs_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
+  
+  generateParameterGridForOutput(rhogrid, zgrid, resample_grid, dz, z0, toptime);
   printf("Write rho in depth on Segy format.\n");
-  SEGY::writeSegy(rho_depth_grid, prefix_ + "rho_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
-  rho_depth_grid = NRLib::StormContGrid(0,0,0);
+  SEGY::writeSegy(resample_grid, prefix_ + "rho_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
 }
 
 void SeismicOutput::writeExtraParametersDepthSegy(SeismicParameters &seismic_parameters) {
