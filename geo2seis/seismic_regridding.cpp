@@ -22,23 +22,7 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   printf("Elastic parameters found.\n");
   
   seismic_parameters.deleteEclipseGrid();
-  
-  //resample, write and delete extra parameter grids
-  if (seismic_parameters.modelSettings()->GetOutputExtraParametersTimeSegy()) {
-    seismic_parameters.seismicOutput()->writeExtraParametersTimeSegy(seismic_parameters);
-  }
-  if (seismic_parameters.modelSettings()->GetOutputExtraParametersDepthSegy()) {
-    seismic_parameters.seismicOutput()->writeExtraParametersDepthSegy(seismic_parameters);
-  }
-  seismic_parameters.deleteExtraParameterGrids();
- 
-  //resample and write elastic parameters in segy
-  if (seismic_parameters.modelSettings()->GetOutputElasticParametersTimeSegy()) {
-    seismic_parameters.seismicOutput()->writeElasticParametersTimeSegy(seismic_parameters);
-  }
-  if (seismic_parameters.modelSettings()->GetOutputElasticParametersDepthSegy()) {
-    seismic_parameters.seismicOutput()->writeElasticParametersDepthSegy(seismic_parameters);
-  }
+
 
   //write reflections and add white noise if requested (not for NMO seis)
   if (seismic_parameters.modelSettings()->GetNMOCorr() == false) {
@@ -90,11 +74,28 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
     nt = tmpgrid.GetNK();
   }
   seismic_parameters.seismicGeometry()->setNt(nt);
-  seismic_parameters.seismicGeometry()->setTRange(tmin, tmax);  
+  seismic_parameters.seismicGeometry()->setTRange(tmin, tmax);
 
   //write toptime and bottime
   if (seismic_parameters.modelSettings()->GetOutputTimeSurfaces()) {
     seismic_parameters.seismicOutput()->writeTimeSurfaces(seismic_parameters);
+  }
+
+  //resample, write and delete extra parameter grids
+  if (seismic_parameters.modelSettings()->GetOutputExtraParametersTimeSegy()) {
+    seismic_parameters.seismicOutput()->writeExtraParametersTimeSegy(seismic_parameters);
+  }
+  if (seismic_parameters.modelSettings()->GetOutputExtraParametersDepthSegy()) {
+    seismic_parameters.seismicOutput()->writeExtraParametersDepthSegy(seismic_parameters);
+  }
+  seismic_parameters.deleteExtraParameterGrids();
+ 
+  //resample and write elastic parameters in segy
+  if (seismic_parameters.modelSettings()->GetOutputElasticParametersTimeSegy()) {
+    seismic_parameters.seismicOutput()->writeElasticParametersTimeSegy(seismic_parameters);
+  }
+  if (seismic_parameters.modelSettings()->GetOutputElasticParametersDepthSegy()) {
+    seismic_parameters.seismicOutput()->writeElasticParametersDepthSegy(seismic_parameters);
   }
 
   //write elastic parameters, z values and twt on storm format
