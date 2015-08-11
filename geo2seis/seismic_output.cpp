@@ -229,8 +229,9 @@ void SeismicOutput::writeSegyGather(NRLib::Grid2D<double>     &data_gather,
   std::vector<float> datavec(nz);
 
   int k;
-  int firstData = static_cast<int>(floor((twt_0[0])              / dz));
+  int firstSample = static_cast<int>(floor((twt_0[0])              / dz));
   int endData   = static_cast<int>(floor((twt_0[data_gather.GetNI()-1]) / dz));
+  int firstData   = firstSample;
   std::vector<double> twt_0_resampl(endData-firstData + 1);
   for (size_t i = firstData; i < endData+1; ++i) {
     twt_0_resampl[i-firstData] = i*dz;
@@ -251,8 +252,8 @@ void SeismicOutput::writeSegyGather(NRLib::Grid2D<double>     &data_gather,
 
   for (size_t off = 0; off < offset_vec.size(); ++off) {
     if ((time == true && time_window_) || (time == false && depth_window_)) {
-      if (windowTop < firstData) {
-        for (k = windowTop; k < firstData; k++) {
+      if (windowTop < firstSample) {
+        for (k = windowTop; k < firstSample; k++) {
           datavec[k - windowTop] = 0.0;
         }
       }
@@ -263,7 +264,7 @@ void SeismicOutput::writeSegyGather(NRLib::Grid2D<double>     &data_gather,
         endData = windowBot;
       }
       for (k = firstData; k < endData; k++) {
-       datavec[k - windowTop] = float(data_gather(k - firstData, off));
+       datavec[k - windowTop] = float(data_gather(k - firstSample, off));
       }
       if (windowBot > endData) {
         for (k = endData; k < windowBot; k++) {
@@ -282,7 +283,7 @@ void SeismicOutput::writeSegyGather(NRLib::Grid2D<double>     &data_gather,
         datavec[k] = 0.0;
       }
       for (k = firstData; k < endData; k++) {
-        datavec[k] = float(data_gather(k - firstData, off));
+        datavec[k] = float(data_gather(k - firstSample, off));
       }
       for (k = endData; k < nz; k++) {
         datavec[k] = 0.0;
