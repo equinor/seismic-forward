@@ -596,7 +596,7 @@ void SeismicForward::generateNMOSeismicTrace(SeismicParameters             &seis
 {
   size_t nx     = seismic_parameters.seismicGeometry()->nx();
   double dt     = seismic_parameters.seismicGeometry()->dt();
-  double tmin   = twt_0[0];
+  double tmin   = seismic_parameters.seismicGeometry()->t0();
   size_t nzrefl = seismic_parameters.seismicGeometry()->zreflectorcount();
 
   std::vector<size_t> n_min(offset_vec.size());
@@ -697,7 +697,7 @@ void SeismicForward::generateSeismicTrace(SeismicParameters             &seismic
   size_t nx     = seismic_parameters.seismicGeometry()->nx();
   size_t nt     = seismic_parameters.seismicGeometry()->nt();
   double dt     = seismic_parameters.seismicGeometry()->dt();
-  double tmin   = twt_0[0];
+  double tmin   = seismic_parameters.seismicGeometry()->t0();
   size_t nzrefl = seismic_parameters.seismicGeometry()->zreflectorcount();
 
   size_t n_min = 0;

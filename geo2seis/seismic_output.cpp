@@ -230,7 +230,7 @@ void SeismicOutput::writeSegyGather(NRLib::Grid2D<double>     &data_gather,
 
   int k;
   int firstData = static_cast<int>(floor((twt_0[0])              / dz));
-  int endData   = static_cast<int>(floor((twt_0[twt_0.size()-1]) / dz));
+  int endData   = static_cast<int>(floor((twt_0[data_gather.GetNI()-1]) / dz));
   std::vector<double> twt_0_resampl(endData-firstData + 1);
   for (size_t i = firstData; i < endData+1; ++i) {
     twt_0_resampl[i-firstData] = i*dz;
