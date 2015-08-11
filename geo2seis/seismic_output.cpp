@@ -131,6 +131,7 @@ bool SeismicOutput::checkUTMPrecision(SeismicParameters   &seismic_parameters,
 
 bool SeismicOutput::prepareSegy(NRLib::SegY               &segyout,
                                 const std::vector<double> &twt_0,
+                                size_t                     n_samples,
                                 std::string                fileName,
                                 SeismicParameters         &seismic_parameters,
                                 const std::vector<double> &offset_vec,
@@ -139,7 +140,7 @@ bool SeismicOutput::prepareSegy(NRLib::SegY               &segyout,
                                 bool                       nmo)
 {
   double z_min = twt_0[0];
-  double z_max = twt_0[twt_0.size()-1];
+  double z_max = twt_0[n_samples-1];
   double dz    = twt_0[1] - twt_0[0];
   double z0     = 0.0; //vurdere å bruke z_min selv uten vindu??
   int    nz     = static_cast<int>(ceil(z_max/dz));

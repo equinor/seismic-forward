@@ -35,27 +35,27 @@ SeisOutput::SeisOutput(SeismicParameters &seismic_parameters,
   if (segy_ok_) {
     if (seismic_parameters.modelSettings()->GetOutputTimeSegy()) {
       std::string filename        = "seismic_time";
-      time_segy_ok_            = seismic_parameters.seismicOutput()->prepareSegy(time_segy_, twt_0_, filename, seismic_parameters, theta_vec, theta_vec.size(), true, false);
+      time_segy_ok_            = seismic_parameters.seismicOutput()->prepareSegy(time_segy_, twt_0_, twt_0_.size(), filename, seismic_parameters, theta_vec, theta_vec.size(), true, false);
     }
     if (seismic_parameters.modelSettings()->GetOutputSeismicStackTimeSegy()) {
       std::string filename        = "seismic_time_stack";
-      time_stack_segy_ok_      = seismic_parameters.seismicOutput()->prepareSegy(time_stack_segy_, twt_0_, filename, seismic_parameters, theta_vec, 1, true, false);
+      time_stack_segy_ok_      = seismic_parameters.seismicOutput()->prepareSegy(time_stack_segy_, twt_0_, twt_0_.size(), filename, seismic_parameters, theta_vec, 1, true, false);
     }
     if (seismic_parameters.modelSettings()->GetOutputDepthSegy()) {
       std::string filename        = "seismic_depth";
-      depth_segy_ok_           = seismic_parameters.seismicOutput()->prepareSegy(depth_segy_, z_0_, filename, seismic_parameters, theta_vec, theta_vec.size(), false, false);
+      depth_segy_ok_           = seismic_parameters.seismicOutput()->prepareSegy(depth_segy_, z_0_, z_0_.size(), filename, seismic_parameters, theta_vec, theta_vec.size(), false, false);
     }
     if (seismic_parameters.modelSettings()->GetOutputSeismicStackDepthSegy()) {
       std::string filename        = "seismic_depth_stack";
-      depth_stack_segy_ok_     = seismic_parameters.seismicOutput()->prepareSegy(depth_stack_segy_, z_0_, filename, seismic_parameters, theta_vec, 1, false, false);
+      depth_stack_segy_ok_     = seismic_parameters.seismicOutput()->prepareSegy(depth_stack_segy_, z_0_, z_0_.size(), filename, seismic_parameters, theta_vec, 1, false, false);
     }
     if (seismic_parameters.modelSettings()->GetOutputTimeshiftSegy()) {
       std::string filename        = "seismic_timeshift";
-      timeshift_segy_ok_       = seismic_parameters.seismicOutput()->prepareSegy(timeshift_segy_, twts_0_, filename, seismic_parameters, theta_vec, theta_vec.size(), true, false);
+      timeshift_segy_ok_       = seismic_parameters.seismicOutput()->prepareSegy(timeshift_segy_, twts_0_, twts_0_.size(), filename, seismic_parameters, theta_vec, theta_vec.size(), true, false);
     }
     if (seismic_parameters.modelSettings()->GetOutputSeismicStackTimeShiftSegy()) {
       std::string filename        = "seismic_timeshift_stack";
-      timeshift_stack_segy_ok_ = seismic_parameters.seismicOutput()->prepareSegy(timeshift_stack_segy_, twts_0_, filename, seismic_parameters, theta_vec, 1, true, false);
+      timeshift_stack_segy_ok_ = seismic_parameters.seismicOutput()->prepareSegy(timeshift_stack_segy_, twts_0_, twts_0_.size(), filename, seismic_parameters, theta_vec, 1, true, false);
     }
   }
   

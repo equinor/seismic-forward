@@ -30,6 +30,7 @@ class SeismicOutput {
 
     bool prepareSegy(NRLib::SegY               &segyout,
                      const std::vector<double> &twt_0,
+                     size_t                     n_samples,
                      std::string                fileName,
                      SeismicParameters         &seismic_parameters,
                      const std::vector<double> &offset_vec,
