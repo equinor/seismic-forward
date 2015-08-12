@@ -858,7 +858,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetOutputReflections(value);
     }
 
-    if (modelSettings_->GetNMOCorr() == false) {
+    if (modelSettings_->GetOldModelling() == true) {
         modelSettings_->SetOutputSeismicTime(true);
     }
     if (ParseBool(root, "seismic-time", value, errTxt) == true) {
@@ -873,7 +873,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
         }
     }
 
-    if (modelSettings_->GetNMOCorr() == false) {
+    if (modelSettings_->GetOldModelling() == true) {
         modelSettings_->SetOutputSeismicDepth(true);
     }
     if (ParseBool(root, "seismic-depth", value, errTxt) == true) {
