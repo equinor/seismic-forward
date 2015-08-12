@@ -303,6 +303,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
   double x, y;
   size_t nt                      = seismic_geometry_->nt();
   double dt                      = seismic_geometry_->dt();
+  double t0                      = seismic_geometry_->t0();
   std::vector<double> constvp    = model_settings_->GetConstVp();
 
   //--find max TWT for highest offset in order to find the highest TWT value to sample seismic
@@ -323,12 +324,20 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
 
   //find tmin
   double factor = 2 * twtx_max / seismic_geometry_->tmax();
-  double tmin = seismic_geometry_->t0() - factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  double tmin = t0;
+  size_t xtra_samples_top = 0;
+  if (factor > 2) {
+    tmin = t0 - factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+    xtra_samples_top = static_cast<size_t>((factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor())/dt);
+  }
 
   //find number of samples required for nmo corrected seismic
-  double tmax_nmo = seismic_geometry_->tmax() + factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  double tmax_nmo = seismic_geometry_->tmax();
+  if (factor > 2) {
+    tmax_nmo += factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  }
   time_stretch_samples = static_cast<size_t>(std::ceil((tmax_nmo - tmin) /dt));
-
+  
   //make twt_0
   size_t nt_seis                 = nt;
   if (twtx_max > tmin + nt*dt) {
@@ -336,7 +345,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
   }
   twt_0_.resize(nt_seis);
   for (size_t i = 0; i < nt_seis; ++i){
-    twt_0_[i] = tmin + (0.5 + i)*dt;
+    twt_0_[i] = (t0 - xtra_samples_top * dt) + (0.5 + i)*dt;
   }
   if (time_stretch_samples > twt_0_.size()){
     time_stretch_samples = twt_0_.size();

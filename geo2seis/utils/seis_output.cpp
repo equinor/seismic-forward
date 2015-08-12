@@ -90,29 +90,28 @@ void SeisOutput::AddTrace(SeismicParameters     &seismic_parameters,
                           size_t                 i,
                           size_t                 j)
 {
-  const std::vector<double> & offset_vec = seismic_parameters.GetOffsetVec();
+  const std::vector<double> & theta_vec = seismic_parameters.GetThetaVec();
   std::vector<double>               zero_vec(1);
   zero_vec[0] = 0;
   size_t nz = seismic_parameters.seismicGeometry()->nz();
   size_t nt = seismic_parameters.seismicGeometry()->nt();
-
   //write seismic time
   if (time_segy_ok_){
-    seismic_parameters.seismicOutput()->writeSegyGather(timegrid_pos, time_segy_, twt_0_, offset_vec, true, x,y);
+    seismic_parameters.seismicOutput()->writeSegyGather(timegrid_pos, time_segy_, twt_0_, theta_vec, true, x,y);
   }
   if (time_stack_segy_ok_) {
     seismic_parameters.seismicOutput()->writeSegyGather(timegrid_stack_pos, time_stack_segy_, twt_0_, zero_vec, true, x,y);
   }
   //write seismic depth
   if (depth_segy_ok_) {
-    seismic_parameters.seismicOutput()->writeSegyGather(depthgrid_pos, depth_segy_, z_0_, offset_vec, false, x,y);
+    seismic_parameters.seismicOutput()->writeSegyGather(depthgrid_pos, depth_segy_, z_0_, theta_vec, false, x,y);
   }
   if (depth_stack_segy_ok_) {
     seismic_parameters.seismicOutput()->writeSegyGather(depthgrid_stack_pos, depth_stack_segy_, z_0_, zero_vec, false, x,y);
   }
   //write seismic timeshift
   if (timeshift_segy_ok_) {
-    seismic_parameters.seismicOutput()->writeSegyGather(timeshiftgrid_pos, timeshift_segy_, twts_0_, offset_vec, true, x,y);
+    seismic_parameters.seismicOutput()->writeSegyGather(timeshiftgrid_pos, timeshift_segy_, twts_0_, theta_vec, true, x,y);
   }
 
   if (timeshift_stack_segy_ok_){
@@ -144,27 +143,27 @@ void SeisOutput::AddZeroTrace(SeismicParameters     &seismic_parameters,
                            size_t                 i,
                            size_t                 j)
 {
-  std::vector<double> & offset_vec = seismic_parameters.GetOffsetVec();
+  std::vector<double> & theta_vec = seismic_parameters.GetThetaVec();
   std::vector<double>               zero_vec(1);
   zero_vec[0] = 0;
   size_t nz = seismic_parameters.seismicGeometry()->nz();
   size_t nt = seismic_parameters.seismicGeometry()->nt();
 
   if (time_segy_ok_){
-    seismic_parameters.seismicOutput()->writeZeroSegyGather(time_segy_, offset_vec, x,y);
+    seismic_parameters.seismicOutput()->writeZeroSegyGather(time_segy_, theta_vec, x,y);
   }
 
   if (time_stack_segy_ok_) {
     seismic_parameters.seismicOutput()->writeZeroSegyGather(time_stack_segy_, zero_vec, x,y);
   }
   if (depth_segy_ok_) {
-    seismic_parameters.seismicOutput()->writeZeroSegyGather(depth_segy_, offset_vec, x,y);
+    seismic_parameters.seismicOutput()->writeZeroSegyGather(depth_segy_, theta_vec, x,y);
   }
   if (depth_stack_segy_ok_) {
     seismic_parameters.seismicOutput()->writeZeroSegyGather(depth_stack_segy_, zero_vec, x,y);
   }
   if (timeshift_segy_ok_) {
-    seismic_parameters.seismicOutput()->writeZeroSegyGather(timeshift_segy_, offset_vec, x,y);
+    seismic_parameters.seismicOutput()->writeZeroSegyGather(timeshift_segy_, theta_vec, x,y);
   }
   if (timeshift_stack_segy_ok_){
     seismic_parameters.seismicOutput()->writeZeroSegyGather(timeshift_stack_segy_, zero_vec, x,y);
