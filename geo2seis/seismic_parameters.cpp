@@ -38,15 +38,15 @@ SeismicParameters::SeismicParameters(ModelSettings *model_settings) {
 }
 
 void SeismicParameters::calculateAngleSpan() {
-    theta_0_ = model_settings_->GetTheta0();
-    dtheta_ = model_settings_->GetDTheta();
+    theta_0_   = model_settings_->GetTheta0();
+    dtheta_    = model_settings_->GetDTheta();
     theta_max_ = model_settings_->GetThetaMax();
 
     if (dtheta_ == 0) {
         ntheta_ = 1;
     } else {
-        ntheta_ = size_t((theta_max_ - theta_0_) / dtheta_) + 1;
-        dtheta_ = (theta_max_ - theta_0_) / (ntheta_ - 1);
+        ntheta_ = static_cast<size_t>((theta_max_ - theta_0_) / dtheta_ + 1.01);
+        //dtheta_ = (theta_max_ - theta_0_) / (ntheta_ - 1);
     }
     theta_vec_.resize(ntheta_);
     for (size_t i = 0; i < ntheta_; ++i) {
@@ -64,7 +64,7 @@ void SeismicParameters::calculateOffsetSpan() {
         noffset_ = 1;
     } else {
         noffset_ = size_t((offset_max_ - offset_0_) / doffset_) + 1;
-        doffset_ = (offset_max_ - offset_0_) / (noffset_ - 1);
+        //doffset_ = (offset_max_ - offset_0_) / (noffset_ - 1);
     }
     offset_vec_.resize(noffset_);
     for (size_t i = 0; i < noffset_; ++i) {
@@ -299,7 +299,7 @@ void SeismicParameters::findNMOReflections(NRLib::Grid2D<double>       &r_vec,
 
 
 std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_samples){
-  size_t i_max, j_max, k_max;
+  size_t i_max, j_max;
   double x, y;
   size_t nt                      = seismic_geometry_->nt();
   double dt                      = seismic_geometry_->dt();
@@ -311,8 +311,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
   double max_twt_value           = bot_time_.MaxNode(i_max, j_max);
   //find index
   bot_time_.GetXY(i_max, j_max, x, y);
-  double bot_y_value_twt = bot_time_.GetZ(x,y) -  2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
-  (*twtgrid_).FindIndex(x, y, bot_y_value_twt, i_max, j_max, k_max);
+  (*twtgrid_).FindXYIndex(x, y, i_max, j_max);
   //find max vrms in index
   std::vector<double> vrms_vec((*twtgrid_).GetNK()), vrms_dummy, twt_0_dummy;
   findVrmsPos(vrms_vec, vrms_dummy, twt_0_dummy, i_max, j_max, false);
@@ -380,16 +379,16 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
 {
   //endre slik at jeg finner i,j og k max her inne istedet for utenfor...
   std::vector<double> constvp = model_settings_->GetConstVp();
-  size_t i_max, j_max, k_max;
+  size_t i_max, j_max;
   double x,y;
 
   //find max twt value from bottime
   double max_twt_value           = bot_time_.MaxNode(i_max, j_max);
   //find index
   bot_time_.GetXY(i_max, j_max, x, y);
-  double bot_y_value_twt = bot_time_.GetZ(x,y) -  2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
-  (*twtgrid_).FindIndex(x, y, bot_y_value_twt, i_max, j_max, k_max);
+  (*twtgrid_).FindXYIndex(x, y, i_max, j_max);
 
+  size_t k_max  = (*twtgrid_).GetNK();
   double ts_0   = (*twt_timeshift_)(i_max, j_max, 0);
   double ts_max = (*twt_timeshift_)(i_max, j_max, k_max);
   double t_0    = (*twtgrid_)(i_max, j_max, 0);

@@ -109,7 +109,8 @@ void SEGY::writeSegy(const NRLib::StormContGrid &data,
       nz = static_cast<int>(ceil(bot_window - z0) / dz);
       z_max = bot_window;
     }
-  } else if (nz < 0) {
+  } 
+  else if (nz < 0) {
     printf("Maximum depth is negative. No Segy file written.\n");
     return;
   }

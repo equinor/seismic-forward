@@ -179,13 +179,13 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters)
 
           //print trace to segy and store in storm grid
           seis_output.AddTrace(seismic_parameters,
-                              timegrid_pos,
-                              timegrid_stack_pos,
-                              depthgrid_pos,
-                              depthgrid_stack_pos,
-                              timeshiftgrid_pos,
-                              timeshiftgrid_stack_pos,
-                              x, y, i, j);
+                               timegrid_pos,
+                               timegrid_stack_pos,
+                               depthgrid_pos,
+                               depthgrid_stack_pos,
+                               timeshiftgrid_pos,
+                               timeshiftgrid_stack_pos,
+                               x, y, i, j);
           }
         //-----------------OUTSIDE ECLIPSE GRID, WHERE NO SEISMIC GENERATED, ZERO TRACE-----------------
         else {

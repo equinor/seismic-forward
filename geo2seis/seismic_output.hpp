@@ -44,12 +44,14 @@ class SeismicOutput {
                          const std::vector<double>  offset_vec,
                          bool                       time,
                          double                     x,
-                         double                     y);
+                         double                     y,
+                         bool                       nmo);
 
     void writeZeroSegyGather(NRLib::SegY               &segyout,
                              const std::vector<double>  offset_vec,
                              double                     x,
-                             double                     y);
+                             double                     y,
+                             bool                       nmo);
 
     void ResampleDataGather(const std::vector<double> twt_0,
                             NRLib::Grid2D<double>    &data_gather,
