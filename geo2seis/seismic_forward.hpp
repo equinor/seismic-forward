@@ -156,9 +156,11 @@ class SeismicForward {
                                      const std::vector<double>  &twt_vec,
                                      const NRLib::StormContGrid &zgrid,
                                      double                      z_bot,
-                                     double                      constvp,
+                                     double                      vp_bot,
+                                     double                      vs_bot,
                                      size_t                      i,
-                                     size_t                      j);
+                                     size_t                      j,
+                                     bool                        ps_seis);
 
     static std::vector<double>   linInterp1D(const std::vector<double> &x_in,
                                              const std::vector<double> &y_in,

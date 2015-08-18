@@ -39,7 +39,9 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters)
     size_t nt                   = seismic_parameters.seismicGeometry()->nt();
     size_t nzrefl               = seismic_parameters.seismicGeometry()->zreflectorcount();
     std::vector<double> constvp = seismic_parameters.modelSettings()->GetConstVp();
+    std::vector<double> constvs = seismic_parameters.modelSettings()->GetConstVs();
     unsigned long seed          = seismic_parameters.modelSettings()->GetSeed();
+    bool ps_seis                = seismic_parameters.modelSettings()->GetPSSeismic();
 
     NRLib::StormContGrid              &zgrid          = seismic_parameters.zGrid();
     NRLib::StormContGrid              &twtgrid        = seismic_parameters.twtGrid();
@@ -153,7 +155,7 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters)
           if (seis_output.GetDepthSegyOk() || seis_output.GetDepthStackSegyOk() || seismic_parameters.GetDepthStormOutput()) {
             std::vector<double> zgrid_vec_extrapol(nzrefl+2);
             std::vector<double> twt_vec_extrapol(nzrefl+2);
-            extrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, bottom_eclipse.GetZ(x,y), constvp[2], i, j);
+            extrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, bottom_eclipse.GetZ(x,y), constvp[2], constvs[2], i, j, ps_seis);
             if (seis_output.GetDepthSegyOk()) {
               convertSeis(twt_vec_extrapol, twt_0, zgrid_vec_extrapol, z_0, timegrid_pos, depthgrid_pos, timegrid_pos.GetNI());
             }
@@ -164,16 +166,20 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters)
 
           //timeshift:
           if (seis_output.GetTimeshiftSegyOk() || seis_output.GetTimeshiftStackSegyOk() || seismic_parameters.GetTimeshiftStormOutput()) {
-            std::vector<double> timeshiftgrid_vec(nzrefl);
+            std::vector<double> timeshiftgrid_vec_extrapol(nzrefl+1);
+            std::vector<double> twt_vec_extrapol(nzrefl+1);
+            timeshiftgrid_vec_extrapol[0] = 0;
+            twt_vec_extrapol[0]           = 0;
             NRLib::StormContGrid &twt_timeshift = seismic_parameters.twtShiftGrid();
             for (size_t k = 0; k < nzrefl; ++k) {
-              timeshiftgrid_vec[k]   = twt_timeshift(i,j,k);
+              timeshiftgrid_vec_extrapol[k+1] = twt_timeshift(i,j,k);
+              twt_vec_extrapol[k+1]           = twt_vec[k];
             }
             if (seis_output.GetTimeshiftSegyOk()) {
-              convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twts_0, timegrid_pos, timeshiftgrid_pos, timegrid_pos.GetNI());
+              convertSeis(twt_vec_extrapol, twt_0, timeshiftgrid_vec_extrapol, twts_0, timegrid_pos, timeshiftgrid_pos, timegrid_pos.GetNI());
             }
             if (seis_output.GetTimeshiftStackSegyOk() || seismic_parameters.GetTimeshiftStormOutput()){
-              convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twts_0, timegrid_stack_pos, timeshiftgrid_stack_pos, timegrid_stack_pos.GetNI());
+              convertSeis(twt_vec_extrapol, twt_0, timeshiftgrid_vec_extrapol, twts_0, timegrid_stack_pos, timeshiftgrid_stack_pos, timegrid_stack_pos.GetNI());
             } 
           }
 
@@ -407,7 +413,9 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
     size_t nt                   = seismic_parameters.seismicGeometry()->nt();
     size_t nzrefl               = seismic_parameters.seismicGeometry()->zreflectorcount();
     std::vector<double> constvp = seismic_parameters.modelSettings()->GetConstVp();
+    std::vector<double> constvs = seismic_parameters.modelSettings()->GetConstVs();
     unsigned long seed          = seismic_parameters.modelSettings()->GetSeed();
+    bool ps_seis                = seismic_parameters.modelSettings()->GetPSSeismic();
 
     NRLib::StormContGrid              &zgrid          = seismic_parameters.zGrid();
     NRLib::StormContGrid              &twtgrid        = seismic_parameters.twtGrid();
@@ -523,7 +531,7 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
           if (nmo_output.GetNMODepthSegyOk() || nmo_output.GetNMODepthStackSegyOk() || seismic_parameters.GetDepthStormOutput()) {
             std::vector<double> zgrid_vec_extrapol(nzrefl+2);
             std::vector<double> twt_vec_extrapol(nzrefl+2);
-            extrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, bottom_eclipse.GetZ(x,y), constvp[2], i, j);
+            extrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, bottom_eclipse.GetZ(x,y), constvp[2], constvs[2], i, j, ps_seis);
             if (nmo_output.GetNMODepthSegyOk()) {
               convertSeis(twt_vec_extrapol, twt_0, zgrid_vec_extrapol, z_0, nmo_timegrid_pos, nmo_depthgrid_pos, max_sample);
             }
@@ -534,16 +542,20 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
 
           //timeshift:
           if (nmo_output.GetNMOTimeshiftSegyOk() || nmo_output.GetNMOTimeshiftStackSegyOk() || seismic_parameters.GetTimeshiftStormOutput()) {
-            std::vector<double> timeshiftgrid_vec(nzrefl);
+            std::vector<double> timeshiftgrid_vec_extrapol(nzrefl+1);
+            std::vector<double> twt_vec_extrapol(nzrefl+1);
+            timeshiftgrid_vec_extrapol[0] = 0;
+            twt_vec_extrapol[0]           = 0;
             NRLib::StormContGrid &twt_timeshift = seismic_parameters.twtShiftGrid();
             for (size_t k = 0; k < nzrefl; ++k) {
-              timeshiftgrid_vec[k]   = twt_timeshift(i,j,k);
+              timeshiftgrid_vec_extrapol[k+1] = twt_timeshift(i,j,k);
+              twt_vec_extrapol[k+1]           = twt_vec[k];
             }
             if (nmo_output.GetNMOTimeshiftSegyOk()) {
-              convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twts_0, nmo_timegrid_pos, nmo_timeshiftgrid_pos, max_sample);
+              convertSeis(twt_vec_extrapol, twt_0, timeshiftgrid_vec_extrapol, twts_0, nmo_timegrid_pos, nmo_timeshiftgrid_pos, max_sample);
             }
             if (nmo_output.GetNMOTimeshiftStackSegyOk() || seismic_parameters.GetTimeshiftStormOutput()){
-              convertSeis(twt_vec, twt_0, timeshiftgrid_vec, twts_0, nmo_timegrid_stack_pos, nmo_timeshiftgrid_stack_pos, max_sample);
+              convertSeis(twt_vec_extrapol, twt_0, timeshiftgrid_vec_extrapol, twts_0, nmo_timegrid_stack_pos, nmo_timeshiftgrid_stack_pos, max_sample);
             } 
           }
 
@@ -881,10 +893,17 @@ void SeismicForward::extrapolZandTwtVec(std::vector<double>        &zgrid_vec_ex
                                         const std::vector<double>  &twt_vec,
                                         const NRLib::StormContGrid &zgrid,
                                         double                      z_bot,
-                                        double                      constvp,
+                                        double                      vp_bot,
+                                        double                      vs_bot,
                                         size_t                      i,
-                                        size_t                      j)
+                                        size_t                      j,
+                                        bool                        ps_seis)
 {
+  double vel_bot;
+  if (ps_seis)
+    vel_bot = 0.5*(vp_bot + vs_bot);
+  else
+    vel_bot = vp_bot;
   size_t nzrefl = zgrid_vec_extrapol.size() - 2;
   zgrid_vec_extrapol[0] = 0;
   twt_vec_extrapol[0]   = 0;
@@ -893,7 +912,7 @@ void SeismicForward::extrapolZandTwtVec(std::vector<double>        &zgrid_vec_ex
     zgrid_vec_extrapol[k+1] = zgrid(i, j, k);
   }
   zgrid_vec_extrapol[nzrefl+1] = z_bot;
-  twt_vec_extrapol[nzrefl+1]   = twt_vec_extrapol[nzrefl] + 2000* (zgrid_vec_extrapol[nzrefl+1] - zgrid_vec_extrapol[nzrefl]) / constvp;
+  twt_vec_extrapol[nzrefl+1]   = twt_vec_extrapol[nzrefl] + 2000* (zgrid_vec_extrapol[nzrefl+1] - zgrid_vec_extrapol[nzrefl]) / vel_bot;
 }
 
 
