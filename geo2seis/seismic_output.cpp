@@ -294,7 +294,7 @@ void SeismicOutput::writeSegyGather(NRLib::Grid2D<double>     &data_gather,
     if (nmo)
       segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(offset_vec[off]));
     else
-      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(offset_vec[off]/NRLib::Degree));
+      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(std::floor(offset_vec[off]/NRLib::Degree + 0.5)));
   }
 }
 
