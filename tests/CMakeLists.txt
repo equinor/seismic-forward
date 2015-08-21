@@ -4,6 +4,7 @@ project(Testing)
 
 set(SOURCE_FILES
     main.cpp
+	compare_traces.cpp
     test_test.cpp)
 
 enable_testing()
@@ -26,4 +27,5 @@ link_directories(${Boost_LIBRARY_DIRS})
 add_executable(test_geo2seis ${SOURCE_FILES})
 target_link_libraries(test_geo2seis geo2seis_lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
 
-add_test(NAME test_geo2seis COMMAND test_geo2seis)
+set (DATA_DIR ${CMAKE_SOURCE_DIR}/tests/data)
+add_test(NAME test_geo2seis WORKING_DIRECTORY ${DATA_DIR} COMMAND test_geo2seis)
