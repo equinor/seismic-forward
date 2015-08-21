@@ -31,7 +31,7 @@ void SeismicForward::seismicForward(SeismicParameters &seismic_parameters) {
 void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters) 
 {
   if (seismic_parameters.GetTimeOutput() || seismic_parameters.GetDepthOutput() || seismic_parameters.GetTimeshiftOutput()) {
-  
+
     ModelSettings * model_settings = seismic_parameters.modelSettings();
     size_t nx                   = seismic_parameters.seismicGeometry()->nx();
     size_t ny                   = seismic_parameters.seismicGeometry()->ny();
@@ -94,6 +94,11 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters)
     SeisOutput seis_output(seismic_parameters, twt_0, z_0, twts_0);
 
     printTime();
+    std::cout << "Generating synthetic seismic for angles: ";
+    for (size_t i = 0; i < theta_vec.size(); ++i){
+      std::cout << theta_vec[i]/NRLib::Degree << " ";
+    }
+    std::cout << "\n";
 
     float monitor_size, next_monitor;
     monitorInitialize(nx, ny, monitor_size, next_monitor);
@@ -405,7 +410,6 @@ void SeismicForward::makeSeismicOLD(SeismicParameters &seismic_parameters)
 void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
 {
   if (seismic_parameters.GetTimeOutput() || seismic_parameters.GetDepthOutput() || seismic_parameters.GetTimeshiftOutput()) {
-  
     ModelSettings * model_settings = seismic_parameters.modelSettings();
     size_t nx                   = seismic_parameters.seismicGeometry()->nx();
     size_t ny                   = seismic_parameters.seismicGeometry()->ny();
@@ -463,7 +467,11 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
     NMOOutput nmo_output(seismic_parameters, twt_0, z_0, twts_0, time_samples_stretch);
 
     printTime();
-
+    std::cout << "Generating synthetic NMO seismic for offsets: ";
+    for (size_t i = 0; i < offset_vec.size(); ++i){
+      std::cout << offset_vec[i] << " ";
+    }
+    std::cout << "\n";
     float monitor_size, next_monitor;
     monitorInitialize(nx, ny, monitor_size, next_monitor);
     int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
@@ -476,11 +484,11 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
     int xl_steps = 0;
     //----------------------LOOP OVER I,J OR IL,XL---------------------------------      
     for (int il = il_min; il <= il_max; il += il_step) {
-    //for (int il = 1350; il < 1351; il += il_step) {
+    //for (int il = 1350; il < 1352; il += il_step) {
       ++il_steps;
       xl_steps = 0;
       for (int xl = xl_min; xl <= xl_max; xl +=xl_step) { 
-      //for (int xl = 1280; xl < 1281; xl += xl_step) {        
+      //for (int xl = 1280; xl < 1282; xl += xl_step) {        
         ++xl_steps;
         size_t i, j;
         double x, y;
@@ -494,6 +502,7 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
           x = 0;
           y = 0;
         }
+        //std::cout << "il, xl, i, j, x, y = " << il << " " << xl << " " << i << " " << j << " " << x << " " << y << "\n";
         //----------------------BEGIN GEN SEIS WITH NMO FOR I,J---------------------------------
         if (generateTraceOk(seismic_parameters, i, j)) {
 
@@ -681,7 +690,6 @@ void SeismicForward::generateNMOSeismicTrace(SeismicParameters             &seis
   //NMO correction:
   NMOCorrect(twt_0, timegrid_pos, twtx_reg, nmo_timegrid_pos, n_min, n_max, max_sample);
 
-
   //////debug print
   //seismic_parameters.seismicOutput()->printVector(twt_0, "twt_0.txt");
   //seismic_parameters.seismicOutput()->printVector(twt_vec, "twt_vec.txt");
@@ -765,15 +773,12 @@ void SeismicForward::monitorInitialize(size_t nx,
                                        float &monitor_size,
                                        float &next_monitor)
 {
-  
-  printf("\nComputing synthetic seismic:");
-      monitor_size = std::max(1.0f, static_cast<float>(nx * ny) * 0.02f);
-      next_monitor = monitor_size;
-      std::cout
-        << "\n  0%       20%       40%       60%       80%      100%"
-        << "\n  |    |    |    |    |    |    |    |    |    |    |  "
-        << "\n  ^";
-
+  monitor_size = std::max(1.0f, static_cast<float>(nx * ny) * 0.02f);
+  next_monitor = monitor_size;
+  std::cout
+    << "\n  0%       20%       40%       60%       80%      100%"
+    << "\n  |    |    |    |    |    |    |    |    |    |    |  "
+    << "\n  ^";
 }
 
 void SeismicForward::monitor(size_t n_xl,

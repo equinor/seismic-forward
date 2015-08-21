@@ -843,7 +843,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("extra-parameters-time-segy");
     legalCommands.push_back("extra-parameters-depth-segy");
     legalCommands.push_back("seismic-stack");
-    legalCommands.push_back("prenmo-seismic-time-segy");
+    legalCommands.push_back("seismic-prenmo-time-segy");
 
     bool value;
     if (ParseBool(root, "elastic-parameters", value, errTxt) == true) {
@@ -866,7 +866,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     }
 
     if (ParseBool(root, "seismic-timeshift", value, errTxt) == true) {
-        if (modelSettings_->GetTwtFileName() == "") {
+        if (value == true && modelSettings_->GetTwtFileName() == "") {
             errTxt += "The command <twt-timeshift> must be set if output parameter <seismic-timeshift> is given.\n";
         } else {
             modelSettings_->SetOutputSeismicTimeshift(value);
@@ -914,7 +914,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     }
 
     if (ParseBool(root, "seismic-timeshift-segy", value, errTxt) == true) {
-        if (modelSettings_->GetTwtFileName() == "") {
+        if (value == true && modelSettings_->GetTwtFileName() == "") {
             errTxt += "The command <twt-timeshift> must be set if output parameter <seismic-timeshift-segy> is given.\n";
         } else {
             modelSettings_->SetOutputTimeshiftSegy(value);
@@ -943,7 +943,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
 
     ParseSeismicStack(root, errTxt);
 
-    if (ParseBool(root, "prenmo-seismic-time-segy", value, errTxt) == true) {
+    if (ParseBool(root, "seismic-prenmo-time-segy", value, errTxt) == true) {
       modelSettings_->SetOutputPrenmoTimeSegy(value);
     }
 

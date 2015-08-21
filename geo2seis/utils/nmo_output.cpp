@@ -42,7 +42,7 @@ NMOOutput::NMOOutput(SeismicParameters &seismic_parameters,
       nmo_time_segy_ok_            = seismic_parameters.seismicOutput()->prepareSegy(nmo_time_segy_, twt_0_, time_samples_stretch, filename, seismic_parameters, offset_vec, offset_vec.size(), true, nmo);
     }
     if (seismic_parameters.modelSettings()->GetOutputPrenmoTimeSegy()) {
-      std::string filename        = "prenmo_seismic_time";
+      std::string filename        = "seismic_prenmo_time";
       prenmo_time_segy_ok_         = seismic_parameters.seismicOutput()->prepareSegy(prenmo_time_segy_, twt_0_, twt_0_.size(), filename, seismic_parameters, offset_vec, offset_vec.size(), true, nmo);
     }
     if (seismic_parameters.modelSettings()->GetOutputSeismicStackTimeSegy()) {

@@ -72,6 +72,7 @@ class SeismicParameters {
                            int               &xl_step,
                            bool              &segy);
 
+    void                FindMaxTwtIndex(size_t & i_max, size_t & j_max, double & max_value);
     std::vector<double> GenerateTwt0ForNMO(size_t & time_stretch_samples);
     std::vector<double> GenerateZ0ForNMO();
 

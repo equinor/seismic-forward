@@ -189,7 +189,7 @@ void SeismicParameters::findVrmsPos(std::vector<double>       &vrms_vec,
   if (include_regular) {
     //generate vrms_vec_reg - including overburden and underburden
     std::vector<double> constvp    = model_settings_->GetConstVp();
-    double twt_wavelet = 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();  
+    double twt_wavelet = 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
     double vrms_under  = vrms_vec[nk-1]*vrms_vec[nk-1]*(*twtgrid_)(i,j,(nk-1)) + constvp[2]*constvp[2]*twt_wavelet;
     vrms_under        *= (1/((*twtgrid_)(i,j,(nk-1))+twt_wavelet));
     vrms_under        = std::sqrt(vrms_under);
@@ -297,21 +297,35 @@ void SeismicParameters::findNMOReflections(NRLib::Grid2D<double>       &r_vec,
   delete zoeppritz;
 }
 
+void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
+                                        size_t & j_max,
+                                        double & max_value)
+{
+  max_value = 0;
+  size_t k_max = (*twtgrid_).GetNK() - 1;
+  for (size_t i = 0; i < (*twtgrid_).GetNI(); ++i) {
+    for (size_t j = 0; j < (*twtgrid_).GetNJ(); ++j) {
+      if ((*twtgrid_)(i,j,k_max) > max_value){
+        max_value = (*twtgrid_)(i,j,k_max);
+        i_max = i;
+        j_max = j;
+      }
+    }
+  }
+}
 
 std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_samples){
   size_t i_max, j_max;
-  double x, y;
+  double max_twt_value;
   size_t nt                      = seismic_geometry_->nt();
   double dt                      = seismic_geometry_->dt();
   double t0                      = seismic_geometry_->t0();
   std::vector<double> constvp    = model_settings_->GetConstVp();
+  double twt_wavelet             = 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
 
-  //--find max TWT for highest offset in order to find the highest TWT value to sample seismic
-  //find max twt value from bottime
-  double max_twt_value           = bot_time_.MaxNode(i_max, j_max);
-  //find index
-  bot_time_.GetXY(i_max, j_max, x, y);
-  (*twtgrid_).FindXYIndex(x, y, i_max, j_max);
+  //find max TWT for highest offset in order to find the highest TWT value to sample seismic
+  FindMaxTwtIndex(i_max, j_max, max_twt_value);
+  max_twt_value += twt_wavelet;
   //find max vrms in index
   std::vector<double> vrms_vec((*twtgrid_).GetNK()), vrms_dummy, twt_0_dummy;
   findVrmsPos(vrms_vec, vrms_dummy, twt_0_dummy, i_max, j_max, false);
@@ -326,14 +340,14 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
   double tmin = t0;
   size_t xtra_samples_top = 0;
   if (factor > 2) {
-    tmin = t0 - factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
-    xtra_samples_top = static_cast<size_t>((factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor())/dt);
+    tmin = t0 - factor * twt_wavelet;
+    xtra_samples_top = static_cast<size_t>((factor * twt_wavelet)/dt);
   }
 
   //find number of samples required for nmo corrected seismic
   double tmax_nmo = seismic_geometry_->tmax();
   if (factor > 2) {
-    tmax_nmo += factor * 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+    tmax_nmo += factor * twt_wavelet;
   }
   time_stretch_samples = static_cast<size_t>(std::ceil((tmax_nmo - tmin) /dt));
   
@@ -377,16 +391,11 @@ std::vector<double>  SeismicParameters::GenerateZ0ForNMO(){
 std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
                                                           size_t n_samples)
 {
-  //endre slik at jeg finner i,j og k max her inne istedet for utenfor...
-  std::vector<double> constvp = model_settings_->GetConstVp();
   size_t i_max, j_max;
-  double x,y;
+  double max_twt_value;
 
-  //find max twt value from bottime
-  double max_twt_value           = bot_time_.MaxNode(i_max, j_max);
-  //find index
-  bot_time_.GetXY(i_max, j_max, x, y);
-  (*twtgrid_).FindXYIndex(x, y, i_max, j_max);
+  //find max twt value
+  FindMaxTwtIndex(i_max, j_max, max_twt_value);
 
   size_t k_max  = (*twtgrid_).GetNK();
   double ts_0   = (*twt_timeshift_)(i_max, j_max, 0);
@@ -595,7 +604,6 @@ void SeismicParameters::findGeometry() {
 
     seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
     seismic_geometry_->setDxDy(dx, dy);
-
   }
   else {
     double x0, y0, lx, ly, angle;
