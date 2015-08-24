@@ -18,28 +18,10 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   printf("Zvalues found.\n");
 
   printf("Start finding elastic parameters.\n");
-  findVpAndR(seismic_parameters);
+  findVp(seismic_parameters);
   printf("Elastic parameters found.\n");
   
   seismic_parameters.deleteEclipseGrid();
-
-
-  //write reflections and add white noise if requested (not for NMO seis)
-  if (seismic_parameters.modelSettings()->GetNMOCorr() == false) {
-    // if we are adding noise to reflection write noise-free reflections to file before adding noise
-    if (seismic_parameters.modelSettings()->GetOutputReflections()) {
-      seismic_parameters.seismicOutput()->writeReflections(seismic_parameters, false);
-    }
-    //-----------------Add white noise to reflections----------------------------
-    if (seismic_parameters.modelSettings()->GetWhiteNoise()) {
-      unsigned long seed = seismic_parameters.modelSettings()->GetSeed();
-      double deviation = seismic_parameters.modelSettings()->GetStandardDeviation();
-      addNoiseToReflections(seed, deviation, seismic_parameters.rGrids());
-    }
-    if (seismic_parameters.modelSettings()->GetOutputReflections() && seismic_parameters.modelSettings()->GetWhiteNoise()) {
-      seismic_parameters.seismicOutput()->writeReflections(seismic_parameters, true);
-    }
-  }
 
   NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
   NRLib::RegularSurface<double> &bottime = seismic_parameters.bottomTime();
@@ -188,12 +170,11 @@ void SeismicRegridding::findVrms(SeismicParameters &seismic_parameters){
 }
 
 
-void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
+void SeismicRegridding::findVp(SeismicParameters &seismic_parameters) {
   NRLib::StormContGrid &vpgrid  = seismic_parameters.vpGrid();
   NRLib::StormContGrid &vsgrid  = seismic_parameters.vsGrid();
   NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
 
-  std::vector<NRLib::StormContGrid> &rgrid                = seismic_parameters.rGrids();
   std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.extraParametersGrids();
   const NRLib::EclipseGrid          &egrid                = seismic_parameters.eclipseGrid();
 
@@ -212,7 +193,6 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
   //NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
 
   double zlimit = seismic_parameters.modelSettings()->GetZeroThicknessLimit();
-  bool ps_seis  = seismic_parameters.modelSettings()->GetPSSeismic();
 
   const NRLib::EclipseGeometry &geometry = egrid.GetGeometry();
   NRLib::Point pt1vp, pt2vp, pt3vp, pt4vp;
@@ -221,21 +201,6 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
   std::vector<NRLib::Point> pt1_extra_param(extra_parameter_names.size()), pt2_extra_param(extra_parameter_names.size());
   std::vector<NRLib::Point> pt3_extra_param(extra_parameter_names.size()), pt4_extra_param(extra_parameter_names.size());
 
-  double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
-  std::vector<Zoeppritz *> zoeppritz(rgrid.size());
-  size_t n_angle = rgrid.size();
-  if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-    double theta;
-    for (size_t i = 0; i < n_angle; i++) {
-      theta = theta_0 + i * dtheta;
-      if (ps_seis) {
-        zoeppritz[i] = new ZoeppritzPS();
-      } else {
-        zoeppritz[i] = new ZoeppritzPP();
-      }
-      zoeppritz[i]->ComputeConstants(theta);
-    }
-  }
   NRLib::Grid2D<double> value_above_vp(egrid.GetNI(), egrid.GetNJ(), constvp[0]);
   NRLib::Grid2D<double> value_above_vs(egrid.GetNI(), egrid.GetNJ(), constvs[0]);
   NRLib::Grid2D<double> value_above_rho(egrid.GetNI(), egrid.GetNJ(), constrho[0]);
@@ -459,16 +424,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                     //if(intersect==true){
                     if (dist < 0.00000000001) {
                       vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                      diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                      meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
                       triangle7.FindIntersection(line, intersec_pt, true);              //<--m� ha denne!
                       vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z); //<--m� ha denne!
-                      diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                      meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
                       triangle11.FindIntersection(line, intersec_pt, true);
                       rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                      diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                      meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
                       for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                         triangles_extra_param[iii * 2].FindIntersection(line, intersec_pt, true);
                         extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
@@ -479,33 +438,13 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                       // if(intersect == true){
                       if (dist < 0.00000000001) {
                         vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                        if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-                          diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                          meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
-                        }
                         triangle8.FindIntersection(line, intersec_pt, true);
                         vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                        if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-                          diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                          meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
-                        }
                         triangle12.FindIntersection(line, intersec_pt, true);
                         rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                        if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-                          diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                          meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
-                        }
                         for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                           triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
                           extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                        }
-                      }
-                    }
-                    // if(intersect){
-                    if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-                      if (dist < 0.00000000001) {
-                        for (size_t l = 0; l < n_angle; l++) {
-                          rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
                         }
                       }
                     }
@@ -697,16 +636,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                 // if(intersect==true){
                 if (dist < 0.00000000001) {
                   vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                  meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
                   triangle7.FindIntersection(line, intersec_pt, true);
                   vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                  meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
                   triangle11.FindIntersection(line, intersec_pt, true);
                   rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                  meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
                   for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                     triangles_extra_param[iii * 2].FindIntersection(line, intersec_pt, true);
                     extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
@@ -717,27 +650,13 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                   // if(intersect == true){
                   if (dist < 0.00000000001) {
                     vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                    meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
                     triangle8.FindIntersection(line, intersec_pt, true);
                     vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                    meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
                     triangle12.FindIntersection(line, intersec_pt, true);
                     rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                    meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
                     for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                       triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
                       extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    }
-                  }
-                }
-                // if(intersect){
-                if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-                  if (dist < 0.00000000001) {
-                    for (size_t l = 0; l < n_angle; l++) {
-                      rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
                     }
                   }
                 }
@@ -928,16 +847,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                 if (dist < 0.00000000001) {
                   //if(intersect==true){
                   vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                  meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
                   triangle7.FindIntersection(line, intersec_pt, true);
                   vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                  meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
                   triangle11.FindIntersection(line, intersec_pt, true);
                   rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                  meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
                   for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                     triangles_extra_param[iii * 2].FindIntersection(line, intersec_pt, true);
                     extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
@@ -948,27 +861,13 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                   //if(intersect == true){
                   if (dist < 0.00000000001) {
                     vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                    meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
                     triangle8.FindIntersection(line, intersec_pt, true);
                     vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                    meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
                     triangle12.FindIntersection(line, intersec_pt, true);
                     rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                    meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
                     for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                       triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
                       extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    }
-                  }
-                }
-                // if(intersect){
-                if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-                  if (dist < 0.00000000001) {
-                    for (size_t l = 0; l < n_angle; l++) {
-                      rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
                     }
                   }
                 }
@@ -1158,16 +1057,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                 //if(intersect==true){
                 if (dist < 0.00000000001) {
                   vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                  meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
                   triangle7.FindIntersection(line, intersec_pt, true);
                   vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                  meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
                   triangle11.FindIntersection(line, intersec_pt, true);
                   rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                  meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
                   for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                     triangles_extra_param[iii * 2].FindIntersection(line, intersec_pt, true);
                     extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
@@ -1178,27 +1071,13 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                   //if(intersect == true){
                   if (dist < 0.00000000001) {
                     vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                    meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
                     triangle8.FindIntersection(line, intersec_pt, true);
                     vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                    meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
                     triangle12.FindIntersection(line, intersec_pt, true);
                     rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                    meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
                     for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                       triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
                       extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    }
-                  }
-                }
-                //if(intersect){
-                if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-                  if (dist < 0.00000000001) {
-                    for (size_t l = 0; l < n_angle; l++) {
-                      rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
                     }
                   }
                 }
@@ -1385,16 +1264,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                 if (dist < 0.00000000001) {
                   //if(intersect==true){
                   vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                  meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
                   triangle7.FindIntersection(line, intersec_pt, true);
                   vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                  meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
                   triangle11.FindIntersection(line, intersec_pt, true);
                   rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                  meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
                   for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                     triangles_extra_param[iii * 2].FindIntersection(line, intersec_pt, true);
                     extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
@@ -1405,27 +1278,13 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
                   // if(intersect == true){
                   if (dist < 0.00000000001) {
                     vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-                    meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
                     triangle8.FindIntersection(line, intersec_pt, true);
                     vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-                    meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
                     triangle12.FindIntersection(line, intersec_pt, true);
                     rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-                    meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
                     for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
                       triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
                       extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    }
-                  }
-                }
-                //if(intersect){
-                if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-                  if (dist < 0.00000000001) {
-                    for (size_t l = 0; l < n_angle; l++) {
-                      rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
                     }
                   }
                 }
@@ -1515,21 +1374,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
           NRLib::Point p1(x, y, 0.0);
           if (inside_e_cells.IsInsidePolygonXY(p1)) {
             vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4vp.z);
-            diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-            meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
             vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4vs.z);
-            diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-            meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
             rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4rho.z);
-            diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-            meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
             for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
               extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt4_extra_param[ii].z);
-            }
-            if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-              for (size_t l = 0; l < n_angle; l++) {
-                rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
-              }
             }
           }
         }
@@ -1616,21 +1464,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
           NRLib::Point p1(x, y, 0.0);
           if (inside_e_cells.IsInsidePolygonXY(p1)) {
             vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4vp.z);
-            diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-            meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
             vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4vs.z);
-            diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-            meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
             rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4rho.z);
-            diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-            meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
             for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
               extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt4_extra_param[ii].z);
-            }
-            if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-              for (size_t l = 0; l < n_angle; l++) {
-                rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
-              }
             }
           }
         }
@@ -1716,21 +1553,10 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
           NRLib::Point p1(x, y, 0.0);
           if (inside_e_cells.IsInsidePolygonXY(p1)) {
             vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4vp.z);
-            diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-            meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
             vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4vs.z);
-            diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-            meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
             rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4rho.z);
-            diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-            meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
             for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
               extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt4_extra_param[ii].z);
-            }
-            if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-              for (size_t l = 0; l < n_angle; l++) {
-                rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
-              }
             }
           }
         }
@@ -1817,29 +1643,15 @@ void SeismicRegridding::findVpAndR(SeismicParameters &seismic_parameters) {
           if (inside_e_cells.IsInsidePolygonXY(p1)) {
             //what? diff and mean commented out by me and Espen!!!
             vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4vp.z);
-            diffvp = vpgrid(ii, jj, (k - topk) + 1) - vpgrid(ii, jj, (k - topk));
-            meanvp = 0.5 * (vpgrid(ii, jj, (k - topk) + 1) + vpgrid(ii, jj, (k - topk)));
             vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4vs.z);
-            diffvs = vsgrid(ii, jj, (k - topk) + 1) - vsgrid(ii, jj, (k - topk));
-            meanvs = 0.5 * (vsgrid(ii, jj, (k - topk) + 1) + vsgrid(ii, jj, (k - topk)));
             rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt4rho.z);
-            diffrho = rhogrid(ii, jj, (k - topk) + 1) - rhogrid(ii, jj, (k - topk));
-            meanrho = 0.5 * (rhogrid(ii, jj, (k - topk) + 1) + rhogrid(ii, jj, (k - topk)));
             for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
               extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt4_extra_param[ii].z);
-            }
-            if (seismic_parameters.modelSettings()->GetNMOCorr() == false){
-              for (size_t l = 0; l < n_angle; l++) {
-                rgrid[l](ii, jj, k - topk) = static_cast<float>(zoeppritz[l]->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
-              }
             }
           }
         }
       }
     }
-  }
-  for (size_t i = 0; i < n_angle; i++) {
-    delete zoeppritz[i];
   }
 }
 

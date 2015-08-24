@@ -105,15 +105,10 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("wavelet");
     legalCommands.push_back("white-noise");
     legalCommands.push_back("output-parameters");
-    legalCommands.push_back("memory-limit");
     legalCommands.push_back("timeshift-twt");
     legalCommands.push_back("ps-seismic");
-    legalCommands.push_back("old-modelling");
 
-    bool bolval;
-    if (ParseBool(root, "old-modelling", bolval, errTxt) == true) {
-        modelSettings_->SetOldModelling(bolval);
-    }
+
     if (ParseNMOStretch(root, errTxt)){
       modelSettings_->SetNMOCorr(true);
     }
@@ -125,15 +120,6 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
     if (ParseWhiteNoise(root, errTxt)) {
         modelSettings_->SetWhiteNoise();
     }
-
-
-    double val;
-    if (ParseValue(root, "memory-limit", val, errTxt) == true) {
-        modelSettings_->SetMemoryLimit(val * 1000000000.0);    // limit is given in GB
-    } else {
-        modelSettings_->SetMemoryLimit(8000000000.0);    // default value
-    }
-
 
     std::string file_name;
     if (ParseValue(root, "timeshift-twt", file_name, errTxt) == true) {
@@ -858,9 +844,6 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetOutputReflections(value);
     }
 
-    if (modelSettings_->GetOldModelling() == true) {
-        modelSettings_->SetOutputSeismicTime(true);
-    }
     if (ParseBool(root, "seismic-time", value, errTxt) == true) {
         modelSettings_->SetOutputSeismicTime(value);
     }
@@ -873,9 +856,6 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
         }
     }
 
-    if (modelSettings_->GetOldModelling() == true) {
-        modelSettings_->SetOutputSeismicDepth(true);
-    }
     if (ParseBool(root, "seismic-depth", value, errTxt) == true) {
         modelSettings_->SetOutputSeismicDepth(value);
     }

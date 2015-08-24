@@ -19,7 +19,7 @@ class SeismicRegridding {
 
   private:
     static void findZValues(SeismicParameters &seismic_parameters);
-    static void findVpAndR(SeismicParameters &seismic_parameters);
+    static void findVp(SeismicParameters &seismic_parameters);
 
     static void findVrms(SeismicParameters &seismic_parameters);
 

@@ -59,8 +59,6 @@ class SeismicOutput {
 
     void writeDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse);
 
-    void writeReflections(SeismicParameters &seismic_parameters, bool noise_added);
-
     void writeTimeSurfaces(SeismicParameters &seismic_parameters);
     void writeElasticParametersTimeSegy(SeismicParameters &seismic_parameters);
     void writeElasticParametersDepthSegy(SeismicParameters &seismic_parameters);
@@ -70,26 +68,14 @@ class SeismicOutput {
     void writeVpVsRho(SeismicParameters &seismic_parameters);
     void writeZValues(SeismicParameters &seismic_parameters);
     void writeTwt(SeismicParameters &seismic_parameters);
-
-    void writeSeismicTimeSegy(SeismicParameters &seismic_parameters,       std::vector<NRLib::StormContGrid> &timegridvec);
-    void writeSeismicTimeStorm(SeismicParameters &seismic_parameters,      std::vector<NRLib::StormContGrid> &timegridvec);
-    void writeSeismicTimeshiftSegy(SeismicParameters &seismic_parameters,  std::vector<NRLib::StormContGrid> &timeshiftgridvec);
-    void writeSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, std::vector<NRLib::StormContGrid> &timeshiftgridvec);
-    void writeSeismicDepthSegy(SeismicParameters &seismic_parameters,      std::vector<NRLib::StormContGrid> &depthgridvec);
-    void writeSeismicDepthStorm(SeismicParameters &seismic_parameters,     std::vector<NRLib::StormContGrid> &depthgridvec);
-
-    void writeSeismicStackTime(SeismicParameters &seismic_parameters,          std::vector<NRLib::StormContGrid> &timegridvec);
-    void writeSeismicStackTimeshift(SeismicParameters &seismic_parameters,     std::vector<NRLib::StormContGrid> &timeshiftgridvec);
-    void writeSeismicStackDepth(SeismicParameters &seismic_parameters,         std::vector<NRLib::StormContGrid> &depthgridvec);
-    void writeSeismicTimeSeismicOnFile(SeismicParameters &seismic_parameters,  bool time_output);
-    void writeSeismicDepthSeismicOnFile(SeismicParameters &seismic_parameters, bool depth_output);
-
-    void writeNMOSeismicTimeStorm(SeismicParameters &seismic_parameters,      NRLib::StormContGrid &timegrid, double offset, bool is_stack = false);
-    void writeNMOSeismicDepthStorm(SeismicParameters &seismic_parameters,     NRLib::StormContGrid &depthgrid, double offset, bool is_stack = false);
-    void writeNMOSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack = false);
-    void writeNMOReflections(SeismicParameters &seismic_parameters, double offset);
-
     void writeVrms(SeismicParameters &seismic_parameters);
+
+    void writeSeismicTimeStorm(SeismicParameters &seismic_parameters,      NRLib::StormContGrid &timegrid, double offset, bool is_stack = false);
+    void writeSeismicDepthStorm(SeismicParameters &seismic_parameters,     NRLib::StormContGrid &depthgrid, double offset, bool is_stack = false);
+    void writeSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack = false);
+    void writeReflections(SeismicParameters &seismic_parameters, double angle_or_offset);
+
+
 
     void printVector(std::vector<double> vec, std::string filename);
     void printVectorSizeT(std::vector<size_t> vec, std::string filename);

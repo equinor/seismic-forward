@@ -726,24 +726,27 @@ void SeismicParameters::createGrids() {
   vsgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
   rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
   twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
-  if (model_settings_->GetNMOCorr()){
-    if (model_settings_->GetOutputVrms())
-      vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
-    else 
-      vrmsgrid_ = NULL;
+
+  if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()) {
+    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
+  }
+  else { 
+    vrmsgrid_ = NULL;
+  }
+
+  if (model_settings_->GetOutputReflections()){
     if (model_settings_->GetWhiteNoise())
       rgridvec_ = new std::vector<NRLib::StormContGrid>(2);
     else
       rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
   }
   else {
-    rgridvec_ = new std::vector<NRLib::StormContGrid>(ntheta_);
-    vrmsgrid_ = NULL;
+    rgridvec_ = NULL;
   }
+
   NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl);
 
   std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
-
   std::vector<double> extra_parameter_default_values = model_settings_->GetExtraParameterDefaultValues();
   extra_parameter_grid_ = new std::vector<NRLib::StormContGrid>(extra_parameter_names.size());
   for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
@@ -779,21 +782,14 @@ void SeismicParameters::createGrids() {
       }
     }
   }
-  if (model_settings_->GetNMOCorr()){
+
+  if (model_settings_->GetOutputReflections()){
+    (*rgridvec_)[0] = rgrid;
     if (model_settings_->GetWhiteNoise()){
-      (*rgridvec_)[0] = rgrid;
       (*rgridvec_)[1] = rgrid;
     }
-    else {
-      (*rgridvec_)[0] = rgrid;
-    }
   }
-  else {
-    for (size_t i = 0; i < ntheta_; i++) {
-      (*rgridvec_)[i] = rgrid;
-    }
-  }
-
+  
   if (model_settings_->GetTwtFileName() != "") {
     twt_timeshift_ = new NRLib::StormContGrid(model_settings_->GetTwtFileName());
     if ((*twt_timeshift_).GetNI() != nx || (*twt_timeshift_).GetNJ() != ny || (*twt_timeshift_).GetNK() != nzrefl) {

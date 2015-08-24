@@ -21,25 +21,6 @@ class SeismicForward {
 
     static void makeNMOSeismic(SeismicParameters &seismic_parameters);
     static void makeSeismic(SeismicParameters &seismic_parameters);
-    static void makeSeismicOLD(SeismicParameters &seismic_parameters);
-
-    static void generateSeismic(std::vector<NRLib::StormContGrid> &rgridvec,
-                                NRLib::StormContGrid &twtgrid,
-                                NRLib::StormContGrid &zgrid,
-                                NRLib::StormContGrid &twt_timeshift,
-                                std::vector<NRLib::StormContGrid> &timegridvec,
-                                std::vector<NRLib::StormContGrid> &depthgridvec,
-                                std::vector<NRLib::StormContGrid> &timeshiftgridvec,
-                                Wavelet *wavelet,
-                                double dt,
-                                NRLib::RegularSurface<double> &bot,
-                                NRLib::RegularSurface<double> &toptime,
-                                double t0, double dz, double z0,
-                                std::vector<double> &constvp,
-                                double waveletScale,
-                                bool time_output,
-                                bool depth_output,
-                                bool timeshift_output);
 
     static void generateSeismicTrace(SeismicParameters             &seismic_parameters,
                                      const std::vector<double>     &twt_vec,
@@ -49,8 +30,7 @@ class SeismicForward {
                                      size_t                         i,
                                      size_t                         j,
                                      unsigned long                  seed,
-                                     const NRLib::StormContGrid    &zgrid,
-                                     std::vector<NRLib::StormContGrid> &rgridvec);
+                                     const NRLib::StormContGrid    &zgrid);
 
 
     static void generateNMOSeismicTrace(SeismicParameters             &seismic_parameters,
@@ -64,7 +44,6 @@ class SeismicForward {
                                         size_t                         j,
                                         unsigned long                  seed,
                                         const NRLib::StormContGrid    &zgrid,
-                                        std::vector<NRLib::StormContGrid> &rgridvec,
                                         size_t                        &max_sample);
 
     static void seisConvolutionNMO(NRLib::Grid2D<double>               &timegrid_pos,
@@ -96,26 +75,6 @@ class SeismicForward {
                                 size_t                               j,
                                 size_t           n_min,
                                   size_t           n_max);
-
-    static void generateSeismicOnFile(std::vector<NRLib::StormContGrid> &rgridvec,
-                                      NRLib::StormContGrid &twtgrid,
-                                      NRLib::StormContGrid &zgrid,
-                                      NRLib::StormContGrid &twt_timeshift,
-                                      Wavelet *wavelet,
-                                      double dt,
-                                      int nt, int nz, int nx, int ny,
-                                      NRLib::RegularSurface<double> &bot,
-                                      NRLib::RegularSurface<double> &toptime,
-                                      double t0, double dz, double z0,
-                                      std::vector<double> &constvp,
-                                      double waveletScale,
-                                      bool time_output,
-                                      bool depth_output,
-                                      bool timeshift_output);
-
-    static double findTFromZ(double z,
-                             std::vector<double> &zvec,
-                             std::vector<double> &tvec);
 
     static void   convertSeis(const std::vector<double>   &twt_vec,
                               const std::vector<double>   &twt_0,

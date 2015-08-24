@@ -45,8 +45,8 @@ ModelSettings::ModelSettings(void) {
     output_vp_ = false;
     output_reflections_ = false;
     output_zvalues_ = false;
-    output_seismic_time_ = false; //true when not nmo seismic
-    output_seismic_depth_ = false;//true when not nmo seismic
+    output_seismic_time_ = false;
+    output_seismic_depth_ = false;
     output_seismic_timeshift_ = false;
     output_time_surfaces_ = false;
     output_depth_surfaces_ = false;
@@ -87,10 +87,8 @@ ModelSettings::ModelSettings(void) {
     utmy_in_ = 185;
     area_from_segy_ = "";
     utm_precision_ = -10;
-    memory_limit_ = 8000000000.0;
     twt_file_name_ = "";
     ps_seismic_ = false;
-    old_mod_ = false;
     nmo_corr_ = false;
     v_w_ = 0.0;
     z_w_ = 0.0;

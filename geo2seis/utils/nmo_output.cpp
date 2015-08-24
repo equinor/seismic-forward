@@ -230,20 +230,21 @@ void NMOOutput::AddZeroTrace(SeismicParameters     &seismic_parameters,
 
 void NMOOutput::WriteSeismicStorm(SeismicParameters     &seismic_parameters)
 {
+  std::vector<double> & offset_vec = seismic_parameters.GetOffsetVec();
   if (seismic_parameters.GetTimeStormOutput()) {
-    seismic_parameters.seismicOutput()->writeNMOSeismicTimeStorm(seismic_parameters, (*timegrid_), 0, true);
+    seismic_parameters.seismicOutput()->writeSeismicTimeStorm(seismic_parameters, (*timegrid_), 0, true);
     timegrid_ = NULL;
   }
   if (seismic_parameters.GetDepthStormOutput()) {
-    seismic_parameters.seismicOutput()->writeNMOSeismicDepthStorm(seismic_parameters, (*depthgrid_), 0, true);
+    seismic_parameters.seismicOutput()->writeSeismicDepthStorm(seismic_parameters, (*depthgrid_), 0, true);
     depthgrid_ = NULL;
   }
   if (seismic_parameters.GetTimeshiftStormOutput()) {
-    seismic_parameters.seismicOutput()->writeNMOSeismicTimeshiftStorm(seismic_parameters, (*timeshiftgrid_), 0, true);
+    seismic_parameters.seismicOutput()->writeSeismicTimeshiftStorm(seismic_parameters, (*timeshiftgrid_), 0, true);
     timeshiftgrid_ = NULL;
   }
   //write reflections
   if (seismic_parameters.modelSettings()->GetOutputReflections()) {
-    seismic_parameters.seismicOutput()->writeNMOReflections(seismic_parameters, 0.0);
+    seismic_parameters.seismicOutput()->writeReflections(seismic_parameters, offset_vec[0]);
   }
 }

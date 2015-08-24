@@ -384,10 +384,6 @@ class ModelSettings {
         depth_window_specified_ = value;
     }
 
-    void SetMemoryLimit(double value) {
-        memory_limit_ = value;
-    }
-
     void SetTwtFileName(std::string name) {
         twt_file_name_ = name;
     }
@@ -398,10 +394,6 @@ class ModelSettings {
 
     void SetNMOCorr(bool nmo) {
         nmo_corr_ = nmo;
-    }
-
-    void SetOldModelling(bool old) {
-      old_mod_ = old;
     }
 
     void SetVw(double value) {
@@ -755,10 +747,6 @@ class ModelSettings {
         return depth_window_specified_;
     }
 
-    double GetMemoryLimit() {
-        return memory_limit_;
-    }
-
     std::string GetTwtFileName() const {
         return twt_file_name_;
     }
@@ -769,10 +757,6 @@ class ModelSettings {
 
     bool GetNMOCorr() {
         return nmo_corr_;
-    }
-
-    bool GetOldModelling() {
-        return old_mod_;
     }
 
     double GetVw() {
@@ -833,12 +817,10 @@ class ModelSettings {
     int il0_in_, xl0_in_, utmx_in_, utmy_in_;
     std::string area_from_segy_;
     short utm_precision_;
-    double memory_limit_;
 
     std::string twt_file_name_;
 
     bool ps_seismic_;
-    bool old_mod_;
     bool nmo_corr_;
     double v_w_, z_w_;
 
