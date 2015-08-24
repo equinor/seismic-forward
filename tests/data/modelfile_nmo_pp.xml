@@ -20,7 +20,6 @@
 		<rho> RHO_DATA </rho>
 	</parameter-names>
 </elastic-param>
-<old-modelling> no </old-modelling>
 <nmo-stretch>
 	<seafloor-depth>  150 </seafloor-depth>
 	<velocity-water> 1500 </velocity-water>

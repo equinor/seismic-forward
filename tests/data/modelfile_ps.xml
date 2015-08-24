@@ -25,7 +25,6 @@
 	<dtheta>    0  </dtheta>
 	<theta-max>  30 </theta-max>
 </angle>
-<old-modelling> no </old-modelling>
 <wavelet>
 	<ricker>
 	<peak-frequency> 30 </peak-frequency>
