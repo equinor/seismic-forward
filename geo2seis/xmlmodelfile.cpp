@@ -818,7 +818,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("depth-surfaces");
     legalCommands.push_back("twt");
     legalCommands.push_back("vrms");
-    legalCommands.push_back("twt-offset");
+    legalCommands.push_back("twt-offset-segy");
     legalCommands.push_back("prefix");
     legalCommands.push_back("suffix");
     legalCommands.push_back("seismic-time-segy");
@@ -876,7 +876,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetOutputVrms(value);
     }
 
-    if (ParseBool(root, "twt-offset", value, errTxt) == true) {
+    if (ParseBool(root, "twt-offset-segy", value, errTxt) == true) {
         modelSettings_->SetOutputTwtOffset(value);
     }
 

@@ -39,7 +39,6 @@ void SeismicRegridding::seismicRegridding(SeismicParameters &seismic_parameters)
   //generate, write and delete vrms grid if writing is requested
   if (seismic_parameters.modelSettings()->GetNMOCorr() && seismic_parameters.modelSettings()->GetOutputVrms()){
     findVrms(seismic_parameters);
-    printf("Write rms velocity.\n");
     seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
     seismic_parameters.deleteVrmsGrid();
   }
@@ -181,7 +180,7 @@ void SeismicRegridding::findVp(SeismicParameters &seismic_parameters) {
   size_t topk    = seismic_parameters.topK();
   size_t botk    = seismic_parameters.bottomK();
   double theta_0 = seismic_parameters.theta0();
-  double dtheta  = seismic_parameters.dTheta();
+  double dtheta  = seismic_parameters.dTheta(); 
   std::vector<double> constvp   = seismic_parameters.modelSettings()->GetConstVp();
   std::vector<double> constvs   = seismic_parameters.modelSettings()->GetConstVs();
   std::vector<double> constrho  = seismic_parameters.modelSettings()->GetConstRho();

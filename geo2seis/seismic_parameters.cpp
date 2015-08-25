@@ -33,7 +33,6 @@ SeismicParameters::SeismicParameters(ModelSettings *model_settings) {
 
     seismic_output_ = new SeismicOutput(model_settings_);
     findSurfaceGeometry();
-
     createGrids();
 }
 
@@ -397,9 +396,10 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
   //find max twt value
   FindMaxTwtIndex(i_max, j_max, max_twt_value);
 
-  size_t k_max  = (*twtgrid_).GetNK();
+  size_t k_max  = (*twt_timeshift_).GetNK() - 1;
   double ts_0   = (*twt_timeshift_)(i_max, j_max, 0);
   double ts_max = (*twt_timeshift_)(i_max, j_max, k_max);
+  k_max         = (*twtgrid_).GetNK() - 1;
   double t_0    = (*twtgrid_)(i_max, j_max, 0);
   double t_max  = (*twtgrid_)(i_max, j_max, k_max);
 
