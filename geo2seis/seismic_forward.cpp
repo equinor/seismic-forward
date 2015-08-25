@@ -90,7 +90,10 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters)
     SeisOutput seis_output(seismic_parameters, twt_0, z_0, twts_0);
 
     printTime();
-    std::cout << "Generating synthetic seismic for angles: ";
+    if (ps_seis)
+      std::cout << "Generating synthetic PS-seismic for angles: ";
+    else
+      std::cout << "Generating synthetic PP-seismic for angles: ";
     for (size_t i = 0; i < theta_vec.size(); ++i){
       std::cout << theta_vec[i]/NRLib::Degree << " ";
     }
@@ -275,7 +278,10 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
     NMOOutput nmo_output(seismic_parameters, twt_0, z_0, twts_0, time_samples_stretch);
 
     printTime();
-    std::cout << "Generating synthetic NMO seismic for offsets: ";
+    if (ps_seis)
+      std::cout << "Generating synthetic NMO PS-seismic for offsets: ";
+    else
+      std::cout << "Generating synthetic NMO PP-seismic for offsets: ";
     for (size_t i = 0; i < offset_vec.size(); ++i){
       std::cout << offset_vec[i] << " ";
     }

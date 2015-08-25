@@ -114,6 +114,8 @@ TraceHeaderFormat::TraceHeaderFormat(int scalCoLoc,
     inline_loc_(inlineLoc),
     crossline_loc_(crosslineLoc),
     coord_sys_(coordSys),
+    delay_rec_time_loc_(),
+    offset_loc_(),
     standard_type_(true)
 {}
 
@@ -127,11 +129,11 @@ TraceHeaderFormat::TraceHeaderFormat(const TraceHeaderFormat & thf)
    scal_co_loc_   (thf.GetScalCoLoc()),
    utmx_loc_     (thf.GetUtmxLoc()),
    utmy_loc_     (thf.GetUtmyLoc()),
-   offset_loc_   (thf.GetOffsetLoc()),
    inline_loc_   (thf.GetInlineLoc()),
    crossline_loc_(thf.GetCrosslineLoc()),
-   delay_rec_time_loc_(thf.GetDelayRecTimeLoc()),
    coord_sys_    (thf.GetCoordSys()),
+   delay_rec_time_loc_(thf.GetDelayRecTimeLoc()),
+   offset_loc_   (thf.GetOffsetLoc()),
    standard_type_(thf.GetStandardType())
 {
   CheckFormat();
@@ -150,6 +152,8 @@ TraceHeaderFormat::Init(int headerformat)
     inline_loc_    = INLINE_LOC;
     crossline_loc_ = CROSSLINE_LOC;
     coord_sys_     = UTM;
+    delay_rec_time_loc_= IMISSING;
+    offset_loc_    = IMISSING;
   }
   else if (headerformat==IESX)
   {
@@ -160,6 +164,8 @@ TraceHeaderFormat::Init(int headerformat)
     inline_loc_    = 221;
     crossline_loc_ = CROSSLINE_LOC;
     coord_sys_     = UTM;
+    delay_rec_time_loc_= IMISSING;
+    offset_loc_    = IMISSING;
   }
   else if (headerformat==SIP)
   {
@@ -182,6 +188,8 @@ TraceHeaderFormat::Init(int headerformat)
     inline_loc_    = 5;
     crossline_loc_ = CROSSLINE_LOC;
     coord_sys_     = UTM;
+    delay_rec_time_loc_= IMISSING;
+    offset_loc_    = IMISSING;
   }
   else if (headerformat == SIPX) // Sebn: SIP probably messed up when they made volumes with this header specification.
   {
@@ -192,6 +200,8 @@ TraceHeaderFormat::Init(int headerformat)
     inline_loc_    = 181;
     crossline_loc_ = 185;
     coord_sys_     = UTM;
+    delay_rec_time_loc_= IMISSING;
+    offset_loc_    = IMISSING;
   }
   else
   {

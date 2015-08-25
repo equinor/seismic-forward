@@ -55,9 +55,9 @@ SegY::SegY(const std::string       & fileName,
            const TraceHeaderFormat & traceHeaderFormat)
   : trace_header_format_(traceHeaderFormat)
 {
-  rmissing_    = segyRMISSING;
-  file_name_    = fileName;
   single_trace_ = true;
+  file_name_    = fileName;
+  rmissing_    = segyRMISSING;
 
   /// \todo Replace with safe open function.
  // file_.open(fileName.c_str(), std::ios::in | std::ios::binary);
@@ -99,9 +99,9 @@ SegY::SegY(const std::string               & fileName,
            std::vector<TraceHeaderFormat*>   thf,
            bool                              searchStandardFormats)
 {
-  rmissing_     = segyRMISSING;
-  file_name_    = fileName;
   single_trace_ = true;
+  file_name_    = fileName;
+  rmissing_     = segyRMISSING;
 
   /// \todo Replace with safe open function.
  // file_.open(fileName.c_str(), std::ios::in | std::ios::binary);
@@ -296,9 +296,9 @@ SegY::SegY(const std::string       & fileName,
            const TraceHeaderFormat & traceHeaderFormat)
   : trace_header_format_(traceHeaderFormat)
 {
-  rmissing_              = segyRMISSING;
   geometry_              = NULL;
   binary_header_         = NULL;
+  rmissing_              = segyRMISSING;
   n_traces_per_ensamble_ = 1;
 
   /// \todo Replace with safe open function.
@@ -345,11 +345,11 @@ void SegY::Initialize(const std::string       & fileName,
                       short                     n_traces_per_ensamble)
 {
   trace_header_format_   = traceHeaderFormat;
-  rmissing_              = segyRMISSING;
   geometry_              = NULL;
   binary_header_         = NULL;
-  n_traces_per_ensamble_ = n_traces_per_ensamble;
   file_name_             = fileName;
+  rmissing_              = segyRMISSING;
+  n_traces_per_ensamble_ = n_traces_per_ensamble;
 
   /// \todo Replace with safe open function.
   //file_.open(fileName.c_str(), std::ios::out | std::ios::binary);

@@ -319,7 +319,7 @@ void SeismicOutput::writeZeroSegyGather(NRLib::SegY               &segyout,
   }
   else {
     for (size_t off = 0; off < offset_vec.size(); ++off) {
-      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(offset_vec[off]/NRLib::Degree));
+      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(std::floor(offset_vec[off]/NRLib::Degree + 0.5)));
     }
   }
 }

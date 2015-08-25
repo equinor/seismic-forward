@@ -154,12 +154,12 @@ private:
   int inline_loc_;
   /// Location of crossline coordinate field. (-1 if non-existant)
   int crossline_loc_;
+  /// Coordinate system to use.
+  coordSys_t coord_sys_;
   /// Location of delay Recording Time
   int delay_rec_time_loc_;
   /// Location of offset
   int offset_loc_;
-  /// Coordinate system to use.
-  coordSys_t coord_sys_;
   /// Standard type
   bool standard_type_;
 
