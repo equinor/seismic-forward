@@ -608,7 +608,7 @@ void SeismicParameters::findGeometry() {
     seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
   }
   else {
-    std::cout << "Area from eclipse grid.\n";
+    std::cout << "Area from Eclipsegrid.\n";
     double x0, y0, lx, ly, angle;
     geometry.FindEnclosingVolume(x0, y0, lx, ly, angle);
     seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);

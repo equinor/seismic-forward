@@ -89,7 +89,8 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters)
     //prepare segy and storm files:      
     SeisOutput seis_output(seismic_parameters, twt_0, z_0, twts_0);
 
-    printTime();
+    time_t t1 = time(0);   // get time now
+    //printTime();
     if (ps_seis)
       std::cout << "Generating synthetic PS-seismic for angles: ";
     else
@@ -206,7 +207,8 @@ void SeismicForward::makeSeismic(SeismicParameters &seismic_parameters)
       }
 
     }
-    printTime();
+    //printTime();
+    printElapsedTime(t1);
 
     //write storm grid if requested
     seis_output.WriteSeismicStorm(seismic_parameters);
@@ -277,7 +279,8 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
     //prepare segy and storm files
     NMOOutput nmo_output(seismic_parameters, twt_0, z_0, twts_0, time_samples_stretch);
 
-    printTime();
+    time_t t1 = time(0);   // get time now
+    //printTime();
     if (ps_seis)
       std::cout << "Generating synthetic NMO PS-seismic for offsets: ";
     else
@@ -402,7 +405,8 @@ void SeismicForward::makeNMOSeismic(SeismicParameters &seismic_parameters)
       }
     }
 
-    printTime();
+    //printTime();
+    printElapsedTime(t1);
 
     //write storm grid if requested
     nmo_output.WriteSeismicStorm(seismic_parameters);
@@ -620,6 +624,33 @@ void SeismicForward::printTime()
     << (now->tm_hour) << ':' 
     << (now->tm_min) << ':'
     <<  now->tm_sec
+    << "\n";
+}
+
+void SeismicForward::printElapsedTime(time_t t1)
+{
+  time_t t2             = time(0);   // get time now
+  size_t seconds        = difftime(t2,t1);
+
+  size_t hours          = static_cast<int>(seconds/3600);
+  seconds               = seconds % 3600;
+  size_t minutes        = static_cast<int>(seconds/60);
+  seconds               = seconds % 60;
+
+  std::string hours_s   = NRLib::ToString(hours);
+  std::string zeros     = std::string(2 - hours_s.length(), '0');
+  hours_s               = zeros + hours_s;
+  std::string minutes_s = NRLib::ToString(minutes);
+  zeros                 = std::string(2 - minutes_s.length(), '0');
+  minutes_s             = zeros + minutes_s;
+  std::string seconds_s = NRLib::ToString(seconds);
+  zeros                 = std::string(2 - seconds_s.length(), '0');
+  seconds_s             = zeros + seconds_s;
+
+  std::cout << "\nTotal time generating seismic: "
+    << hours_s << ':'
+    << minutes_s << ':'
+    << seconds_s
     << "\n";
 }
 

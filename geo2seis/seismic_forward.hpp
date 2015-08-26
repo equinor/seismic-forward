@@ -18,7 +18,7 @@ class SeismicForward {
     static void seismicForward(SeismicParameters &seismic_parameters);
     static void printTime();
   private:
-
+    static void printElapsedTime(time_t t1);
     static void makeNMOSeismic(SeismicParameters &seismic_parameters);
     static void makeSeismic(SeismicParameters &seismic_parameters);
 
