@@ -557,26 +557,9 @@ void SeismicParameters::findGeometry() {
 
   const NRLib::EclipseGeometry &geometry = eclipse_grid_->GetGeometry();
 
-  if (model_settings_->GetAreaGiven()) {
-    double x0 = model_settings_->GetX0();
-    double y0 = model_settings_->GetY0();
-    double lx = model_settings_->GetLx();
-    double ly = model_settings_->GetLy();
-    double angle = model_settings_->GetAngle();
-    seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
 
-  }
-  else if (model_settings_->GetAreaFromSurface() != "") {
-    NRLib::RegularSurfaceRotated<double> toptime_rot = NRLib::RegularSurfaceRotated<double>(model_settings_->GetAreaFromSurface());
-    double x0 = toptime_rot.GetXRef();
-    double y0 = toptime_rot.GetYRef();
-    double lx = toptime_rot.GetLengthX();
-    double ly = toptime_rot.GetLengthY();
-    double angle = toptime_rot.GetAngle();
-    seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
-
-  }
-  else if (model_settings_->GetAreaFromSegy() != "") {
+  if (model_settings_->GetAreaFromSegy() != "") {
+    std::cout << "Area from <area-from-segy>.\n";
     int scalcoloc = 71;
     NRLib::TraceHeaderFormat::coordSys_t coord = NRLib::TraceHeaderFormat::UTM;
     NRLib::TraceHeaderFormat *thf = new NRLib::TraceHeaderFormat(scalcoloc, model_settings_->GetUtmxIn(), model_settings_->GetUtmyIn(), model_settings_->GetIL0In(), model_settings_->GetXL0In(), coord);
@@ -605,14 +588,30 @@ void SeismicParameters::findGeometry() {
     seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
     seismic_geometry_->setDxDy(dx, dy);
   }
+  else if (model_settings_->GetAreaGiven()) {
+    std::cout << "Area from <area>.\n";
+    double x0 = model_settings_->GetX0();
+    double y0 = model_settings_->GetY0();
+    double lx = model_settings_->GetLx();
+    double ly = model_settings_->GetLy();
+    double angle = model_settings_->GetAngle();
+    seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
+  }
+  else if (model_settings_->GetAreaFromSurface() != "") {
+    std::cout << "Area from <area-from-surface>.\n";
+    NRLib::RegularSurfaceRotated<double> toptime_rot = NRLib::RegularSurfaceRotated<double>(model_settings_->GetAreaFromSurface());
+    double x0 = toptime_rot.GetXRef();
+    double y0 = toptime_rot.GetYRef();
+    double lx = toptime_rot.GetLengthX();
+    double ly = toptime_rot.GetLengthY();
+    double angle = toptime_rot.GetAngle();
+    seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
+  }
   else {
+    std::cout << "Area from eclipse grid.\n";
     double x0, y0, lx, ly, angle;
     geometry.FindEnclosingVolume(x0, y0, lx, ly, angle);
     seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
-  }
-
-  if (model_settings_->GetAreaGiven() && model_settings_->GetAreaFromSurface() != "") {
-    printf("WARNING! Area defined in two different ways. The area specified by the area command is used.\n");
   }
 }
 

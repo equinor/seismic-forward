@@ -504,18 +504,26 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode *node, std::string &errTxt) {
 
     if (ParseArea(root, errTxt) == true) {
         modelSettings_->SetAreaGiven(true);
-    } else {
-        modelSettings_->SetAreaGiven(false);
     }
-
-    bool area_from_segy = false;
     std::string value;
     if (ParseValue(root, "area-from-surface", value, errTxt) == true) {
         modelSettings_->SetAreaFromSurface(value);
-    } else if (ParseAreaFromSegy(root, errTxt) == true) {
+    }
+    bool area_from_segy = false;
+    if (ParseAreaFromSegy(root, errTxt) == true) {
         area_from_segy = true;
     }
 
+    if (modelSettings_->GetAreaGiven() && modelSettings_->GetAreaFromSurface() != "" && modelSettings_->GetAreaFromSegy() != "") {
+      printf("WARNING:: Area defined in three different ways. The area specified by the <area-from-segy> command is used.\n");
+    }
+    else if   ((modelSettings_->GetAreaFromSurface() != "" && modelSettings_->GetAreaFromSegy() != "") 
+      || (modelSettings_->GetAreaGiven()             && modelSettings_->GetAreaFromSegy() != "")) {
+        printf("WARNING:: Area defined in two different ways. The area specified by the <area-from-segy> command is used.\n");
+    }
+    else if (modelSettings_->GetAreaGiven() && modelSettings_->GetAreaFromSurface() != "") {
+      printf("WARNING:: Area defined in two different ways. The area specified by the <area> command is used.\n");
+    }
 
     ParseDepth(root, errTxt);
     ParseCellSize(root, errTxt, area_from_segy);
@@ -702,7 +710,7 @@ bool XmlModelFile::ParseCellSize(TiXmlNode *node, std::string &errTxt, bool &are
     double value;
     if (ParseValue(root, "dx", value, errTxt) == true) {
         if (area_from_segy == true) {
-          printf("WARNING:: Both <dx> and <area-from-segy> is specified, and dx will be taken from segy file. \n\n");
+          printf("WARNING:: Both <dx> and <area-from-segy> is specified, and dx will be taken from segy file. \n");
         }
         else {
           modelSettings_->SetDx(value);
@@ -713,7 +721,7 @@ bool XmlModelFile::ParseCellSize(TiXmlNode *node, std::string &errTxt, bool &are
 
     if (ParseValue(root, "dy", value, errTxt) == true) {
         if (area_from_segy == true) {
-            printf("WARNING:: Both <dy> and <area-from-segy> is specified, and dy will be taken from segy file. \n\n");
+            printf("WARNING:: Both <dy> and <area-from-segy> is specified, and dy will be taken from segy file. \n");
         }
         else {
           modelSettings_->SetDy(value);
@@ -761,10 +769,10 @@ bool XmlModelFile::ParseTimeWindow(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetBotTimeWindow(value);
         modelSettings_->SetTimeWindowSpecified(true);
         if (top_value == false) {
-            printf("WARNING:: Value for <top> under <time-window> is not given. Is set to top reservoir.\n\n");
+            printf("WARNING:: Value for <top> under <time-window> is not given. Is set to top reservoir.\n");
         }
     } else if (top_value == true) {
-        printf("WARNING:: Value for <bot> under <time-window> is not given. Is set to bottom reservoir.\n\n");
+        printf("WARNING:: Value for <bot> under <time-window> is not given. Is set to bottom reservoir.\n");
     }
 
     CheckForJunk(root, errTxt, legalCommands);
@@ -792,10 +800,10 @@ bool XmlModelFile::ParseDepthWindow(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetBotDepthWindow(value);
         modelSettings_->SetDepthWindowSpecified(true);
         if (top_value == false) {
-            printf("WARNING:: Value for <top> under <depth-window> is not given. Is set to top reservoir.\n\n");
+            printf("WARNING:: Value for <top> under <depth-window> is not given. Is set to top reservoir.\n");
         }
     } else if (top_value == true) {
-        printf("WARNING:: Value for <bot> under <depth-window> is not given. Is set to bottom reservoir.\n\n");
+        printf("WARNING:: Value for <bot> under <depth-window> is not given. Is set to bottom reservoir.\n");
     }
     CheckForJunk(root, errTxt, legalCommands);
     return true;
@@ -958,11 +966,11 @@ bool XmlModelFile::ParseSegyIndexes(TiXmlNode *node, std::string &errTxt, bool a
                       + NRLib::ToString(root->Column()) + ".\n";
         }
       }
-      else
+      else {
         if (area_from_segy == false)
           errTxt += "One or more keyword under command <" + root->ValueStr() + ">  on line " + NRLib::ToString(root->Row()) + ", column "
                   + NRLib::ToString(root->Column()) + " is not legal or missing. Three keywords; <inline-start>, <xline-start> and <inline-direction> are required.\n";
-
+      }
       int inline_step, xline_step;
       if (ParseValue(root, "inline-step", inline_step, errTxt) && area_from_segy == false) {
           modelSettings_->SetSegyInlineStep(inline_step);
@@ -972,7 +980,7 @@ bool XmlModelFile::ParseSegyIndexes(TiXmlNode *node, std::string &errTxt, bool a
       }
 
     if (area_from_segy)  {
-      printf("WARNING:: Both <area-from-segy> and <segy-indexes> are given. Indexes are taken from segy file, and values given in <segy-indexes> are not used.\n\n");
+      printf("WARNING:: Both <segy-indexes> <area-from-segy> and are given. Indexes are taken from segy file, and values given in <segy-indexes> are not used.\n");
     }
 
     CheckForJunk(root, errTxt, legalCommands);
