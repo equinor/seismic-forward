@@ -61,7 +61,7 @@ class SeismicParameters {
     double dOffset()                 { return doffset_; }
     size_t nOffset()                 { return noffset_; }
     std::vector<double> & GetOffsetVec() { return offset_vec_; }
-    
+
 
     void   findLoopIndeces(int               &n_xl,
                            int               &il_min,

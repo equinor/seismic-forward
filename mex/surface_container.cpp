@@ -27,7 +27,7 @@ SurfaceContainer::SurfaceContainer(std::string path) {
         mexPrintf("Regridding started. This may take some time...!\n");
         _model_settings = modelFile.getModelSettings();
         _seismic_parameters = new SeismicParameters(_model_settings);
-        SeismicRegridding::seismicRegridding(* _seismic_parameters);
+        SeismicRegridding::MakeSeismicRegridding(* _seismic_parameters);
         //SeismicForward::seismicForward(* _seismic_parameters);
         mexPrintf("Regridding successful!\n");
     }

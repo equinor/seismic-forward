@@ -473,7 +473,7 @@ void SeismicForward::generateNMOSeismicTrace(SeismicParameters             &seis
   }
   //add noise to reflections
   if (seismic_parameters.modelSettings()->GetWhiteNoise()) {
-    SeismicRegridding::addNoiseToReflectionsPos(seed+long(i+nx*j), deviation, refl_pos); //nb, make unique seed when i and j loop is made
+    SeismicRegridding::AddNoiseToReflectionsPos(seed+long(i+nx*j), deviation, refl_pos); //nb, make unique seed when i and j loop is made
     //keep reflections for zero offset if output on storm and white noise
     if (seismic_parameters.modelSettings()->GetOutputReflections()) {
       for (size_t k = 0; k < nzrefl; ++k) {
@@ -558,7 +558,7 @@ void SeismicForward::generateSeismicTrace(SeismicParameters             &seismic
   //add noise to reflections
   if (seismic_parameters.modelSettings()->GetWhiteNoise()) {
     double deviation = seismic_parameters.modelSettings()->GetStandardDeviation();
-    SeismicRegridding::addNoiseToReflectionsPos(seed+long(i+nx*j), deviation, refl_pos); //nb, make unique seed when i and j loop is made
+    SeismicRegridding::AddNoiseToReflectionsPos(seed+long(i+nx*j), deviation, refl_pos); //nb, make unique seed when i and j loop is made
     //keep reflections for zero offset if output on storm and white noise
     if (seismic_parameters.modelSettings()->GetOutputReflections()) {
       for (size_t k = 0; k < nzrefl; ++k) {
@@ -627,10 +627,10 @@ void SeismicForward::printTime()
     << "\n";
 }
 
-void SeismicForward::printElapsedTime(time_t t1)
+void SeismicForward::printElapsedTime(time_t start_time)
 {
-  time_t t2             = time(0);   // get time now
-  size_t seconds        = difftime(t2,t1);
+  time_t end_time       = time(0);   // get time now
+  size_t seconds        = difftime(end_time,start_time);
 
   size_t hours          = static_cast<int>(seconds/3600);
   seconds               = seconds % 3600;
