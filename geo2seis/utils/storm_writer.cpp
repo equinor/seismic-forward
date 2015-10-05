@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-void STORM::writeStorm(NRLib::StormContGrid &grid,
+void STORM::WriteStorm(NRLib::StormContGrid &grid,
                        std::string &filename,
                        double top_window,
                        double bot_window,

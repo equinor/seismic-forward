@@ -16,8 +16,10 @@ set(CPP_FILES
 
     utils/segy_writer.cpp
     utils/storm_writer.cpp
-    utils/nmo_output.cpp
-    utils/seis_output.cpp
+	utils/output.cpp
+	utils/result_trace.cpp
+	utils/trace.cpp
+	utils/gen_seis_trace_params.cpp
 )
 
 set(H_FILES
@@ -36,8 +38,10 @@ set(H_FILES
 
     utils/segy_writer.hpp
     utils/storm_writer.hpp
-    utils/nmo_output.hpp
-    utils/seis_output.hpp
+	utils/output.hpp
+	utils/result_trace.hpp
+	utils/trace.hpp
+	utils/gen_seis_trace_params.hpp
 )
 
 

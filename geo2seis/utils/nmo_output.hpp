@@ -6,10 +6,10 @@
 class NMOOutput {
   public:
     NMOOutput(SeismicParameters &seismic_parameters,
-            std::vector<double> twt_0,
-            std::vector<double> z_0,
-            std::vector<double> twts_0,
-            size_t time_samples_stretch);
+              std::vector<double> twt_0,
+              std::vector<double> z_0,
+              std::vector<double> twts_0,
+              size_t time_samples_stretch);
 
     void AddTrace(SeismicParameters     &seismic_parameters,
                   NRLib::Grid2D<double> &timegrid_pos,
@@ -31,10 +31,10 @@ class NMOOutput {
                      size_t                 j);
     void WriteSeismicStorm(SeismicParameters     &seismic_parameters);
 
-    bool GetNMODepthSegyOk(void)          { return nmo_depth_segy_ok_;};
-    bool GetNMODepthStackSegyOk(void)     { return nmo_depth_stack_segy_ok_;};
-    bool GetNMOTimeshiftSegyOk(void)      { return nmo_timeshift_segy_ok_;};
-    bool GetNMOTimeshiftStackSegyOk(void) { return nmo_timeshift_stack_segy_ok_;};
+    const bool GetNMODepthSegyOk(void)          { return nmo_depth_segy_ok_;};
+    const bool GetNMODepthStackSegyOk(void)     { return nmo_depth_stack_segy_ok_;};
+    const bool GetNMOTimeshiftSegyOk(void)      { return nmo_timeshift_segy_ok_;};
+    const bool GetNMOTimeshiftStackSegyOk(void) { return nmo_timeshift_stack_segy_ok_;};
 
 
 

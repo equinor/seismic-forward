@@ -313,6 +313,40 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
   }
 }
 
+void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> &twt_0,
+                                          std::vector<double> &z_0,
+                                          std::vector<double> &twts_0, 
+                                          size_t              &time_samples_stretch)
+{
+  if (model_settings_->GetNMOCorr()){
+    twt_0 = GenerateTwt0ForNMO(time_samples_stretch);
+    z_0   = GenerateZ0ForNMO();
+    if (model_settings_->GetTwtFileName() != "") {
+      twts_0 = GenerateTWT0Shift(twt_0[0], time_samples_stretch);
+    }
+  }
+  else {
+    double tmin = seismic_geometry_->t0();
+    double dt   = seismic_geometry_->dt();
+    size_t nz   = seismic_geometry_->nz();
+    size_t nt   = seismic_geometry_->nt();
+    twt_0.resize(nt);
+    for (size_t i = 0; i < nt; ++i){
+      twt_0[i] = tmin + (0.5 + i)*dt;
+    }
+    double zmin = seismic_geometry_->z0();
+    double dz   = seismic_geometry_->dz();
+    z_0.resize(nz);
+    for (size_t i = 0; i < nz; ++i){
+      z_0[i] = zmin + (0.5 + i)*dz;
+    }
+
+    if (model_settings_->GetTwtFileName() != "") {
+      twts_0 = GenerateTWT0Shift(twt_0[0], twt_0.size());
+    }
+  }
+}
+
 std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_samples){
   size_t i_max, j_max;
   double max_twt_value;

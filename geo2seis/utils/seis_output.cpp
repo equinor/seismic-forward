@@ -6,15 +6,15 @@
 
 
 SeisOutput::SeisOutput(SeismicParameters &seismic_parameters,
-                      std::vector<double> twt_0,
-                      std::vector<double> z_0,
-                      std::vector<double> twts_0)
-  : segy_ok_(false),                    
-    time_segy_ok_(false),           
-    time_stack_segy_ok_(false),     
-    depth_segy_ok_(false),          
-    depth_stack_segy_ok_(false),    
-    timeshift_segy_ok_(false),      
+                      const std::vector<double> &twt_0,
+                      const std::vector<double> &z_0,
+                      const std::vector<double> &twts_0)
+  : segy_ok_(false),
+    time_segy_ok_(false),
+    time_stack_segy_ok_(false),
+    depth_segy_ok_(false),
+    depth_stack_segy_ok_(false),
+    timeshift_segy_ok_(false),
     timeshift_stack_segy_ok_(false),
     twt_0_(twt_0),
     z_0_(z_0),
@@ -59,7 +59,7 @@ SeisOutput::SeisOutput(SeismicParameters &seismic_parameters,
       timeshift_stack_segy_ok_ = seismic_parameters.seismicOutput()->prepareSegy(timeshift_stack_segy_, twts_0_, twts_0_.size(), filename, seismic_parameters, theta_vec, 1, true, nmo);
     }
   }
-  
+
   //prepare grid if output of seismic in storm i requested
   if (seismic_parameters.GetTimeStormOutput()) {
     timegrid_      = new NRLib::StormContGrid(volume_t, nx, ny, nt);

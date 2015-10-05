@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_pp_seis )
   if (!failedModelFile) {
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
     SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
-    SeismicForward::seismicForward(seismic_parameters);
+    SeismicForward::DoSeismicForward(seismic_parameters);
   }
 
 
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_ps_seis )
   if (!failedModelFile) {
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
     SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
-    SeismicForward::seismicForward(seismic_parameters);
+    SeismicForward::DoSeismicForward(seismic_parameters);
   }
 
 
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE( test_pp_seis )
   if (!failedModelFile) {
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
     SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
-    SeismicForward::seismicForward(seismic_parameters);
+    SeismicForward::DoSeismicForward(seismic_parameters);
   }
 
 
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE( test_ps_seis )
   if (!failedModelFile) {
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
     SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
-    SeismicForward::seismicForward(seismic_parameters);
+    SeismicForward::DoSeismicForward(seismic_parameters);
   }
 
 

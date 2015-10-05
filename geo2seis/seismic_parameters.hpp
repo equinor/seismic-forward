@@ -26,8 +26,7 @@ class SeismicParameters {
   public:
     SeismicParameters(ModelSettings *model_settings);
 
-    ~SeismicParameters() {
-    };
+    ~SeismicParameters() {};
 
 
     NRLib::StormContGrid &vpGrid()                             { return *vpgrid_; };
@@ -73,6 +72,12 @@ class SeismicParameters {
                            bool              &segy);
 
     void                FindMaxTwtIndex(size_t & i_max, size_t & j_max, double & max_value);
+
+    void                GenerateTwt0AndZ0(std::vector<double> &twt_0,
+                                          std::vector<double> &z_0,
+                                          std::vector<double> &twts_0,
+                                          size_t              &time_samples_stretch);
+
     std::vector<double> GenerateTwt0ForNMO(size_t & time_stretch_samples);
     std::vector<double> GenerateZ0ForNMO();
 
@@ -86,20 +91,20 @@ class SeismicParameters {
                        std::vector<size_t> &n_max);
 
 
-   void   findVrmsPos(std::vector<double>       &vrms_vec,
+    void  findVrmsPos(std::vector<double>       &vrms_vec,
                        std::vector<double>       &vrms_vec_reg,
                        const std::vector<double> &twt_0,
                        size_t                    i,
                        size_t                    j,
                        bool                      include_regular = true);
 
-   void   findNMOReflections(NRLib::Grid2D<double>       &r_vec,
+    void  findNMOReflections(NRLib::Grid2D<double>       &r_vec,
                              const NRLib::Grid2D<double> &theta_vec,
                              const std::vector<double>   &offset_vec,
                              size_t                       i,
                              size_t                       j);
-
-   void   findReflections(NRLib::Grid2D<double>       &r_vec,
+    
+    void  findReflections(NRLib::Grid2D<double>       &r_vec,
                           const std::vector<double>   &theta_vec,
                           size_t                       i,
                           size_t                       j);

@@ -2,7 +2,7 @@
 
 #include "nrlib/segy/segy.hpp"
 
-void SEGY::writeSegy(const NRLib::StormContGrid &data,
+void SEGY::WriteSegy(const NRLib::StormContGrid &data,
                      std::string                 fileName,
                      int                         inline_start,
                      int                         xline_start,

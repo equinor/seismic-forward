@@ -600,7 +600,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters)
   }
 }
 
-
 void SeismicRegridding::FindVpEdges(const NRLib::EclipseGeometry        &geometry,
                                     size_t                               n_extra_param,
                                     SeismicParameters                   &seismic_parameters,
@@ -962,7 +961,6 @@ bool SeismicRegridding::Is124Triangulate(std::vector<NRLib::Point> pt_vp)
   return triangulate_124;
 }
 
-
 void SeismicRegridding::GetCornerPointDir(std::vector<size_t> &a,
                                           std::vector<size_t> &b,
                                           std::vector<size_t> &c, 
@@ -1008,7 +1006,6 @@ void SeismicRegridding::GetCornerPointDir(std::vector<size_t> &a,
   c[2] = 0;
   c[3] = 1;
 }
-
 
 bool SeismicRegridding::FindTopCell(const NRLib::EclipseGeometry &geometry,
                                     size_t  i,
@@ -1109,4 +1106,6 @@ void SeismicRegridding::FindCornerCellPoints(const NRLib::EclipseGeometry &geome
     pt_vp[2] = 0.5 * (0.5 * (geometry.FindCornerPoint(i, j, k, 0, 1, 0) + geometry.FindCornerPoint(i, j, k, 0, 1, 1)) + pt_vp[3]);
   }
 }
+
+
 

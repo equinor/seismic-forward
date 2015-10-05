@@ -28,6 +28,13 @@ NMOOutput::NMOOutput(SeismicParameters &seismic_parameters,
   size_t nz = seismic_parameters.seismicGeometry()->nz();
   size_t nt = seismic_parameters.seismicGeometry()->nt();
   std::vector<double> & offset_vec = seismic_parameters.GetOffsetVec();
+
+  //std::vector<double> *vec;
+  //if (true){
+  //  std::vector<double> & offset_vec_1 = seismic_parameters.GetOffsetVec();
+  //  vec = &offset_vec_1;
+  //}
+
   NRLib::Volume volume   = seismic_parameters.seismicGeometry()->createDepthVolume();
   NRLib::Volume volume_t = seismic_parameters.seismicGeometry()->createTimeVolume();
   bool nmo = true;
@@ -114,7 +121,7 @@ void NMOOutput::AddTrace(SeismicParameters     &seismic_parameters,
                          NRLib::Grid2D<double> &nmo_timeshiftgrid_pos,
                          NRLib::Grid2D<double> &nmo_timeshiftgrid_stack_pos,
                          NRLib::Grid2D<double> &twtx_reg,
-                         double                 x, 
+                         double                 x,
                          double                 y,
                          size_t                 i,
                          size_t                 j)

@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     if (!failedModelFile) {
         SeismicParameters seismic_parameters = SeismicParameters(model_settings);
         SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
-        SeismicForward::seismicForward(seismic_parameters);
+        SeismicForward::DoSeismicForward(seismic_parameters);
     } else {
         printf("Press a key and then enter to continue.\n");
         int x;
