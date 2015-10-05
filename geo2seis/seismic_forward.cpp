@@ -57,8 +57,7 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
     tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
     result_queue.set_capacity(queue_capacity);
 
-    std::vector<std::thread> worker_thread;
-    std::vector<std::thread> write_thread;
+    std::vector<std::thread*> worker_thread;
 
     std::vector<double> dummy_vec;
     Output * output = &seis_output;
@@ -75,15 +74,16 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
                                       0);
     GenSeisTraceParams * parameters = &parameters_tmp;
     for (size_t i = 0; i < n_threads; ++i) {
-      worker_thread.push_back(std::thread(GenerateSeismicTraces, output, parameters));
+      worker_thread.push_back(new std::thread(GenerateSeismicTraces, output, parameters));
     }
 
-    write_thread.push_back(std::thread(WriteSeismicTraces, parameters, output));
+    std::thread write_thread(WriteSeismicTraces, parameters, output);
 
     for (size_t i = 0; i < n_threads; ++i) {
-      worker_thread[i].join();
+      worker_thread[i]->join();
+      delete worker_thread[i];
     }
-    write_thread[0].join();
+    write_thread.join();
 
 
     ResultTrace *result_trace;
@@ -138,8 +138,7 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
     tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
     result_queue.set_capacity(queue_capacity);
 
-    std::vector<std::thread> worker_thread;
-    std::vector<std::thread> write_thread;
+    std::vector<std::thread*> worker_thread;
 
     Output * output = &nmo_output;
     std::vector<double> dummy_vec;
@@ -159,14 +158,15 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
 
     //loop over available threads, send work to each thread
     for (size_t i = 0; i < n_threads; ++i) {
-      worker_thread.push_back(std::thread(GenerateNMOSeismicTraces, output, parameters));
+      worker_thread.push_back(new std::thread(GenerateNMOSeismicTraces, output, parameters));
     }
-    write_thread.push_back(std::thread(WriteSeismicTraces, parameters, output));
+    std::thread write_thread(WriteSeismicTraces, parameters, output);
 
     for (size_t i = 0; i < n_threads; ++i) {
-      worker_thread[i].join();
+      worker_thread[i]->join();
+      delete worker_thread[i];
     }
-    write_thread[0].join();
+    write_thread.join();
 
     ResultTrace *result_trace;
     while (empty_queue.try_pop(result_trace)){
