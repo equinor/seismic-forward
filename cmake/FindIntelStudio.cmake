@@ -114,17 +114,35 @@ if(INTEL_STUDIO_ROOT)
              )
    
    if(UNIX)
-     set(GCC_VER gcc4.4)  # Only GCC on Huldra for now.
+     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+                     OUTPUT_VARIABLE GCC_VERSION)
+
+     if(GCC_VERSION VERSION_LESS 4.4)
+       set(TBB_GCC_VER gcc4.1)
+     else()
+       set(TBB_GCC_VER gcc4.4)
+     endif()
+
      find_path(TBB_LIB_DIR
                NAMES libtbb.so
-               PATHS ${TBB_ROOT}/lib/intel64/${GCC_VER}
+               PATHS ${TBB_ROOT}/lib/intel64/${TBB_GCC_VER}
                DOC "Library directory for Intel TBB"
                )
+
    elseif(WIN32)
-     set(VC_VER vc10)    # Only Visual Studio 2010
+     if(MSVC_VERSION EQUAL 1800)
+       set(TBB_MSVC_VER vc12)
+     elseif(MSVC_VERSION EQUAL 1700)
+       set(TBB_MSVC_VER vc11)
+     elseif(MSVC_VERSION EQUAL 1600)
+       set(TBB_MSVC_VER vc10)
+     else()
+       set(TBB_MSVC_VER vc_mt)
+     endif()
+
      find_path(TBB_LIB_DIR
                NAMES tbb.lib
-               PATHS ${TBB_ROOT}/lib/intel64/${VC_VER}
+               PATHS ${TBB_ROOT}/lib/intel64/${TBB_MSVC_VER}
                DOC "Library directory for Intel TBB"
                )
    endif(UNIX)
