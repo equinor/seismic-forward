@@ -50,8 +50,8 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
 
     PrintSeisType(false, ps_seis, theta_vec);
 
-    size_t n_threads = 3;
-    size_t queue_capacity = 100;//50 * n_threads;
+    size_t n_threads      = static_cast<size_t>(n);
+    size_t queue_capacity = 1000;//50 * n_threads;
 
     tbb::concurrent_queue<ResultTrace*> empty_queue;
     tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
@@ -131,8 +131,8 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
 
     PrintSeisType(true, ps_seis, offset_vec);
 
-    size_t n_threads = 3;
-    size_t queue_capacity = 100;//50 * n_threads;
+    size_t n_threads      = static_cast<size_t>(n);
+    size_t queue_capacity = 1000;//50 * n_threads;
 
     tbb::concurrent_queue<ResultTrace*> empty_queue;
     tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
