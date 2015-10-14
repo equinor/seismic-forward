@@ -30,6 +30,7 @@ if(USE_INTEL_STUDIO)
     link_directories(${TBB_LIB_DIR})
     set(FFT_LIBRARIES ${MKL_LIBRARIES})
     set(MATH_LIBRARIES ${MKL_LIBRARIES} ${TBB_LIBRARIES})
+    set(FFT_MATLAB_LIBRARIES -L${MKL_LIB_PATH} -lmkl_rt)
     add_definitions(-DMKL)
 else()
     # Out-of-the-box on Unix Statoil systems this will not work and a path is required.
@@ -44,6 +45,7 @@ else()
     endif(FFTW_FOUND)
 
     set(FFT_LIBRARIES ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
+    set(FFT_MATLAB_LIBRARIES ${FFT_LIBRARIES})
 
     find_package(TBB REQUIRED)
     if(TBB_FOUND)
