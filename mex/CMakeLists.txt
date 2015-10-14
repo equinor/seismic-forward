@@ -107,7 +107,7 @@ endfunction()
 
 set(MEX_LINK_LIBRARIES
     $<TARGET_FILE:geo2seis_lib>
-    ${FFT_LIBRARIES}
+    ${FFT_MATLAB_LIBRARIES}
     ${TBB_LIBRARIES}
 )
 
