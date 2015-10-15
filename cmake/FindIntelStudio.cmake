@@ -149,10 +149,18 @@ if(INTEL_STUDIO_ROOT)
                )
    endif(UNIX)
 
-   find_library(TBB_LIBRARIES 
+   find_library(TBB_LIBRARIES_RELEASE 
                 NAMES tbb libtbb
                 HINTS ${TBB_LIB_DIR})
-   
+    
+   find_library(TBB_LIBRARIES_DEBUG 
+                NAMES tbb_debug libtbb_debug
+                HINTS ${TBB_LIB_DIR})
+
+   set(TBB_LIBRARIES
+      debug ${TBB_LIBRARIES_DEBUG}
+      optimized ${TBB_LIBRARIES_RELEASE})
+
 
 endif(INTEL_STUDIO_ROOT)
 
@@ -164,7 +172,8 @@ find_package_handle_standard_args(INTEL_STUDIO DEFAULT_MSG MKL_LIBRARIES MKL_INC
 
 mark_as_advanced(MKL_LIBRARIES MKL_INCLUDE_DIRS MKL_FFTW_INCLUDE_DIRS) 
 mark_as_advanced(MKL_INTERFACE_LIBRARY MKL_THREADING_LIBRARY MKL_COMPUTATIONAL_LIBRARY)
-mark_as_advanced(TBB_LIBRARIES TBB_INCLUDE_DIRS TBB_LIB_DIR) 
+mark_as_advanced(TBB_LIBRARIES TBB_INCLUDE_DIRS TBB_LIB_DIR)
+mark_as_advanced(TBB_LIBRARIES_RELEASE TBB_LIBRARIES_DEBUG) 
 
 # message(STATUS "TBB_ROOT = ${TBB_ROOT}")
 # message(STATUS "TBB_INCLUDE_DIRS = ${TBB_INCLUDE_DIRS}")
