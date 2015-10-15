@@ -51,7 +51,8 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
     PrintSeisType(false, ps_seis, theta_vec);
 
     size_t n_threads      = static_cast<size_t>(n);
-    size_t queue_capacity = 1000;//50 * n_threads;
+    size_t queue_capacity = 10000;//50 * n_threads;
+    std::cout << n_threads << " threads are used, and queue capacity is " << queue_capacity << " traces.\n";
 
     tbb::concurrent_queue<ResultTrace*> empty_queue;
     tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
@@ -132,7 +133,8 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
     PrintSeisType(true, ps_seis, offset_vec);
 
     size_t n_threads      = static_cast<size_t>(n);
-    size_t queue_capacity = 1000;//50 * n_threads;
+    size_t queue_capacity = 10000;//50 * n_threads;
+    std::cout << n_threads << " threads are used, and queue capacity is " << queue_capacity << " traces.\n";
 
     tbb::concurrent_queue<ResultTrace*> empty_queue;
     tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
@@ -648,15 +650,18 @@ void SeismicForward::PrintSeisType(bool                 nmo,
       std::cout << "Generating synthetic NMO PS-seismic for offsets: ";
     else
       std::cout << "Generating synthetic NMO PP-seismic for offsets: ";
+    for (size_t i = 0; i < off_theta_vec.size(); ++i) {
+      std::cout << off_theta_vec[i] << " ";
+    }
   }
   else {
     if (ps_seis)
       std::cout << "Generating synthetic PS-seismic for angles: ";
     else
       std::cout << "Generating synthetic PP-seismic for angles: ";
-  }
-  for (size_t i = 0; i < off_theta_vec.size(); ++i){
-    std::cout << off_theta_vec[i] << " ";
+    for (size_t i = 0; i < off_theta_vec.size(); ++i) {
+      std::cout << off_theta_vec[i] / NRLib::Degree << " ";
+    }
   }
   std::cout << "\n";
 }
