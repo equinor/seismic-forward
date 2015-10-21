@@ -33,7 +33,7 @@
 </wavelet>
 <output-grid>
     <depth>
-      <top-time-surface> Input_base_surface.irap </top-time-surface>
+	  <top-time-surface> Input_top_surface_PS.irap </top-time-surface>	
     </depth>
 	<area>
 	  <x0>  472546 </x0>
@@ -60,8 +60,8 @@
         <bot> 1900 </bot>
 	</depth-window>
     <time-window>
-  	    <top>    1500 </top>
-        <bot> 2000 </bot>
+  	    <top> 2400 </top>
+        <bot> 2700 </bot>
  	</time-window>
     <utm-precision> 0.01 </utm-precision> 
 
@@ -86,5 +86,6 @@
 #	<elastic-parameters-time-segy>  yes </elastic-parameters-time-segy>
 </output-parameters>
 <ps-seismic> yes </ps-seismic>
-<timeshift-twt> Input_timeshift_minus50_twt.storm </timeshift-twt> 
+<timeshift-twt> Input_timeshift_minus50_twt_PS.storm </timeshift-twt> 
+<traces-in-memory> 4 </traces-in-memory>
 </seismic-forward>

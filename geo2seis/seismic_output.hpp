@@ -18,17 +18,17 @@ class SeismicOutput {
   public:
     SeismicOutput(ModelSettings *model_settings);
 
-    void setSegyGeometry(SeismicParameters         &seismic_parameters,
+    void SetSegyGeometry(SeismicParameters         &seismic_parameters,
                          const NRLib::Volume       &vol,
                          size_t                     nx,
                          size_t                     ny);
 
-    bool checkUTMPrecision(SeismicParameters         &seismic_parameters,
+    bool CheckUTMPrecision(SeismicParameters         &seismic_parameters,
                            const NRLib::Volume       &vol,
                            size_t                     nx,
                            size_t                     ny);
 
-    bool prepareSegy(NRLib::SegY               &segyout,
+    bool PrepareSegy(NRLib::SegY               &segyout,
                      const std::vector<double> &twt_0,
                      size_t                     n_samples,
                      std::string                fileName,
@@ -38,7 +38,7 @@ class SeismicOutput {
                      bool                       time,
                      bool                       nmo);
 
-    void writeSegyGather(NRLib::Grid2D<double>     &data_gather,
+    void WriteSegyGather(NRLib::Grid2D<double>     &data_gather,
                          NRLib::SegY               &segyout,
                          const std::vector<double>  twt_0,
                          const std::vector<double>  offset_vec,
@@ -47,7 +47,7 @@ class SeismicOutput {
                          double                     y,
                          bool                       nmo);
 
-    void writeZeroSegyGather(NRLib::SegY               &segyout,
+    void WriteZeroSegyGather(NRLib::SegY               &segyout,
                              const std::vector<double>  offset_vec,
                              double                     x,
                              double                     y,
@@ -57,33 +57,31 @@ class SeismicOutput {
                             NRLib::Grid2D<double>    &data_gather,
                             std::vector<double>       twt_0_resampl);
 
-    void writeDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse);
+    void WriteDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse);
 
-    void writeTimeSurfaces(SeismicParameters &seismic_parameters);
-    void writeElasticParametersTimeSegy(SeismicParameters &seismic_parameters);
-    void writeElasticParametersDepthSegy(SeismicParameters &seismic_parameters);
-    void writeExtraParametersTimeSegy(SeismicParameters &seismic_parameters);
-    void writeExtraParametersDepthSegy(SeismicParameters &seismic_parameters);
+    void WriteTimeSurfaces(SeismicParameters &seismic_parameters);
+    void WriteElasticParametersTimeSegy(SeismicParameters &seismic_parameters);
+    void WriteElasticParametersDepthSegy(SeismicParameters &seismic_parameters);
+    void WriteExtraParametersTimeSegy(SeismicParameters &seismic_parameters);
+    void WriteExtraParametersDepthSegy(SeismicParameters &seismic_parameters);
 
-    void writeVpVsRho(SeismicParameters &seismic_parameters);
-    void writeZValues(SeismicParameters &seismic_parameters);
-    void writeTwt(SeismicParameters &seismic_parameters);
-    void writeVrms(SeismicParameters &seismic_parameters);
+    void WriteVpVsRho(SeismicParameters &seismic_parameters);
+    void WriteZValues(SeismicParameters &seismic_parameters);
+    void WriteTwt(SeismicParameters &seismic_parameters);
+    void WriteVrms(SeismicParameters &seismic_parameters);
 
-    void writeSeismicTimeStorm(SeismicParameters &seismic_parameters,      NRLib::StormContGrid &timegrid, double offset, bool is_stack = false);
-    void writeSeismicDepthStorm(SeismicParameters &seismic_parameters,     NRLib::StormContGrid &depthgrid, double offset, bool is_stack = false);
-    void writeSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack = false);
-    void writeReflections(SeismicParameters &seismic_parameters, double angle_or_offset);
+    void WriteSeismicTimeStorm(SeismicParameters &seismic_parameters,      NRLib::StormContGrid &timegrid, double offset, bool is_stack = false);
+    void WriteSeismicDepthStorm(SeismicParameters &seismic_parameters,     NRLib::StormContGrid &depthgrid, double offset, bool is_stack = false);
+    void WriteSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack = false);
+    void WriteReflections(SeismicParameters &seismic_parameters,           double angle_or_offset);
 
-
-
-    void printVector(std::vector<double> vec, std::string filename);
-    void printVectorSizeT(std::vector<size_t> vec, std::string filename);
-    void printMatrix(NRLib::Grid2D<double> matrix, std::string filename);
+    void PrintVector(std::vector<double> vec, std::string filename);
+    void PrintVectorSizeT(std::vector<size_t> vec, std::string filename);
+    void PrintMatrix(NRLib::Grid2D<double> matrix, std::string filename);
 
   private:
-    void generateParameterGridForOutput(NRLib::StormContGrid &input_grid, NRLib::StormContGrid &time_or_depth_grid, NRLib::StormContGrid &output_grid, double delta_time_or_depth, double zero_time_or_depth, NRLib::RegularSurface<double> &toptime);
-    size_t findCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid);
+    void GenerateParameterGridForOutput(NRLib::StormContGrid &input_grid, NRLib::StormContGrid &time_or_depth_grid, NRLib::StormContGrid &output_grid, double delta_time_or_depth, double zero_time_or_depth, NRLib::RegularSurface<double> &toptime);
+    size_t FindCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid);
 
     double top_time_window_;
     double bot_time_window_;
@@ -97,13 +95,13 @@ class SeismicOutput {
 
     std::vector<std::string> extra_parameter_names_;
 
-    int inline_start_;
-    int xline_start_;
+    int         inline_start_;
+    int         xline_start_;
     std::string inline_direction_;
-    short scalco_;
-    bool xline_x_axis_;
-    int inline_step_;
-    int xline_step_;
+    short       scalco_;
+    bool        xline_x_axis_;
+    int         inline_step_;
+    int         xline_step_;
 };
 
 #endif

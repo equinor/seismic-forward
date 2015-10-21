@@ -26,7 +26,9 @@ class SeismicRegridding {
 
     static void FindVrms(SeismicParameters &seismic_parameters);
 
-    static void FindTWT(NRLib::StormContGrid &vpgrid, NRLib::StormContGrid &vsgrid, NRLib::StormContGrid &twtgrid, NRLib::StormContGrid &zgrid, NRLib::RegularSurface<double> &toptime, NRLib::RegularSurface<double> &bottime, bool ps_seismic);
+    static void FindTWT(SeismicParameters &seismic_parameters,
+                        NRLib::RegularSurface<double> &toptime,
+                        NRLib::RegularSurface<double> &bottime);
 
     static void FindPointZValue(size_t i, size_t j, size_t k,
                                 NRLib::Point &point,

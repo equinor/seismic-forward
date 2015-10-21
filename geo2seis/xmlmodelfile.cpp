@@ -107,6 +107,7 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("output-parameters");
     legalCommands.push_back("timeshift-twt");
     legalCommands.push_back("ps-seismic");
+    legalCommands.push_back("traces-in-memory");
 
 
     if (ParseNMOStretch(root, errTxt)){
@@ -128,8 +129,15 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
 
     std::string ps;
     modelSettings_->SetPSSeismic(false);
-    if (ParseValue(root, "ps-seismic", ps, errTxt) == true) if (ps == "yes") {
+    if (ParseValue(root, "ps-seismic", ps, errTxt) == true) {
+      if (ps == "yes") {
         modelSettings_->SetPSSeismic(true);
+      }
+    }
+
+    double number;
+    if (ParseValue(root, "traces-in-memory", number, errTxt)) {
+      modelSettings_->SetTracesInMemory(static_cast<size_t>(number));
     }
 
     ParseOutputParameters(root, errTxt);

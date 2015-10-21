@@ -392,6 +392,10 @@ class ModelSettings {
         ps_seismic_ = ps;
     }
 
+    void SetTracesInMemory(size_t value) {
+      traces_in_memory_ = value;
+    }
+
     void SetNMOCorr(bool nmo) {
         nmo_corr_ = nmo;
     }
@@ -755,6 +759,10 @@ class ModelSettings {
         return ps_seismic_;
     }
 
+    size_t GetTracesInMemory(void) {
+      return traces_in_memory_;
+    }
+
     bool GetNMOCorr() {
         return nmo_corr_;
     }
@@ -819,6 +827,8 @@ class ModelSettings {
     short utm_precision_;
 
     std::string twt_file_name_;
+
+    size_t traces_in_memory_;
 
     bool ps_seismic_;
     bool nmo_corr_;

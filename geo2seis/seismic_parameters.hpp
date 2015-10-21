@@ -34,99 +34,36 @@ class SeismicParameters {
     NRLib::StormContGrid &rhoGrid()                            { return *rhogrid_; };
     NRLib::StormContGrid &zGrid()                              { return *zgrid_; };
     NRLib::StormContGrid &twtGrid()                            { return *twtgrid_; };
+    NRLib::StormContGrid &twtSSGrid()                          { return *twtssgrid_; };
+    NRLib::StormContGrid &twtPPGrid()                          { return *twtppgrid_; };
     NRLib::StormContGrid &twtShiftGrid()                       { return *twt_timeshift_; };
+    NRLib::StormContGrid &vrmsGrid()                           { return *vrmsgrid_; };
     std::vector<NRLib::StormContGrid> &rGrids()                { return *rgridvec_; };
     std::vector<NRLib::StormContGrid> &extraParametersGrids()  { return *extra_parameter_grid_; };
     NRLib::EclipseGrid &eclipseGrid()                          { return *eclipse_grid_; };
 
-    NRLib::StormContGrid &vrmsGrid()                           { return *vrmsgrid_; };
-
-
-    void deleteEclipseGrid();
-    void deleteElasticParameterGrids();
-    void deleteExtraParameterGrids();
-    void deleteZandRandTWTGrids();
-    void deleteVrmsGrid();
-    void deleteWavelet();
-    void deleteGeometryAndOutput();
-
-    size_t topK()                    { return top_k_; }
-    size_t bottomK()                 { return bottom_k_; }
-    double theta0()                  { return theta_0_; }
-    double dTheta()                  { return dtheta_; }
-    size_t nTheta()                  { return ntheta_; }
-    std::vector<double> & GetThetaVec() { return theta_vec_; }
-    double offset0()                 { return offset_0_; }
-    double dOffset()                 { return doffset_; }
-    size_t nOffset()                 { return noffset_; }
-    std::vector<double> & GetOffsetVec() { return offset_vec_; }
-
-
-    void   findLoopIndeces(int               &n_xl,
-                           int               &il_min,
-                           int               &il_max,
-                           int               &il_step,
-                           int               &xl_min,
-                           int               &xl_max,
-                           int               &xl_step,
-                           bool              &segy);
-
-    void                FindMaxTwtIndex(size_t & i_max, size_t & j_max, double & max_value);
-
-    void                GenerateTwt0AndZ0(std::vector<double> &twt_0,
-                                          std::vector<double> &z_0,
-                                          std::vector<double> &twts_0,
-                                          size_t              &time_samples_stretch);
-
-    std::vector<double> GenerateTwt0ForNMO(size_t & time_stretch_samples);
-    std::vector<double> GenerateZ0ForNMO();
-
-    std::vector<double> GenerateTWT0Shift(double twt_0_min,
-                                          size_t n_samples);
-
-    void getSeisLimits(std::vector<double>  twt_0,
-                       std::vector<double>  vrms_vec,
-                       std::vector<double>  offset_vec,
-                       std::vector<size_t> &n_min,
-                       std::vector<size_t> &n_max);
-
-
-    void  findVrmsPos(std::vector<double>       &vrms_vec,
-                       std::vector<double>       &vrms_vec_reg,
-                       const std::vector<double> &twt_0,
-                       size_t                    i,
-                       size_t                    j,
-                       bool                      include_regular = true);
-
-    void  findNMOReflections(NRLib::Grid2D<double>       &r_vec,
-                             const NRLib::Grid2D<double> &theta_vec,
-                             const std::vector<double>   &offset_vec,
-                             size_t                       i,
-                             size_t                       j);
+    NRLib::RegularSurface<double> &topTime()                   { return top_time_; };
+    NRLib::RegularSurface<double> &bottomTime()                { return bot_time_; };
+    NRLib::RegularSurface<double> &topEclipse()                { return topeclipse_; };
+    NRLib::RegularSurface<double> &bottomEclipse()             { return boteclipse_; };
     
-    void  findReflections(NRLib::Grid2D<double>       &r_vec,
-                          const std::vector<double>   &theta_vec,
-                          size_t                       i,
-                          size_t                       j);
+    ModelSettings*       modelSettings()                       { return model_settings_;};
+    SeismicOutput*       seismicOutput()                       { return seismic_output_; };
+    SeismicGeometry*     seismicGeometry()                     { return seismic_geometry_; };
+    Wavelet*             wavelet()                             { return wavelet_; };
+    double               waveletScale() const                  { return wavelet_scale_; };
+    NRLib::SegyGeometry* segyGeometry()                        { return segy_geometry_; };
 
-    NRLib::RegularSurface<double> &topTime()       { return top_time_; };
-    NRLib::RegularSurface<double> &bottomTime()    { return bot_time_; };
-
-    NRLib::RegularSurface<double> &topEclipse()    { return topeclipse_; };
-    NRLib::RegularSurface<double> &bottomEclipse() { return boteclipse_; };
-
-
-    ModelSettings*       modelSettings()   { return model_settings_;};
-
-    SeismicOutput*       seismicOutput()   { return seismic_output_; };
-    SeismicGeometry*     seismicGeometry() { return seismic_geometry_; };
-
-
-    Wavelet*             wavelet()         { return wavelet_; };
-    double               waveletScale()    { return wavelet_scale_; };
-    NRLib::SegyGeometry* segyGeometry()    { return segy_geometry_; };
-
-    void setSegyGeometry(const NRLib::SegyGeometry &geometry);
+    size_t topK()                                              { return top_k_; }
+    size_t bottomK()                                           { return bottom_k_; }
+    double theta0()                                            { return theta_0_; }
+    double dTheta()                                            { return dtheta_; }
+    size_t nTheta()                                            { return ntheta_; }
+    std::vector<double> & GetThetaVec()                        { return theta_vec_; }
+    double offset0()                                           { return offset_0_; }
+    double dOffset()                                           { return doffset_; }
+    size_t nOffset()                                           { return noffset_; }
+    std::vector<double> & GetOffsetVec()                       { return offset_vec_; }
 
     bool GetTimeOutput();
     bool GetDepthOutput();
@@ -138,9 +75,92 @@ class SeismicParameters {
     bool GetTimeshiftStormOutput();
     bool GetStormOutput();
 
-  private:
-    ModelSettings *model_settings_;
+    void SetSegyGeometry(const NRLib::SegyGeometry &geometry);
 
+    void FindLoopIndeces(int               &n_xl,
+                         int               &il_min,
+                         int               &il_max,
+                         int               &il_step,
+                         int               &xl_min,
+                         int               &xl_max,
+                         int               &xl_step,
+                         bool              &segy);
+
+    void FindMaxTwtIndex(size_t &i_max, 
+                         size_t &j_max, 
+                         double &max_value);
+
+    void GenerateTwt0AndZ0(std::vector<double> &twt_0,
+                           std::vector<double> &z_0,
+                           std::vector<double> &twts_0,
+                           size_t              &time_samples_stretch,
+                           bool                 ps_seis);
+
+    std::vector<double> GenerateTwt0ForNMO(size_t &time_stretch_samples, 
+                                           bool    ps_seis);
+
+    std::vector<double> GenerateZ0ForNMO();
+
+    std::vector<double> GenerateTWT0Shift(double twt_0_min,
+                                          size_t n_samples);
+
+    static void FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &thetagrid,
+                                        NRLib::Grid2D<double>     &offset_down_grid,
+                                        NRLib::Grid2D<double>     &offset_up_grid,
+                                        const std::vector<double> &twt_pp_vec,
+                                        const std::vector<double> &twt_ps_vec,
+                                        const std::vector<double> &vrms_pp_vec,
+                                        const std::vector<double> &vrms_ss_vec,
+                                        const std::vector<double> &offset,
+                                        bool                      save_offset = true);
+
+    static double FindSinThetaPSWithNewtonsMethod(double start_value,
+                                                  double offset,
+                                                  double dU,
+                                                  double dD,
+                                                  double vr,
+                                                  double tol,
+                                                  size_t &n_it);
+
+    void FindVrms(std::vector<double>       &vrms_vec,
+                  std::vector<double>       &vrms_vec_reg,
+                  const std::vector<double> &twt_vec,
+                  const std::vector<double> &twt_vec_reg,
+                  const std::vector<double> &v_vec,
+                  double                     const_v,
+                  size_t                     i,
+                  size_t                     j,
+                  bool                       include_regular) const;
+
+    void  FindNMOReflections(NRLib::Grid2D<double>       &r_vec,
+                             const NRLib::Grid2D<double> &theta_vec,
+                             size_t                       i,
+                             size_t                       j);
+    
+    void  FindReflections(NRLib::Grid2D<double>       &r_vec,
+                          const std::vector<double>   &theta_vec,
+                          size_t                       i,
+                          size_t                       j);
+
+
+    void DeleteEclipseGrid();
+    void DeleteElasticParameterGrids();
+    void DeleteExtraParameterGrids();
+    void DeleteZandRandTWTGrids();
+    void DeleteVrmsGrid();
+    void DeleteWavelet();
+    void DeleteGeometryAndOutput();
+
+  private:
+    void SetupWavelet();
+    void ReadEclipseGrid();
+    void FindGeometry();
+    void FindSurfaceGeometry();
+    void CalculateAngleSpan();
+    void CalculateOffsetSpan();
+    void CreateGrids();
+
+    ModelSettings *model_settings_;
     SeismicGeometry *seismic_geometry_;
     SeismicOutput *seismic_output_;
 
@@ -157,7 +177,7 @@ class SeismicParameters {
     std::vector<double> offset_vec_;
 
     Wavelet *wavelet_;
-    double wavelet_scale_;
+    double   wavelet_scale_;
 
     NRLib::EclipseGrid *eclipse_grid_;
 
@@ -166,7 +186,6 @@ class SeismicParameters {
 
     NRLib::RegularSurface<double> top_time_;
     NRLib::RegularSurface<double> bot_time_;
-
     NRLib::RegularSurface<double> topeclipse_;
     NRLib::RegularSurface<double> boteclipse_;
 
@@ -177,29 +196,18 @@ class SeismicParameters {
     NRLib::StormContGrid *vsgrid_;
     NRLib::StormContGrid *rhogrid_;
     NRLib::StormContGrid *twtgrid_;
-    std::vector<NRLib::StormContGrid> *rgridvec_;
-    std::vector<NRLib::StormContGrid> *extra_parameter_grid_;
-
-    NRLib::StormContGrid *vrmsgrid_;
-
+    NRLib::StormContGrid *twtssgrid_;
+    NRLib::StormContGrid *twtppgrid_;
     NRLib::StormContGrid *twt_timeshift_;
+    NRLib::StormContGrid *vrmsgrid_;
+    std::vector<NRLib::StormContGrid> *rgridvec_;
+    std::vector<NRLib::StormContGrid> *extra_parameter_grid_;   
 
 
     std::vector<double> twt_0_;
     std::vector<double> z_0_;
 
-    void setupWavelet();
 
-    void readEclipseGrid();
-
-    void findGeometry();
-
-    void findSurfaceGeometry();
-
-    void calculateAngleSpan();
-    void calculateOffsetSpan();
-
-    void createGrids();
 };
 
 #endif

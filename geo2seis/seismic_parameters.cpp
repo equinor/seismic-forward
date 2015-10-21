@@ -14,76 +14,79 @@
 
 
 SeismicParameters::SeismicParameters(ModelSettings *model_settings) {
-    this->model_settings_ = model_settings;
+  this->model_settings_ = model_settings;
 
-    seismic_geometry_ = new SeismicGeometry();
+  seismic_geometry_ = new SeismicGeometry();
 
-    if (model_settings->GetNMOCorr()) {
-      calculateOffsetSpan();
-    }
-    else {
-      calculateAngleSpan();
-    }
+  if (model_settings->GetNMOCorr()) {
+    CalculateOffsetSpan();
+  }
+  else {
+    CalculateAngleSpan();
+  }
 
-    segy_geometry_ = NULL;
+  segy_geometry_ = NULL;
 
-    setupWavelet();
-    readEclipseGrid();
-    findGeometry();
+  SetupWavelet();
+  ReadEclipseGrid();
+  FindGeometry();
 
-    seismic_output_ = new SeismicOutput(model_settings_);
-    findSurfaceGeometry();
-    createGrids();
+  seismic_output_ = new SeismicOutput(model_settings_);
+  FindSurfaceGeometry();
+  CreateGrids();
 }
 
-void SeismicParameters::calculateAngleSpan() {
-    theta_0_   = model_settings_->GetTheta0();
-    dtheta_    = model_settings_->GetDTheta();
-    theta_max_ = model_settings_->GetThetaMax();
+void SeismicParameters::CalculateAngleSpan() {
+  theta_0_ = model_settings_->GetTheta0();
+  dtheta_ = model_settings_->GetDTheta();
+  theta_max_ = model_settings_->GetThetaMax();
 
-    if (dtheta_ == 0) {
-        ntheta_ = 1;
-    } else {
-        ntheta_ = static_cast<size_t>((theta_max_ - theta_0_) / dtheta_ + 1.01);
-        //dtheta_ = (theta_max_ - theta_0_) / (ntheta_ - 1);
-    }
-    theta_vec_.resize(ntheta_);
-    for (size_t i = 0; i < ntheta_; ++i) {
-      theta_vec_[i] = theta_0_ + i*dtheta_;
-    }
+  if (dtheta_ == 0) {
+    ntheta_ = 1;
+  }
+  else {
+    ntheta_ = static_cast<size_t>((theta_max_ - theta_0_) / dtheta_ + 1.01);
+    //dtheta_ = (theta_max_ - theta_0_) / (ntheta_ - 1);
+  }
+  theta_vec_.resize(ntheta_);
+  for (size_t i = 0; i < ntheta_; ++i) {
+    theta_vec_[i] = theta_0_ + i*dtheta_;
+  }
 }
 
 
-void SeismicParameters::calculateOffsetSpan() {
-    offset_0_ = model_settings_->GetOffset0();
-    doffset_ = model_settings_->GetDOffset();
-    offset_max_ = model_settings_->GetOffsetMax();
+void SeismicParameters::CalculateOffsetSpan() {
+  offset_0_ = model_settings_->GetOffset0();
+  doffset_ = model_settings_->GetDOffset();
+  offset_max_ = model_settings_->GetOffsetMax();
 
-    if (doffset_ == 0) {
-        noffset_ = 1;
-    } else {
-        noffset_ = size_t((offset_max_ - offset_0_) / doffset_) + 1;
-        //doffset_ = (offset_max_ - offset_0_) / (noffset_ - 1);
-    }
-    offset_vec_.resize(noffset_);
-    for (size_t i = 0; i < noffset_; ++i) {
-      offset_vec_[i] = offset_0_ + i*doffset_;
-    }
+  if (doffset_ == 0) {
+    noffset_ = 1;
+  }
+  else {
+    noffset_ = size_t((offset_max_ - offset_0_) / doffset_) + 1;
+    //doffset_ = (offset_max_ - offset_0_) / (noffset_ - 1);
+  }
+  offset_vec_.resize(noffset_);
+  for (size_t i = 0; i < noffset_; ++i) {
+    offset_vec_[i] = offset_0_ + i*doffset_;
+  }
 }
 
-void SeismicParameters::setupWavelet() {
-    if (model_settings_->GetRicker()) {
-        double peakF = model_settings_->GetPeakFrequency();
-        wavelet_ = new Wavelet(peakF);
-    } else {
-        std::string wavelet_file_format = model_settings_->GetWaveletFileFormat();
-        std::string wavelet_file_name = model_settings_->GetWaveletFileName();
-        wavelet_ = new Wavelet(wavelet_file_name, wavelet_file_format);
-    }
-    wavelet_scale_ = model_settings_->GetWaveletScale();
+void SeismicParameters::SetupWavelet() {
+  if (model_settings_->GetRicker()) {
+    double peakF = model_settings_->GetPeakFrequency();
+    wavelet_ = new Wavelet(peakF);
+  }
+  else {
+    std::string wavelet_file_format = model_settings_->GetWaveletFileFormat();
+    std::string wavelet_file_name = model_settings_->GetWaveletFileName();
+    wavelet_ = new Wavelet(wavelet_file_name, wavelet_file_format);
+  }
+  wavelet_scale_ = model_settings_->GetWaveletScale();
 }
 
-void SeismicParameters::setSegyGeometry(const NRLib::SegyGeometry &geometry)
+void SeismicParameters::SetSegyGeometry(const NRLib::SegyGeometry &geometry)
 {
   if (segy_geometry_ != NULL) {
     delete segy_geometry_;
@@ -91,7 +94,7 @@ void SeismicParameters::setSegyGeometry(const NRLib::SegyGeometry &geometry)
   segy_geometry_ = new NRLib::SegyGeometry(geometry);
 }
 
-void SeismicParameters::findLoopIndeces(int               &n_xl,
+void SeismicParameters::FindLoopIndeces(int               &n_xl,
                                         int               &il_min,
                                         int               &il_max,
                                         int               &il_step,
@@ -124,101 +127,79 @@ void SeismicParameters::findLoopIndeces(int               &n_xl,
 }
 
 
-void SeismicParameters::getSeisLimits(std::vector<double>  twt_0,
-                                      std::vector<double>  vrms_vec,
-                                      std::vector<double>  offset_vec,
-                                      std::vector<size_t> &n_min,
-                                      std::vector<size_t> &n_max)
-{
-  size_t nt      = seismic_geometry_->nt();
-  double dt      = seismic_geometry_->dt();
-  double tmin    = twt_0[0];
-  size_t n_twt_0 = twt_0.size();
-  double tmax    = seismic_geometry_->tmax();
-  double vrms_nk = vrms_vec[vrms_vec.size() - 1];
-  double vrms_0  = vrms_vec[0];
 
-  for (size_t i = 0; i < offset_vec.size(); ++i) {
-    double offset = offset_vec[i];
-    double twtx_max                = std::sqrt(tmax*tmax + 1000*1000*offset*offset/(vrms_nk*vrms_nk));
-    double twtx_min                = std::sqrt(tmin*tmin + 1000*1000*offset*offset/(vrms_0*vrms_0));
-    if (twtx_min > tmin){
-      double test = (twtx_min - tmin)/dt;
-      n_min[i] = static_cast<size_t>((twtx_min - tmin)/dt); //static_cast cuts decimal. Ok, because target is (x - 0.5).
-    }
-    double test = (twtx_max - tmin)/dt;
-    n_max[i] = std::min(static_cast<size_t>((twtx_max - tmin)/dt),n_twt_0-1);
-  }
-}
-
-
-void SeismicParameters::findVrmsPos(std::vector<double>       &vrms_vec,
-                                    std::vector<double>       &vrms_vec_reg,
-                                    const std::vector<double> &twt_0,
-                                    size_t                    i,
-                                    size_t                    j,
-                                    bool                      include_regular)
+void SeismicParameters::FindVrms(std::vector<double>       &vrms_vec,
+                                 std::vector<double>       &vrms_vec_reg,
+                                 const std::vector<double> &twt_vec,
+                                 const std::vector<double> &twt_vec_reg,
+                                 const std::vector<double> &v_vec,
+                                 double                     const_v,
+                                 size_t                     i,
+                                 size_t                     j,
+                                 bool                       include_regular) const
 {
   double v_w = model_settings_->GetVw();
   double z_w = model_settings_->GetZw();
 
   double v_over;
-  double twt_w = 2000*z_w/v_w;
+  double twt_w = 2000 * z_w / v_w;
   double tmp, tmp0;
-  size_t nk = (*twtgrid_).GetNK();
+  size_t nk = twt_vec.size();
 
   //generate vrms_vec - only for each layer in reservoir
-  if ((*twtgrid_)(i,j,0) == -999.0) {
-    for (size_t k = 0; k < (*twtgrid_).GetNK(); ++k) {
+  if (twt_vec[0] == -999.0) {
+    for (size_t k = 0; k < nk; ++k) {
       vrms_vec[k] = -999.0;
     }
   }
   else {
-    v_over = 2000*((*zgrid_)(i,j,0) - z_w)/((*twtgrid_)(i,j,0) - 2000*z_w/v_w);
-    tmp0 = v_w*v_w*twt_w + v_over*v_over*((*twtgrid_)(i,j,0) - twt_w);
+    v_over = 2000 * ((*zgrid_)(i, j, 0) - z_w) / (twt_vec[0] - 2000 * z_w / v_w);
+    tmp0 = v_w*v_w*twt_w + v_over*v_over*(twt_vec[0] - twt_w);
     for (size_t k = 0; k < nk; ++k) {
       tmp = tmp0;
       for (size_t l = 1; l <= k; ++l) {
-        tmp += (*vpgrid_)(i,j,l)* (*vpgrid_)(i,j,l)*((*twtgrid_)(i,j,l) - (*twtgrid_)(i,j,l-1));
+        tmp += v_vec[l]* v_vec[l]*(twt_vec[l] - twt_vec[l-1]);
       }
-      vrms_vec[k] = std::sqrt(tmp / (*twtgrid_)(i,j,k));
+      vrms_vec[k] = std::sqrt(tmp / twt_vec[k]);
     }
   }
-  
+
   if (include_regular) {
     //generate vrms_vec_reg - including overburden and underburden
-    std::vector<double> constvp    = model_settings_->GetConstVp();
-    double twt_wavelet = 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
-    double vrms_under  = vrms_vec[nk-1]*vrms_vec[nk-1]*(*twtgrid_)(i,j,(nk-1)) + constvp[2]*constvp[2]*twt_wavelet;
-    vrms_under        *= (1/((*twtgrid_)(i,j,(nk-1))+twt_wavelet));
-    vrms_under        = std::sqrt(vrms_under);
+    
+    double twt_wavelet = 2000 / const_v * wavelet_->GetDepthAdjustmentFactor();
+    double vrms_under = vrms_vec[nk - 1]*vrms_vec[nk - 1]*twt_vec[nk - 1] + const_v * const_v * twt_wavelet;
+    vrms_under *= (1 / (twt_vec[nk - 1] + twt_wavelet));
+    vrms_under = std::sqrt(vrms_under);
 
     //sample vrms regularly:
-    std::vector<double> twt_vec_in(nk+2), vrms_vec_in(nk+2);
-    twt_vec_in[0]  = twt_w;
+    std::vector<double> twt_vec_in(nk + 2), vrms_vec_in(nk + 2);
+    twt_vec_in[0] = twt_w;
     vrms_vec_in[0] = v_w;
-    twt_vec_in[1]  = (*twtgrid_)(i,j,0);
+    twt_vec_in[1] = twt_vec[0];
     vrms_vec_in[1] = vrms_vec[0];
-    size_t index   = 2;
+    size_t index = 2;
     for (size_t k = 0; k < nk; ++k) {
-      if ((*twtgrid_)(i,j,k) != twt_vec_in[index-1]) {
-        twt_vec_in[index]  = (*twtgrid_)(i,j,k);
+      if (twt_vec[k] != twt_vec_in[index - 1]) {
+        twt_vec_in[index] = twt_vec[k];
         vrms_vec_in[index] = vrms_vec[k];
         ++index;
       }
     }
-    twt_vec_in.resize(index+1);
-    vrms_vec_in.resize(index+1);
-    twt_vec_in[index]  = twt_vec_in[index-1]+twt_wavelet;
+    twt_vec_in.resize(index + 1);
+    vrms_vec_in.resize(index + 1);
+    twt_vec_in[index] = twt_vec_in[index - 1] + twt_wavelet;
     vrms_vec_in[index] = vrms_under;
+    //seismic_output_->PrintVector(twt_vec_in, "twt_vec_in.txt");
+    //seismic_output_->PrintVector(vrms_vec_in, "vrms_vec_in.txt");
 
-    vrms_vec_reg = NRLib::Interpolation::Interpolate1D(twt_vec_in, vrms_vec_in, twt_0, "linear");
-  }
+    vrms_vec_reg = NRLib::Interpolation::Interpolate1D(twt_vec_in, vrms_vec_in, twt_vec_reg, "linear");
+  }  
 }
 
 
 
-void SeismicParameters::findReflections(NRLib::Grid2D<double>       &r_vec,
+void SeismicParameters::FindReflections(NRLib::Grid2D<double>       &r_vec,
                                         const std::vector<double>   &theta_vec,
                                         size_t                       i,
                                         size_t                       j){
@@ -258,9 +239,8 @@ void SeismicParameters::findReflections(NRLib::Grid2D<double>       &r_vec,
 }
 
 
-void SeismicParameters::findNMOReflections(NRLib::Grid2D<double>       &r_vec,
+void SeismicParameters::FindNMOReflections(NRLib::Grid2D<double>       &r_vec,
                                            const NRLib::Grid2D<double> &theta_vec,
-                                           const std::vector<double>   &offset_vec,
                                            size_t                       i,
                                            size_t                       j){
 
@@ -276,7 +256,7 @@ void SeismicParameters::findNMOReflections(NRLib::Grid2D<double>       &r_vec,
   double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
   std::vector<double> vp_vec(bottom_k_-top_k_+3), vs_vec(bottom_k_-top_k_+3), rho_vec(bottom_k_-top_k_+3);
 
-  for (size_t off = 0; off < offset_vec.size(); ++off) {
+  for (size_t off = 0; off < theta_vec.GetNJ(); ++off) {
     for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {
       vp_vec[k - top_k_]  = (*vpgrid_)(i, j, (k - top_k_));
       vs_vec[k - top_k_]  = (*vsgrid_)(i, j, (k - top_k_));
@@ -304,8 +284,8 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
   size_t k_max = (*twtgrid_).GetNK() - 1;
   for (size_t i = 0; i < (*twtgrid_).GetNI(); ++i) {
     for (size_t j = 0; j < (*twtgrid_).GetNJ(); ++j) {
-      if ((*twtgrid_)(i,j,k_max) > max_value){
-        max_value = (*twtgrid_)(i,j,k_max);
+      if ((*twtgrid_)(i, j, k_max) > max_value) {
+        max_value = (*twtgrid_)(i, j, k_max);
         i_max = i;
         j_max = j;
       }
@@ -316,10 +296,11 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
 void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> &twt_0,
                                           std::vector<double> &z_0,
                                           std::vector<double> &twts_0, 
-                                          size_t              &time_samples_stretch)
+                                          size_t              &time_samples_stretch,
+                                          bool                 ps_seis)
 {
   if (model_settings_->GetNMOCorr()){
-    twt_0 = GenerateTwt0ForNMO(time_samples_stretch);
+    twt_0 = GenerateTwt0ForNMO(time_samples_stretch, ps_seis);
     z_0   = GenerateZ0ForNMO();
     if (model_settings_->GetTwtFileName() != "") {
       twts_0 = GenerateTWT0Shift(twt_0[0], time_samples_stretch);
@@ -347,48 +328,115 @@ void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> &twt_0,
   }
 }
 
-std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_samples){
+std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_samples,
+                                                          bool ps_seis)
+{
+  //Account for stretch by making twt0 sufficiently long. Stretch upwards is also taken into account
+  //through "xtra_samples_top". 
+  //Max twt value and location is found from twtgrid and twtx is calculated for the largest offset.
+  //"Time samples stretch" is number of samples in nmo-corrected seismic trace.
+
   size_t i_max, j_max;
-  double max_twt_value;
+  double max_twt_value, twtx_max;
   size_t nt                      = seismic_geometry_->nt();
   double dt                      = seismic_geometry_->dt();
   double t0                      = seismic_geometry_->t0();
   std::vector<double> constvp    = model_settings_->GetConstVp();
   double twt_wavelet             = 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  size_t nzrefl                  = seismic_geometry_->zreflectorcount();
 
-  //find max TWT for highest offset in order to find the highest TWT value to sample seismic
+  //find max from twgrid, and index of max twt value
   FindMaxTwtIndex(i_max, j_max, max_twt_value);
-  max_twt_value += twt_wavelet;
-  //find max vrms in index
-  std::vector<double> vrms_vec((*twtgrid_).GetNK()), vrms_dummy, twt_0_dummy;
-  findVrmsPos(vrms_vec, vrms_dummy, twt_0_dummy, i_max, j_max, false);
-  double vrms_max_t              = vrms_vec[vrms_vec.size() - 1];
-  //find max offset
-  double offset_max              = offset_0_+doffset_*(noffset_ - 1);
-  //calculate max twtx
-  double twtx_max                = std::sqrt(max_twt_value*max_twt_value + 1000*1000*offset_max*offset_max/(vrms_max_t*vrms_max_t));
 
-  //find tmin
-  double factor = 2 * twtx_max / seismic_geometry_->tmax();
+  //find max TWTX for highest offset in order to find the highest TWT value to sample seismic
+  if (ps_seis) { //------------PS seismic------------
+    std::vector<double> vrms_pp_vec(nzrefl), vrms_ss_vec(nzrefl), dummy;
+    std::vector<double> vp_vec(nzrefl), vs_vec(nzrefl), twt_pp_vec(nzrefl), twt_ss_vec(nzrefl);
+
+    for (size_t k = 0; k < nzrefl; ++k) {
+      twt_pp_vec[k] = (*twtppgrid_)(i_max, j_max, k);
+      twt_ss_vec[k] = (*twtssgrid_)(i_max, j_max, k);
+      vp_vec[k] = (*vpgrid_)(i_max, j_max, k);
+      vs_vec[k] = (*vsgrid_)(i_max, j_max, k);
+    }
+
+    FindVrms(vrms_pp_vec, dummy, twt_pp_vec, dummy, vp_vec, 1.0, i_max, j_max, false);
+    FindVrms(vrms_ss_vec, dummy, twt_ss_vec, dummy, vs_vec, 1.0, i_max, j_max, false);
+    
+    double vrms_pp = vrms_pp_vec[nzrefl - 1];
+    double vrms_ss = vrms_ss_vec[nzrefl - 1];
+    double twt_pp_max = twt_pp_vec[nzrefl - 1] + twt_wavelet;
+    double twt_ss_max = twt_ss_vec[nzrefl - 1] + twt_wavelet;
+    double offset_max = offset_0_ + doffset_*(noffset_ - 1);
+    double tmp = offset_max / (vrms_pp_vec[nzrefl - 1]*twt_pp_max / 1000);
+    double start_value = atan(tmp);
+    if (start_value >= 1.0)
+      start_value = 0.99;
+    double dU = vrms_ss * twt_ss_max / 2000;
+    double dD = vrms_pp* twt_pp_max / 2000;
+    double vr = vrms_ss / vrms_pp;
+    size_t n_it = 10;
+    double y_out = FindSinThetaPSWithNewtonsMethod(start_value,
+                                                   offset_max,
+                                                   dU,
+                                                   dD,
+                                                   vr,
+                                                   0.00001,
+                                                   n_it);
+    double theta_ss = asin(vr*y_out);
+    double theta_pp = asin(y_out);
+    double offset_pp = tan(theta_pp)*dD;
+    double offset_ss = tan(theta_ss)*dU;
+
+    double twtx_pp = twt_pp_max * twt_pp_max / 4 + 2000 * 2000 * (offset_pp * offset_pp) / (vrms_pp * vrms_pp);
+    double twtx_ss = twt_ss_max * twt_ss_max / 4 + 2000 * 2000 * (offset_ss * offset_ss) / (vrms_ss * vrms_ss);
+    twtx_max = std::sqrt(twtx_pp) + std::sqrt(twtx_ss);
+  }
+  else {  //------------PP seismic------------
+    max_twt_value += twt_wavelet;
+
+    //find max vrms in index
+    std::vector<double> vrms_vec(nzrefl), vp_vec(nzrefl), twt_vec(nzrefl), dummy;
+    for (size_t k = 0; k < nzrefl; ++k) {
+      twt_vec[k] = (*twtgrid_)(i_max, j_max, k);
+      vp_vec[k] = (*vpgrid_) (i_max, j_max, k);
+    }
+    FindVrms(vrms_vec, dummy, twt_vec, dummy, vp_vec, 1.0, i_max, j_max, false);
+    double vrms_max_t = vrms_vec[vrms_vec.size() - 1];
+
+    //find max offset
+    double offset_max = offset_0_ + doffset_*(noffset_ - 1);
+    twtx_max = std::sqrt(max_twt_value*max_twt_value + 1000 * 1000 * offset_max*offset_max / (vrms_max_t*vrms_max_t));
+  } //---------------------------
+
+  //------------find samples on top and number of samples in nmo corrected seismic------------
+  //find tmin and xtra samples top. 
+  double stretch_factor = twtx_max / seismic_geometry_->tmax();
   double tmin = t0;
   size_t xtra_samples_top = 0;
-  if (factor > 2) {
-    tmin = t0 - factor * twt_wavelet;
-    xtra_samples_top = static_cast<size_t>((factor * twt_wavelet)/dt);
+  if (stretch_factor > 1) {
+    tmin = t0 - 2 * stretch_factor * twt_wavelet;
+    xtra_samples_top = static_cast<size_t>((2 * stretch_factor * twt_wavelet)/dt);
   }
 
-  //find number of samples required for nmo corrected seismic
-  double tmax_nmo = seismic_geometry_->tmax();
-  if (factor > 2) {
-    tmax_nmo += factor * twt_wavelet;
+  //find number of samples required for nmo corrected seismic:
+  double tmax_nmo = max_twt_value;
+  if (stretch_factor > 1) {
+    tmax_nmo += 4 * stretch_factor * twt_wavelet;
   }
   time_stretch_samples = static_cast<size_t>(std::ceil((tmax_nmo - tmin) /dt));
   
-  //make twt_0
-  size_t nt_seis                 = nt;
+  //------------make twt_0------------
+  //add two wavelets to max twtx. Not necessary for zero offset (stretch_factor = 1),
+  //stretch_factor: graduately increase with offset. Target is ~2 wavelets for long offsets.
+  if (stretch_factor > 1) {
+    twtx_max += stretch_factor * twt_wavelet;
+  }  
+  size_t nt_seis = nt;
   if (twtx_max > tmin + nt*dt) {
     nt_seis = static_cast<size_t>(std::ceil((twtx_max - tmin)/dt));
   }
+  
   twt_0_.resize(nt_seis);
   for (size_t i = 0; i < nt_seis; ++i){
     twt_0_[i] = (t0 - xtra_samples_top * dt) + (0.5 + i)*dt;
@@ -396,7 +444,12 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
   if (time_stretch_samples > twt_0_.size()){
     time_stretch_samples = twt_0_.size();
   }
-
+  //std::cout << "\ntmax_nmo = " << tmax_nmo << "\n";
+  //std::cout << "twtx_max = " << twtx_max << "\n";
+  //std::cout << "stretch_factor = " << stretch_factor << "\n";
+  //std::cout << "nt_seis " << nt_seis << "\n";
+  //std::cout << "time_stretch_samples " << time_stretch_samples << "\n";
+  //std::cout << "xtra_samples_top " << xtra_samples_top << "\n";
   return twt_0_;
 }
 
@@ -465,7 +518,95 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
   return twt_0_s;
 }
 
-void SeismicParameters::readEclipseGrid() {
+void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double> &thetagrid,
+                                                NRLib::Grid2D<double> &offset_down_grid,
+                                                NRLib::Grid2D<double> &offset_up_grid,
+                                                const std::vector<double> &twt_pp_vec,
+                                                const std::vector<double> &twt_ss_vec,
+                                                const std::vector<double> &vrms_pp_vec,
+                                                const std::vector<double> &vrms_ss_vec,
+                                                const std::vector<double> &offset,
+                                                bool                      save_offset)
+{
+  double tol = 0.000001;
+  size_t n_it = 10;
+  size_t n_it_avg = 0;
+  double theta_up, theta_down, y_out, dU, dD, vr;
+  double start_value = 0.1;
+
+  for (size_t off = 0; off < offset.size(); off++) {
+    double tmp = offset[off] / (vrms_pp_vec[0]*twt_pp_vec[0] / 1000);
+    start_value = atan(tmp);
+    if (start_value >= 1.0)
+      start_value = 0.99;
+    for (size_t k = 0; k < twt_pp_vec.size(); k++) {
+      dU = vrms_ss_vec[k] * twt_ss_vec[k] / 2000;
+      dD = vrms_pp_vec[k] * twt_pp_vec[k] / 2000;
+      vr = vrms_ss_vec[k] / vrms_pp_vec[k];
+      n_it = 10;
+      y_out = FindSinThetaPSWithNewtonsMethod(start_value,
+                                              offset[off],
+                                              dU,
+                                              dD,
+                                              vr,
+                                              tol,
+                                              n_it);
+      n_it_avg += n_it;
+      theta_up = asin(vr*y_out);
+      if (save_offset) {
+        thetagrid(k, off) = theta_up;
+      }      
+      theta_down = asin(y_out);
+      offset_down_grid(k, off) = tan(theta_down)*dD;
+      offset_up_grid(k, off)   = tan(theta_up)  *dU;
+      start_value = y_out;
+    }
+  }
+  size_t n_values = offset.size() * twt_pp_vec.size();
+  double it_avg = static_cast<double>(n_it_avg) / static_cast<double>(n_values);
+  //std::cout << "avg iterations " << it_avg << "\n";
+}
+
+
+double SeismicParameters::FindSinThetaPSWithNewtonsMethod(double start_value,
+                                                          double offset,
+                                                          double dU,
+                                                          double dD,
+                                                          double vr,
+                                                          double tol,
+                                                          size_t &n_it)
+{
+  double y_old = start_value;
+  double y_new, f_y, f_der_y;
+
+  for (size_t i = 0; i < n_it; ++i) {
+    f_y = -offset + dD*y_old / sqrt(1.0 - std::pow(y_old, 2)) + dU*vr*y_old / sqrt(1.0 - std::pow(vr, 2) * std::pow(y_old, 2));
+    f_der_y = dD / (std::pow((1.0 - y_old), (3 / 2))) + dU*vr / (std::pow((1.0 - std::pow(vr, 2) * std::pow(y_old, 2)), (3 / 2)));
+
+    if (f_der_y == 0) {
+      std::cout << "failure in newtons method: zero derivative.";
+      return 0;
+    }
+    y_new = y_old - f_y / f_der_y;
+
+    if (std::abs(y_new) > 1.0) {
+      std::cout << "failure in newtons method: Value > 1.0 : y_old = " << y_old << ", y_new = " << y_new << ". New value: y_new = 0.1 suggested.\n";
+      y_new = 0.1;
+    }
+
+    if (std::abs(y_new - y_old) < tol) {
+      n_it = i + 1;
+      return y_new;
+    }
+    y_old = y_new;
+  }
+  return y_new;
+
+}
+
+
+
+void SeismicParameters::ReadEclipseGrid() {
     std::string filename = model_settings_->GetEclipseFileName();
 
     printf("Start reading Eclipsegrid from file.\n");
@@ -495,37 +636,42 @@ void SeismicParameters::readEclipseGrid() {
 }
 
 
-void SeismicParameters::deleteEclipseGrid() {
+void SeismicParameters::DeleteEclipseGrid() {
   delete eclipse_grid_;
 }
 
-void SeismicParameters::deleteElasticParameterGrids() {
+void SeismicParameters::DeleteElasticParameterGrids() {
   delete vpgrid_;
   delete vsgrid_;
   delete rhogrid_;
 }
 
-void SeismicParameters::deleteExtraParameterGrids() {
+void SeismicParameters::DeleteExtraParameterGrids() {
   delete extra_parameter_grid_;
 }
 
-void SeismicParameters::deleteZandRandTWTGrids() {
-  delete twtgrid_;
+void SeismicParameters::DeleteZandRandTWTGrids() {
+  if (twtgrid_ != NULL)
+    delete twtgrid_;
+  if (twtssgrid_ != NULL)
+    delete twtssgrid_;
+  if (twtppgrid_ != NULL)
+    delete twtppgrid_;
   delete zgrid_;
   delete rgridvec_;
   if (twt_timeshift_ != NULL)
     delete twt_timeshift_;
 }
 
-void SeismicParameters::deleteVrmsGrid() {
+void SeismicParameters::DeleteVrmsGrid() {
   delete vrmsgrid_;
 }
 
-void SeismicParameters::deleteWavelet() {
+void SeismicParameters::DeleteWavelet() {
   delete wavelet_;
 }
 
-void SeismicParameters::deleteGeometryAndOutput() {
+void SeismicParameters::DeleteGeometryAndOutput() {
   delete seismic_geometry_;
   delete segy_geometry_;
   delete seismic_output_;
@@ -584,7 +730,7 @@ bool SeismicParameters::GetStormOutput() {
 
 
 
-void SeismicParameters::findGeometry() {
+void SeismicParameters::FindGeometry() {
   seismic_geometry_->setDxDy(model_settings_->GetDx(), model_settings_->GetDy());
   seismic_geometry_->setDz(model_settings_->GetDz());
   seismic_geometry_->setDt(model_settings_->GetDt());
@@ -649,7 +795,7 @@ void SeismicParameters::findGeometry() {
   }
 }
 
-void SeismicParameters::findSurfaceGeometry() {
+void SeismicParameters::FindSurfaceGeometry() {
   const NRLib::EclipseGeometry &geometry = eclipse_grid_->GetGeometry();
 
   double dx = seismic_geometry_->dx();
@@ -681,11 +827,11 @@ void SeismicParameters::findSurfaceGeometry() {
 
     bot_time_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, top_time_.Max());
     const_top_given = false;
-  } else {
+  } 
+  else {
     double t1 = model_settings_->GetTopTimeConstant();
     top_time_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, t1);
     bot_time_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, t1);
-
   }
 
   topeclipse_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, -999.0);
@@ -712,7 +858,8 @@ void SeismicParameters::findSurfaceGeometry() {
 
   if (model_settings_->GetUseCornerpointInterpol()) {
     geometry.FindLayerSurfaceCornerpoint(values, bottom_k_, 1, boteclipse_.GetDX(), boteclipse_.GetDY(), xmin - dx, ymin - dy, 0.0, 0);
-  } else {
+  }
+  else {
     geometry.FindLayerSurface(values, bottom_k_, 1, boteclipse_.GetDX(), boteclipse_.GetDY(), xmin - dx, ymin - dy, 0.0, 0);
   }
 
@@ -723,7 +870,7 @@ void SeismicParameters::findSurfaceGeometry() {
   }
 
   if (model_settings_->GetOutputDepthSurfaces()) {
-    seismic_output_->writeDepthSurfaces(topeclipse_, boteclipse_);
+    seismic_output_->WriteDepthSurfaces(topeclipse_, boteclipse_);
   }
 
   double d1 = topeclipse_.Min();
@@ -747,7 +894,7 @@ void SeismicParameters::findSurfaceGeometry() {
   seismic_geometry_->setZRange(d1, d2);
 }
 
-void SeismicParameters::createGrids() {
+void SeismicParameters::CreateGrids() {
   size_t nx = seismic_geometry_->nx();
   size_t ny = seismic_geometry_->ny();
   size_t nzrefl = seismic_geometry_->zreflectorcount();
@@ -759,6 +906,15 @@ void SeismicParameters::createGrids() {
   vsgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
   rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
   twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+  
+  if (model_settings_->GetNMOCorr() && model_settings_->GetPSSeismic()) {
+    twtssgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+    twtppgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+  }
+  else {
+    twtssgrid_ = NULL;
+    twtppgrid_ = NULL;
+  }
 
   if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()) {
     vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
@@ -802,13 +958,16 @@ void SeismicParameters::createGrids() {
         if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()){
           (*vrmsgrid_)(i, j, k) = 0.0;
         }
+        if (model_settings_->GetNMOCorr() && model_settings_->GetPSSeismic()) {
+          (*twtssgrid_)(i, j, k) = 0.0;
+          (*twtppgrid_)(i, j, k) = 0.0;
+        }
         for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
           (*extra_parameter_grid_)[epi](i, j, k) = static_cast<float>(extra_parameter_default_values[epi]);
         }
       }
-
-      (*vpgrid_)(i, j, nzrefl) = static_cast<float>(const_vp[2]);
-      (*vsgrid_)(i, j, nzrefl) = static_cast<float>(const_vs[2]);
+      (*vpgrid_)(i, j, nzrefl)  = static_cast<float>(const_vp[2]);
+      (*vsgrid_)(i, j, nzrefl)  = static_cast<float>(const_vs[2]);
       (*rhogrid_)(i, j, nzrefl) = static_cast<float>(const_rho[2]);
       for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
         (*extra_parameter_grid_)[epi](i, j, nzrefl) = 0.0;

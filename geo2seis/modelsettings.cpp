@@ -89,6 +89,7 @@ ModelSettings::ModelSettings(void) {
     area_from_segy_ = "";
     utm_precision_ = -10;
     twt_file_name_ = "";
+    traces_in_memory_ = 10000;
     ps_seismic_ = false;
     nmo_corr_ = false;
     v_w_ = 0.0;

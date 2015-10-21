@@ -21,33 +21,29 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   FindVp(seismic_parameters);
   printf("Elastic parameters found.\n");
 
-  seismic_parameters.deleteEclipseGrid();
-
+  seismic_parameters.DeleteEclipseGrid();
+  
   NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
-  NRLib::RegularSurface<double> &bottime = seismic_parameters.bottomTime();
-  NRLib::StormContGrid &vpgrid           = seismic_parameters.vpGrid();
-  NRLib::StormContGrid &vsgrid           = seismic_parameters.vsGrid();
-  NRLib::StormContGrid &twtgrid          = seismic_parameters.twtGrid();
-  NRLib::StormContGrid &zgrid            = seismic_parameters.zGrid();
-  bool find_for_ps                       = seismic_parameters.modelSettings()->GetPSSeismic();
+  NRLib::RegularSurface<double> &bottime = seismic_parameters.bottomTime();  
   std::vector<double> constvp            = seismic_parameters.modelSettings()->GetConstVp();
   Wavelet* wavelet                       = seismic_parameters.wavelet();
-
+  
   //find twt grid
-  FindTWT(vpgrid, vsgrid, twtgrid, zgrid, toptime, bottime, find_for_ps);
+  FindTWT(seismic_parameters, toptime, bottime);
 
   //generate, write and delete vrms grid if writing is requested
   if (seismic_parameters.modelSettings()->GetNMOCorr() && seismic_parameters.modelSettings()->GetOutputVrms()){
     FindVrms(seismic_parameters);
-    seismic_parameters.seismicOutput()->writeVrms(seismic_parameters);
-    seismic_parameters.deleteVrmsGrid();
+    seismic_parameters.seismicOutput()->WriteVrms(seismic_parameters);
+    seismic_parameters.DeleteVrmsGrid();
   }
-
   //add wavelet above and below toptime and bottime
   toptime.Add(-2000 / constvp[0] * wavelet->GetDepthAdjustmentFactor()); // add one wavelet length to bot and subtract from top
   bottime.Add(2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor());
 
   double tmin = toptime.Min();
+  size_t ns = static_cast<size_t>(tmin / seismic_parameters.seismicGeometry()->dt());
+  tmin = (ns + 1) * seismic_parameters.seismicGeometry()->dt();
   double tmax = bottime.Max();
   size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.seismicGeometry()->dt()+0.5));
   if (seismic_parameters.modelSettings()->GetNLayersFileName() != "") {
@@ -59,35 +55,35 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
 
   //write toptime and bottime
   if (seismic_parameters.modelSettings()->GetOutputTimeSurfaces()) {
-    seismic_parameters.seismicOutput()->writeTimeSurfaces(seismic_parameters);
+    seismic_parameters.seismicOutput()->WriteTimeSurfaces(seismic_parameters);
   }
 
   //resample, write and delete extra parameter grids
   if (seismic_parameters.modelSettings()->GetOutputExtraParametersTimeSegy()) {
-    seismic_parameters.seismicOutput()->writeExtraParametersTimeSegy(seismic_parameters);
+    seismic_parameters.seismicOutput()->WriteExtraParametersTimeSegy(seismic_parameters);
   }
   if (seismic_parameters.modelSettings()->GetOutputExtraParametersDepthSegy()) {
-    seismic_parameters.seismicOutput()->writeExtraParametersDepthSegy(seismic_parameters);
+    seismic_parameters.seismicOutput()->WriteExtraParametersDepthSegy(seismic_parameters);
   }
-  seismic_parameters.deleteExtraParameterGrids();
+  seismic_parameters.DeleteExtraParameterGrids();
  
   //resample and write elastic parameters in segy
   if (seismic_parameters.modelSettings()->GetOutputElasticParametersTimeSegy()) {
-    seismic_parameters.seismicOutput()->writeElasticParametersTimeSegy(seismic_parameters);
+    seismic_parameters.seismicOutput()->WriteElasticParametersTimeSegy(seismic_parameters);
   }
   if (seismic_parameters.modelSettings()->GetOutputElasticParametersDepthSegy()) {
-    seismic_parameters.seismicOutput()->writeElasticParametersDepthSegy(seismic_parameters);
+    seismic_parameters.seismicOutput()->WriteElasticParametersDepthSegy(seismic_parameters);
   }
 
   //write elastic parameters, z values and twt on storm format
   if (seismic_parameters.modelSettings()->GetOutputVp()) {
-    seismic_parameters.seismicOutput()->writeVpVsRho(seismic_parameters);
+    seismic_parameters.seismicOutput()->WriteVpVsRho(seismic_parameters);
   }
   if (seismic_parameters.modelSettings()->GetOutputZvalues()) {
-    seismic_parameters.seismicOutput()->writeZValues(seismic_parameters);
+    seismic_parameters.seismicOutput()->WriteZValues(seismic_parameters);
   }
   if (seismic_parameters.modelSettings()->GetOutputTwt()) {
-    seismic_parameters.seismicOutput()->writeTwt(seismic_parameters);
+    seismic_parameters.seismicOutput()->WriteTwt(seismic_parameters);
   }
 }
 
@@ -1691,7 +1687,20 @@ void SeismicRegridding::AddNoiseToReflectionsPos(unsigned long         seed,
 
 
 
-void SeismicRegridding::FindTWT(NRLib::StormContGrid &vpgrid, NRLib::StormContGrid &vsgrid, NRLib::StormContGrid &twtgrid, NRLib::StormContGrid &zgrid,NRLib::RegularSurface<double> &toptime, NRLib::RegularSurface<double> &bottime, bool ps_seismic) {
+void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
+                                NRLib::RegularSurface<double> &toptime, 
+                                NRLib::RegularSurface<double> &bottime)
+{
+  NRLib::StormContGrid &vpgrid    = seismic_parameters.vpGrid();
+  NRLib::StormContGrid &vsgrid    = seismic_parameters.vsGrid();
+  NRLib::StormContGrid &twtgrid   = seismic_parameters.twtGrid();
+  NRLib::StormContGrid &twtssgrid = seismic_parameters.twtSSGrid();
+  NRLib::StormContGrid &twtppgrid = seismic_parameters.twtPPGrid();
+  NRLib::StormContGrid &zgrid     = seismic_parameters.zGrid();
+  bool ps_seismic                 = seismic_parameters.modelSettings()->GetPSSeismic();
+  bool nmo_seismic                = seismic_parameters.modelSettings()->GetNMOCorr();
+  double v_w                      = seismic_parameters.modelSettings()->GetVw();
+  double z_w                      = seismic_parameters.modelSettings()->GetZw();
 
   size_t nk = twtgrid.GetNK();
   double dx1 = vpgrid.GetDX();
@@ -1703,14 +1712,25 @@ void SeismicRegridding::FindTWT(NRLib::StormContGrid &vpgrid, NRLib::StormContGr
       double x, y, z;
       vpgrid.FindCenterOfCell(i, j, 0, x, y, z);
       twtgrid(i, j, 0) = static_cast<float>(toptime.GetZ(x, y));
+      if (ps_seismic && nmo_seismic) {
+        double a = 2.0;
+        twtppgrid(i, j, 0) = 2 / (a + 1) * (twtgrid(i, j, 0) + (a - 1) * z_w / v_w); //twtgrid is PS twt
+        twtssgrid(i, j, 0) = 2 * twtgrid(i, j, 0) - twtppgrid(i, j, 0);
+        //std::cout << "twtgrid(i,j,0) = " << twtgrid(i, j, 0) << "\n";
+        //std::cout << "twtssgrid(i,j,0) = " << twtssgrid(i, j, 0) << "\n";
+        //std::cout << "twtppgrid(i,j,0) = " << twtppgrid(i, j, 0) << "\n";
+      }
       if (toptime.IsMissing(twtgrid(i, j, 0)) == false) {
         for (size_t k = 1; k < nk; k++) {
           if(ps_seismic) {
-            // twtgrid(i, j, k) = twtgrid(i, j, k-1) + static_cast<float>(2000.0*(zgrid(i, j, k)-zgrid(i, j, k-1))/(0.5*(vpgrid(i, j, 2*k)+vpgrid(i, j, (2*k-1)))));
             twtgrid(i, j, k) = twtgrid(i, j, k - 1) + static_cast<float>(1000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vpgrid(i, j, k + 1)) + static_cast<float>(1000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vsgrid(i, j, k + 1));
-          } else {
-            // twtgrid(i, j, k) = twtgrid(i, j, k-1) + static_cast<float>(2000.0*(zgrid(i, j, k)-zgrid(i, j, k-1))/(0.5*(vpgrid(i, j, 2*k)+vpgrid(i, j, (2*k-1)))));
+          } 
+          else {
             twtgrid(i, j, k) = twtgrid(i, j, k - 1) + static_cast<float>(2000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vpgrid(i, j, k + 1));
+          }
+          if (ps_seismic && nmo_seismic){
+            twtppgrid(i, j, k) = twtppgrid(i, j, k - 1) + static_cast<float>(2000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vpgrid(i, j, k + 1));
+            twtssgrid(i, j, k) = twtssgrid(i, j, k - 1) + static_cast<float>(2000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vsgrid(i, j, k + 1));
           }
         }
 
@@ -1732,14 +1752,22 @@ void SeismicRegridding::FindTWT(NRLib::StormContGrid &vpgrid, NRLib::StormContGr
           }
           x = x + dx2;
         }
-      } else {
+      } 
+      else {
         for (size_t k = 0; k < nk; k++) {
           twtgrid(i, j, k) = -999.0;
+        }
+        if (ps_seismic && nmo_seismic) {
+          for (size_t k = 0; k < nk; k++) {
+            twtppgrid(i, j, k) = -999.0;
+            twtssgrid(i, j, k) = -999.0;
+          }
         }
       }
     }
   }
 }
+
 
 void SeismicRegridding::FindVpTest(SeismicParameters &seismic_parameters)
 {
@@ -2511,6 +2539,7 @@ bool SeismicRegridding::FindTopCell(const NRLib::EclipseGeometry &geometry,
   else
     return false;
 }
+
 bool SeismicRegridding::FindBotCell(const NRLib::EclipseGeometry &geometry,
                                     size_t  nj,
                                     size_t  i,
@@ -2526,6 +2555,7 @@ bool SeismicRegridding::FindBotCell(const NRLib::EclipseGeometry &geometry,
   else
     return false;
 }
+
 bool SeismicRegridding::FindLeftCell(const NRLib::EclipseGeometry &geometry,
                                      size_t  ni,
                                      size_t &i,
@@ -2541,6 +2571,7 @@ bool SeismicRegridding::FindLeftCell(const NRLib::EclipseGeometry &geometry,
   else
     return false;
 }
+
 bool SeismicRegridding::FindRightCell(const NRLib::EclipseGeometry &geometry,
                                       size_t &ii,
                                       size_t  j)

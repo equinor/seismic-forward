@@ -6,8 +6,6 @@
 #include <seismic_parameters.hpp>
 #include "tbb/concurrent_queue.h"
 #include <utils/trace.hpp>
-#include "utils/seis_output.hpp"
-#include "utils/nmo_output.hpp"
 #include "utils/result_trace.hpp"
 
 class GenSeisTraceParams {
