@@ -518,15 +518,16 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
   return twt_0_s;
 }
 
-void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double> &thetagrid,
-                                                NRLib::Grid2D<double> &offset_down_grid,
-                                                NRLib::Grid2D<double> &offset_up_grid,
+void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &thetagrid,
+                                                NRLib::Grid2D<double>     &offset_down_grid,
+                                                NRLib::Grid2D<double>     &offset_up_grid,
                                                 const std::vector<double> &twt_pp_vec,
                                                 const std::vector<double> &twt_ss_vec,
                                                 const std::vector<double> &vrms_pp_vec,
                                                 const std::vector<double> &vrms_ss_vec,
                                                 const std::vector<double> &offset,
-                                                bool                      save_offset)
+                                                NRLib::Grid2D<double>     &theta_extra_grid_temp,
+                                                bool                       save_theta)
 {
   double tol = 0.000001;
   size_t n_it = 10;
@@ -551,12 +552,13 @@ void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double> &thetagrid
                                               vr,
                                               tol,
                                               n_it);
-      n_it_avg += n_it;
-      theta_up = asin(vr*y_out);
-      if (save_offset) {
-        thetagrid(k, off) = theta_up;
-      }      
+      n_it_avg  += n_it;
+      theta_up   = asin(vr*y_out);
       theta_down = asin(y_out);
+      if (save_theta) {
+        thetagrid(k, off) = theta_down;
+        theta_extra_grid_temp(k, off) = theta_up;
+      }      
       offset_down_grid(k, off) = tan(theta_down)*dD;
       offset_up_grid(k, off)   = tan(theta_up)  *dU;
       start_value = y_out;

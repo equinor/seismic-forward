@@ -111,10 +111,17 @@ class SeismicForward {
                                  NRLib::Grid2D<double>       &offset_pp_reg,
                                  NRLib::Grid2D<double>       &offset_ss_reg);
 
-    static void ResampleTWTx(const NRLib::Grid2D<double> &twtx_grid,
+    static void ResampleTWTxOld(const NRLib::Grid2D<double> &twtx_grid,
                              NRLib::Grid2D<double>       &twtx_grid_reg,
                              const std::vector<double>   &twt_vec,
                              const std::vector<double>   &twt_0);
+
+    static void ResampleTWTx(const NRLib::Grid2D<double> &twtx_grid,
+                                  const NRLib::Grid2D<double> &twtx_below,
+                                  NRLib::Grid2D<double>       &twtx_grid_reg,
+                                  const std::vector<double>   &twt_vec,
+                                  const double                &twt_below,
+                                  const std::vector<double>   &twt_0);
 
     static void FindTWTxPS(NRLib::Grid2D<double>     &twtx_grid,
                            const std::vector<double> &twt_ss_vec,

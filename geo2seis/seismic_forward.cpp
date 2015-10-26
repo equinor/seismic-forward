@@ -287,7 +287,8 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       double wavelet_scale        = param->seismic_parameters.waveletScale();
       Wavelet * wavelet           = param->seismic_parameters.wavelet();
       double twt_wavelet          = 2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor();
-      double tmax                 = param->seismic_parameters.seismicGeometry()->tmax() + 2 * twt_wavelet;
+      double tmax                 = param->seismic_parameters.seismicGeometry()->tmax();
+      double tmax_limits          = tmax + 2 * twt_wavelet;
 
       std::vector<size_t> n_min(param->offset_vec.size());
       std::vector<size_t> n_max(param->offset_vec.size());
@@ -299,9 +300,8 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         twt_vec[k]   = twtgrid(i,j,k);
         vp_vec[k] = vpgrid(i, j, k);
       }
-
       
-      if (ps_seis) { //------PS seismic-----------------
+      if (ps_seis) { //------------PS seismic------------
         //setup and get vectors and grid for calculation
         std::vector<double> twt_ss_vec(nzrefl);
         std::vector<double> twt_pp_vec(nzrefl);
@@ -339,22 +339,73 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         param->seismic_parameters.FindVrms(vrms_ss_vec, vrms_ss_vec_reg, twt_ss_vec, twt_ss_vec_reg, vs_vec, constvs[2], i, j, true);
 
         //find theta and offset - for each layer for each offset:
-        param->seismic_parameters.FindPSNMOThetaAndOffset(theta_pos, offset_pp, offset_ss, twt_pp_vec, twt_ss_vec, vrms_pp_vec, vrms_ss_vec, param->offset_vec);
+        NRLib::Grid2D<double> theta_extra_grid(nzrefl, param->offset_vec.size());
+        param->seismic_parameters.FindPSNMOThetaAndOffset(theta_pos, offset_pp, offset_ss, twt_pp_vec, twt_ss_vec, vrms_pp_vec, vrms_ss_vec, param->offset_vec, theta_extra_grid);
 
         //find twtx - for each layer for each offset:        
         FindTWTxPS(twtx, twt_ss_vec, twt_pp_vec, vrms_pp_vec, vrms_ss_vec, offset_ss, offset_pp);
 
-        NRLib::Grid2D<double> dummy;
-        param->seismic_parameters.FindPSNMOThetaAndOffset(dummy, offset_pp_reg, offset_ss_reg, twt_pp_vec_reg, twt_ss_vec_reg, vrms_pp_vec_reg, vrms_ss_vec_reg, param->offset_vec, false);
 
-        //sample twtx regularly - for each layer for each offset:
-        //ResampleOffsetPS(twt_vec, offset_pp, offset_ss, param->twt_0, offset_pp_reg, offset_ss_reg);
-        FindTWTxPS(twtx_reg, twt_ss_vec_reg, twt_pp_vec_reg, vrms_pp_vec_reg, vrms_ss_vec_reg, offset_ss_reg, offset_pp_reg);
+        //find twtx regular (4.)
+        double twt_ss_wavelet = 2000 / constvs[2] * wavelet->GetDepthAdjustmentFactor();
+        double twt_pp_wavelet = 2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor();
+        double twt_ps_wavelet = 2000 * 2 / (constvs[2]+constvp[2]) * wavelet->GetDepthAdjustmentFactor();        
 
-        //find limits for where to generate seismic, for each offset
-        FindSeisLimits(twtx_reg, param->twt_0, n_min, n_max, tmax);
+        std::vector<double>   vrms_pp_below(1), vrms_ss_below(1);
+        std::vector<double>   twt_pp_below(1), twt_ss_below(1);
+        NRLib::Grid2D<double> offset_pp_below(1, param->offset_vec.size());
+        NRLib::Grid2D<double> offset_ss_below(1, param->offset_vec.size());
+        NRLib::Grid2D<double> twtx_below     (1, param->offset_vec.size());
+
+        double twt_below = twt_vec[nzrefl - 1]    + twt_ps_wavelet;
+        twt_pp_below[0]  = twt_pp_vec[nzrefl - 1] + twt_pp_wavelet;
+        twt_ss_below[0]  = twt_ss_vec[nzrefl - 1] + twt_ss_wavelet;
+        vrms_pp_below[0] = std::sqrt(1 / twt_pp_below[0] * (constvp[2] * constvp[2] * (twt_pp_below[0] - twt_pp_vec[nzrefl - 1]) + vrms_pp_vec[nzrefl - 1] * vrms_pp_vec[nzrefl - 1] * twt_pp_vec[nzrefl - 1]));
+        vrms_ss_below[0] = std::sqrt(1 / twt_ss_below[0] * (constvs[2] * constvs[2] * (twt_ss_below[0] - twt_ss_vec[nzrefl - 1]) + vrms_ss_vec[nzrefl - 1] * vrms_ss_vec[nzrefl - 1] * twt_ss_vec[nzrefl - 1]));
+
+        NRLib::Grid2D<double> dummygrid;
+        param->seismic_parameters.FindPSNMOThetaAndOffset(theta_pos, offset_pp_below, offset_ss_below, twt_pp_below, twt_ss_below, vrms_pp_below, vrms_ss_below, param->offset_vec, dummygrid, false);
+        FindTWTxPS(twtx_below, twt_ss_below, twt_pp_below, vrms_pp_below, vrms_ss_below, offset_ss_below, offset_pp_below);
+        ResampleTWTx(twtx, twtx_below, twtx_reg, twt_vec, twt_below, param->twt_0);
+
+        ////find twtx regular (0. sjekket inn 21. okt)
+        //NRLib::Grid2D<double> theta_down(param->twt_0.size(), param->offset_vec.size()), theta_up(param->twt_0.size(), param->offset_vec.size());
+        //param->seismic_parameters.FindPSNMOThetaAndOffset(theta_down, offset_pp_reg, offset_ss_reg, twt_pp_vec_reg, twt_ss_vec_reg, vrms_pp_vec_reg, vrms_ss_vec_reg, param->offset_vec, theta_up, true);
+        //FindTWTxPS(twtx_reg, twt_ss_vec_reg, twt_pp_vec_reg, vrms_pp_vec_reg, vrms_ss_vec_reg, offset_ss_reg, offset_pp_reg);
+        
+        //find limits for where to generate seismic, for each offset        
+        tmax_limits = tmax + 2 * twt_ps_wavelet;
+        FindSeisLimits(twtx_reg, param->twt_0, n_min, n_max, tmax_limits);
+
+        ////if (i == 138 && j == 581) {
+        //if (i == 285 && j == 412) {
+        //  param->seismic_parameters.seismicOutput()->PrintVector(twt_pp_vec_reg, "twt_pp_vec_reg.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(twt_ss_vec_reg, "twt_ss_vec_reg.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_ss_reg, "offset_up_reg.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_pp_reg, "offset_down_reg.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_ss, "offset_up.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_pp, "offset_down.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(twtx, "twtx.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(twtx_reg, "twtx_reg.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_pp_vec, "vrms_pp_down.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_ss_vec_reg, "vrms_ss_vec_reg.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_pp_vec_reg, "vrms_pp_vec_reg.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_ss_vec, "vrms_ss_up.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(twtx, "twtx.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(refl_pos, "refl_pos.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(theta_pos, "theta_down.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(theta_extra_grid, "theta_up.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(param->twt_0, "twt_0.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(param->z_0, "z_0.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(twt_ss_vec, "twt_ss_vec.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(twt_pp_vec, "twt_pp_vec.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(twt_vec, "twt_vec.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(vs_vec, "vs_vec.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(vp_vec, "vp_vec.txt");          
+        //}
+
       }
-      else {
+      else { //------------PP seismic------------
         std::vector<double> vrms_vec(nzrefl);
         std::vector<double> vrms_vec_reg(param->twt_0);
         param->seismic_parameters.FindVrms(vrms_vec, vrms_vec_reg, twt_vec, param->twt_0, vp_vec, constvp[2], i, j, true);
@@ -367,8 +418,8 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         FindTWTx(twtx_reg, param->twt_0, vrms_vec_reg, param->offset_vec);
         
         //find limits for where to generate seismic, for each offset
-        FindSeisLimits(twtx_reg, param->twt_0, n_min, n_max, tmax);
-      }      
+        FindSeisLimits(twtx_reg, param->twt_0, n_min, n_max, tmax_limits);
+      }//------------ ------------
 
       //find reflection coeff - for each layer for each offset:
       param->seismic_parameters.FindNMOReflections(refl_pos, theta_pos, i, j);
@@ -420,7 +471,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       //param->seismic_parameters.seismicOutput()->PrintMatrix(offset_pp, "offset_pp.txt");
       //param->seismic_parameters.seismicOutput()->PrintMatrix(twtx, "twtx.txt");
       //param->seismic_parameters.seismicOutput()->PrintMatrix(twtx_reg, "twtx_reg.txt");
-      //ResampleTWTx(twtx, twtx_reg, twt_vec, param->twt_0);
+      //ResampleTWTxOld(twtx, twtx_reg, twt_vec, param->twt_0);
       //param->seismic_parameters.seismicOutput()->PrintMatrix(twtx_reg, "twtx_reg_resm.txt");
       //param->seismic_parameters.seismicOutput()->PrintVector(vrms_vec, "vrms_vec.txt");
       //param->seismic_parameters.seismicOutput()->PrintVector(vrms_vec_reg, "vrms_vec_reg.txt");      
@@ -433,8 +484,10 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       //param->seismic_parameters.seismicOutput()->PrintVectorSizeT(n_min, "n_min.txt");
       //param->seismic_parameters.seismicOutput()->PrintVectorSizeT(n_max, "n_max.txt");
       //param->seismic_parameters.seismicOutput()->PrintMatrix(timegrid_pos, "timegrid_pos.txt");
-      //param->seismic_parameters.seismicOutput()->PrintMatrix(nmo_timegrid_pos, "nmo_timegrid_pos.txt");
-
+      //if (i == 0 && j == 0) {
+      //  param->seismic_parameters.seismicOutput()->PrintMatrix(nmo_timegrid_pos, "nmo_timegrid_pos.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(param->twt_0, "PS_NMO_twt_0.txt");
+      //}
       //stacking of offsets:
       if (param->seismic_parameters.GetStackOutput() || param->seismic_parameters.GetStormOutput()) {
         float noffset_inv = static_cast<float>(1.0 / param->offset_vec.size());
@@ -580,6 +633,11 @@ void SeismicForward::GenerateSeismicTraces(Output             *seis_output,
                       j,
                       n_min,
                       n_max);
+
+      //if (i == 0 && j == 0) {
+      //  param->seismic_parameters.seismicOutput()->PrintMatrix(timegrid_pos, "timegrid_pos.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(param->twt_0, "PS_twt_0.txt");
+      //}     
 
       //stacking of angles:
       if (param->seismic_parameters.GetStackOutput() || param->seismic_parameters.GetStormOutput()) {
@@ -962,10 +1020,10 @@ void SeismicForward::ResampleOffsetPS(const std::vector<double>   &twt_vec,
   }
 }
 
-void SeismicForward::ResampleTWTx(const NRLib::Grid2D<double> &twtx_grid,
-                                  NRLib::Grid2D<double>       &twtx_grid_reg,
-                                  const std::vector<double>   &twt_vec,
-                                  const std::vector<double>   &twt_0)
+void SeismicForward::ResampleTWTxOld(const NRLib::Grid2D<double> &twtx_grid,
+                                     NRLib::Grid2D<double>       &twtx_grid_reg,
+                                     const std::vector<double>   &twt_vec,
+                                     const std::vector<double>   &twt_0)
 {
   std::vector<double> twtx_vec_reg(twt_0.size());
   std::vector<double> twtx_vec(twtx_grid.GetNI());
@@ -981,6 +1039,38 @@ void SeismicForward::ResampleTWTx(const NRLib::Grid2D<double> &twtx_grid,
 }
 
 
+void SeismicForward::ResampleTWTx(const NRLib::Grid2D<double> &twtx_grid, 
+                                  const NRLib::Grid2D<double> &twtx_below,
+                                  NRLib::Grid2D<double>       &twtx_grid_reg,
+                                  const std::vector<double>   &twt_vec,
+                                  const double                &twt_below,
+                                  const std::vector<double>   &twt_0)
+{
+  size_t nlayers = twtx_grid.GetNI() + 1;
+  size_t noff    = twtx_grid.GetNJ();
+  size_t nreg    = twt_0.size();
+  std::vector<double> twtx_vec_reg(nreg);
+  std::vector<double> twtx_vec(nlayers);
+  std::vector<double> twt_vec_nlay(nlayers);
+  
+  for (size_t i = 0; i < nlayers - 1; ++i) {
+    twt_vec_nlay[i] = twt_vec[i];
+  }
+  twt_vec_nlay[nlayers - 1] = twt_below;
+
+  for (size_t off = 0; off < noff; ++off) {
+    for (size_t i = 0; i < nlayers - 1; ++i) {
+      twtx_vec[i] = twtx_grid(i, off);
+    }
+    twtx_vec[nlayers - 1] = twtx_below(0, off);
+
+    twtx_vec_reg = LinInterp1D(twt_vec_nlay, twtx_vec, twt_0);
+    for (size_t i = 0; i < twtx_grid_reg.GetNI(); ++i) {
+      twtx_grid_reg(i, off) = twtx_vec_reg[i];
+    }
+  }
+}
+
 void SeismicForward::FindTWTxPS(NRLib::Grid2D<double>     &twtx_grid,
                                const std::vector<double> &twt_ss_vec,
                                const std::vector<double> &twt_pp_vec,
@@ -992,8 +1082,8 @@ void SeismicForward::FindTWTxPS(NRLib::Grid2D<double>     &twtx_grid,
   double twtx_pp, twtx_ss;
   for (size_t off = 0; off < offset_ss.GetNJ(); ++off) {
     for (size_t k = 0; k < twt_pp_vec.size(); ++k) {
-      twtx_pp = std::sqrt(twt_pp_vec[k] * twt_pp_vec[k] / 4 + 2000 * 2000 * (offset_pp(k,off) * offset_pp(k,off) / (vrms_pp_vec[k] * vrms_pp_vec[k])));
-      twtx_ss = std::sqrt(twt_ss_vec[k] * twt_ss_vec[k] / 4 + 2000 * 2000 * (offset_ss(k,off) * offset_ss(k,off) / (vrms_ss_vec[k] * vrms_ss_vec[k])));
+      twtx_pp = std::sqrt(twt_pp_vec[k] * twt_pp_vec[k] / 4 + 1000 * 1000 * (offset_pp(k,off) * offset_pp(k,off) / (vrms_pp_vec[k] * vrms_pp_vec[k])));
+      twtx_ss = std::sqrt(twt_ss_vec[k] * twt_ss_vec[k] / 4 + 1000 * 1000 * (offset_ss(k,off) * offset_ss(k,off) / (vrms_ss_vec[k] * vrms_ss_vec[k])));
       twtx_grid(k, off) = twtx_pp + twtx_ss;
     }
   }

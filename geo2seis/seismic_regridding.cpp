@@ -1714,7 +1714,7 @@ void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
       twtgrid(i, j, 0) = static_cast<float>(toptime.GetZ(x, y));
       if (ps_seismic && nmo_seismic) {
         double a = 2.0;
-        twtppgrid(i, j, 0) = 2 / (a + 1) * (twtgrid(i, j, 0) + (a - 1) * z_w / v_w); //twtgrid is PS twt
+        twtppgrid(i, j, 0) = 2 / (a + 1) * (twtgrid(i, j, 0) + 1000 * (a - 1) * z_w / v_w); //twtgrid is PS twt
         twtssgrid(i, j, 0) = 2 * twtgrid(i, j, 0) - twtppgrid(i, j, 0);
         //std::cout << "twtgrid(i,j,0) = " << twtgrid(i, j, 0) << "\n";
         //std::cout << "twtssgrid(i,j,0) = " << twtssgrid(i, j, 0) << "\n";
