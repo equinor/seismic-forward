@@ -365,8 +365,8 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
     
     double vrms_pp = vrms_pp_vec[nzrefl - 1];
     double vrms_ss = vrms_ss_vec[nzrefl - 1];
-    double twt_pp_max = twt_pp_vec[nzrefl - 1] + twt_wavelet;
-    double twt_ss_max = twt_ss_vec[nzrefl - 1] + twt_wavelet;
+    double twt_pp_max = twt_pp_vec[nzrefl - 1];
+    double twt_ss_max = twt_ss_vec[nzrefl - 1];
     double offset_max = offset_0_ + doffset_*(noffset_ - 1);
     double tmp = offset_max / (vrms_pp_vec[nzrefl - 1]*twt_pp_max / 1000);
     double start_value = atan(tmp);
@@ -388,9 +388,10 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
     double offset_pp = tan(theta_pp)*dD;
     double offset_ss = tan(theta_ss)*dU;
 
-    double twtx_pp = twt_pp_max * twt_pp_max / 4 + 2000 * 2000 * (offset_pp * offset_pp) / (vrms_pp * vrms_pp);
-    double twtx_ss = twt_ss_max * twt_ss_max / 4 + 2000 * 2000 * (offset_ss * offset_ss) / (vrms_ss * vrms_ss);
-    twtx_max = std::sqrt(twtx_pp) + std::sqrt(twtx_ss);
+    double twtx_pp = std::sqrt(twt_pp_max * twt_pp_max / 4 + 1000 * 1000 * (offset_pp * offset_pp) / (vrms_pp * vrms_pp));
+    double twtx_ss = std::sqrt(twt_ss_max * twt_ss_max / 4 + 1000 * 1000 * (offset_ss * offset_ss) / (vrms_ss * vrms_ss));
+    twtx_max = twtx_pp + twtx_ss;
+    twtx_max += twt_wavelet;
   }
   else {  //------------PP seismic------------
     max_twt_value += twt_wavelet;
@@ -423,8 +424,11 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
   double tmax_nmo = max_twt_value;
   if (stretch_factor > 1) {
     tmax_nmo += 4 * stretch_factor * twt_wavelet;
+    time_stretch_samples = static_cast<size_t>(std::ceil((tmax_nmo - tmin) / dt));
   }
-  time_stretch_samples = static_cast<size_t>(std::ceil((tmax_nmo - tmin) /dt));
+  else {
+    time_stretch_samples = nt;
+  }  
   
   //------------make twt_0------------
   //add two wavelets to max twtx. Not necessary for zero offset (stretch_factor = 1),
