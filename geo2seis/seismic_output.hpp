@@ -68,7 +68,7 @@ class SeismicOutput {
     void WriteVpVsRho(SeismicParameters &seismic_parameters);
     void WriteZValues(SeismicParameters &seismic_parameters);
     void WriteTwt(SeismicParameters &seismic_parameters);
-    void WriteVrms(SeismicParameters &seismic_parameters);
+    void WriteVrms(SeismicParameters &seismic_parameters, std::string name_pp_or_ps = "");
 
     void WriteSeismicTimeStorm(SeismicParameters &seismic_parameters,      NRLib::StormContGrid &timegrid, double offset, bool is_stack = false);
     void WriteSeismicDepthStorm(SeismicParameters &seismic_parameters,     NRLib::StormContGrid &depthgrid, double offset, bool is_stack = false);

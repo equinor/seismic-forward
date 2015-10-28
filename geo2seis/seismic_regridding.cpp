@@ -33,9 +33,25 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
 
   //generate, write and delete vrms grid if writing is requested
   if (seismic_parameters.modelSettings()->GetNMOCorr() && seismic_parameters.modelSettings()->GetOutputVrms()){
-    FindVrms(seismic_parameters);
-    seismic_parameters.seismicOutput()->WriteVrms(seismic_parameters);
-    seismic_parameters.DeleteVrmsGrid();
+    if (seismic_parameters.modelSettings()->GetPSSeismic()) {
+      NRLib::StormContGrid &twtssgrid = seismic_parameters.twtSSGrid();
+      NRLib::StormContGrid &twtppgrid = seismic_parameters.twtPPGrid();
+      NRLib::StormContGrid &vpgrid = seismic_parameters.vpGrid();
+      NRLib::StormContGrid &vsgrid = seismic_parameters.vsGrid();
+      FindVrms(seismic_parameters, vpgrid, twtppgrid);
+      seismic_parameters.seismicOutput()->WriteVrms(seismic_parameters, "PP");
+      FindVrms(seismic_parameters, vsgrid, twtssgrid);
+      seismic_parameters.seismicOutput()->WriteVrms(seismic_parameters, "SS");
+      seismic_parameters.DeleteVrmsGrid();
+    }
+    else {
+      NRLib::StormContGrid &twtgrid = seismic_parameters.twtGrid();
+      NRLib::StormContGrid &vpgrid = seismic_parameters.vpGrid();
+      FindVrms(seismic_parameters, vpgrid, twtgrid);
+      seismic_parameters.seismicOutput()->WriteVrms(seismic_parameters);
+      seismic_parameters.DeleteVrmsGrid();
+    }
+    
   }
   //add wavelet above and below toptime and bottime
   toptime.Add(-2000 / constvp[0] * wavelet->GetDepthAdjustmentFactor()); // add one wavelet length to bot and subtract from top
@@ -130,13 +146,15 @@ void SeismicRegridding::FindZValues(SeismicParameters &seismic_parameters) {
 
 }
 
-void SeismicRegridding::FindVrms(SeismicParameters &seismic_parameters){
+void SeismicRegridding::FindVrms(SeismicParameters          &seismic_parameters,
+                                 const NRLib::StormContGrid &vgrid,
+                                 const NRLib::StormContGrid &twtgrid)
+{
   double v_w = seismic_parameters.modelSettings()->GetVw();
   double z_w = seismic_parameters.modelSettings()->GetZw();
   NRLib::StormContGrid &zgrid             = seismic_parameters.zGrid();
-  NRLib::StormContGrid &twtgrid           = seismic_parameters.twtGrid();
   NRLib::StormContGrid &vrmsgrid          = seismic_parameters.vrmsGrid();
-  NRLib::StormContGrid &vpgrid            = seismic_parameters.vpGrid();
+  
 
   double v_over;
   double twt_w = 2000*z_w/v_w;
@@ -154,7 +172,7 @@ void SeismicRegridding::FindVrms(SeismicParameters &seismic_parameters){
         for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
           tmp = tmp0;
           for (size_t l = 1; l <= k; ++l) {
-            tmp += vpgrid(i,j,l)* vpgrid(i,j,l)*(twtgrid(i,j,l) - twtgrid(i,j,l-1));
+            tmp += vgrid(i,j,l)* vgrid(i,j,l)*(twtgrid(i,j,l) - twtgrid(i,j,l-1));
           }
           tmp = tmp / twtgrid(i,j,k);
           vrmsgrid(i,j,k) = float(std::sqrt(tmp));

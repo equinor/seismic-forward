@@ -375,11 +375,20 @@ void SeismicOutput::WriteReflections(SeismicParameters &seismic_parameters, doub
 }
 
 
-void SeismicOutput::WriteVrms(SeismicParameters &seismic_parameters) {
+void SeismicOutput::WriteVrms(SeismicParameters    &seismic_parameters,
+                              std::string           name_pp_or_ps) 
+{
   NRLib::StormContGrid &vrmsgrid = seismic_parameters.vrmsGrid();
-
-  printf("Write vrms grid on Storm format.\n");
-  std::string filename = prefix_ + "vrms" + suffix_ + ".storm";
+  std::string message;
+  if (name_pp_or_ps != "") {
+    message = "Write vrms grid for " + name_pp_or_ps + " on Storm format.\n";
+    name_pp_or_ps = "_" + name_pp_or_ps;    
+  }
+  else {
+    message = "Write vrms grid on Storm format.\n";
+  }
+  std::cout << message;
+  std::string filename = prefix_ + "vrms" + name_pp_or_ps + suffix_ + ".storm";
   vrmsgrid.WriteToFile(filename);
 }
 
