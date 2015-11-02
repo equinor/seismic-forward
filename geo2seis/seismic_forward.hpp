@@ -142,11 +142,12 @@ class SeismicForward {
                                   std::vector<size_t> &n_max,
                                   double  tmax);
 
+
     static void ExtrapolZandTwtVec(std::vector<double>        &zgrid_vec_extrapol,
                                    std::vector<double>        &twt_vec_extrapol,
                                    const std::vector<double>  &twt_vec,
                                    const NRLib::StormContGrid &zgrid,
-                                   double                      z_bot,
+                                   double                      wavelet_depth_adj_fact,
                                    double                      vp_bot,
                                    double                      vs_bot,
                                    size_t                      i,

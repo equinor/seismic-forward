@@ -294,13 +294,13 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       std::vector<size_t> n_max(param->offset_vec.size());
       std::vector<double> twt_vec(nzrefl);
       std::vector<double> vp_vec(nzrefl);
-      
+
       //get twt and vp at all layers from twtgrid and vpgrid
       for (size_t k = 0; k < nzrefl; ++k) {
-        twt_vec[k]   = twtgrid(i,j,k);
-        vp_vec[k] = vpgrid(i, j, k);
+        twt_vec[k] = twtgrid(i, j, k);
+        vp_vec[k]  = vpgrid(i, j, k);
       }
-      
+
       if (ps_seis) { //------------PS seismic------------
         //setup and get vectors and grid for calculation
         std::vector<double> twt_ss_vec(nzrefl);
@@ -326,7 +326,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         //get SS and PP twt, and vs at all layers from twtgrid and vsgrid
         for (size_t k = 0; k < nzrefl; ++k) {
           twt_ss_vec[k] = twtssgrid(i, j, k);
-          twt_pp_vec[k] = twtppgrid(i, j, k);          
+          twt_pp_vec[k] = twtppgrid(i, j, k);
           vs_vec[k] = vsgrid(i, j, k);
         }
 
@@ -344,18 +344,18 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
 
         //find twtx - for each layer for each offset:        
         FindTWTxPS(twtx, twt_ss_vec, twt_pp_vec, vrms_pp_vec, vrms_ss_vec, offset_ss, offset_pp);
-
+        
 
         //find twtx regular (4.)
         double twt_ss_wavelet = 2000 / constvs[2] * wavelet->GetDepthAdjustmentFactor();
         double twt_pp_wavelet = 2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor();
-        double twt_ps_wavelet = 2000 * 2 / (constvs[2]+constvp[2]) * wavelet->GetDepthAdjustmentFactor();        
+        double twt_ps_wavelet = 0.5 * (twt_ss_wavelet + twt_pp_wavelet);   
 
         std::vector<double>   vrms_pp_below(1), vrms_ss_below(1);
         std::vector<double>   twt_pp_below(1), twt_ss_below(1);
         NRLib::Grid2D<double> offset_pp_below(1, param->offset_vec.size());
         NRLib::Grid2D<double> offset_ss_below(1, param->offset_vec.size());
-        NRLib::Grid2D<double> twtx_below     (1, param->offset_vec.size());
+        NRLib::Grid2D<double> twtx_below(1, param->offset_vec.size());
 
         double twt_below = twt_vec[nzrefl - 1]    + twt_ps_wavelet;
         twt_pp_below[0]  = twt_pp_vec[nzrefl - 1] + twt_pp_wavelet;
@@ -372,13 +372,36 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         //NRLib::Grid2D<double> theta_down(param->twt_0.size(), param->offset_vec.size()), theta_up(param->twt_0.size(), param->offset_vec.size());
         //param->seismic_parameters.FindPSNMOThetaAndOffset(theta_down, offset_pp_reg, offset_ss_reg, twt_pp_vec_reg, twt_ss_vec_reg, vrms_pp_vec_reg, vrms_ss_vec_reg, param->offset_vec, theta_up, true);
         //FindTWTxPS(twtx_reg, twt_ss_vec_reg, twt_pp_vec_reg, vrms_pp_vec_reg, vrms_ss_vec_reg, offset_ss_reg, offset_pp_reg);
-        
+
         //find limits for where to generate seismic, for each offset        
         tmax_limits = tmax + 2 * twt_ps_wavelet;
         FindSeisLimits(twtx_reg, param->twt_0, n_min, n_max, tmax_limits);
 
-        ////if (i == 138 && j == 581) {
+        //////if (i == 138 && j == 581) {
         //if (i == 285 && j == 412) {
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(zgrid_vec_extrapol  , "zgrid_vec_extrapol.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(twt_vec_extrapol, "twt_vec_extrapol.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(twt_pp_vec_extrapol, "twt_pp_vec_extrapol.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(twt_ss_vec_extrapol, "twt_ss_vec_extrapol.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(vs_vec_extrapol, "vs_vec_extrapol.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(vp_vec_extrapol, "vp_vec_extrapol.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(vrms_pp_vec_extrapol, "vrms_pp_vec_extrapol.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(vrms_ss_vec_extrapol, "vrms_ss_vec_extrapol.txt");
+
+        //  //param->seismic_parameters.seismicOutput()->PrintMatrix(offset_pp_extrapol, "offset_pp_extrapol.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintMatrix(offset_ss_extrapol, "offset_ss_extrapol.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintMatrix(twtx_extrapol     , "twtx_extrapol.txt");
+
+
+        //  std::cout << "twt_below = " << twt_below << "\n";
+        //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_pp_below, "vrms_pp_below.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_ss_below, "vrms_ss_below.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(twt_pp_below, "twt_pp_below.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintVector(twt_ss_below, "twt_ss_below.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_pp_below, "offset_pp_below.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_ss_below, "offset_ss_below.txt");
+        //  param->seismic_parameters.seismicOutput()->PrintMatrix(twtx_below, "twtx_below.txt");
+
         //  param->seismic_parameters.seismicOutput()->PrintVector(twt_pp_vec_reg, "twt_pp_vec_reg.txt");
         //  param->seismic_parameters.seismicOutput()->PrintVector(twt_ss_vec_reg, "twt_ss_vec_reg.txt");
         //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_ss_reg, "offset_up_reg.txt");
@@ -388,8 +411,8 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         //  param->seismic_parameters.seismicOutput()->PrintMatrix(twtx, "twtx.txt");
         //  param->seismic_parameters.seismicOutput()->PrintMatrix(twtx_reg, "twtx_reg.txt");
         //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_pp_vec, "vrms_pp_down.txt");
-        //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_ss_vec_reg, "vrms_ss_vec_reg.txt");
-        //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_pp_vec_reg, "vrms_pp_vec_reg.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(vrms_ss_vec_reg, "vrms_ss_vec_reg.txt");
+        //  //param->seismic_parameters.seismicOutput()->PrintVector(vrms_pp_vec_reg, "vrms_pp_vec_reg.txt");
         //  param->seismic_parameters.seismicOutput()->PrintVector(vrms_ss_vec, "vrms_ss_up.txt");
         //  param->seismic_parameters.seismicOutput()->PrintMatrix(twtx, "twtx.txt");
         //  param->seismic_parameters.seismicOutput()->PrintMatrix(refl_pos, "refl_pos.txt");
@@ -416,14 +439,16 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         //find twtx for each layer for each offset, and regularly in time:
         FindTWTx(twtx, twt_vec, vrms_vec, param->offset_vec);
         FindTWTx(twtx_reg, param->twt_0, vrms_vec_reg, param->offset_vec);
-        
+
         //find limits for where to generate seismic, for each offset
         FindSeisLimits(twtx_reg, param->twt_0, n_min, n_max, tmax_limits);
       }//------------ ------------
 
       //find reflection coeff - for each layer for each offset:
       param->seismic_parameters.FindNMOReflections(refl_pos, theta_pos, i, j);
-
+      //if (i == 285 && j == 412) {
+      //  param->seismic_parameters.seismicOutput()->PrintMatrix(refl_pos, "refl_pos.txt");
+      //}
       //keep reflections for zero offset if output on storm
       if (param->seismic_parameters.modelSettings()->GetOutputReflections()){
         for (size_t k = 0; k < nzrefl; ++k) {
@@ -503,7 +528,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       if (nmo_output->GetDepthSegyOk() || nmo_output->GetDepthStackSegyOk() || param->seismic_parameters.GetDepthStormOutput()) {
         std::vector<double> zgrid_vec_extrapol(nzrefl+2);
         std::vector<double> twt_vec_extrapol(nzrefl+2);
-        ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, bottom_eclipse.GetZ(x,y), constvp[2], constvs[2], i, j, ps_seis);
+		    ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, wavelet->GetDepthAdjustmentFactor(), constvp[2], constvs[2], i, j, ps_seis);
         if (nmo_output->GetDepthSegyOk()) {
           ConvertSeis(twt_vec_extrapol, param->twt_0, zgrid_vec_extrapol, param->z_0, nmo_timegrid_pos, nmo_depthgrid_pos, max_sample);
         }
@@ -654,7 +679,7 @@ void SeismicForward::GenerateSeismicTraces(Output             *seis_output,
       if (seis_output->GetDepthSegyOk() || seis_output->GetDepthStackSegyOk() || param->seismic_parameters.GetDepthStormOutput()) {
         std::vector<double> zgrid_vec_extrapol(nzrefl+2);
         std::vector<double> twt_vec_extrapol(nzrefl+2);
-        ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, bottom_eclipse.GetZ(x,y), constvp[2], constvs[2], i, j, ps_seis);
+		    ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, wavelet->GetDepthAdjustmentFactor(), constvp[2], constvs[2], i, j, ps_seis);
         if (seis_output->GetDepthSegyOk()) {
           ConvertSeis(twt_vec_extrapol, param->twt_0, zgrid_vec_extrapol, param->z_0, timegrid_pos, depthgrid_pos, timegrid_pos.GetNI());
         }
@@ -870,7 +895,7 @@ void SeismicForward::ExtrapolZandTwtVec(std::vector<double>        &zgrid_vec_ex
                                         std::vector<double>        &twt_vec_extrapol,
                                         const std::vector<double>  &twt_vec,
                                         const NRLib::StormContGrid &zgrid,
-                                        double                      z_bot,
+                                        double                      wavelet_depth_adj_fact,
                                         double                      vp_bot,
                                         double                      vs_bot,
                                         size_t                      i,
@@ -879,18 +904,18 @@ void SeismicForward::ExtrapolZandTwtVec(std::vector<double>        &zgrid_vec_ex
 {
   double vel_bot;
   if (ps_seis)
-    vel_bot = 0.5*(vp_bot + vs_bot);
+    vel_bot = 2 / (1 / vp_bot + 1 / vs_bot);
   else
     vel_bot = vp_bot;
   size_t nzrefl = zgrid_vec_extrapol.size() - 2;
   zgrid_vec_extrapol[0] = 0;
-  twt_vec_extrapol[0]   = 0;
+  twt_vec_extrapol  [0] = 0;
   for (size_t k = 0; k < nzrefl; ++k) {
-    twt_vec_extrapol[k+1]   = twt_vec[k];
+    twt_vec_extrapol  [k+1] = twt_vec[k];
     zgrid_vec_extrapol[k+1] = zgrid(i, j, k);
   }
-  zgrid_vec_extrapol[nzrefl+1] = z_bot;
-  twt_vec_extrapol[nzrefl+1]   = twt_vec_extrapol[nzrefl] + 2000* (zgrid_vec_extrapol[nzrefl+1] - zgrid_vec_extrapol[nzrefl]) / vel_bot;
+  zgrid_vec_extrapol[nzrefl+1] = zgrid_vec_extrapol[nzrefl] + wavelet_depth_adj_fact;
+  twt_vec_extrapol  [nzrefl+1] = twt_vec_extrapol[nzrefl]   + 2000 * wavelet_depth_adj_fact / vel_bot;
 }
 
 
