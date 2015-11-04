@@ -102,19 +102,35 @@ class SeismicForward {
                              std::vector<double>       &vrms_vec,
                              const std::vector<double>   &offset);
 
-
+    static void ResampleTwtPS(std::vector<double> &twt_pp_reg,
+                              std::vector<double> &twt_ss_reg,
+                              const std::vector<double> &twt_pp,
+                              const std::vector<double> &twt_ss,
+                              const std::vector<double> &twt,
+                              const std::vector<double> &twt_0,
+                              double twt_pp_above,
+                              double twt_ss_above,
+                              double twt_above,
+                              double twt_pp_below,
+                              double twt_ss_below,
+                              double twt_below);
+        
       
-    static void ResampleOffsetPS(const std::vector<double>   &twt_vec,
+    static void ResampleOffsetPS(const std::vector<double>   &twt,
                                  const NRLib::Grid2D<double> &offset_pp,
-                                 const NRLib::Grid2D<double> &offset_ss,
+                                 const NRLib::Grid2D<double> &offset_pp_above,
+                                 const NRLib::Grid2D<double> &offset_pp_below,
                                  const std::vector<double>   &twt_0,
+                                 const std::vector<double>   &offset_tot_vec,
                                  NRLib::Grid2D<double>       &offset_pp_reg,
-                                 NRLib::Grid2D<double>       &offset_ss_reg);
+                                 NRLib::Grid2D<double>       &offset_ss_reg,
+                                 double                       twt_above,
+                                 double                       twt_below);
 
     static void ResampleTWTxOld(const NRLib::Grid2D<double> &twtx_grid,
-                             NRLib::Grid2D<double>       &twtx_grid_reg,
-                             const std::vector<double>   &twt_vec,
-                             const std::vector<double>   &twt_0);
+                                NRLib::Grid2D<double>       &twtx_grid_reg,
+                                const std::vector<double>   &twt_vec,
+                                const std::vector<double>   &twt_0);
 
     static void ResampleTWTx(const NRLib::Grid2D<double> &twtx_grid,
                                   const NRLib::Grid2D<double> &twtx_below,

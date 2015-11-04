@@ -170,25 +170,25 @@ void SeismicParameters::FindVrms(std::vector<double>       &vrms_vec,
     double twt_wavelet = 2000 / const_v * wavelet_->GetDepthAdjustmentFactor();
     double vrms_under = vrms_vec[nk - 1]*vrms_vec[nk - 1]*twt_vec[nk - 1] + const_v * const_v * twt_wavelet;
     vrms_under *= (1 / (twt_vec[nk - 1] + twt_wavelet));
-    vrms_under = std::sqrt(vrms_under);
+    vrms_under  = std::sqrt(vrms_under);
 
     //sample vrms regularly:
     std::vector<double> twt_vec_in(nk + 2), vrms_vec_in(nk + 2);
-    twt_vec_in[0] = twt_w;
+    twt_vec_in [0] = twt_w;
     vrms_vec_in[0] = v_w;
-    twt_vec_in[1] = twt_vec[0];
+    twt_vec_in [1] = twt_vec[0];
     vrms_vec_in[1] = vrms_vec[0];
     size_t index = 2;
     for (size_t k = 0; k < nk; ++k) {
       if (twt_vec[k] != twt_vec_in[index - 1]) {
-        twt_vec_in[index] = twt_vec[k];
+        twt_vec_in [index] = twt_vec[k];
         vrms_vec_in[index] = vrms_vec[k];
         ++index;
       }
     }
     twt_vec_in.resize(index + 1);
     vrms_vec_in.resize(index + 1);
-    twt_vec_in[index] = twt_vec_in[index - 1] + twt_wavelet;
+    twt_vec_in [index] = twt_vec_in[index - 1] + twt_wavelet;
     vrms_vec_in[index] = vrms_under;
     //seismic_output_->PrintVector(twt_vec_in, "twt_vec_in.txt");
     //seismic_output_->PrintVector(vrms_vec_in, "vrms_vec_in.txt");
@@ -522,6 +522,7 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
   return twt_0_s;
 }
 
+
 void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &thetagrid,
                                                 NRLib::Grid2D<double>     &offset_down_grid,
                                                 NRLib::Grid2D<double>     &offset_up_grid,
@@ -530,7 +531,6 @@ void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &theta
                                                 const std::vector<double> &vrms_pp_vec,
                                                 const std::vector<double> &vrms_ss_vec,
                                                 const std::vector<double> &offset,
-                                                NRLib::Grid2D<double>     &theta_extra_grid_temp,
                                                 bool                       save_theta)
 {
   double tol = 0.000001;
@@ -548,7 +548,7 @@ void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &theta
       dU = vrms_ss_vec[k] * twt_ss_vec[k] / 2000;
       dD = vrms_pp_vec[k] * twt_pp_vec[k] / 2000;
       vr = vrms_ss_vec[k] / vrms_pp_vec[k];
-      n_it = 10;
+      n_it = 20;
       y_out = FindSinThetaPSWithNewtonsMethod(start_value,
                                               offset[off],
                                               dU,
@@ -561,7 +561,6 @@ void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &theta
       theta_down = asin(y_out);
       if (save_theta) {
         thetagrid(k, off) = theta_down;
-        theta_extra_grid_temp(k, off) = theta_up;
       }      
       offset_down_grid(k, off) = tan(theta_down)*dD;
       offset_up_grid(k, off)   = tan(theta_up)  *dU;

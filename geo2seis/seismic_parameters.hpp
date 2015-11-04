@@ -112,7 +112,6 @@ class SeismicParameters {
                                         const std::vector<double> &vrms_pp_vec,
                                         const std::vector<double> &vrms_ss_vec,
                                         const std::vector<double> &offset,
-                                        NRLib::Grid2D<double>     &theta_extra_grid_temp,
                                         bool                      save_theta = true);
 
     static double FindSinThetaPSWithNewtonsMethod(double start_value,
