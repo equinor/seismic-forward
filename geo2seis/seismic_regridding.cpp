@@ -58,8 +58,8 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   bottime.Add(2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor());
 
   double tmin = toptime.Min();
-  size_t ns = static_cast<size_t>(tmin / seismic_parameters.seismicGeometry()->dt());
-  tmin = (ns + 1) * seismic_parameters.seismicGeometry()->dt();
+  size_t ns = static_cast<size_t>(floor(tmin / seismic_parameters.seismicGeometry()->dt() + 0.5));
+  tmin = ns * seismic_parameters.seismicGeometry()->dt();
   double tmax = bottime.Max();
   size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.seismicGeometry()->dt()+0.5));
   if (seismic_parameters.modelSettings()->GetNLayersFileName() != "") {

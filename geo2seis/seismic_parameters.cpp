@@ -438,7 +438,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
   }  
   size_t nt_seis = nt;
   if (twtx_max > tmin + nt*dt) {
-    nt_seis = static_cast<size_t>(std::ceil((twtx_max - tmin)/dt));
+    nt_seis = static_cast<size_t>(floor((twtx_max - tmin)/dt + 0.5));
   }
   
   twt_0_.resize(nt_seis);
