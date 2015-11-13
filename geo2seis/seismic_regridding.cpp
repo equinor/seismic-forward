@@ -18,7 +18,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   printf("Zvalues found.\n");
 
   printf("Start finding elastic parameters.\n");
-  FindVp(seismic_parameters);
+  FindVpTest(seismic_parameters);
   printf("Elastic parameters found.\n");
 
   seismic_parameters.DeleteEclipseGrid();
@@ -1679,13 +1679,15 @@ void SeismicRegridding::FindPointZValue(size_t i, size_t j, size_t k,
                                         double &zlimit) 
 {
 
-    if (geometry.IsActive(i, j, k)) {
-      point.z = grid(i, j, k);
-    } else if (geometry.GetDZ(i, j, k) < zlimit) {
-      point.z = value_above(i, j);
-    } else {
-      point.z = default_value;
-    }
+  if (geometry.IsActive(i, j, k)) {
+    point.z = grid(i, j, k);
+  }
+  else if (geometry.GetDZ(i, j, k) < zlimit) {
+    point.z = value_above(i, j);
+  }
+  else {
+    point.z = default_value;
+  }
 }
 
 
@@ -1789,6 +1791,7 @@ void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
 
 void SeismicRegridding::FindVpTest(SeismicParameters &seismic_parameters)
 {
+  std::cout << "New routine for finding vp, vs and rho.\n";
   NRLib::StormContGrid              &vpgrid               = seismic_parameters.vpGrid();
   NRLib::StormContGrid              &vsgrid               = seismic_parameters.vsGrid();
   NRLib::StormContGrid              &rhogrid              = seismic_parameters.rhoGrid();
@@ -1890,7 +1893,7 @@ void SeismicRegridding::FindVpTest(SeismicParameters &seismic_parameters)
                 FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_vs[pt],  geometry, vs_grid,  value_above_vs,  constvs[1],  zlimit);
                 FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_rho[pt], geometry, rho_grid, value_above_rho, constrho[1], zlimit);
                 for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
-                  FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_extra_param[pt][ii], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit);
+                  FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_extra_param[ii][pt], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit);
                 }
               }
             }
@@ -1933,39 +1936,38 @@ void SeismicRegridding::FindVpTest(SeismicParameters &seismic_parameters)
               for (size_t jj = start_jj; jj < end_jj; jj++) {
                 double x, y, z;
                 vpgrid.FindCenterOfCell(ii, jj, 0, x, y, z);
-                if (true) { 
-                  NRLib::Point p1, p2;
-                  p1.x  = x;
-                  p1.y  = y;
-                  p1.z  = pt_vp[0].z;
-                  p2    = p1;
-                  p2.z += 1000;
-                  NRLib::Line line(p1, p2, false, false);
-                  NRLib::Point intersec_pt;
-                  double dist = triangles_elastic[0].FindNearestPoint(line, intersec_pt); // To avoid numerical instabilities when point is on edge of triangle
+
+                NRLib::Point p1, p2;
+                p1.x = x;
+                p1.y = y;
+                p1.z = pt_vp[0].z;
+                p2 = p1;
+                p2.z += 1000;
+                NRLib::Line line(p1, p2, false, false);
+                NRLib::Point intersec_pt;
+                double dist = triangles_elastic[0].FindNearestPoint(line, intersec_pt); // To avoid numerical instabilities when point is on edge of triangle
+                if (dist < 0.00000000001) {
+                  vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
+                  triangles_elastic[2].FindIntersection(line, intersec_pt, true);
+                  vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
+                  triangles_elastic[4].FindIntersection(line, intersec_pt, true);
+                  rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
+                  for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
+                    triangles_extra_param[iii * 2].FindIntersection(line, intersec_pt, true);
+                    extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
+                  }
+                }
+                else {
+                  dist = triangles_elastic[1].FindNearestPoint(line, intersec_pt);
                   if (dist < 0.00000000001) {
-                    vpgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);
-                    triangles_elastic[2].FindIntersection(line, intersec_pt, true);
-                    vsgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);
-                    triangles_elastic[4].FindIntersection(line, intersec_pt, true);
+                    vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
+                    triangles_elastic[3].FindIntersection(line, intersec_pt, true);
+                    vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
+                    triangles_elastic[5].FindIntersection(line, intersec_pt, true);
                     rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
                     for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
-                      triangles_extra_param[iii * 2].FindIntersection(line, intersec_pt, true);
+                      triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
                       extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                    }
-                  }
-                  else {
-                    dist = triangles_elastic[1].FindNearestPoint(line, intersec_pt);
-                    if (dist < 0.00000000001) {
-                      vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                      triangles_elastic[3].FindIntersection(line, intersec_pt, true);
-                      vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                      triangles_elastic[5].FindIntersection(line, intersec_pt, true);
-                      rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                      for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
-                        triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
-                        extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                      }
                     }
                   }
                 }
@@ -1975,7 +1977,7 @@ void SeismicRegridding::FindVpTest(SeismicParameters &seismic_parameters)
         }
       }
     }
-    //-------------find edges---------------------
+    ////-------------find edges---------------------
     for (size_t i = 0; i < egrid.GetNI() - 1; i++) {
       //bot edge
       size_t j = 0;
@@ -2431,7 +2433,7 @@ void SeismicRegridding::FindVpCorners(const NRLib::EclipseGeometry        &geome
           vsgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(pt_vs[3].z);
           rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt_rho[3].z);
           for (size_t iii = 0; iii < n_extra_param; ++iii) {
-            extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt_extra_param[ii][3].z);
+            extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(pt_extra_param[iii][3].z);
           }
         }
       }
