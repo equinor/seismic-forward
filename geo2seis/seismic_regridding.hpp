@@ -22,8 +22,6 @@ class SeismicRegridding {
 
     static void FindVp(SeismicParameters &seismic_parameters);
 
-    static void FindVpTest(SeismicParameters &seismic_parameters);  //to be removed
-
     static void FindVrms(SeismicParameters          &seismic_parameters,
                          const NRLib::StormContGrid &vgrid,
                          const NRLib::StormContGrid &twtgrid);
