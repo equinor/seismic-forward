@@ -64,6 +64,7 @@ class SeismicParameters {
     double dOffset()                                           { return doffset_; }
     size_t nOffset()                                           { return noffset_; }
     std::vector<double> & GetOffsetVec()                       { return offset_vec_; }
+    float GetMissingVal()                                      { return missing_; }
 
     bool GetTimeOutput();
     bool GetDepthOutput();
@@ -142,6 +143,7 @@ class SeismicParameters {
                           size_t                       i,
                           size_t                       j);
 
+    static void PrintElapsedTime(time_t start_time, std::string work);
 
     void DeleteEclipseGrid();
     void DeleteElasticParameterGrids();
@@ -207,7 +209,7 @@ class SeismicParameters {
     std::vector<double> twt_0_;
     std::vector<double> z_0_;
 
-
+    float missing_;
 };
 
 #endif

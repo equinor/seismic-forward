@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <fstream>
 //#include <string>
-
+#include <ctime>
 
 #include "nrlib/iotools/fileio.hpp"
 #include "nrlib/surface/regularsurface.hpp"
@@ -65,9 +65,11 @@ int main(int argc, char *argv[]) {
     }
 
     if (!failedModelFile) {
-        SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-        SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
-        SeismicForward::DoSeismicForward(seismic_parameters);
+      time_t t1 = time(0);   // get time now
+      SeismicParameters seismic_parameters = SeismicParameters(model_settings);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      seismic_parameters.PrintElapsedTime(t1, "for preprocesses");
+      SeismicForward::DoSeismicForward(seismic_parameters);
     } else {
         printf("Press a key and then enter to continue.\n");
         int x;

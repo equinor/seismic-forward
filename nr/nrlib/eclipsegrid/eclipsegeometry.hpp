@@ -154,9 +154,15 @@ public:
 
   double GetDZ(size_t i, size_t j, size_t k) const;
 
+  /// Finds the bottom z-value in cell (i,j,k) if at least one active cell in column (i,j)
+  double FindZBotInCellActiveColumn(size_t i, size_t j, size_t k, bool & found) const;
+
+  /// Finds the top z-value in cell (i,j,k) if at least one active cell in column (i,j)
+  double FindZTopInCellActiveColumn(size_t i, size_t j, size_t k, bool & found) const;
+
 private:
   // ----------------- PRIVATE FUNCTIONS ---------------------------
-    /// Finds the z-value at the pillar on top of the grid
+  /// Finds the z-value at the pillar on top of the grid
   double FindZTopAtPillar(size_t i, size_t j, bool & found) const;
 
   /// Finds the z-value at the pillar on bottom of the grid

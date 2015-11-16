@@ -13,7 +13,9 @@
 #include <physics/zoeppritz_pp.hpp>
 
 
-SeismicParameters::SeismicParameters(ModelSettings *model_settings) {
+SeismicParameters::SeismicParameters(ModelSettings *model_settings) 
+ : missing_(-999.0)
+{
   this->model_settings_ = model_settings;
 
   seismic_geometry_ = new SeismicGeometry();
@@ -206,7 +208,7 @@ void SeismicParameters::FindReflections(NRLib::Grid2D<double>       &r_vec,
 
 
 
-  bool ps_seis   = model_settings_->GetPSSeismic();
+  bool                ps_seis  = model_settings_->GetPSSeismic();
 
   Zoeppritz *zoeppritz = NULL;
   if (ps_seis) {
@@ -226,13 +228,13 @@ void SeismicParameters::FindReflections(NRLib::Grid2D<double>       &r_vec,
     }
     zoeppritz->ComputeConstants(theta_vec[theta]);
     for (size_t k = top_k_; k <= bottom_k_ + 1; k++) {
-      diffvp  =         vp_vec[k-top_k_ + 1] - vp_vec[k-top_k_];
-      meanvp  = 0.5 *  (vp_vec[k-top_k_ + 1] + vp_vec[k-top_k_]);
-      diffvs  =         vs_vec[k-top_k_ + 1] - vs_vec[k-top_k_];
-      meanvs  = 0.5 *  (vs_vec[k-top_k_ + 1] + vs_vec[k-top_k_]);
-      diffrho =        rho_vec[k-top_k_ + 1] - rho_vec[k-top_k_];
-      meanrho = 0.5 * (rho_vec[k-top_k_ + 1] + rho_vec[k-top_k_]);
-      r_vec(k - top_k_, theta) = static_cast<float>(zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+        diffvp = vp_vec[k - top_k_ + 1] - vp_vec[k - top_k_];
+        meanvp = 0.5 *  (vp_vec[k - top_k_ + 1] + vp_vec[k - top_k_]);
+        diffvs = vs_vec[k - top_k_ + 1] - vs_vec[k - top_k_];
+        meanvs = 0.5 *  (vs_vec[k - top_k_ + 1] + vs_vec[k - top_k_]);
+        diffrho = rho_vec[k - top_k_ + 1] - rho_vec[k - top_k_];
+        meanrho = 0.5 * (rho_vec[k - top_k_ + 1] + rho_vec[k - top_k_]);
+        r_vec(k - top_k_, theta) = static_cast<float>(zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
     }
   }
   delete zoeppritz;
@@ -240,11 +242,11 @@ void SeismicParameters::FindReflections(NRLib::Grid2D<double>       &r_vec,
 
 
 void SeismicParameters::FindNMOReflections(NRLib::Grid2D<double>       &r_vec,
-                                           const NRLib::Grid2D<double> &theta_vec,
+                                           const NRLib::Grid2D<double> &theta,
                                            size_t                       i,
                                            size_t                       j){
 
-  bool ps_seis   = model_settings_->GetPSSeismic();
+  bool                ps_seis  = model_settings_->GetPSSeismic();
 
   Zoeppritz *zoeppritz = NULL;
   if (ps_seis) {
@@ -256,23 +258,23 @@ void SeismicParameters::FindNMOReflections(NRLib::Grid2D<double>       &r_vec,
   double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
   std::vector<double> vp_vec(bottom_k_-top_k_+3), vs_vec(bottom_k_-top_k_+3), rho_vec(bottom_k_-top_k_+3);
 
-  for (size_t off = 0; off < theta_vec.GetNJ(); ++off) {
+  for (size_t off = 0; off < theta.GetNJ(); ++off) {
     for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {
       vp_vec[k - top_k_]  = (*vpgrid_)(i, j, (k - top_k_));
       vs_vec[k - top_k_]  = (*vsgrid_)(i, j, (k - top_k_));
       rho_vec[k - top_k_] = (*rhogrid_)(i, j, (k - top_k_));
-    }
+      }
     for (size_t k = top_k_; k <= bottom_k_ + 1; k++) {
-      diffvp  =         vp_vec[k-top_k_ + 1] - vp_vec[k-top_k_];
-      meanvp  = 0.5 *  (vp_vec[k-top_k_ + 1] + vp_vec[k-top_k_]);
-      diffvs  =         vs_vec[k-top_k_ + 1] - vs_vec[k-top_k_];
-      meanvs  = 0.5 *  (vs_vec[k-top_k_ + 1] + vs_vec[k-top_k_]);
-      diffrho =        rho_vec[k-top_k_ + 1] - rho_vec[k-top_k_];
-      meanrho = 0.5 * (rho_vec[k-top_k_ + 1] + rho_vec[k-top_k_]);
-      zoeppritz->ComputeConstants(theta_vec(k, off));
-      r_vec(k - top_k_, off) = static_cast<float>(zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+        diffvp = vp_vec[k - top_k_ + 1] - vp_vec[k - top_k_];
+        meanvp = 0.5 *  (vp_vec[k - top_k_ + 1] + vp_vec[k - top_k_]);
+        diffvs = vs_vec[k - top_k_ + 1] - vs_vec[k - top_k_];
+        meanvs = 0.5 *  (vs_vec[k - top_k_ + 1] + vs_vec[k - top_k_]);
+        diffrho = rho_vec[k - top_k_ + 1] - rho_vec[k - top_k_];
+        meanrho = 0.5 * (rho_vec[k - top_k_ + 1] + rho_vec[k - top_k_]);
+        zoeppritz->ComputeConstants(theta(k, off));
+        r_vec(k - top_k_, off) = static_cast<float>(zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+      }
     }
-  }
   delete zoeppritz;
 }
 
@@ -842,7 +844,7 @@ void SeismicParameters::FindSurfaceGeometry() {
   topeclipse_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, -999.0);
   boteclipse_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, -999.0);
 
-  top_k_ = geometry.FindTopLayer();
+  top_k_    = geometry.FindTopLayer();
   bottom_k_ = geometry.FindBottomLayer();
 
   seismic_geometry_->setZReflectorCount(static_cast<size_t>(bottom_k_ + 2 - top_k_));
@@ -878,23 +880,43 @@ void SeismicParameters::FindSurfaceGeometry() {
     seismic_output_->WriteDepthSurfaces(topeclipse_, boteclipse_);
   }
 
-  double d1 = topeclipse_.Min();
-  double d2 = boteclipse_.Max();
+
+  double min, max, d1 = 1e10, d2 = 0;
+  bool found;
+  for (size_t i = 0; i < geometry.GetNI(); ++i) {
+    for (size_t j = 0; j < geometry.GetNJ(); ++j) {
+      found = false;
+      min = geometry.FindZTopInCellActiveColumn(i, j, top_k_, found);
+      if (found && min < d1) {
+        d1 = min;
+      }
+      found = false;
+      max = geometry.FindZBotInCellActiveColumn(i, j, bottom_k_, found);
+      if (found && max > d2) {
+        d2 = max;
+      }
+    }
+  }
 
   if (const_top_given) {
+    double const_v = model_settings_->GetConstVp()[0];
+    if (model_settings_->GetPSSeismic()) {
+      double const_vs = model_settings_->GetConstVs()[0];
+      const_v = 2 / (1 / const_v + 1 / const_vs);
+    }
     double t1 = model_settings_->GetTopTimeConstant();
-    std::vector<double> const_vp = model_settings_->GetConstVp();
     for (size_t i = 0; i < top_time_.GetNI(); i++)
       for (size_t j = 0; j < top_time_.GetNJ(); j++) {
-        top_time_(i, j) = t1 + 2000.0 * (topeclipse_(i, j) - d1) / const_vp[0];
+        top_time_(i, j) = t1 + 2000.0 * (topeclipse_(i, j) - d1) / const_v;
         bot_time_(i, j) = top_time_(i, j);
       }
   }
 
   topeclipse_.Add(-1 * wavelet_->GetDepthAdjustmentFactor()); // add one wavelet length to bot and subtract from top
   boteclipse_.Add(wavelet_->GetDepthAdjustmentFactor());
-  d1 = topeclipse_.Min();
-  d2 = boteclipse_.Max();
+
+  d1 += -1 * wavelet_->GetDepthAdjustmentFactor();
+  d2 +=      wavelet_->GetDepthAdjustmentFactor();
 
   seismic_geometry_->setZRange(d1, d2);
 }
@@ -999,3 +1021,32 @@ void SeismicParameters::CreateGrids() {
   }
 
 }
+
+void SeismicParameters::PrintElapsedTime(time_t start_time, std::string work)
+{
+  time_t end_time = time(0);   // get time now
+  size_t seconds = static_cast<size_t>(difftime(end_time, start_time));
+
+  size_t hours = static_cast<int>(seconds / 3600);
+  seconds = seconds % 3600;
+  size_t minutes = static_cast<int>(seconds / 60);
+  seconds = seconds % 60;
+
+  std::string hours_s = NRLib::ToString(hours);
+  std::string zeros = std::string(2 - hours_s.length(), '0');
+  hours_s = zeros + hours_s;
+  std::string minutes_s = NRLib::ToString(minutes);
+  zeros = std::string(2 - minutes_s.length(), '0');
+  minutes_s = zeros + minutes_s;
+  std::string seconds_s = NRLib::ToString(seconds);
+  zeros = std::string(2 - seconds_s.length(), '0');
+  seconds_s = zeros + seconds_s;
+
+  std::cout << "Total time " << work << ": "
+    << hours_s << ':'
+    << minutes_s << ':'
+    << seconds_s
+    << "\n";
+}
+
+

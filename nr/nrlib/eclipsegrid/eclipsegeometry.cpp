@@ -587,6 +587,58 @@ EclipseGeometry::FindPointAtPillarInsideGrid(size_t i, size_t j, double z, bool 
 }
 
 double
+EclipseGeometry::FindZTopInCellActiveColumn(size_t i, size_t j, size_t k, bool & found) const
+{
+  found = false;
+  double z;
+  double z_top = numeric_limits<double>::infinity();
+  if (k < GetNK()) {
+    if (IsColumnActive(i, j)) {
+      z = GetZCorner(i, j, k, 1, 1, 0);
+      if (z < z_top)
+        z_top = z;
+      z = GetZCorner(i, j, k, 1, 0, 0);
+      if (z < z_top)
+        z_top = z;
+      z = GetZCorner(i, j, k, 0, 1, 0);
+      if (z < z_top)
+        z_top = z;
+      z = GetZCorner(i, j, k, 0, 0, 0);
+      if (z < z_top)
+        z_top = z;
+      found = true;
+    }
+  }
+  return(z_top);
+}
+
+double
+EclipseGeometry::FindZBotInCellActiveColumn(size_t i, size_t j, size_t k, bool & found) const
+{
+  found = false;
+  double z;
+  double z_bot = -numeric_limits<double>::infinity();
+  if (k < GetNK()) {
+    if (IsColumnActive(i, j)) {
+      z = GetZCorner(i, j, k, 1, 1, 1);
+        if (z > z_bot)
+          z_bot = z;
+      z = GetZCorner(i, j, k, 1, 0, 1);
+        if (z > z_bot)
+          z_bot = z;
+      z = GetZCorner(i, j, k, 0, 1, 1);
+        if (z > z_bot)
+          z_bot = z;
+      z = GetZCorner(i, j, k, 0, 0, 1);
+        if (z > z_bot)
+          z_bot = z;
+        found = true;
+    }
+  }
+  return(z_bot);
+}
+
+double
 EclipseGeometry::FindZTopAtPillar(size_t i, size_t j, bool & found) const
 {
   double z_top = numeric_limits<double>::infinity();
