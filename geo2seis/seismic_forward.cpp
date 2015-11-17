@@ -41,16 +41,19 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
     time_t t1 = time(0);   // get time now
 
     ///parallelisation
-
+    
     size_t n_traces;
     tbb::concurrent_queue<Trace*> seismic_traces = FindTracesInForward(seismic_parameters, n_traces);
     
+    size_t max_threads = seismic_parameters.modelSettings()->GetMaxThreads();
     unsigned int n = std::thread::hardware_concurrency();
     std::cout << n << " concurrent threads are supported.\n";
-        
+    //std::cout << max_threads << " max_threads.\n";
 
     size_t n_threads = static_cast<size_t>(n);
-    //n_threads = 1;
+    if (n_threads > max_threads) {
+      n_threads = max_threads;
+    }
     size_t queue_capacity = seismic_parameters.modelSettings()->GetTracesInMemory();
     
     std::cout << n_threads << " threads are used, and queue capacity is " << queue_capacity << " traces.\n";
@@ -100,7 +103,7 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
     //delete output;
     //delete parameters;
 
-    PrintElapsedTime(t1);
+    seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 
     //write storm grid if requested
     seis_output.WriteSeismicStorm(seismic_parameters);
@@ -131,11 +134,14 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
     size_t n_traces;
     tbb::concurrent_queue<Trace*> seismic_traces = FindTracesInForward(seismic_parameters, n_traces);
 
+    size_t max_threads = seismic_parameters.modelSettings()->GetMaxThreads();
     unsigned int n = std::thread::hardware_concurrency();
     std::cout << n << " concurrent threads are supported.\n";
     
     size_t n_threads = static_cast<size_t>(n);
-    //n_threads = 1;
+    if (n_threads > max_threads) {
+      n_threads = max_threads;
+    }
     size_t queue_capacity = seismic_parameters.modelSettings()->GetTracesInMemory();;
 
     std::cout << n_threads << " threads are used, and queue capacity is " << queue_capacity << " traces.\n";
@@ -179,7 +185,7 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
     }
 
 
-    PrintElapsedTime(t1);
+    seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 
     //write storm grid if requested
     nmo_output.WriteSeismicStorm(seismic_parameters);
@@ -229,6 +235,23 @@ tbb::concurrent_queue<Trace*> SeismicForward::FindTracesInForward(SeismicParamet
       Trace * trace = new Trace(job_number, x, y, i, j);
       traces.push(trace);
       ++job_number;
+
+      //if (il == 5000 && xl == 6380)
+      //  std::cout << "il, xl, i, j, x, y  = " << il << " " << xl << " " << i << " " << j << " " << x << " " << y << "\n";
+      //if (il == 5000 && xl == 6080)
+      //  std::cout << "il, xl, i, j, x, y  = " << il << " " << xl << " " << i << " " << j << " " << x << " " << y << "\n";
+      //if (il == 5000 && xl == 6680)
+      //  std::cout << "il, xl, i, j, x, y  = " << il << " " << xl << " " << i << " " << j << " " << x << " " << y << "\n";
+
+      //if (i == 1536 && j == 1781)
+      //  std::cout << "il, xl, i, j, x, y  = " << il << " " << xl << " " << i << " " << j << " " << x << " " << y << "\n";
+      //if (i == 1492 && j == 1773) {
+      //  std::cout << "il, xl, i, j, x, y  = " << il << " " << xl << " " << i << " " << j << " " << x << " " << y << "\n";
+      //  size_t i_test, j_test;
+      //  geometry->FindIndex(461594.55, 6826744.58, i_test, j_test);
+      //  std::cout << "itest, jtest = " << i_test << " " << j_test << "\n";
+      //}
+
     }
   }
   n_traces = job_number;
@@ -381,7 +404,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         tmax_limits = tmax + 2 * twt_ps_wavelet;
         FindSeisLimits(twtx_reg, param->twt_0, n_min, n_max, tmax_limits);
 
-        //if (i == 285 && j == 412) {
+        //if (i == 610 && j == 1050) {
         //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_pp_below, "offset_pp_below.txt");
         //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_ss_below, "offset_ss_below.txt");
         //  param->seismic_parameters.seismicOutput()->PrintMatrix(offset_pp_above, "offset_pp_above.txt");
@@ -431,6 +454,32 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
 
       //find reflection coeff - for each layer for each offset:
       param->seismic_parameters.FindNMOReflections(refl_pos, theta_pos, i, j);
+
+      //if (i == 610 && j == 1050) {
+      //  NRLib::StormContGrid  &vsgrid = param->seismic_parameters.vsGrid();
+      //  NRLib::StormContGrid  &rhogrid = param->seismic_parameters.rhoGrid();
+      //  std::vector<double> vs_vec(nzrefl), rho_vec(nzrefl), z_vec(nzrefl), twt_vec(nzrefl), r_vec(nzrefl);
+
+      //  for (size_t k = 0; k < nzrefl; ++k) {
+      //    twt_vec[k] = twtgrid(i, j, k);
+      //    vp_vec[k] = vpgrid(i, j, k);
+      //    z_vec[k] = zgrid(i, j, k);
+      //    vs_vec[k] = vsgrid(i, j, k);
+      //    rho_vec[k] = rhogrid(i, j, k);
+      //    r_vec[k] = refl_pos(k,0);
+      //  }
+
+      //  param->seismic_parameters.seismicOutput()->PrintVector(z_vec,     "z_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(twt_vec, "twt_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(vp_vec,   "vp_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(vs_vec,   "vs_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(rho_vec, "rho_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(r_vec,     "r_vec_geo2seis.txt");
+
+      //  param->seismic_parameters.seismicOutput()->PrintVector(param->twt_0, "twt_0.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(param->z_0, "z_0.txt");
+      //}
+
 
       //keep reflections for zero offset if output on storm
       if (param->seismic_parameters.modelSettings()->GetOutputReflections()){
@@ -625,6 +674,34 @@ void SeismicForward::GenerateSeismicTraces(Output             *seis_output,
       //  param->seismic_parameters.seismicOutput()->PrintVector(param->twt_0, "PS_twt_0.txt");
       //}     
 
+
+      //if (i == 610 && j == 1050) {
+      ////if (i == 0 && j == 0) {
+      //  NRLib::StormContGrid  &vsgrid = param->seismic_parameters.vsGrid();
+      //  NRLib::StormContGrid  &vpgrid = param->seismic_parameters.vpGrid();
+      //  NRLib::StormContGrid  &rhogrid = param->seismic_parameters.rhoGrid();
+      //  std::vector<double> vs_vec(nzrefl), vp_vec(nzrefl), rho_vec(nzrefl), z_vec(nzrefl), twt_vec(nzrefl), r_vec(nzrefl);
+
+      //  for (size_t k = 0; k < nzrefl; ++k) {
+      //    twt_vec[k] = twtgrid(i, j, k);
+      //    vp_vec[k] = vpgrid(i, j, k);
+      //    z_vec[k] = zgrid(i, j, k);
+      //    vs_vec[k] = vsgrid(i, j, k);
+      //    rho_vec[k] = rhogrid(i, j, k);
+      //    r_vec[k] = refl_pos(k, 0);
+      //  }
+
+      //  param->seismic_parameters.seismicOutput()->PrintVector(z_vec, "z_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(twt_vec, "twt_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(vp_vec, "vp_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(vs_vec, "vs_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(rho_vec, "rho_vec_geo2seis.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(r_vec, "r_vec_geo2seis.txt");
+
+      //  param->seismic_parameters.seismicOutput()->PrintVector(param->twt_0, "twt_0.txt");
+      //  param->seismic_parameters.seismicOutput()->PrintVector(param->z_0, "z_0.txt");
+      //}
+
       //stacking of angles:
       if (param->seismic_parameters.GetStackOutput() || param->seismic_parameters.GetStormOutput()) {
         float ntheta_inv = static_cast<float>(1.0 / param->theta_vec.size());
@@ -640,7 +717,7 @@ void SeismicForward::GenerateSeismicTraces(Output             *seis_output,
       if (seis_output->GetDepthSegyOk() || seis_output->GetDepthStackSegyOk() || param->seismic_parameters.GetDepthStormOutput()) {
         std::vector<double> zgrid_vec_extrapol(nzrefl+2);
         std::vector<double> twt_vec_extrapol(nzrefl+2);
-		    ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, wavelet->GetDepthAdjustmentFactor(), constvp[2], constvs[2], i, j, ps_seis);
+        ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, wavelet->GetDepthAdjustmentFactor(), constvp[2], constvs[2], i, j, ps_seis);
         if (seis_output->GetDepthSegyOk()) {
           ConvertSeis(twt_vec_extrapol, param->twt_0, zgrid_vec_extrapol, param->z_0, timegrid_pos, depthgrid_pos, timegrid_pos.GetNI());
         }
@@ -697,12 +774,11 @@ void SeismicForward::Monitor(size_t trace,
                              float monitor_size,
                              float &next_monitor)
 {
-  //int size_loop = n_xl * il_steps + xl_steps + 1;
-  if (trace >= static_cast<size_t>(next_monitor)) {
+  if (trace +1 >= static_cast<size_t>(next_monitor)) {
     next_monitor += monitor_size;
     std::cout << "^";
     fflush(stdout);
-    if (next_monitor > monitor_size*51){
+    if (next_monitor > monitor_size*50){
       std::cout << "\n";
     }
   }
@@ -741,33 +817,6 @@ void SeismicForward::PrintTime()
     << (now->tm_hour) << ':' 
     << (now->tm_min) << ':'
     <<  now->tm_sec
-    << "\n";
-}
-
-void SeismicForward::PrintElapsedTime(time_t start_time)
-{
-  time_t end_time       = time(0);   // get time now
-  size_t seconds        = static_cast<size_t>(difftime(end_time,start_time));
-
-  size_t hours          = static_cast<int>(seconds/3600);
-  seconds               = seconds % 3600;
-  size_t minutes        = static_cast<int>(seconds/60);
-  seconds               = seconds % 60;
-
-  std::string hours_s   = NRLib::ToString(hours);
-  std::string zeros     = std::string(2 - hours_s.length(), '0');
-  hours_s               = zeros + hours_s;
-  std::string minutes_s = NRLib::ToString(minutes);
-  zeros                 = std::string(2 - minutes_s.length(), '0');
-  minutes_s             = zeros + minutes_s;
-  std::string seconds_s = NRLib::ToString(seconds);
-  zeros                 = std::string(2 - seconds_s.length(), '0');
-  seconds_s             = zeros + seconds_s;
-
-  std::cout << "\nTotal time generating seismic: "
-    << hours_s << ':'
-    << minutes_s << ':'
-    << seconds_s
     << "\n";
 }
 

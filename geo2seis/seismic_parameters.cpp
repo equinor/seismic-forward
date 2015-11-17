@@ -977,9 +977,9 @@ void SeismicParameters::CreateGrids() {
     for (size_t j = 0; j < ny; j++) {
       for (size_t k = 0; k < nzrefl; k++) {
         (*zgrid_)(i, j, k) = 0.0;
-        (*vpgrid_)(i, j, k) = static_cast<float>(const_vp[1]);
-        (*vsgrid_)(i, j, k) = static_cast<float>(const_vs[1]);
-        (*rhogrid_)(i, j, k) = static_cast<float>(const_rho[1]);
+        (*vpgrid_) (i, j, k) = missing_;
+        (*vsgrid_) (i, j, k) = missing_;
+        (*rhogrid_)(i, j, k) = missing_;
         (*twtgrid_)(i, j, k) = 0.0;
         rgrid(i, j, k) = 0.0;
         if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()){
@@ -993,9 +993,9 @@ void SeismicParameters::CreateGrids() {
           (*extra_parameter_grid_)[epi](i, j, k) = static_cast<float>(extra_parameter_default_values[epi]);
         }
       }
-      (*vpgrid_)(i, j, nzrefl)  = static_cast<float>(const_vp[2]);
-      (*vsgrid_)(i, j, nzrefl)  = static_cast<float>(const_vs[2]);
-      (*rhogrid_)(i, j, nzrefl) = static_cast<float>(const_rho[2]);
+      (*vpgrid_)(i, j, nzrefl)  = missing_;
+      (*vsgrid_)(i, j, nzrefl)  = missing_;
+      (*rhogrid_)(i, j, nzrefl) = missing_;
       for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
         (*extra_parameter_grid_)[epi](i, j, nzrefl) = 0.0;
       }

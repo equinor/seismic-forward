@@ -108,6 +108,8 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("timeshift-twt");
     legalCommands.push_back("ps-seismic");
     legalCommands.push_back("traces-in-memory");
+    legalCommands.push_back("max-threads");
+    legalCommands.push_back("default-underburden");
 
 
     if (ParseNMOStretch(root, errTxt)){
@@ -138,6 +140,16 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
     double number;
     if (ParseValue(root, "traces-in-memory", number, errTxt)) {
       modelSettings_->SetTracesInMemory(static_cast<size_t>(number));
+    }
+    double n_threads;
+    if (ParseValue(root, "max-threads", n_threads, errTxt)) {
+      modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
+    }
+    std::string du;
+    modelSettings_->SetDefaultUnderburden(false);
+    if (ParseValue(root, "default-underburden", du, errTxt)) {
+      if (du == "yes")
+        modelSettings_->SetDefaultUnderburden(true);
     }
 
     ParseOutputParameters(root, errTxt);

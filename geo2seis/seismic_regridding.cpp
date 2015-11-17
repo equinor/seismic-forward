@@ -20,6 +20,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   printf("Start finding elastic parameters.\n");
   FindVp(seismic_parameters);
   printf("Elastic parameters found.\n");
+  VpPostProcess(seismic_parameters);
 
   seismic_parameters.DeleteEclipseGrid();
   
@@ -187,8 +188,9 @@ void SeismicRegridding::FindPointZValue(size_t i, size_t j, size_t k,
                                         const NRLib::EclipseGeometry &geometry,
                                         const NRLib::Grid<double> &grid,
                                         const NRLib::Grid2D<double> &value_above,
-                                        double &default_value,
-                                        double &zlimit) 
+                                        double default_value,
+                                        double zlimit,
+                                        double default_top)
 {
 
   if (geometry.IsActive(i, j, k)) {
@@ -196,6 +198,9 @@ void SeismicRegridding::FindPointZValue(size_t i, size_t j, size_t k,
   }
   else if (geometry.GetDZ(i, j, k) < zlimit) {
     point.z = value_above(i, j);
+  }
+  else if (value_above(i, j) == default_top) {
+    point.z = default_top;
   }
   else {
     point.z = default_value;
@@ -320,7 +325,11 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters)
   std::vector<double> constrho                       = seismic_parameters.modelSettings()->GetConstRho();
   std::vector<std::string> names                     = seismic_parameters.modelSettings()->GetParameterNames();
   std::vector<double> extra_parameter_default_values = seismic_parameters.modelSettings()->GetExtraParameterDefaultValues();
-  std::vector<std::string> extra_parameter_names     = seismic_parameters.modelSettings()->GetExtraParameterNames();
+  std::vector<std::string> extra_parameter_names;
+  if (seismic_parameters.modelSettings()->GetOutputExtraParametersTimeSegy() 
+    || seismic_parameters.modelSettings()->GetOutputExtraParametersDepthSegy()) { //only resample extra parameters if requested for output segy.
+    extra_parameter_names = seismic_parameters.modelSettings()->GetExtraParameterNames();
+  }
 
   const NRLib::Grid<double> &vp_grid  = egrid.GetParameter(names[0]);
   const NRLib::Grid<double> &vs_grid  = egrid.GetParameter(names[1]);
@@ -401,11 +410,11 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters)
             }
             else {
               for (size_t pt = 0; pt < 4; ++pt){
-                FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_vp[pt],  geometry, vp_grid,  value_above_vp,  constvp[1],  zlimit);
-                FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_vs[pt],  geometry, vs_grid,  value_above_vs,  constvs[1],  zlimit);
-                FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_rho[pt], geometry, rho_grid, value_above_rho, constrho[1], zlimit);
+                FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_vp[pt],  geometry, vp_grid,  value_above_vp,  constvp[1],  zlimit, constvp[0]);
+                FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_vs[pt],  geometry, vs_grid,  value_above_vs,  constvs[1],  zlimit, constvs[0]);
+                FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_rho[pt], geometry, rho_grid, value_above_rho, constrho[1], zlimit, constrho[0]);
                 for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
-                  FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_extra_param[ii][pt], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit);
+                  FindPointZValue(i+int(pt%2), j+int(floor(double(pt/2))), k, pt_extra_param[ii][pt], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit, extra_parameter_default_values[ii]);
                 }
               }
             }
@@ -740,17 +749,17 @@ void SeismicRegridding::FindVpEdges(const NRLib::EclipseGeometry        &geometr
       }
     }
     else {
-      FindPointZValue(i, j, k, pt_vp[0],  geometry, vp_grid, value_above_vp,   constvp[1],  zlimit);
-      FindPointZValue(i, j, k, pt_vs[0],  geometry, vs_grid, value_above_vs,   constvs[1],  zlimit);
-      FindPointZValue(i, j, k, pt_rho[0], geometry, rho_grid, value_above_rho, constrho[1], zlimit);
+      FindPointZValue(i, j, k, pt_vp[0],  geometry, vp_grid, value_above_vp,   constvp [1], zlimit, constvp [0]);
+      FindPointZValue(i, j, k, pt_vs[0],  geometry, vs_grid, value_above_vs,   constvs [1], zlimit, constvs [0]);
+      FindPointZValue(i, j, k, pt_rho[0], geometry, rho_grid, value_above_rho, constrho[1], zlimit, constrho[0]);
 
-      FindPointZValue(ic, jc, k, pt_vp[1],  geometry, vp_grid,  value_above_vp,  constvp[1],  zlimit);
-      FindPointZValue(ic, jc, k, pt_vs[1],  geometry, vs_grid,  value_above_vs,  constvs[1],  zlimit);
-      FindPointZValue(ic, jc, k, pt_rho[1], geometry, rho_grid, value_above_rho, constrho[1], zlimit);
+      FindPointZValue(ic, jc, k, pt_vp[1],  geometry, vp_grid,  value_above_vp,  constvp[1],  zlimit, constvp [0]);
+      FindPointZValue(ic, jc, k, pt_vs[1],  geometry, vs_grid,  value_above_vs,  constvs[1],  zlimit, constvs [0]);
+      FindPointZValue(ic, jc, k, pt_rho[1], geometry, rho_grid, value_above_rho, constrho[1], zlimit, constrho[0]);
 
       for (size_t ii = 0; ii < n_extra_param; ++ii) {
-        FindPointZValue(i,  j,  k, pt_extra_param[ii][0], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit);
-        FindPointZValue(ic, jc, k, pt_extra_param[ii][1], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit);
+        FindPointZValue(i,  j,  k, pt_extra_param[ii][0], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit, extra_parameter_default_values[ii]);
+        FindPointZValue(ic, jc, k, pt_extra_param[ii][1], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit, extra_parameter_default_values[ii]);
       }
     }
     for (size_t pt = 2; pt < 4; ++pt) { //nb, only loop two last points here
@@ -900,12 +909,12 @@ void SeismicRegridding::FindVpCorners(const NRLib::EclipseGeometry        &geome
       }
     } 
     else {
-      FindPointZValue(i, j, k, pt_vp[3],  geometry, vp_grid,  value_above_vp,  constvp[1],  zlimit);
-      FindPointZValue(i, j, k, pt_vs[3],  geometry, vs_grid,  value_above_vs,  constvs[1],  zlimit);
-      FindPointZValue(i, j, k, pt_rho[3], geometry, rho_grid, value_above_rho, constrho[1], zlimit);
+      FindPointZValue(i, j, k, pt_vp[3],  geometry, vp_grid,  value_above_vp,  constvp [1], zlimit, constvp [0]);
+      FindPointZValue(i, j, k, pt_vs[3],  geometry, vs_grid,  value_above_vs,  constvs [1], zlimit, constvs [0]);
+      FindPointZValue(i, j, k, pt_rho[3], geometry, rho_grid, value_above_rho, constrho[1], zlimit, constrho[0]);
 
       for (size_t ii = 0; ii < n_extra_param; ++ii) {
-        FindPointZValue(i, j, k, pt_extra_param[ii][3], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit);
+        FindPointZValue(i, j, k, pt_extra_param[ii][3], geometry, parameter_grid_from_eclipse[ii], value_above_extra_param[ii], extra_parameter_default_values[ii], zlimit, extra_parameter_default_values[ii]);
       }
     }
 
@@ -1157,5 +1166,70 @@ void SeismicRegridding::FindCornerCellPoints(const NRLib::EclipseGeometry &geome
   }
 }
 
+
+void SeismicRegridding::VpPostProcess(SeismicParameters &seismic_parameters)
+{
+  NRLib::StormContGrid &vpgrid  = seismic_parameters.vpGrid();
+  NRLib::StormContGrid &vsgrid  = seismic_parameters.vsGrid();
+  NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
+
+  std::vector<double> constvp   = seismic_parameters.modelSettings()->GetConstVp();
+  std::vector<double> constvs   = seismic_parameters.modelSettings()->GetConstVs();
+  std::vector<double> constrho  = seismic_parameters.modelSettings()->GetConstRho();
+
+  bool default_underburden = seismic_parameters.modelSettings()->GetDefaultUnderburden();
+
+
+  float missing = seismic_parameters.GetMissingVal();
+  bool found_bot = false;
+  for (size_t i = 0; i < vpgrid.GetNI(); ++i) {
+    for (size_t j = 0; j < vpgrid.GetNJ(); ++j) {
+      //for (size_t k = 0; k < vpgrid.GetNK(); ++k) {
+      //  if (vpgrid(i, j, k) == missing) {
+      //    vpgrid(i, j, k)  = constvp [0];
+      //    vsgrid(i, j, k)  = constvs [0];
+      //    rhogrid(i, j, k) = constrho[0];
+      //  }
+      //  else
+      //    break;
+      //}
+      if (default_underburden) {
+        found_bot = false;
+        for (size_t k = vpgrid.GetNK() - 1; k > 0; --k) {
+          if (found_bot && vpgrid(i, j, k) == missing) {
+            vpgrid (i, j, k) = constvp [1];
+            vsgrid (i, j, k) = constvs [1];
+            rhogrid(i, j, k) = constrho[1];
+          }
+          else if (vpgrid(i, j, k) == missing) {
+            vpgrid (i, j, k) = constvp [2];
+            vsgrid (i, j, k) = constvs [2];
+            rhogrid(i, j, k) = constrho[2];
+          }
+          else
+            found_bot == true;
+        }
+      }
+      else {
+        found_bot = false;
+        for (size_t k = vpgrid.GetNK() - 1; k > 0; --k) {
+          if (found_bot && vpgrid(i, j, k) == missing) {
+            vpgrid (i, j, k) = constvp [1];
+            vsgrid (i, j, k) = constvs [1];
+            rhogrid(i, j, k) = constrho[1];
+          }
+          else if (found_bot != true && vpgrid(i, j, k) != missing) {
+            found_bot = true;
+            for (size_t kk = vpgrid.GetNK() - 1; kk > k; --kk) {
+              vpgrid (i, j, kk) = vpgrid (i, j, k);
+              vsgrid (i, j, kk) = vsgrid (i, j, k);
+              rhogrid(i, j, kk) = rhogrid(i, j, k);
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 

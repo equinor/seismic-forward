@@ -396,6 +396,14 @@ class ModelSettings {
       traces_in_memory_ = value;
     }
 
+    void SetMaxThreads(size_t value) {
+      max_threads_ = value;
+    }
+
+    void SetDefaultUnderburden(bool value) {
+      default_underburden_ = value;
+    }
+
     void SetNMOCorr(bool nmo) {
         nmo_corr_ = nmo;
     }
@@ -763,6 +771,14 @@ class ModelSettings {
       return traces_in_memory_;
     }
 
+    size_t GetMaxThreads(void) {
+      return max_threads_;
+    }
+
+    size_t GetDefaultUnderburden(void) {
+      return default_underburden_;
+    }
+
     bool GetNMOCorr() {
         return nmo_corr_;
     }
@@ -829,6 +845,8 @@ class ModelSettings {
     std::string twt_file_name_;
 
     size_t traces_in_memory_;
+    size_t max_threads_;
+    bool default_underburden_;
 
     bool ps_seismic_;
     bool nmo_corr_;

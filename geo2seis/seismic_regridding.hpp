@@ -22,6 +22,8 @@ class SeismicRegridding {
 
     static void FindVp(SeismicParameters &seismic_parameters);
 
+    static void VpPostProcess(SeismicParameters &seismic_parameters);
+
     static void FindVrms(SeismicParameters          &seismic_parameters,
                          const NRLib::StormContGrid &vgrid,
                          const NRLib::StormContGrid &twtgrid);
@@ -35,8 +37,9 @@ class SeismicRegridding {
                                 const NRLib::EclipseGeometry &geometry,
                                 const NRLib::Grid<double> &grid,
                                 const NRLib::Grid2D<double> &value_above,
-                                double &default_value,
-                                double &zlimit);
+                                double default_value,
+                                double zlimit,
+                                double default_top);
 
     static void FindVpEdges(const NRLib::EclipseGeometry        &geometry,
                             size_t                               n_extra_param,

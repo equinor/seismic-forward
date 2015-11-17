@@ -184,8 +184,6 @@ class SeismicForward {
 
     static void PrintTime();
 
-    static void PrintElapsedTime(time_t start_time);
-
     static std::vector<double> LinInterp1D(const std::vector<double> &x_in,
                                            const std::vector<double> &y_in,
                                            const std::vector<double> &x_out);
