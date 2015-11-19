@@ -10,14 +10,14 @@ ResultTrace::ResultTrace(SeismicParameters         &seismic_parameters,
                          const std::vector<double> &offset_vec)
   : empty_(false)
 {
-  size_t nzrefl = seismic_parameters.seismicGeometry()->zreflectorcount();
-  if (seismic_parameters.modelSettings()->GetNMOCorr()) {
+  size_t nzrefl = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
+  if (seismic_parameters.GetModelSettings()->GetNMOCorr()) {
     twtx_reg_.           Resize(twt_0.size(), offset_vec.size());
     twtx_.               Resize(nzrefl,       offset_vec.size());
     theta_.              Resize(nzrefl,       offset_vec.size());
     refl_.               Resize(nzrefl,       offset_vec.size());
     prenmo_timegrid_pos_.Resize(twt_0.size(), offset_vec.size());
-    if (seismic_parameters.modelSettings()->GetPSSeismic()) {
+    if (seismic_parameters.GetModelSettings()->GetPSSeismic()) {
       offset_pp_.    Resize(nzrefl, offset_vec.size());
       offset_ss_.    Resize(nzrefl, offset_vec.size());
       offset_pp_reg_.Resize(twt_0.size(), offset_vec.size());

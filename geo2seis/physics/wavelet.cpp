@@ -30,7 +30,7 @@ Wavelet::Wavelet(std::string filename, std::string file_format) : is_ricker_(fal
       sample_number_for_zero_time_ = sample_number_for_zero_time_ - 1;
       size_t i = 0;
       double value;
-      while (i < number_of_samples + 1) {
+      while (i < number_of_samples) {
         file >> value;
         wavelet_.push_back(value);
         ++i;
@@ -134,36 +134,40 @@ double Wavelet::FindDepthAdjustmentFactor(std::vector<double> wavelet, double ti
 
 double Wavelet::FindWaveletPoint(double t)
 {
-  double return_value;
   if (is_ricker_) {
     double rickerConst = NRLib::Pi * NRLib::Pi * peak_frequency_ * peak_frequency_ * 1e-6;
     double c = rickerConst * t * t;
-    return_value = (1 - 2 * c) * exp(-c);
-  } else {
+    return (1 - 2 * c) * exp(-c);
+  } 
+  else {
     if (wavelet_.size() > 0 && time_sampling_in_ms_ > 0) {
 
       size_t i;
       if (t < time_vector_[0]) {
         i = 0;
-      } else {
+      } 
+      else {
         double start = (t - time_vector_[0]) / time_sampling_in_ms_;
         i = static_cast<size_t>(start);
         if (i < wavelet_.size() - 1 && t > time_vector_[i]) {
           ++i;
         }
       }
-
-      if (i > 0) {
-        double a = (time_vector_[i] - t) / (time_vector_[i] - time_vector_[i - 1]);
-        return_value = a * wavelet_[i - 1] + (1 - a) * wavelet_[i];
-      } else {
-        return_value = wavelet_[0];
+      if (i > wavelet_.size() - 1) {
+        return 0;
       }
-    } else {
-      return_value = 0;
+      else if (i > 0) {
+        double a = (time_vector_[i] - t) / (time_vector_[i] - time_vector_[i - 1]);
+        return a * wavelet_[i - 1] + (1 - a) * wavelet_[i];
+      } 
+      else {
+        return 0;
+      }
+    } 
+    else {
+      return 0;
     }
   }
-  return return_value;
 }
 
 
@@ -179,13 +183,13 @@ void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &w
   // Fill fine-sampled grid
   //
   std::vector<std::complex<double> > fine_data_fft(data_fft.size() * scale_factor);
-  for (size_t i = 0; i < data_fft.size() / 2; i++) {
+  for (size_t i = 0; i < data_fft.size() / 2 + 1; i++) {
     fine_data_fft[i] = data_fft[i];
   }
 
   //Pad with zeros
 
-  for (size_t i = data_fft.size() / 2; i < 1 * data_fft.size() * scale_factor; i++) {
+  for (size_t i = data_fft.size() / 2 + 1; i < data_fft.size() * scale_factor; i++) {
     fine_data_fft[i] = 0;
   }
 
@@ -194,9 +198,10 @@ void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &w
   //
   wavelet_out.resize(fine_data_fft.size());
   NRLib::ComputeFFTInv1D(fine_data_fft, wavelet_out, false);
-
+  
   // Scale wavelet out according to change of length
 
+  wavelet_out.resize(fine_data_fft.size() - scale_factor + 1);
   for (size_t i = 0; i < wavelet_out.size(); ++i) {
     wavelet_out[i] *= scale_factor;
   }

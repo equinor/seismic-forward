@@ -19,37 +19,47 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
 
   printf("Start finding elastic parameters.\n");
   FindVp(seismic_parameters);
+  NRLib::StormContGrid &vpgrid = seismic_parameters.GetVpGrid();
+  std::vector<double> vp_vec(vpgrid.GetNK());
+  for (size_t k = 0; k < vp_vec.size(); ++k) {
+    vp_vec[k] = vpgrid(500, 1050, k);
+  }
+  seismic_parameters.GetSeismicOutput()->PrintVector(vp_vec, "vp_vec_before_post.txt");
   printf("Elastic parameters found.\n");
   VpPostProcess(seismic_parameters);
+  for (size_t k = 0; k < vp_vec.size(); ++k) {
+    vp_vec[k] = vpgrid(500, 1050, k);
+  }
+  seismic_parameters.GetSeismicOutput()->PrintVector(vp_vec, "vp_vec_after_post.txt");
 
   seismic_parameters.DeleteEclipseGrid();
   
-  NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
-  NRLib::RegularSurface<double> &bottime = seismic_parameters.bottomTime();  
-  std::vector<double> constvp            = seismic_parameters.modelSettings()->GetConstVp();
-  Wavelet* wavelet                       = seismic_parameters.wavelet();
+  NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
+  NRLib::RegularSurface<double> &bottime = seismic_parameters.GetBottomTime();
+  std::vector<double> constvp            = seismic_parameters.GetModelSettings()->GetConstVp();
+  Wavelet* wavelet                       = seismic_parameters.GetWavelet();
   
   //find twt grid
   FindTWT(seismic_parameters, toptime, bottime);
 
   //generate, write and delete vrms grid if writing is requested
-  if (seismic_parameters.modelSettings()->GetNMOCorr() && seismic_parameters.modelSettings()->GetOutputVrms()){
-    if (seismic_parameters.modelSettings()->GetPSSeismic()) {
-      NRLib::StormContGrid &twtssgrid = seismic_parameters.twtSSGrid();
-      NRLib::StormContGrid &twtppgrid = seismic_parameters.twtPPGrid();
-      NRLib::StormContGrid &vpgrid = seismic_parameters.vpGrid();
-      NRLib::StormContGrid &vsgrid = seismic_parameters.vsGrid();
+  if (seismic_parameters.GetModelSettings()->GetNMOCorr() && seismic_parameters.GetModelSettings()->GetOutputVrms()){
+    if (seismic_parameters.GetModelSettings()->GetPSSeismic()) {
+      NRLib::StormContGrid &twtssgrid = seismic_parameters.GetTwtSSGrid();
+      NRLib::StormContGrid &twtppgrid = seismic_parameters.GetTwtPPGrid();
+      NRLib::StormContGrid &vpgrid    = seismic_parameters.GetVpGrid();
+      NRLib::StormContGrid &vsgrid    = seismic_parameters.GetVsGrid();
       FindVrms(seismic_parameters, vpgrid, twtppgrid);
-      seismic_parameters.seismicOutput()->WriteVrms(seismic_parameters, "PP");
+      seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters, "PP");
       FindVrms(seismic_parameters, vsgrid, twtssgrid);
-      seismic_parameters.seismicOutput()->WriteVrms(seismic_parameters, "SS");
+      seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters, "SS");
       seismic_parameters.DeleteVrmsGrid();
     }
     else {
-      NRLib::StormContGrid &twtgrid = seismic_parameters.twtGrid();
-      NRLib::StormContGrid &vpgrid = seismic_parameters.vpGrid();
+      NRLib::StormContGrid &twtgrid = seismic_parameters.GetTwtGrid();
+      NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
       FindVrms(seismic_parameters, vpgrid, twtgrid);
-      seismic_parameters.seismicOutput()->WriteVrms(seismic_parameters);
+      seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters);
       seismic_parameters.DeleteVrmsGrid();
     }
     
@@ -59,57 +69,57 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   bottime.Add(2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor());
 
   double tmin = toptime.Min();
-  size_t ns = static_cast<size_t>(floor(tmin / seismic_parameters.seismicGeometry()->dt() + 0.5));
-  tmin = ns * seismic_parameters.seismicGeometry()->dt();
+  size_t ns = static_cast<size_t>(floor(tmin / seismic_parameters.GetSeismicGeometry()->dt() + 0.5));
+  tmin = ns * seismic_parameters.GetSeismicGeometry()->dt();
   double tmax = bottime.Max();
-  size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.seismicGeometry()->dt()+0.5));
-  if (seismic_parameters.modelSettings()->GetNLayersFileName() != "") {
-    NRLib::StormContGrid tmpgrid(seismic_parameters.modelSettings()->GetNLayersFileName());
+  size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.GetSeismicGeometry()->dt()+0.5));
+  if (seismic_parameters.GetModelSettings()->GetNLayersFileName() != "") {
+    NRLib::StormContGrid tmpgrid(seismic_parameters.GetModelSettings()->GetNLayersFileName());
     nt = tmpgrid.GetNK();
   }
-  seismic_parameters.seismicGeometry()->setNt(nt);
-  seismic_parameters.seismicGeometry()->setTRange(tmin, tmax);
+  seismic_parameters.GetSeismicGeometry()->setNt(nt);
+  seismic_parameters.GetSeismicGeometry()->setTRange(tmin, tmax);
 
   //write toptime and bottime
-  if (seismic_parameters.modelSettings()->GetOutputTimeSurfaces()) {
-    seismic_parameters.seismicOutput()->WriteTimeSurfaces(seismic_parameters);
+  if (seismic_parameters.GetModelSettings()->GetOutputTimeSurfaces()) {
+    seismic_parameters.GetSeismicOutput()->WriteTimeSurfaces(seismic_parameters);
   }
 
   //resample, write and delete extra parameter grids
-  if (seismic_parameters.modelSettings()->GetOutputExtraParametersTimeSegy()) {
-    seismic_parameters.seismicOutput()->WriteExtraParametersTimeSegy(seismic_parameters);
+  if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy()) {
+    seismic_parameters.GetSeismicOutput()->WriteExtraParametersTimeSegy(seismic_parameters);
   }
-  if (seismic_parameters.modelSettings()->GetOutputExtraParametersDepthSegy()) {
-    seismic_parameters.seismicOutput()->WriteExtraParametersDepthSegy(seismic_parameters);
+  if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
+    seismic_parameters.GetSeismicOutput()->WriteExtraParametersDepthSegy(seismic_parameters);
   }
   seismic_parameters.DeleteExtraParameterGrids();
  
   //resample and write elastic parameters in segy
-  if (seismic_parameters.modelSettings()->GetOutputElasticParametersTimeSegy()) {
-    seismic_parameters.seismicOutput()->WriteElasticParametersTimeSegy(seismic_parameters);
+  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy()) {
+    seismic_parameters.GetSeismicOutput()->WriteElasticParametersTimeSegy(seismic_parameters);
   }
-  if (seismic_parameters.modelSettings()->GetOutputElasticParametersDepthSegy()) {
-    seismic_parameters.seismicOutput()->WriteElasticParametersDepthSegy(seismic_parameters);
+  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
+    seismic_parameters.GetSeismicOutput()->WriteElasticParametersDepthSegy(seismic_parameters);
   }
 
   //write elastic parameters, z values and twt on storm format
-  if (seismic_parameters.modelSettings()->GetOutputVp()) {
-    seismic_parameters.seismicOutput()->WriteVpVsRho(seismic_parameters);
+  if (seismic_parameters.GetModelSettings()->GetOutputVp()) {
+    seismic_parameters.GetSeismicOutput()->WriteVpVsRho(seismic_parameters);
   }
-  if (seismic_parameters.modelSettings()->GetOutputZvalues()) {
-    seismic_parameters.seismicOutput()->WriteZValues(seismic_parameters);
+  if (seismic_parameters.GetModelSettings()->GetOutputZvalues()) {
+    seismic_parameters.GetSeismicOutput()->WriteZValues(seismic_parameters);
   }
-  if (seismic_parameters.modelSettings()->GetOutputTwt()) {
-    seismic_parameters.seismicOutput()->WriteTwt(seismic_parameters);
+  if (seismic_parameters.GetModelSettings()->GetOutputTwt()) {
+    seismic_parameters.GetSeismicOutput()->WriteTwt(seismic_parameters);
   }
 }
 
 
 void SeismicRegridding::FindZValues(SeismicParameters &seismic_parameters) {
-  NRLib::StormContGrid &zgrid = seismic_parameters.zGrid();
-  const NRLib::EclipseGeometry &geometry = seismic_parameters.eclipseGrid().GetGeometry();
-  size_t top_k = seismic_parameters.topK();
-  bool use_corner_point = seismic_parameters.modelSettings()->GetUseCornerpointInterpol();
+  NRLib::StormContGrid         &zgrid    = seismic_parameters.GetZGrid();
+  const NRLib::EclipseGeometry &geometry = seismic_parameters.GetEclipseGrid().GetGeometry();
+  size_t top_k          = seismic_parameters.GetTopK();
+  bool use_corner_point = seismic_parameters.GetModelSettings()->GetUseCornerpointInterpol();
 
   double xmin  = zgrid.GetXMin();
   double ymin  = zgrid.GetYMin();
@@ -151,10 +161,10 @@ void SeismicRegridding::FindVrms(SeismicParameters          &seismic_parameters,
                                  const NRLib::StormContGrid &vgrid,
                                  const NRLib::StormContGrid &twtgrid)
 {
-  double v_w = seismic_parameters.modelSettings()->GetVw();
-  double z_w = seismic_parameters.modelSettings()->GetZw();
-  NRLib::StormContGrid &zgrid             = seismic_parameters.zGrid();
-  NRLib::StormContGrid &vrmsgrid          = seismic_parameters.vrmsGrid();
+  double v_w = seismic_parameters.GetModelSettings()->GetVw();
+  double z_w = seismic_parameters.GetModelSettings()->GetZw();
+  NRLib::StormContGrid &zgrid    = seismic_parameters.GetZGrid();
+  NRLib::StormContGrid &vrmsgrid = seismic_parameters.GetVrmsGrid();
   
 
   double v_over;
@@ -228,16 +238,16 @@ void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
                                 NRLib::RegularSurface<double> &toptime, 
                                 NRLib::RegularSurface<double> &bottime)
 {
-  NRLib::StormContGrid &vpgrid    = seismic_parameters.vpGrid();
-  NRLib::StormContGrid &vsgrid    = seismic_parameters.vsGrid();
-  NRLib::StormContGrid &twtgrid   = seismic_parameters.twtGrid();
-  NRLib::StormContGrid &twtssgrid = seismic_parameters.twtSSGrid();
-  NRLib::StormContGrid &twtppgrid = seismic_parameters.twtPPGrid();
-  NRLib::StormContGrid &zgrid     = seismic_parameters.zGrid();
-  bool ps_seismic                 = seismic_parameters.modelSettings()->GetPSSeismic();
-  bool nmo_seismic                = seismic_parameters.modelSettings()->GetNMOCorr();
-  double v_w                      = seismic_parameters.modelSettings()->GetVw();
-  double z_w                      = seismic_parameters.modelSettings()->GetZw();
+  NRLib::StormContGrid &vpgrid    = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid &vsgrid    = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid &twtgrid   = seismic_parameters.GetTwtGrid();
+  NRLib::StormContGrid &twtssgrid = seismic_parameters.GetTwtSSGrid();
+  NRLib::StormContGrid &twtppgrid = seismic_parameters.GetTwtPPGrid();
+  NRLib::StormContGrid &zgrid     = seismic_parameters.GetZGrid();
+  bool ps_seismic                 = seismic_parameters.GetModelSettings()->GetPSSeismic();
+  bool nmo_seismic                = seismic_parameters.GetModelSettings()->GetNMOCorr();
+  double v_w                      = seismic_parameters.GetModelSettings()->GetVw();
+  double z_w                      = seismic_parameters.GetModelSettings()->GetZw();
 
   size_t nk = twtgrid.GetNK();
   double dx1 = vpgrid.GetDX();
@@ -309,26 +319,26 @@ void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
 void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters)
 {
   std::cout << "New routine for finding vp, vs and rho.\n";
-  NRLib::StormContGrid              &vpgrid               = seismic_parameters.vpGrid();
-  NRLib::StormContGrid              &vsgrid               = seismic_parameters.vsGrid();
-  NRLib::StormContGrid              &rhogrid              = seismic_parameters.rhoGrid();
-  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.extraParametersGrids();
-  const NRLib::EclipseGrid          &egrid                = seismic_parameters.eclipseGrid();
+  NRLib::StormContGrid              &vpgrid               = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid              &vsgrid               = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid              &rhogrid              = seismic_parameters.GetRhoGrid();
+  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
+  const NRLib::EclipseGrid          &egrid                = seismic_parameters.GetEclipseGrid();
   const NRLib::EclipseGeometry      &geometry             = egrid.GetGeometry();
 
-  size_t topk   = seismic_parameters.topK();
-  size_t botk   = seismic_parameters.bottomK();
-  double zlimit = seismic_parameters.modelSettings()->GetZeroThicknessLimit();
+  size_t topk   = seismic_parameters.GetTopK();
+  size_t botk   = seismic_parameters.GetBottomK();
+  double zlimit = seismic_parameters.GetModelSettings()->GetZeroThicknessLimit();
 
-  std::vector<double> constvp                        = seismic_parameters.modelSettings()->GetConstVp();
-  std::vector<double> constvs                        = seismic_parameters.modelSettings()->GetConstVs();
-  std::vector<double> constrho                       = seismic_parameters.modelSettings()->GetConstRho();
-  std::vector<std::string> names                     = seismic_parameters.modelSettings()->GetParameterNames();
-  std::vector<double> extra_parameter_default_values = seismic_parameters.modelSettings()->GetExtraParameterDefaultValues();
+  std::vector<double> constvp                        = seismic_parameters.GetModelSettings()->GetConstVp();
+  std::vector<double> constvs                        = seismic_parameters.GetModelSettings()->GetConstVs();
+  std::vector<double> constrho                       = seismic_parameters.GetModelSettings()->GetConstRho();
+  std::vector<std::string> names                     = seismic_parameters.GetModelSettings()->GetParameterNames();
+  std::vector<double> extra_parameter_default_values = seismic_parameters.GetModelSettings()->GetExtraParameterDefaultValues();
   std::vector<std::string> extra_parameter_names;
-  if (seismic_parameters.modelSettings()->GetOutputExtraParametersTimeSegy() 
-    || seismic_parameters.modelSettings()->GetOutputExtraParametersDepthSegy()) { //only resample extra parameters if requested for output segy.
-    extra_parameter_names = seismic_parameters.modelSettings()->GetExtraParameterNames();
+  if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() 
+    || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) { //only resample extra parameters if requested for output segy.
+    extra_parameter_names = seismic_parameters.GetModelSettings()->GetExtraParameterNames();
   }
 
   const NRLib::Grid<double> &vp_grid  = egrid.GetParameter(names[0]);
@@ -670,19 +680,19 @@ void SeismicRegridding::FindVpEdges(const NRLib::EclipseGeometry        &geometr
                                     size_t i, size_t j, size_t k,
                                     bool top, bool bot, bool right, bool left)
 {
-  NRLib::StormContGrid &vpgrid  = seismic_parameters.vpGrid();
-  NRLib::StormContGrid &vsgrid  = seismic_parameters.vsGrid();
-  NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
-  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.extraParametersGrids();
+  NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid &vsgrid  = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid &rhogrid = seismic_parameters.GetRhoGrid();
+  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
 
-  std::vector<double> constvp                        = seismic_parameters.modelSettings()->GetConstVp();
-  std::vector<double> constvs                        = seismic_parameters.modelSettings()->GetConstVs();
-  std::vector<double> constrho                       = seismic_parameters.modelSettings()->GetConstRho();
-  std::vector<double> extra_parameter_default_values = seismic_parameters.modelSettings()->GetExtraParameterDefaultValues();
+  std::vector<double> constvp                        = seismic_parameters.GetModelSettings()->GetConstVp();
+  std::vector<double> constvs                        = seismic_parameters.GetModelSettings()->GetConstVs();
+  std::vector<double> constrho                       = seismic_parameters.GetModelSettings()->GetConstRho();
+  std::vector<double> extra_parameter_default_values = seismic_parameters.GetModelSettings()->GetExtraParameterDefaultValues();
 
-  size_t topk    = seismic_parameters.topK();
-  size_t botk    = seismic_parameters.bottomK();
-  double zlimit  = seismic_parameters.modelSettings()->GetZeroThicknessLimit();
+  size_t topk    = seismic_parameters.GetTopK();
+  size_t botk    = seismic_parameters.GetBottomK();
+  double zlimit  = seismic_parameters.GetModelSettings()->GetZeroThicknessLimit();
 
   double vp_angle   = vpgrid.GetAngle();
   double cosvpangle = cos(vp_angle);
@@ -863,19 +873,19 @@ void SeismicRegridding::FindVpCorners(const NRLib::EclipseGeometry        &geome
                                       size_t i, size_t j, size_t k,
                                       std::vector<NRLib::Point>           &pt_vp)
 {
-  NRLib::StormContGrid &vpgrid  = seismic_parameters.vpGrid();
-  NRLib::StormContGrid &vsgrid  = seismic_parameters.vsGrid();
-  NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
-  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.extraParametersGrids();
+  NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid &vsgrid  = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid &rhogrid = seismic_parameters.GetRhoGrid();
+  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
 
-  std::vector<double> constvp                        = seismic_parameters.modelSettings()->GetConstVp();
-  std::vector<double> constvs                        = seismic_parameters.modelSettings()->GetConstVs();
-  std::vector<double> constrho                       = seismic_parameters.modelSettings()->GetConstRho();
-  std::vector<double> extra_parameter_default_values = seismic_parameters.modelSettings()->GetExtraParameterDefaultValues();
+  std::vector<double> constvp                        = seismic_parameters.GetModelSettings()->GetConstVp();
+  std::vector<double> constvs                        = seismic_parameters.GetModelSettings()->GetConstVs();
+  std::vector<double> constrho                       = seismic_parameters.GetModelSettings()->GetConstRho();
+  std::vector<double> extra_parameter_default_values = seismic_parameters.GetModelSettings()->GetExtraParameterDefaultValues();
 
-  size_t topk   = seismic_parameters.topK();
-  size_t botk   = seismic_parameters.bottomK();
-  double zlimit = seismic_parameters.modelSettings()->GetZeroThicknessLimit();
+  size_t topk   = seismic_parameters.GetTopK();
+  size_t botk   = seismic_parameters.GetBottomK();
+  double zlimit = seismic_parameters.GetModelSettings()->GetZeroThicknessLimit();
 
   double vp_angle   = vpgrid.GetAngle();
   double cosvpangle = cos(vp_angle);
@@ -1169,30 +1179,21 @@ void SeismicRegridding::FindCornerCellPoints(const NRLib::EclipseGeometry &geome
 
 void SeismicRegridding::VpPostProcess(SeismicParameters &seismic_parameters)
 {
-  NRLib::StormContGrid &vpgrid  = seismic_parameters.vpGrid();
-  NRLib::StormContGrid &vsgrid  = seismic_parameters.vsGrid();
-  NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
+  NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid &vsgrid  = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid &rhogrid = seismic_parameters.GetRhoGrid();
 
-  std::vector<double> constvp   = seismic_parameters.modelSettings()->GetConstVp();
-  std::vector<double> constvs   = seismic_parameters.modelSettings()->GetConstVs();
-  std::vector<double> constrho  = seismic_parameters.modelSettings()->GetConstRho();
+  std::vector<double> constvp   = seismic_parameters.GetModelSettings()->GetConstVp();
+  std::vector<double> constvs   = seismic_parameters.GetModelSettings()->GetConstVs();
+  std::vector<double> constrho  = seismic_parameters.GetModelSettings()->GetConstRho();
 
-  bool default_underburden = seismic_parameters.modelSettings()->GetDefaultUnderburden();
+  bool default_underburden = seismic_parameters.GetModelSettings()->GetDefaultUnderburden();
 
 
   float missing = seismic_parameters.GetMissingVal();
   bool found_bot = false;
   for (size_t i = 0; i < vpgrid.GetNI(); ++i) {
     for (size_t j = 0; j < vpgrid.GetNJ(); ++j) {
-      //for (size_t k = 0; k < vpgrid.GetNK(); ++k) {
-      //  if (vpgrid(i, j, k) == missing) {
-      //    vpgrid(i, j, k)  = constvp [0];
-      //    vsgrid(i, j, k)  = constvs [0];
-      //    rhogrid(i, j, k) = constrho[0];
-      //  }
-      //  else
-      //    break;
-      //}
       if (default_underburden) {
         found_bot = false;
         for (size_t k = vpgrid.GetNK() - 1; k > 0; --k) {
@@ -1201,13 +1202,21 @@ void SeismicRegridding::VpPostProcess(SeismicParameters &seismic_parameters)
             vsgrid (i, j, k) = constvs [1];
             rhogrid(i, j, k) = constrho[1];
           }
-          else if (vpgrid(i, j, k) == missing) {
-            vpgrid (i, j, k) = constvp [2];
-            vsgrid (i, j, k) = constvs [2];
-            rhogrid(i, j, k) = constrho[2];
+          else if (found_bot == false && vpgrid(i, j, k) != missing) {
+            found_bot = true;
+            for (size_t kk = vpgrid.GetNK() - 1; kk > k; --kk) {
+              vpgrid (i, j, kk) = constvp [2];
+              vsgrid (i, j, kk) = constvs [2];
+              rhogrid(i, j, kk) = constrho[2];
+            }
           }
-          else
-            found_bot == true;
+        }
+        if (found_bot == false) {
+          for (size_t k = 0; k < vpgrid.GetNK();++k) {
+            vpgrid (i, j, k) = constvp [1];
+            vsgrid (i, j, k) = constvs [1];
+            rhogrid(i, j, k) = constrho[1];
+          }
         }
       }
       else {
@@ -1218,13 +1227,20 @@ void SeismicRegridding::VpPostProcess(SeismicParameters &seismic_parameters)
             vsgrid (i, j, k) = constvs [1];
             rhogrid(i, j, k) = constrho[1];
           }
-          else if (found_bot != true && vpgrid(i, j, k) != missing) {
+          else if (found_bot == false && vpgrid(i, j, k) != missing) {
             found_bot = true;
             for (size_t kk = vpgrid.GetNK() - 1; kk > k; --kk) {
               vpgrid (i, j, kk) = vpgrid (i, j, k);
               vsgrid (i, j, kk) = vsgrid (i, j, k);
               rhogrid(i, j, kk) = rhogrid(i, j, k);
             }
+          }
+        }
+        if (found_bot == false) {
+          for (size_t k = 0; k < vpgrid.GetNK();++k) {
+            vpgrid (i, j, k) = constvp [1];
+            vsgrid (i, j, k) = constvs [1];
+            rhogrid(i, j, k) = constrho[1];
           }
         }
       }

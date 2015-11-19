@@ -73,7 +73,7 @@ void SeismicOutput::SetSegyGeometry(SeismicParameters   &seismic_parameters,
   xlstepy *= xline_step_;
 
 
-  if (seismic_parameters.segyGeometry() == NULL){
+  if (seismic_parameters.GetSegyGeometry() == NULL){
     const NRLib::SegyGeometry *geometry = 
       new NRLib::SegyGeometry(vol.GetXMin(), vol.GetYMin(), dx, dy,
                               nx, ny, inline_start_ - 0.5, xline_start_ - 0.5, 
@@ -89,7 +89,7 @@ bool SeismicOutput::CheckUTMPrecision(SeismicParameters   &seismic_parameters,
                                       size_t               ny)
 {
   ///---Check that the precision asked for is not too high.---
-  NRLib::SegyGeometry *geometry   = seismic_parameters.segyGeometry();
+  NRLib::SegyGeometry *geometry   = seismic_parameters.GetSegyGeometry();
   double dx          = vol.GetLX()/nx; //nb check
   double dy          = vol.GetLY()/ny; //nb check
   double x_max_coord = 0;
@@ -185,7 +185,7 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               &segyout,
     return false;
   }
 
-  NRLib::SegyGeometry *geometry     = seismic_parameters.segyGeometry();
+  NRLib::SegyGeometry *geometry     = seismic_parameters.GetSegyGeometry();
   geometry->FindILXLGeometry();
   std::string filename_out = prefix_ + fileName + suffix_ + ".segy";
   NRLib::TraceHeaderFormat thf(2);
@@ -351,8 +351,8 @@ void SeismicOutput::WriteDepthSurfaces(const NRLib::RegularSurface<double> &top_
 }
 
 void SeismicOutput::WriteTimeSurfaces(SeismicParameters &seismic_parameters) {
-  NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
-  NRLib::RegularSurface<double> &bottime = seismic_parameters.bottomTime();
+  NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
+  NRLib::RegularSurface<double> &bottime = seismic_parameters.GetBottomTime();
 
   printf("Write time surfaces on Storm format.\n");
   bottime.WriteToFile(prefix_ + "bottime" + suffix_ + ".storm");
@@ -360,7 +360,7 @@ void SeismicOutput::WriteTimeSurfaces(SeismicParameters &seismic_parameters) {
 }
 
 void SeismicOutput::WriteReflections(SeismicParameters &seismic_parameters, double angle_or_offset) {
-  std::vector<NRLib::StormContGrid> &rgridvec = seismic_parameters.rGrids();
+  std::vector<NRLib::StormContGrid> &rgridvec = seismic_parameters.GetRGrids();
 
   printf("Write reflections on Storm format.\n");
   std::string reflection_string = "reflections_";
@@ -378,7 +378,7 @@ void SeismicOutput::WriteReflections(SeismicParameters &seismic_parameters, doub
 void SeismicOutput::WriteVrms(SeismicParameters    &seismic_parameters,
                               std::string           name_pp_or_ps) 
 {
-  NRLib::StormContGrid &vrmsgrid = seismic_parameters.vrmsGrid();
+  NRLib::StormContGrid &vrmsgrid = seismic_parameters.GetVrmsGrid();
   std::string message;
   if (name_pp_or_ps != "") {
     message = "Write vrms grid for " + name_pp_or_ps + " on Storm format.\n";
@@ -393,20 +393,20 @@ void SeismicOutput::WriteVrms(SeismicParameters    &seismic_parameters,
 }
 
 void SeismicOutput::WriteElasticParametersTimeSegy(SeismicParameters &seismic_parameters) {
-  size_t nx = seismic_parameters.seismicGeometry()->nx();
-  size_t ny = seismic_parameters.seismicGeometry()->ny();
-  size_t nt = seismic_parameters.seismicGeometry()->nt();
-  double dt = seismic_parameters.seismicGeometry()->dt();
+  size_t nx = seismic_parameters.GetSeismicGeometry()->nx();
+  size_t ny = seismic_parameters.GetSeismicGeometry()->ny();
+  size_t nt = seismic_parameters.GetSeismicGeometry()->nt();
+  double dt = seismic_parameters.GetSeismicGeometry()->dt();
 
-  NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
-  NRLib::SegyGeometry *segy_geometry     = seismic_parameters.segyGeometry();
-  NRLib::Volume volume_time              = seismic_parameters.seismicGeometry()->createTimeVolume();
+  NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
+  NRLib::SegyGeometry *segy_geometry     = seismic_parameters.GetSegyGeometry();
+  NRLib::Volume volume_time              = seismic_parameters.GetSeismicGeometry()->createTimeVolume();
   double t_min                           = toptime.Min();
   
-  NRLib::StormContGrid &vpgrid  = seismic_parameters.vpGrid();
-  NRLib::StormContGrid &vsgrid  = seismic_parameters.vsGrid();
-  NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
-  NRLib::StormContGrid &twtgrid = seismic_parameters.twtGrid();
+  NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid &vsgrid  = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid &rhogrid = seismic_parameters.GetRhoGrid();
+  NRLib::StormContGrid &twtgrid = seismic_parameters.GetTwtGrid();
 
   NRLib::StormContGrid resample_grid(volume_time, nx, ny, nt);
   GenerateParameterGridForOutput(vpgrid, twtgrid, resample_grid, dt, t_min, toptime);
@@ -424,18 +424,18 @@ void SeismicOutput::WriteElasticParametersTimeSegy(SeismicParameters &seismic_pa
 
 void SeismicOutput::WriteExtraParametersTimeSegy(SeismicParameters &seismic_parameters) {
   printf("Write extra parameters in time on Segy format.\n");
-  size_t nx = seismic_parameters.seismicGeometry()->nx();
-  size_t ny = seismic_parameters.seismicGeometry()->ny();
-  size_t nt = seismic_parameters.seismicGeometry()->nt();
-  double dt = seismic_parameters.seismicGeometry()->dt();
+  size_t nx = seismic_parameters.GetSeismicGeometry()->nx();
+  size_t ny = seismic_parameters.GetSeismicGeometry()->ny();
+  size_t nt = seismic_parameters.GetSeismicGeometry()->nt();
+  double dt = seismic_parameters.GetSeismicGeometry()->dt();
 
-  NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
-  NRLib::SegyGeometry *segy_geometry     = seismic_parameters.segyGeometry();
-  NRLib::Volume volume_time              = seismic_parameters.seismicGeometry()->createTimeVolume();
+  NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
+  NRLib::SegyGeometry *segy_geometry     = seismic_parameters.GetSegyGeometry();
+  NRLib::Volume volume_time              = seismic_parameters.GetSeismicGeometry()->createTimeVolume();
   double tmin                            = toptime.Min();
 
-  NRLib::StormContGrid              &twtgrid              = seismic_parameters.twtGrid();
-  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.extraParametersGrids();
+  NRLib::StormContGrid              &twtgrid              = seismic_parameters.GetTwtGrid();
+  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
     
   for (size_t i = 0; i < extra_parameter_names_.size(); ++i) {
     NRLib::StormContGrid extra_parameter_time_grid(volume_time, nx, ny, nt);
@@ -446,20 +446,20 @@ void SeismicOutput::WriteExtraParametersTimeSegy(SeismicParameters &seismic_para
 }
 
 void SeismicOutput::WriteElasticParametersDepthSegy(SeismicParameters &seismic_parameters) {
-  size_t nx = seismic_parameters.seismicGeometry()->nx();
-  size_t ny = seismic_parameters.seismicGeometry()->ny();
-  size_t nz = seismic_parameters.seismicGeometry()->nz();
-  double dz = seismic_parameters.seismicGeometry()->dz();
-  double z0 = seismic_parameters.seismicGeometry()->z0();
+  size_t nx = seismic_parameters.GetSeismicGeometry()->nx();
+  size_t ny = seismic_parameters.GetSeismicGeometry()->ny();
+  size_t nz = seismic_parameters.GetSeismicGeometry()->nz();
+  double dz = seismic_parameters.GetSeismicGeometry()->dz();
+  double z0 = seismic_parameters.GetSeismicGeometry()->z0();
 
-  NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
-  NRLib::SegyGeometry *segy_geometry     = seismic_parameters.segyGeometry();
-  NRLib::Volume volume                   = seismic_parameters.seismicGeometry()->createDepthVolume();
+  NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
+  NRLib::SegyGeometry *segy_geometry     = seismic_parameters.GetSegyGeometry();
+  NRLib::Volume volume                   = seismic_parameters.GetSeismicGeometry()->createDepthVolume();
 
-  NRLib::StormContGrid &vpgrid  = seismic_parameters.vpGrid();
-  NRLib::StormContGrid &vsgrid  = seismic_parameters.vsGrid();
-  NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
-  NRLib::StormContGrid &zgrid   = seismic_parameters.zGrid();
+  NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid &vsgrid  = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid &rhogrid = seismic_parameters.GetRhoGrid();
+  NRLib::StormContGrid &zgrid   = seismic_parameters.GetZGrid();
 
   NRLib::StormContGrid resample_grid(volume, nx, ny, nz);
   GenerateParameterGridForOutput(vpgrid, zgrid, resample_grid, dz, z0, toptime);
@@ -477,17 +477,17 @@ void SeismicOutput::WriteElasticParametersDepthSegy(SeismicParameters &seismic_p
 
 void SeismicOutput::WriteExtraParametersDepthSegy(SeismicParameters &seismic_parameters) {
   printf("Write extra parameters in depth on Segy format.\n");
-  size_t nx                              = seismic_parameters.seismicGeometry()->nx();
-  size_t ny                              = seismic_parameters.seismicGeometry()->ny();
-  size_t nz                              = seismic_parameters.seismicGeometry()->nz();
-  double dz                              = seismic_parameters.seismicGeometry()->dz();
-  NRLib::RegularSurface<double> &toptime = seismic_parameters.topTime();
+  size_t nx                              = seismic_parameters.GetSeismicGeometry()->nx();
+  size_t ny                              = seismic_parameters.GetSeismicGeometry()->ny();
+  size_t nz                              = seismic_parameters.GetSeismicGeometry()->nz();
+  double dz                              = seismic_parameters.GetSeismicGeometry()->dz();
+  NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
 
-  NRLib::Volume        volume        = seismic_parameters.seismicGeometry()->createDepthVolume();
-  NRLib::StormContGrid &zgrid        = seismic_parameters.zGrid();
-  NRLib::SegyGeometry *segy_geometry = seismic_parameters.segyGeometry();
+  NRLib::Volume        volume        = seismic_parameters.GetSeismicGeometry()->createDepthVolume();
+  NRLib::StormContGrid &zgrid        = seismic_parameters.GetZGrid();
+  NRLib::SegyGeometry *segy_geometry = seismic_parameters.GetSegyGeometry();
 
-  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.extraParametersGrids();
+  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
   
   for (size_t i = 0; i < extra_parameter_names_.size(); ++i) {
     NRLib::StormContGrid extra_parameter_depth_grid(volume, nx, ny, nz);
@@ -498,9 +498,9 @@ void SeismicOutput::WriteExtraParametersDepthSegy(SeismicParameters &seismic_par
 }
 
 void SeismicOutput::WriteVpVsRho(SeismicParameters &seismic_parameters) {
-  NRLib::StormContGrid &vpgrid  = seismic_parameters.vpGrid();
-  NRLib::StormContGrid &vsgrid  = seismic_parameters.vsGrid();
-  NRLib::StormContGrid &rhogrid = seismic_parameters.rhoGrid();
+  NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid &vsgrid  = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid &rhogrid = seismic_parameters.GetRhoGrid();
 
   printf("Write elastic parameters on Storm format.\n");
   std::string filename = prefix_ + "vp" + suffix_ + ".storm";
@@ -512,7 +512,7 @@ void SeismicOutput::WriteVpVsRho(SeismicParameters &seismic_parameters) {
 }
 
 void SeismicOutput::WriteZValues(SeismicParameters &seismic_parameters) {
-  NRLib::StormContGrid &zgrid = seismic_parameters.zGrid();
+  NRLib::StormContGrid &zgrid = seismic_parameters.GetZGrid();
   std::string filename = prefix_ + "zgrid" + suffix_ + ".storm";
 
   printf("Write zvalues on Storm format.\n");
@@ -520,7 +520,7 @@ void SeismicOutput::WriteZValues(SeismicParameters &seismic_parameters) {
 }
 
 void SeismicOutput::WriteTwt(SeismicParameters &seismic_parameters) {
-  NRLib::StormContGrid &twtgrid = seismic_parameters.twtGrid();
+  NRLib::StormContGrid &twtgrid = seismic_parameters.GetTwtGrid();
   std::string filename = prefix_ + "twt" + suffix_ + ".storm";
 
   printf("Write two way time on Storm format.\n");
@@ -570,7 +570,7 @@ size_t SeismicOutput::FindCellIndex(size_t i, size_t j, double target_k, NRLib::
 
 void SeismicOutput::WriteSeismicTimeStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset, bool is_stack) {
   printf("Write seismic in time on Storm format.\n");
-  ModelSettings *model_settings = seismic_parameters.modelSettings();
+  ModelSettings *model_settings = seismic_parameters.GetModelSettings();
   std::string filename;
   if (is_stack == false) {
     filename = prefix_ + "seismic_time_" + NRLib::ToString(offset) + suffix_ + ".storm";
@@ -583,7 +583,7 @@ void SeismicOutput::WriteSeismicTimeStorm(SeismicParameters &seismic_parameters,
 
 void SeismicOutput::WriteSeismicDepthStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &depthgrid, double offset, bool is_stack) {
   printf("Write seismic in depth on Storm format.\n");
-  ModelSettings *model_settings = seismic_parameters.modelSettings();
+  ModelSettings *model_settings = seismic_parameters.GetModelSettings();
   std::string filename;
   if (is_stack == false) {
     filename = prefix_ + "seismic_depth_" + NRLib::ToString(offset) + suffix_ + ".storm";
@@ -596,7 +596,7 @@ void SeismicOutput::WriteSeismicDepthStorm(SeismicParameters &seismic_parameters
 
 void SeismicOutput::WriteSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack) {
   printf("Write seismic in timeshift on Storm format.\n");
-  ModelSettings *model_settings = seismic_parameters.modelSettings();
+  ModelSettings *model_settings = seismic_parameters.GetModelSettings();
   std::string filename;
   if (is_stack == false) {
     filename = prefix_ + "seismic_timeshift_" + NRLib::ToString(offset) + suffix_ + ".storm";

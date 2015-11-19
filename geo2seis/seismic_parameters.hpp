@@ -29,52 +29,53 @@ class SeismicParameters {
     ~SeismicParameters() {};
 
 
-    NRLib::StormContGrid &vpGrid()                             { return *vpgrid_; };
-    NRLib::StormContGrid &vsGrid()                             { return *vsgrid_; };
-    NRLib::StormContGrid &rhoGrid()                            { return *rhogrid_; };
-    NRLib::StormContGrid &zGrid()                              { return *zgrid_; };
-    NRLib::StormContGrid &twtGrid()                            { return *twtgrid_; };
-    NRLib::StormContGrid &twtSSGrid()                          { return *twtssgrid_; };
-    NRLib::StormContGrid &twtPPGrid()                          { return *twtppgrid_; };
-    NRLib::StormContGrid &twtShiftGrid()                       { return *twt_timeshift_; };
-    NRLib::StormContGrid &vrmsGrid()                           { return *vrmsgrid_; };
-    std::vector<NRLib::StormContGrid> &rGrids()                { return *rgridvec_; };
-    std::vector<NRLib::StormContGrid> &extraParametersGrids()  { return *extra_parameter_grid_; };
-    NRLib::EclipseGrid &eclipseGrid()                          { return *eclipse_grid_; };
+    inline NRLib::StormContGrid &GetVpGrid()                            const { return *vpgrid_; };
+    inline NRLib::StormContGrid &GetVsGrid()                            const { return *vsgrid_; };
+    inline NRLib::StormContGrid &GetRhoGrid()                           const { return *rhogrid_; };
+    inline NRLib::StormContGrid &GetZGrid()                             const { return *zgrid_; };
+    inline NRLib::StormContGrid &GetTwtGrid()                           const { return *twtgrid_; };
+    inline NRLib::StormContGrid &GetTwtSSGrid()                         const { return *twtssgrid_; };
+    inline NRLib::StormContGrid &GetTwtPPGrid()                         const { return *twtppgrid_; };
+    inline NRLib::StormContGrid &GetTwtShiftGrid()                      const { return *twt_timeshift_; };
+    inline NRLib::StormContGrid &GetVrmsGrid()                          const { return *vrmsgrid_; };
+    inline std::vector<NRLib::StormContGrid> &GetRGrids()               const { return *rgridvec_; };
+    inline std::vector<NRLib::StormContGrid> &GetExtraParametersGrids() const { return *extra_parameter_grid_; };
+    inline NRLib::EclipseGrid &GetEclipseGrid()                         const { return *eclipse_grid_; };
 
-    NRLib::RegularSurface<double> &topTime()                   { return top_time_; };
-    NRLib::RegularSurface<double> &bottomTime()                { return bot_time_; };
-    NRLib::RegularSurface<double> &topEclipse()                { return topeclipse_; };
-    NRLib::RegularSurface<double> &bottomEclipse()             { return boteclipse_; };
-    
-    ModelSettings*       modelSettings()                       { return model_settings_;};
-    SeismicOutput*       seismicOutput()                       { return seismic_output_; };
-    SeismicGeometry*     seismicGeometry()                     { return seismic_geometry_; };
-    Wavelet*             wavelet()                             { return wavelet_; };
-    double               waveletScale() const                  { return wavelet_scale_; };
-    NRLib::SegyGeometry* segyGeometry()                        { return segy_geometry_; };
+    inline NRLib::RegularSurface<double> &GetTopTime()                        { return top_time_; };
+    inline NRLib::RegularSurface<double> &GetBottomTime()                     { return bot_time_; };
+    //inline NRLib::RegularSurface<double> &GetTopEclipse()               const { return topeclipse_; };
+    //inline NRLib::RegularSurface<double> &GetBottomEclipse()            const { return boteclipse_; };
 
-    size_t topK()                                              { return top_k_; }
-    size_t bottomK()                                           { return bottom_k_; }
-    double theta0()                                            { return theta_0_; }
-    double dTheta()                                            { return dtheta_; }
-    size_t nTheta()                                            { return ntheta_; }
-    std::vector<double> & GetThetaVec()                        { return theta_vec_; }
-    double offset0()                                           { return offset_0_; }
-    double dOffset()                                           { return doffset_; }
-    size_t nOffset()                                           { return noffset_; }
-    std::vector<double> & GetOffsetVec()                       { return offset_vec_; }
-    float GetMissingVal()                                      { return missing_; }
+    inline ModelSettings*       GetModelSettings()                      const { return model_settings_;};
+    inline SeismicOutput*       GetSeismicOutput()                      const { return seismic_output_; };
+    inline SeismicGeometry*     GetSeismicGeometry()                    const { return seismic_geometry_; };
+    inline Wavelet*             GetWavelet()                            const { return wavelet_; };
+    inline double               GetWaveletScale()                       const { return wavelet_scale_; };
+    inline NRLib::SegyGeometry* GetSegyGeometry()                       const { return segy_geometry_; };
 
-    bool GetTimeOutput();
-    bool GetDepthOutput();
-    bool GetTimeshiftOutput();
-    bool GetStackOutput();
-    bool GetSegyOutput();
-    bool GetTimeStormOutput();
-    bool GetDepthStormOutput();
-    bool GetTimeshiftStormOutput();
-    bool GetStormOutput();
+    inline size_t               GetTopK()                               const { return top_k_;      }
+    inline size_t               GetBottomK()                            const { return bottom_k_;   }
+    inline std::vector<double> &GetThetaVec()                                 { return theta_vec_;  }
+    inline std::vector<double> &GetOffsetVec()                                { return offset_vec_; }
+    inline float                GetMissingVal()                         const { return missing_;    }
+
+    //inline double               GetTheta0()                             const { return theta_0_;  }
+    //inline double               GetDTheta()                             const { return dtheta_;   }
+    //inline size_t               GetNTheta()                             const { return ntheta_;   }
+    //inline double               GetOffset0()                            const { return offset_0_; }
+    //inline double               GetDOffset()                            const { return doffset_;  }
+    //inline size_t               GetNOffset()                            const { return noffset_;  }
+
+    inline bool GetTimeOutput()           const;
+    inline bool GetDepthOutput()          const;
+    inline bool GetTimeshiftOutput()      const;
+    inline bool GetStackOutput()          const;
+    inline bool GetSegyOutput()           const;
+    inline bool GetTimeStormOutput()      const;
+    inline bool GetDepthStormOutput()     const;
+    inline bool GetTimeshiftStormOutput() const;
+    inline bool GetStormOutput()          const;
 
     void SetSegyGeometry(const NRLib::SegyGeometry &geometry);
 
@@ -211,5 +212,58 @@ class SeismicParameters {
 
     float missing_;
 };
+
+bool SeismicParameters::GetTimeOutput() const {
+  return (model_settings_->GetOutputTimeSegy()
+    || model_settings_->GetOutputSeismicStackTimeSegy()
+    || model_settings_->GetOutputSeismicTime()
+    || model_settings_->GetOutputSeismicStackTimeStorm()
+    || model_settings_->GetOutputPrenmoTimeSegy());
+}
+
+bool SeismicParameters::GetDepthOutput() const {
+  return (model_settings_->GetOutputDepthSegy()
+    || model_settings_->GetOutputSeismicStackDepthSegy()
+    || model_settings_->GetOutputSeismicDepth()
+    || model_settings_->GetOutputSeismicStackDepthStorm());
+}
+
+bool SeismicParameters::GetTimeshiftOutput() const {
+  return (model_settings_->GetOutputTimeshiftSegy()
+    || model_settings_->GetOutputSeismicStackTimeShiftSegy()
+    || model_settings_->GetOutputSeismicTimeshift()
+    || model_settings_->GetOutputSeismicStackTimeShiftStorm());
+}
+bool SeismicParameters::GetStackOutput() const {
+  return (model_settings_->GetOutputSeismicStackTimeSegy()
+    || model_settings_->GetOutputSeismicStackDepthSegy()
+    || model_settings_->GetOutputSeismicStackTimeShiftSegy()
+    || model_settings_->GetOutputSeismicStackTimeStorm()
+    || model_settings_->GetOutputSeismicStackDepthStorm()
+    || model_settings_->GetOutputSeismicStackTimeShiftStorm());
+}
+bool SeismicParameters::GetSegyOutput() const {
+  return (model_settings_->GetOutputTimeSegy()
+    || model_settings_->GetOutputSeismicStackTimeSegy()
+    || model_settings_->GetOutputDepthSegy()
+    || model_settings_->GetOutputSeismicStackDepthSegy()
+    || model_settings_->GetOutputTimeshiftSegy()
+    || model_settings_->GetOutputSeismicStackTimeShiftSegy()
+    || model_settings_->GetOutputPrenmoTimeSegy());
+}
+bool SeismicParameters::GetTimeStormOutput() const {
+  return (model_settings_->GetOutputSeismicStackTimeStorm() || model_settings_->GetOutputSeismicTime());
+}
+bool SeismicParameters::GetDepthStormOutput() const {
+  return (model_settings_->GetOutputSeismicStackDepthStorm() || model_settings_->GetOutputSeismicDepth());
+}
+bool SeismicParameters::GetTimeshiftStormOutput() const {
+  return (model_settings_->GetOutputSeismicStackTimeShiftStorm() || model_settings_->GetOutputSeismicTimeshift());
+}
+
+bool SeismicParameters::GetStormOutput() const {
+  return (GetTimeStormOutput() || GetDepthStormOutput() || GetTimeshiftStormOutput());
+}
+
 
 #endif

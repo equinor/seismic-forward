@@ -685,55 +685,6 @@ void SeismicParameters::DeleteGeometryAndOutput() {
   delete model_settings_;
 }
 
-bool SeismicParameters::GetTimeOutput() {
-  bool output = (model_settings_->GetOutputSeismicTime()
-              || model_settings_->GetOutputTimeSegy()
-              || model_settings_->GetOutputSeismicStackTimeStorm()      
-              || model_settings_->GetOutputSeismicStackTimeSegy()
-              || model_settings_->GetOutputPrenmoTimeSegy());
-  return output;
-}
-
-bool SeismicParameters::GetDepthOutput() {
-  return (model_settings_->GetOutputSeismicDepth()               
-       || model_settings_->GetOutputDepthSegy()
-       || model_settings_->GetOutputSeismicStackDepthStorm()     
-       || model_settings_->GetOutputSeismicStackDepthSegy());
-}
-
-bool SeismicParameters::GetTimeshiftOutput() {
-  return (model_settings_->GetOutputSeismicTimeshift()           
-       || model_settings_->GetOutputTimeshiftSegy()
-       || model_settings_->GetOutputSeismicStackTimeShiftStorm() 
-       || model_settings_->GetOutputSeismicStackTimeShiftSegy());
-}
-bool SeismicParameters::GetStackOutput() {
-  return (model_settings_->GetOutputSeismicStackTimeStorm()      || model_settings_->GetOutputSeismicStackTimeSegy()
-       || model_settings_->GetOutputSeismicStackTimeShiftStorm() || model_settings_->GetOutputSeismicStackTimeShiftSegy()
-       || model_settings_->GetOutputSeismicStackDepthStorm()     || model_settings_->GetOutputSeismicStackDepthSegy());
-}
-bool SeismicParameters::GetSegyOutput() {
-  return (model_settings_->GetOutputTimeSegy()
-       || model_settings_->GetOutputSeismicStackTimeSegy()
-       || model_settings_->GetOutputDepthSegy()
-       || model_settings_->GetOutputSeismicStackDepthSegy()
-       || model_settings_->GetOutputTimeshiftSegy()
-       || model_settings_->GetOutputSeismicStackTimeShiftSegy()
-       || model_settings_->GetOutputPrenmoTimeSegy());
-}
-bool SeismicParameters::GetTimeStormOutput() {
-  return (model_settings_->GetOutputSeismicTime()      || model_settings_->GetOutputSeismicStackTimeStorm());
-}
-bool SeismicParameters::GetDepthStormOutput() {
-  return (model_settings_->GetOutputSeismicDepth()     || model_settings_->GetOutputSeismicStackDepthStorm());
-}
-bool SeismicParameters::GetTimeshiftStormOutput() {
-  return (model_settings_->GetOutputSeismicTimeshift() || model_settings_->GetOutputSeismicStackTimeShiftStorm());
-}
-
-bool SeismicParameters::GetStormOutput() {
-  return (GetTimeStormOutput() || GetTimeshiftStormOutput() || GetDepthStormOutput());
-}
 
 
 
