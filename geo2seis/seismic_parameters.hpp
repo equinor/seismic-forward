@@ -44,8 +44,8 @@ class SeismicParameters {
 
     inline NRLib::RegularSurface<double> &GetTopTime()                        { return top_time_; };
     inline NRLib::RegularSurface<double> &GetBottomTime()                     { return bot_time_; };
-    //inline NRLib::RegularSurface<double> &GetTopEclipse()               const { return topeclipse_; };
-    //inline NRLib::RegularSurface<double> &GetBottomEclipse()            const { return boteclipse_; };
+    inline NRLib::RegularSurface<double> &GetTopEclipse()                     { return topeclipse_; };
+    inline NRLib::RegularSurface<double> &GetBottomEclipse()                  { return boteclipse_; };
 
     inline ModelSettings*       GetModelSettings()                      const { return model_settings_;};
     inline SeismicOutput*       GetSeismicOutput()                      const { return seismic_output_; };

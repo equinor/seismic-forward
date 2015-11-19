@@ -101,72 +101,72 @@ void SurfaceContainer::copyValuesFromGridToArray(NRLib::RegularSurface<double> &
 
 mxArray * SurfaceContainer::zgrid() {
     if (_zgrid == NULL) {
-        _zgrid = createArrayFromGrid(_seismic_parameters->zGrid());
-        copyValuesFromGridToArray(_seismic_parameters->zGrid(), _zgrid);
+        _zgrid = createArrayFromGrid(_seismic_parameters->GetZGrid());
+        copyValuesFromGridToArray(_seismic_parameters->GetZGrid(), _zgrid);
     }
     return _zgrid;
 }
 
 mxArray * SurfaceContainer::vpgrid() {
     if (_vpgrid == NULL) {
-        _vpgrid = createArrayFromGrid(_seismic_parameters->vpGrid());
-        copyValuesFromGridToArray(_seismic_parameters->vpGrid(), _vpgrid);
+        _vpgrid = createArrayFromGrid(_seismic_parameters->GetVpGrid());
+        copyValuesFromGridToArray(_seismic_parameters->GetVpGrid(), _vpgrid);
     }
     return _vpgrid;
 }
 
 mxArray * SurfaceContainer::vsgrid() {
     if (_vsgrid == NULL) {
-        _vsgrid = createArrayFromGrid(_seismic_parameters->vsGrid());
-        copyValuesFromGridToArray(_seismic_parameters->vsGrid(), _vsgrid);
+        _vsgrid = createArrayFromGrid(_seismic_parameters->GetVsGrid());
+        copyValuesFromGridToArray(_seismic_parameters->GetVsGrid(), _vsgrid);
     }
     return _vsgrid;
 }
 
 mxArray * SurfaceContainer::rhogrid() {
     if (_rhogrid == NULL) {
-        _rhogrid = createArrayFromGrid(_seismic_parameters->rhoGrid());
-        copyValuesFromGridToArray(_seismic_parameters->rhoGrid(), _rhogrid);
+        _rhogrid = createArrayFromGrid(_seismic_parameters->GetRhoGrid());
+        copyValuesFromGridToArray(_seismic_parameters->GetRhoGrid(), _rhogrid);
     }
     return _rhogrid;
 }
 
 mxArray * SurfaceContainer::twtgrid() {
     if (_twtgrid == NULL) {
-        _twtgrid = createArrayFromGrid(_seismic_parameters->twtGrid());
-        copyValuesFromGridToArray(_seismic_parameters->twtGrid(), _twtgrid);
+        _twtgrid = createArrayFromGrid(_seismic_parameters->GetTwtGrid());
+        copyValuesFromGridToArray(_seismic_parameters->GetTwtGrid(), _twtgrid);
     }
     return _twtgrid;
 }
 
 mxArray * SurfaceContainer::toptime() {
     if(_toptime == NULL) {
-        _toptime = createArrayFromGrid(_seismic_parameters->topTime());
-        copyValuesFromGridToArray(_seismic_parameters->topTime(), _toptime);
+        _toptime = createArrayFromGrid(_seismic_parameters->GetTopTime());
+        copyValuesFromGridToArray(_seismic_parameters->GetTopTime(), _toptime);
     }
     return _toptime;
 }
 
 mxArray * SurfaceContainer::bottime() {
     if(_bottime == NULL) {
-        _bottime = createArrayFromGrid(_seismic_parameters->bottomTime());
-        copyValuesFromGridToArray(_seismic_parameters->bottomTime(), _bottime);
+        _bottime = createArrayFromGrid(_seismic_parameters->GetBottomTime());
+        copyValuesFromGridToArray(_seismic_parameters->GetBottomTime(), _bottime);
     }
     return _bottime;
 }
 
 mxArray * SurfaceContainer::topeclipse() {
     if(_topeclipse == NULL) {
-        _topeclipse = createArrayFromGrid(_seismic_parameters->topEclipse());
-        copyValuesFromGridToArray(_seismic_parameters->topEclipse(), _topeclipse);
+        _topeclipse = createArrayFromGrid(_seismic_parameters->GetTopEclipse());
+        copyValuesFromGridToArray(_seismic_parameters->GetTopEclipse(), _topeclipse);
     }
     return _topeclipse;
 }
 
 mxArray * SurfaceContainer::boteclipse() {
     if(_boteclipse == NULL) {
-        _boteclipse = createArrayFromGrid(_seismic_parameters->bottomEclipse());
-        copyValuesFromGridToArray(_seismic_parameters->bottomEclipse(), _boteclipse);
+        _boteclipse = createArrayFromGrid(_seismic_parameters->GetBottomEclipse());
+        copyValuesFromGridToArray(_seismic_parameters->GetBottomEclipse(), _boteclipse);
     }
     return _boteclipse;
 }
