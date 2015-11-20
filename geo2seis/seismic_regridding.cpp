@@ -19,21 +19,11 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
 
   printf("Start finding elastic parameters.\n");
   FindVp(seismic_parameters);
-  NRLib::StormContGrid &vpgrid = seismic_parameters.GetVpGrid();
-  std::vector<double> vp_vec(vpgrid.GetNK());
-  for (size_t k = 0; k < vp_vec.size(); ++k) {
-    vp_vec[k] = vpgrid(500, 1050, k);
-  }
-  seismic_parameters.GetSeismicOutput()->PrintVector(vp_vec, "vp_vec_before_post.txt");
-  printf("Elastic parameters found.\n");
   VpPostProcess(seismic_parameters);
-  for (size_t k = 0; k < vp_vec.size(); ++k) {
-    vp_vec[k] = vpgrid(500, 1050, k);
-  }
-  seismic_parameters.GetSeismicOutput()->PrintVector(vp_vec, "vp_vec_after_post.txt");
+  printf("Elastic parameters found.\n");
 
   seismic_parameters.DeleteEclipseGrid();
-  
+
   NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
   NRLib::RegularSurface<double> &bottime = seismic_parameters.GetBottomTime();
   std::vector<double> constvp            = seismic_parameters.GetModelSettings()->GetConstVp();

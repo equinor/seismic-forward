@@ -180,6 +180,9 @@ int Interpolation::FindNearestNeighborIndex(const double x, const std::vector<do
       dist = newDist;
       idx = i;
     }
+    else if (newDist < 0.0) {
+      break;
+    }
   }
   return idx;
 }
