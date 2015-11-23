@@ -235,13 +235,14 @@ void SeismicOutput::WriteSegyGather(NRLib::Grid2D<double>     &data_gather,
   int firstSample = static_cast<int>(floor((twt_0[0])              / dz));
   int endData   = static_cast<int>(floor((twt_0[data_gather.GetNI()-1]) / dz));
   int firstData   = firstSample;
-  std::vector<double> twt_0_resampl(endData-firstData + 1);
-  for (size_t i = firstData; i < endData+1; ++i) {
-    twt_0_resampl[i-firstData] = i*dz;
+  if (time == false) { //seismic in time should be generated at the samples, but in depth must be resampled
+    std::vector<double> twt_0_resampl(endData - firstData + 1);
+    for (size_t i = firstData; i < endData + 1; ++i) {
+      twt_0_resampl[i - firstData] = i*dz;
+    }
+
+    ResampleDataGather(twt_0, data_gather, twt_0_resampl);
   }
-
-  ResampleDataGather(twt_0, data_gather, twt_0_resampl);
-
   int windowTop, windowBot;
   if ((time == true && time_window_) || (time == false && depth_window_)) {
     if (time == true ) {

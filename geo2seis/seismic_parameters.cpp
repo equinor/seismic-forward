@@ -315,13 +315,13 @@ void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> &twt_0,
     size_t nt   = seismic_geometry_->nt();
     twt_0.resize(nt);
     for (size_t i = 0; i < nt; ++i){
-      twt_0[i] = tmin + (0.5 + i)*dt;
+      twt_0[i] = tmin + i*dt;
     }
     double zmin = seismic_geometry_->z0();
     double dz   = seismic_geometry_->dz();
     z_0.resize(nz);
     for (size_t i = 0; i < nz; ++i){
-      z_0[i] = zmin + (0.5 + i)*dz;
+      z_0[i] = zmin + i*dz;
     }
 
     if (model_settings_->GetTwtFileName() != "") {
@@ -445,7 +445,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
   
   twt_0_.resize(nt_seis);
   for (size_t i = 0; i < nt_seis; ++i){
-    twt_0_[i] = (t0 - xtra_samples_top * dt) + (0.5 + i)*dt;
+    twt_0_[i] = (t0 - xtra_samples_top * dt) + i*dt;
   }
   if (time_stretch_samples > twt_0_.size()){
     time_stretch_samples = twt_0_.size();
