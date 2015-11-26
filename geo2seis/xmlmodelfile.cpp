@@ -857,7 +857,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("extra-parameters-time-segy");
     legalCommands.push_back("extra-parameters-depth-segy");
     legalCommands.push_back("seismic-stack");
-    legalCommands.push_back("seismic-prenmo-time-segy");
+    legalCommands.push_back("seismic-time-prenmo-segy");
 
     bool value;
     if (ParseBool(root, "elastic-parameters", value, errTxt) == true) {
@@ -951,7 +951,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
 
     ParseSeismicStack(root, errTxt);
 
-    if (ParseBool(root, "seismic-prenmo-time-segy", value, errTxt) == true) {
+    if (ParseBool(root, "seismic-time-prenmo-segy", value, errTxt) == true) {
       modelSettings_->SetOutputPrenmoTimeSegy(value);
     }
 

@@ -81,7 +81,7 @@
 	<seismic-time-segy>        yes    </seismic-time-segy>
 	<seismic-depth-segy>       yes    </seismic-depth-segy>
 	<seismic-timeshift-segy>   yes    </seismic-timeshift-segy>
-	<seismic-prenmo-time-segy> yes    </seismic-prenmo-time-segy>
+	<seismic-time-prenmo-segy> yes    </seismic-time-prenmo-segy>
 #	<seismic-stack>
 #		<time-segy>      yes </time-segy>
 #		<depth-segy>     yes </depth-segy>

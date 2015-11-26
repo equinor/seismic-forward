@@ -89,9 +89,9 @@ BOOST_AUTO_TEST_CASE( test_nmo_pp_seis )
     }
   }
   if (true) {
-    filename = "answ_nmo_pp_seismic_prenmo_time.segy";
+    filename = "answ_nmo_pp_seismic_time_prenmo.segy";
     NRLib::SegY segy_answ(filename, 0, thf);
-    filename = "nmo_pp_seismic_prenmo_time.segy";
+    filename = "nmo_pp_seismic_time_prenmo.segy";
     NRLib::SegY segy_test(filename, 0, thf);
     for (size_t tr = 0; tr < 4; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
@@ -172,9 +172,9 @@ BOOST_AUTO_TEST_CASE( test_nmo_ps_seis )
     }
   }
   if (true) {
-    filename = "answ_nmo_ps_seismic_prenmo_time.segy";
+    filename = "answ_nmo_ps_seismic_time_prenmo.segy";
     NRLib::SegY segy_answ(filename, 0, thf);
-    filename = "nmo_ps_seismic_prenmo_time.segy";
+    filename = "nmo_ps_seismic_time_prenmo.segy";
     NRLib::SegY segy_test(filename, 0, thf);
     for (size_t tr = 0; tr < 4; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();

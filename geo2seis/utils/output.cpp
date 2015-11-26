@@ -43,7 +43,7 @@ Output::Output(SeismicParameters &seismic_parameters,
       time_segy_ok_            = seismic_parameters.GetSeismicOutput()->PrepareSegy(time_segy_, twt_0_, time_samples_stretch, filename, seismic_parameters, offset_vec_, offset_vec_.size(), true, nmo);
     }
     if (seismic_parameters.GetModelSettings()->GetOutputPrenmoTimeSegy()) {
-      std::string filename        = "seismic_prenmo_time";
+      std::string filename        = "seismic_time_prenmo";
       prenmo_time_segy_ok_         = seismic_parameters.GetSeismicOutput()->PrepareSegy(prenmo_time_segy_, twt_0_, twt_0_.size(), filename, seismic_parameters, offset_vec_, offset_vec_.size(), true, nmo);
     }
     if (seismic_parameters.GetModelSettings()->GetOutputSeismicStackTimeSegy()) {
