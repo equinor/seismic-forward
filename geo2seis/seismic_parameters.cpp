@@ -330,7 +330,7 @@ void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> &twt_0,
   }
 }
 
-std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_samples,
+std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
                                                           bool ps_seis)
 {
   //Account for stretch by making twt0 sufficiently long. Stretch upwards is also taken into account
@@ -339,16 +339,17 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
   //"Time samples stretch" is number of samples in nmo-corrected seismic trace.
 
   size_t i_max, j_max;
-  double max_twt_value, twtx_max;
+  double twt_max, twtx_max;
   size_t nt                      = seismic_geometry_->nt();
   double dt                      = seismic_geometry_->dt();
   double t0                      = seismic_geometry_->t0();
   std::vector<double> constvp    = model_settings_->GetConstVp();
-  double twt_wavelet             = 2000 / constvp[2] * wavelet_->GetDepthAdjustmentFactor();
+  double z_wavelet               = wavelet_->GetDepthAdjustmentFactor();
+  double twt_wavelet             = 2000 / constvp[2] * z_wavelet;
   size_t nzrefl                  = seismic_geometry_->zreflectorcount();
 
   //find max from twgrid, and index of max twt value
-  FindMaxTwtIndex(i_max, j_max, max_twt_value);
+  FindMaxTwtIndex(i_max, j_max, twt_max);
 
   //find max TWTX for highest offset in order to find the highest TWT value to sample seismic
   if (ps_seis) { //------------PS seismic------------
@@ -364,7 +365,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
 
     FindVrms(vrms_pp_vec, dummy, twt_pp_vec, dummy, vp_vec, 1.0, i_max, j_max, false);
     FindVrms(vrms_ss_vec, dummy, twt_ss_vec, dummy, vs_vec, 1.0, i_max, j_max, false);
-    
+
     double vrms_pp = vrms_pp_vec[nzrefl - 1];
     double vrms_ss = vrms_ss_vec[nzrefl - 1];
     double twt_pp_max = twt_pp_vec[nzrefl - 1];
@@ -396,7 +397,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
     twtx_max += twt_wavelet;
   }
   else {  //------------PP seismic------------
-    max_twt_value += twt_wavelet;
+    twt_max += twt_wavelet;
 
     //find max vrms in index
     std::vector<double> vrms_vec(nzrefl), vp_vec(nzrefl), twt_vec(nzrefl), dummy;
@@ -409,53 +410,35 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & time_stretch_
 
     //find max offset
     double offset_max = offset_0_ + doffset_*(noffset_ - 1);
-    twtx_max = std::sqrt(max_twt_value*max_twt_value + 1000 * 1000 * offset_max*offset_max / (vrms_max_t*vrms_max_t));
+    twtx_max = std::sqrt(twt_max*twt_max + 1000 * 1000 * offset_max*offset_max / (vrms_max_t*vrms_max_t));
   } //---------------------------
 
-  //------------find samples on top and number of samples in nmo corrected seismic------------
-  //find tmin and xtra samples top. 
-  double stretch_factor = twtx_max / seismic_geometry_->tmax();
-  double tmin = t0;
-  size_t xtra_samples_top = 0;
-  if (stretch_factor > 1) {
-    tmin = t0 - 2 * stretch_factor * twt_wavelet;
-    xtra_samples_top = static_cast<size_t>((2 * stretch_factor * twt_wavelet)/dt);
-  }
+  double sf            = twtx_max / seismic_geometry_->tmax(); //stretch factor
+  double tmin          = t0;                                   //min twt sample
+  size_t nt_top        = 0;                                    //samples on top due to stretch
+  double tmax_stretch  = seismic_geometry_->tmax();            //max twt sample due to stretch
+  nt_stretch           = nt;                                   //samples in nmo corrected seismic - include stretch top and bot
+  size_t nt_seis       = nt;                                   //number of samples in prenmo seis (twt_0)
 
-  //find number of samples required for nmo corrected seismic:
-  double tmax_nmo = max_twt_value;
-  if (stretch_factor > 1) {
-    tmax_nmo += 4 * stretch_factor * twt_wavelet;
-    time_stretch_samples = static_cast<size_t>(std::ceil((tmax_nmo - tmin) / dt));
+
+  //using z_wavelet here as a conservative estimate - so not affected by a high <vp-bot> value giving smaller twt_wavelets
+  if (sf > 1) {
+    tmin         -= sf * 2 * z_wavelet;
+    nt_top        = static_cast<size_t>((t0 - tmin) / dt);
+    tmax_stretch += sf * 4 * z_wavelet;
+    nt_stretch    = static_cast<size_t>((tmax_stretch - tmin) / dt);
+    twtx_max     += sf * 1 * z_wavelet;
+    nt_seis       = static_cast<size_t>(floor((twtx_max - tmin) / dt + 0.5));
   }
-  else {
-    time_stretch_samples = nt;
-  }  
-  
-  //------------make twt_0------------
-  //add two wavelets to max twtx. Not necessary for zero offset (stretch_factor = 1),
-  //stretch_factor: graduately increase with offset. Target is ~2 wavelets for long offsets.
-  if (stretch_factor > 1) {
-    twtx_max += stretch_factor * twt_wavelet;
-  }  
-  size_t nt_seis = nt;
-  if (twtx_max > tmin + nt*dt) {
-    nt_seis = static_cast<size_t>(floor((twtx_max - tmin)/dt + 0.5));
-  }
-  
+ 
   twt_0_.resize(nt_seis);
   for (size_t i = 0; i < nt_seis; ++i){
-    twt_0_[i] = (t0 - xtra_samples_top * dt) + i*dt;
+    twt_0_[i] = (t0 - nt_top * dt) + i*dt;
   }
-  if (time_stretch_samples > twt_0_.size()){
-    time_stretch_samples = twt_0_.size();
+  if (nt_stretch > twt_0_.size()){
+    nt_stretch = twt_0_.size();
   }
-  //std::cout << "\ntmax_nmo = " << tmax_nmo << "\n";
-  //std::cout << "twtx_max = " << twtx_max << "\n";
-  //std::cout << "stretch_factor = " << stretch_factor << "\n";
-  //std::cout << "nt_seis " << nt_seis << "\n";
-  //std::cout << "time_stretch_samples " << time_stretch_samples << "\n";
-  //std::cout << "xtra_samples_top " << xtra_samples_top << "\n";
+
   return twt_0_;
 }
 

@@ -312,9 +312,10 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
 
       double wavelet_scale        = param->seismic_parameters.GetWaveletScale();
       Wavelet * wavelet           = param->seismic_parameters.GetWavelet();
-      double twt_wavelet          = 2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor();
+      double z_wavelet            = wavelet->GetDepthAdjustmentFactor();
+      double twt_wavelet          = 2000 / constvp[2] * z_wavelet;
       double tmax                 = param->seismic_parameters.GetSeismicGeometry()->tmax();
-      double tmax_limits          = tmax + 2 * twt_wavelet;
+      double tmax_limits          = tmax + 4 * z_wavelet;
 
       std::vector<size_t> n_min(param->offset_vec.size());
       std::vector<size_t> n_max(param->offset_vec.size());
@@ -402,7 +403,6 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         FindTWTxPS(twtx_reg, twt_ss_vec_reg, twt_pp_vec_reg, vrms_pp_vec_reg, vrms_ss_vec_reg, offset_ss_reg, offset_pp_reg);
  
         //find limits for where to generate seismic, for each offset        
-        tmax_limits = tmax + 2 * twt_ps_wavelet;
         FindSeisLimits(twtx_reg, param->twt_0, n_min, n_max, tmax_limits);
 
         //if (i == 610 && j == 1050) {
@@ -539,7 +539,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       if (nmo_output->GetDepthSegyOk() || nmo_output->GetDepthStackSegyOk() || param->seismic_parameters.GetDepthStormOutput()) {
         std::vector<double> zgrid_vec_extrapol(nzrefl+2);
         std::vector<double> twt_vec_extrapol(nzrefl+2);
-		    ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, wavelet->GetDepthAdjustmentFactor(), constvp[2], constvs[2], i, j, ps_seis);
+        ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, wavelet->GetDepthAdjustmentFactor(), constvp[2], constvs[2], i, j, ps_seis);
         if (nmo_output->GetDepthSegyOk()) {
           ConvertSeis(twt_vec_extrapol, param->twt_0, zgrid_vec_extrapol, param->z_0, nmo_timegrid_pos, nmo_depthgrid_pos, max_sample);
         }
@@ -726,6 +726,7 @@ void SeismicForward::GenerateSeismicTraces(Output             *seis_output,
           ConvertSeis(twt_vec_extrapol, param->twt_0, zgrid_vec_extrapol, param->z_0, timegrid_stack_pos, depthgrid_stack_pos, timegrid_stack_pos.GetNI());
         }
       }
+      //NBNB MARIA her kan resampling til z i riktig dz intervall gjøres med det samme!!! :) For å minske tiden i utskrift!
 
       //timeshift:
       if (seis_output->GetTimeshiftSegyOk() || seis_output->GetTimeshiftStackSegyOk() || param->seismic_parameters.GetTimeshiftStormOutput()) {
@@ -1003,7 +1004,7 @@ void SeismicForward::NMOCorrect(const std::vector<double>   &t_in,
       std::cout << "ERROR: stretch not properly accounted for.\n";
       error = true;
       //std::cout << "index = " << index << " ni = " << data_out.GetNI() << "\n";
-      index = data_out.GetNI();      
+      index = data_out.GetNI();
     }
     for (size_t k = 0; k < index; k++) {
       data_out(k, off) = data_vec_out[k];
@@ -1194,7 +1195,7 @@ void SeismicForward::FindSeisLimits(const NRLib::Grid2D<double> &twtx_grid,
     twtx_max = 0;
     for (size_t i = 0; i < index; ++i) {
       if (twtx_grid(i, off) > twtx_max) twtx_max = twtx_grid(i, off);
-      if (twtx_grid(i, off) < twtx_min) twtx_min = twtx_grid(i, off);        
+      if (twtx_grid(i, off) < twtx_min) twtx_min = twtx_grid(i, off);
     }
 
     if (twtx_min > tmin) {
