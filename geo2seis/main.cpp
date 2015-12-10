@@ -70,7 +70,9 @@ int main(int argc, char *argv[]) {
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
       seismic_parameters.PrintElapsedTime(t1, "for preprocesses");
       SeismicForward::DoSeismicForward(seismic_parameters);
-    } else {
+      //seismic_parameters.PrintElapsedTime(t1, "for total program");
+    } 
+    else {
         printf("Press a key and then enter to continue.\n");
         int x;
         cin >> x;

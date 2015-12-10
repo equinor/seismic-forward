@@ -54,7 +54,6 @@ ModelSettings::ModelSettings(void) {
     output_twt_ = false;
     output_vrms_ = false;
     output_twt_offset_ = false;
-    nlayers_file_name_ = "";
     prefix_ = "";
     suffix_ = "";
     zero_thickness_limit_ = 0.1;

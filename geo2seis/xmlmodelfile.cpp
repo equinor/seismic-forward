@@ -666,26 +666,11 @@ bool XmlModelFile::ParseDepth(TiXmlNode *node, std::string &errTxt) {
     }
 
     std::vector<std::string> legalCommands;
-    //legalCommands.push_back("top-surface-file"); commands not used. probably never used.
-    //legalCommands.push_back("bot-surface-file");
-    //legalCommands.push_back("constant-top");
-    //legalCommands.push_back("constant-bot");
     legalCommands.push_back("top-time-surface");
     legalCommands.push_back("top-time-constant");
-    legalCommands.push_back("nlayers-from-file");
 
     std::string value;
-    //bool topfile, botfile;
-    //topfile = false;
-    //botfile = false;
-    //if(ParseValue(root, "top-surface-file", value, errTxt) == true){
-    //  modelSettings_->SetTopSurfaceFile(value);
-    //  topfile = true;
-    //}
-    //if(ParseValue(root, "bot-surface-file", value, errTxt) == true){
-    //  modelSettings_->SetBotSurfaceFile(value);
-    //  botfile = true;
-    //}
+
     if (ParseValue(root, "top-time-surface", value, errTxt) == true) {
         modelSettings_->SetTopTimeSurface(value);
     }
@@ -694,22 +679,6 @@ bool XmlModelFile::ParseDepth(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetTopTimeConstant(val);
     }
 
-
-    //if(ParseValue(root, "constant-top", val, errTxt) == true){
-    //  modelSettings_->SetConstantTop(val);
-    //  if(topfile == true)
-    //    errTxt+= "Top depth is given both as surface and constant.\n";
-    //}
-    //if(ParseValue(root, "constant-bot", val, errTxt) == true){
-    //  modelSettings_->SetConstantBot(val);
-    //  if(botfile == true)
-    //    errTxt+= "Bottom depth is given both as surface and constant.\n";
-    //}
-    if (ParseValue(root, "nlayers-from-file", value, errTxt) == true) {
-        modelSettings_->SetNLayersFile(value);
-
-
-    }
     CheckForJunk(root, errTxt, legalCommands);
     return true;
 

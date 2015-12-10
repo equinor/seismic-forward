@@ -52,7 +52,7 @@ class ResultTrace {
     NRLib::Grid2D<double> timeshiftgrid_pos_;
     NRLib::Grid2D<double> timeshiftgrid_stack_pos_;
     NRLib::Grid2D<double> twtx_reg_;
-    NRLib::Grid2D<double> twtx_;      
+    NRLib::Grid2D<double> twtx_;
     NRLib::Grid2D<double> theta_;
     NRLib::Grid2D<double> refl_;
     

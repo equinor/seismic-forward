@@ -55,18 +55,14 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
     
   }
   //add wavelet above and below toptime and bottime
-  toptime.Add(-2000 / constvp[0] * wavelet->GetDepthAdjustmentFactor()); // add one wavelet length to bot and subtract from top
-  bottime.Add(2000 / constvp[2] * wavelet->GetDepthAdjustmentFactor());
+  toptime.Add(-1 * wavelet->GetTwtWavelet()); // add one wavelet length to bot and subtract from top
+  bottime.Add(     wavelet->GetTwtWavelet());
 
   double tmin = toptime.Min();
   size_t ns = static_cast<size_t>(floor(tmin / seismic_parameters.GetSeismicGeometry()->dt() + 0.5));
   tmin = ns * seismic_parameters.GetSeismicGeometry()->dt();
   double tmax = bottime.Max();
   size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.GetSeismicGeometry()->dt()+0.5));
-  if (seismic_parameters.GetModelSettings()->GetNLayersFileName() != "") {
-    NRLib::StormContGrid tmpgrid(seismic_parameters.GetModelSettings()->GetNLayersFileName());
-    nt = tmpgrid.GetNK();
-  }
   seismic_parameters.GetSeismicGeometry()->setNt(nt);
   seismic_parameters.GetSeismicGeometry()->setTRange(tmin, tmax);
 
@@ -308,7 +304,6 @@ void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
 
 void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters)
 {
-  std::cout << "New routine for finding vp, vs and rho.\n";
   NRLib::StormContGrid              &vpgrid               = seismic_parameters.GetVpGrid();
   NRLib::StormContGrid              &vsgrid               = seismic_parameters.GetVsGrid();
   NRLib::StormContGrid              &rhogrid              = seismic_parameters.GetRhoGrid();

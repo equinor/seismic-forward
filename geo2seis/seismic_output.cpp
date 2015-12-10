@@ -235,14 +235,7 @@ void SeismicOutput::WriteSegyGather(NRLib::Grid2D<double>     &data_gather,
   int firstSample = static_cast<int>(floor((twt_0[0])              / dz));
   int endData   = static_cast<int>(floor((twt_0[data_gather.GetNI()-1]) / dz));
   int firstData   = firstSample;
-  if (time == false) { //seismic in time should be generated at the samples, but in depth must be resampled
-    std::vector<double> twt_0_resampl(endData - firstData + 1);
-    for (size_t i = firstData; i < endData + 1; ++i) {
-      twt_0_resampl[i - firstData] = i*dz;
-    }
 
-    ResampleDataGather(twt_0, data_gather, twt_0_resampl);
-  }
   int windowTop, windowBot;
   if ((time == true && time_window_) || (time == false && depth_window_)) {
     if (time == true ) {
@@ -326,22 +319,6 @@ void SeismicOutput::WriteZeroSegyGather(NRLib::SegY               &segyout,
   }
 }
 
-void SeismicOutput::ResampleDataGather(const std::vector<double> twt_0,
-                                       NRLib::Grid2D<double>    &data_gather,
-                                       std::vector<double>       twt_0_resampl)
-{
-  std::vector<double> data_vec(twt_0.size());
-
-  for (size_t off = 0; off < data_gather.GetNJ(); ++off) {
-    for (size_t k = 0; k < data_gather.GetNI(); ++k) {
-      data_vec[k] = data_gather(k, off);
-    }
-    data_vec = NRLib::Interpolation::Interpolate1D(twt_0, data_vec, twt_0_resampl, "linear");
-    for (size_t k = 0; k < data_gather.GetNI(); ++k) {
-      data_gather(k, off) = data_vec[k];
-    }
-  }
-}
 
 void SeismicOutput::WriteDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse) {
   printf("Write depth surfaces on Storm format\n");
@@ -609,6 +586,7 @@ void SeismicOutput::WriteSeismicTimeshiftStorm(SeismicParameters &seismic_parame
 }
 
 void SeismicOutput::PrintVector(std::vector<double> vec, std::string filename) {
+  std::cout << "debug print: " << filename << "\n";
   std::ofstream fout;
   NRLib::OpenWrite(fout, filename);
   for (size_t i = 0; i < vec.size(); ++i) {
@@ -618,6 +596,7 @@ void SeismicOutput::PrintVector(std::vector<double> vec, std::string filename) {
 }
 
 void SeismicOutput::PrintVectorSizeT(std::vector<size_t> vec, std::string filename) {
+  std::cout << "debug print: " << filename << "\n";
   std::ofstream fout;
   NRLib::OpenWrite(fout, filename);
   for (size_t i = 0; i < vec.size(); ++i) {
@@ -627,6 +606,7 @@ void SeismicOutput::PrintVectorSizeT(std::vector<size_t> vec, std::string filena
 }
 
 void SeismicOutput::PrintMatrix(NRLib::Grid2D<double> matrix, std::string filename) {
+  std::cout << "debug print: " << filename << "\n";
   std::ofstream fout;
   NRLib::OpenWrite(fout, filename);
   for (size_t i = 0; i < matrix.GetNI(); ++i) {

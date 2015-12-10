@@ -48,7 +48,6 @@ void SeismicParameters::CalculateAngleSpan() {
   }
   else {
     ntheta_ = static_cast<size_t>((theta_max_ - theta_0_) / dtheta_ + 1.01);
-    //dtheta_ = (theta_max_ - theta_0_) / (ntheta_ - 1);
   }
   theta_vec_.resize(ntheta_);
   for (size_t i = 0; i < ntheta_; ++i) {
@@ -67,7 +66,6 @@ void SeismicParameters::CalculateOffsetSpan() {
   }
   else {
     noffset_ = size_t((offset_max_ - offset_0_) / doffset_) + 1;
-    //doffset_ = (offset_max_ - offset_0_) / (noffset_ - 1);
   }
   offset_vec_.resize(noffset_);
   for (size_t i = 0; i < noffset_; ++i) {
@@ -169,8 +167,8 @@ void SeismicParameters::FindVrms(std::vector<double>       &vrms_vec,
   if (include_regular) {
     //generate vrms_vec_reg - including overburden and underburden
     
-    double twt_wavelet = 2000 / const_v * wavelet_->GetDepthAdjustmentFactor();
-    double vrms_under = vrms_vec[nk - 1]*vrms_vec[nk - 1]*twt_vec[nk - 1] + const_v * const_v * twt_wavelet;
+    double twt_wavelet = wavelet_->GetTwtWavelet();
+    double vrms_under  = vrms_vec[nk - 1]*vrms_vec[nk - 1]*twt_vec[nk - 1] + const_v * const_v * twt_wavelet;
     vrms_under *= (1 / (twt_vec[nk - 1] + twt_wavelet));
     vrms_under  = std::sqrt(vrms_under);
 
@@ -192,8 +190,6 @@ void SeismicParameters::FindVrms(std::vector<double>       &vrms_vec,
     vrms_vec_in.resize(index + 1);
     twt_vec_in [index] = twt_vec_in[index - 1] + twt_wavelet;
     vrms_vec_in[index] = vrms_under;
-    //seismic_output_->PrintVector(twt_vec_in, "twt_vec_in.txt");
-    //seismic_output_->PrintVector(vrms_vec_in, "vrms_vec_in.txt");
 
     vrms_vec_reg = NRLib::Interpolation::Interpolate1D(twt_vec_in, vrms_vec_in, twt_vec_reg, "linear");
   }  
@@ -320,8 +316,12 @@ void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> &twt_0,
     double zmin = seismic_geometry_->z0();
     double dz   = seismic_geometry_->dz();
     z_0.resize(nz);
+    //find min z in a sample
+    size_t nzmin = static_cast<size_t>(floor(zmin) / dz + 0.5);
+    double zmin_sampl = nzmin *dz;
+
     for (size_t i = 0; i < nz; ++i){
-      z_0[i] = zmin + i*dz;
+      z_0[i] = zmin_sampl + i*dz;
     }
 
     if (model_settings_->GetTwtFileName() != "") {
@@ -344,8 +344,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
   double dt                      = seismic_geometry_->dt();
   double t0                      = seismic_geometry_->t0();
   std::vector<double> constvp    = model_settings_->GetConstVp();
-  double z_wavelet               = wavelet_->GetDepthAdjustmentFactor();
-  double twt_wavelet             = 2000 / constvp[2] * z_wavelet;
+  double twt_wavelet             = wavelet_->GetTwtWavelet();
   size_t nzrefl                  = seismic_geometry_->zreflectorcount();
 
   //find max from twgrid, and index of max twt value
@@ -359,26 +358,26 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
     for (size_t k = 0; k < nzrefl; ++k) {
       twt_pp_vec[k] = (*twtppgrid_)(i_max, j_max, k);
       twt_ss_vec[k] = (*twtssgrid_)(i_max, j_max, k);
-      vp_vec[k] = (*vpgrid_)(i_max, j_max, k);
-      vs_vec[k] = (*vsgrid_)(i_max, j_max, k);
+      vp_vec[k]     = (*vpgrid_)(i_max, j_max, k);
+      vs_vec[k]     = (*vsgrid_)(i_max, j_max, k);
     }
 
     FindVrms(vrms_pp_vec, dummy, twt_pp_vec, dummy, vp_vec, 1.0, i_max, j_max, false);
     FindVrms(vrms_ss_vec, dummy, twt_ss_vec, dummy, vs_vec, 1.0, i_max, j_max, false);
 
-    double vrms_pp = vrms_pp_vec[nzrefl - 1];
-    double vrms_ss = vrms_ss_vec[nzrefl - 1];
-    double twt_pp_max = twt_pp_vec[nzrefl - 1];
-    double twt_ss_max = twt_ss_vec[nzrefl - 1];
+    double vrms_pp     = vrms_pp_vec[nzrefl - 1];
+    double vrms_ss     = vrms_ss_vec[nzrefl - 1];
+    double twt_pp_max  = twt_pp_vec[nzrefl - 1];
+    double twt_ss_max  = twt_ss_vec[nzrefl - 1];
     double offset_max = offset_0_ + doffset_*(noffset_ - 1);
-    double tmp = offset_max / (vrms_pp_vec[nzrefl - 1]*twt_pp_max / 1000);
+    double tmp         = offset_max / (vrms_pp_vec[nzrefl - 1]*twt_pp_max / 1000);
     double start_value = atan(tmp);
     if (start_value >= 1.0)
       start_value = 0.99;
-    double dU = vrms_ss * twt_ss_max / 2000;
-    double dD = vrms_pp* twt_pp_max / 2000;
-    double vr = vrms_ss / vrms_pp;
-    size_t n_it = 10;
+    double dU    = vrms_ss * twt_ss_max / 2000;
+    double dD    = vrms_pp* twt_pp_max / 2000;
+    double vr    = vrms_ss / vrms_pp;
+    size_t n_it  = 10;
     double y_out = FindSinThetaPSWithNewtonsMethod(start_value,
                                                    offset_max,
                                                    dU,
@@ -386,19 +385,16 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
                                                    vr,
                                                    0.00001,
                                                    n_it);
-    double theta_ss = asin(vr*y_out);
-    double theta_pp = asin(y_out);
+    double theta_ss  = asin(vr*y_out);
+    double theta_pp  = asin(y_out);
     double offset_pp = tan(theta_pp)*dD;
     double offset_ss = tan(theta_ss)*dU;
 
     double twtx_pp = std::sqrt(twt_pp_max * twt_pp_max / 4 + 1000 * 1000 * (offset_pp * offset_pp) / (vrms_pp * vrms_pp));
     double twtx_ss = std::sqrt(twt_ss_max * twt_ss_max / 4 + 1000 * 1000 * (offset_ss * offset_ss) / (vrms_ss * vrms_ss));
-    twtx_max = twtx_pp + twtx_ss;
-    twtx_max += twt_wavelet;
+    twtx_max       = twtx_pp + twtx_ss;
   }
   else {  //------------PP seismic------------
-    twt_max += twt_wavelet;
-
     //find max vrms in index
     std::vector<double> vrms_vec(nzrefl), vp_vec(nzrefl), twt_vec(nzrefl), dummy;
     for (size_t k = 0; k < nzrefl; ++k) {
@@ -413,22 +409,20 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
     twtx_max = std::sqrt(twt_max*twt_max + 1000 * 1000 * offset_max*offset_max / (vrms_max_t*vrms_max_t));
   } //---------------------------
 
-  double sf            = twtx_max / seismic_geometry_->tmax(); //stretch factor
-  double tmin          = t0;                                   //min twt sample
+  double sf            = twtx_max / twt_max;                   //stretch factor. NO wavelet in twtx_max and twt_max
+  double tmin          = t0;                                   //min twt sample. Includes wavlet
   size_t nt_top        = 0;                                    //samples on top due to stretch
-  double tmax_stretch  = seismic_geometry_->tmax();            //max twt sample due to stretch
+  double tmax_stretch  = seismic_geometry_->tmax();            //max twt sample due to stretch. Includes wavelet
   nt_stretch           = nt;                                   //samples in nmo corrected seismic - include stretch top and bot
   size_t nt_seis       = nt;                                   //number of samples in prenmo seis (twt_0)
+  twtx_max            += twt_wavelet;                          //add one wavelet (as no wavelet is included here)
 
-
-  //using z_wavelet here as a conservative estimate - so not affected by a high <vp-bot> value giving smaller twt_wavelets
   if (sf > 1) {
-    tmin         -= sf * 2 * z_wavelet;
+    tmin         -= sf * 2 * twt_wavelet;
     nt_top        = static_cast<size_t>((t0 - tmin) / dt);
-    tmax_stretch += sf * 4 * z_wavelet;
-    nt_stretch    = static_cast<size_t>((tmax_stretch - tmin) / dt);
-    twtx_max     += sf * 1 * z_wavelet;
-    nt_seis       = static_cast<size_t>(floor((twtx_max - tmin) / dt + 0.5));
+    tmax_stretch += sf * 6 * twt_wavelet;
+    nt_stretch    = static_cast<size_t>(floor((tmax_stretch - tmin) / dt + 0.5));
+    nt_seis       = static_cast<size_t>(floor((twtx_max     - tmin) / dt + 0.5));
   }
  
   twt_0_.resize(nt_seis);
@@ -438,7 +432,6 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
   if (nt_stretch > twt_0_.size()){
     nt_stretch = twt_0_.size();
   }
-
   return twt_0_;
 }
 
@@ -447,17 +440,32 @@ std::vector<double>  SeismicParameters::GenerateZ0ForNMO(){
   double zmin                    = seismic_geometry_->z0();
   double dz                      = seismic_geometry_->dz();
 
+  std::vector<double> constvp    = model_settings_->GetConstVp();
+  double twt_wavelet             = wavelet_->GetTwtWavelet();
+  double z_top_wavelet           = twt_wavelet * constvp[0] / 2000;
+  double z_bot_wavelet           = twt_wavelet * constvp[2] / 2000;
+
   double tmax                    = seismic_geometry_->tmax();
   double twt_0_max               = twt_0_[twt_0_.size()-1];
-  double factor                  = 2 * twt_0_max / tmax;
-  double max_z                   = zmin + (nz-1)*dz + factor * wavelet_->GetDepthAdjustmentFactor();
-  double min_z                   = zmin             - factor * wavelet_->GetDepthAdjustmentFactor();
-  
+  double sf                      = (twt_0_max - twt_wavelet) / (tmax - twt_wavelet);
+  double min_z                   = zmin;
+  double max_z                   = zmin + (nz-1)*dz;
+
+  //account for stretch above and below reservoir
+  if (sf > 1) {
+    min_z -= sf * 2 * z_top_wavelet;
+    max_z += sf * 2 * z_bot_wavelet;
+  }
+
   size_t nz_seis                 = static_cast<size_t>(std::ceil((max_z - min_z)/dz));
+
+  //find min z in a sample
+  size_t nzmin = static_cast<size_t>(floor(min_z) / dz + 0.5);
+  double min_z_sampl = nzmin *dz;
 
   z_0_.resize(nz_seis);
   for (size_t i = 0; i < nz_seis; ++i){
-    z_0_[i] = min_z + (0.5 + i)*dz;
+    z_0_[i] = min_z_sampl + i*dz;
   }
   return z_0_;
 }
@@ -487,17 +495,15 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
   
   size_t n_samples_top = 0;
   size_t n_samples_bot = 0;
-  if (delta_top < 0) { //shift oppover...må ta med mer i toppen
+  if (delta_top < 0) { //shift upwards...include more samples in the top
     n_samples_top = static_cast<size_t>(std::ceil((-1*delta_top)/dt));
   }
-  if (delta_bot > 0) { //shift nedover, må ta med mer i bunnen
+  if (delta_bot > 0) { //shift downwards...include more samples below
     n_samples_bot = static_cast<size_t>(std::ceil(delta_bot/dt));
   }
 
   size_t n_samples_tot = n_samples_bot + n_samples + n_samples_top;
   double twts_min = twt_0_min - n_samples_top *dt;
-
-  //std::cout << " n_samples, n_samples_top, n_samples_bot" << n_samples << " " << n_samples_top << " " << n_samples_bot << "\n";
 
   twt_0_s.resize(n_samples_tot);
 
@@ -554,7 +560,6 @@ void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &theta
   }
   size_t n_values = offset.size() * twt_pp_vec.size();
   double it_avg = static_cast<double>(n_it_avg) / static_cast<double>(n_values);
-  //std::cout << "avg iterations " << it_avg << "\n";
 }
 
 
@@ -845,12 +850,15 @@ void SeismicParameters::FindSurfaceGeometry() {
         bot_time_(i, j) = top_time_(i, j);
       }
   }
+  double twt_wavelet   = wavelet_->GetTwtWavelet();
+  std::vector<double> constvp = model_settings_->GetConstVp();
+  double z_top_wavelet = twt_wavelet * constvp[0] / 2000;
+  double z_bot_wavelet = twt_wavelet * constvp[2] / 2000;
+  topeclipse_.Add(-1 * z_top_wavelet); // add one wavelet length to bot and subtract from top
+  boteclipse_.Add(     z_bot_wavelet);
 
-  topeclipse_.Add(-1 * wavelet_->GetDepthAdjustmentFactor()); // add one wavelet length to bot and subtract from top
-  boteclipse_.Add(wavelet_->GetDepthAdjustmentFactor());
-
-  d1 += -1 * wavelet_->GetDepthAdjustmentFactor();
-  d2 +=      wavelet_->GetDepthAdjustmentFactor();
+  d1 -= twt_wavelet;
+  d2 += twt_wavelet;
 
   seismic_geometry_->setZRange(d1, d2);
 }
@@ -976,7 +984,7 @@ void SeismicParameters::PrintElapsedTime(time_t start_time, std::string work)
   zeros = std::string(2 - seconds_s.length(), '0');
   seconds_s = zeros + seconds_s;
 
-  std::cout << "Total time " << work << ": "
+  std::cout << "\nTotal time " << work << ": "
     << hours_s << ':'
     << minutes_s << ':'
     << seconds_s

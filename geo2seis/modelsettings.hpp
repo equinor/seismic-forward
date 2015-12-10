@@ -119,8 +119,6 @@ public:
 
   void SetOutputTwtOffset(bool value) {output_twt_offset_ = value;}
 
-  void SetNLayersFile(std::string val) { nlayers_file_name_ = val; }
-
   void SetPrefix(std::string val) {prefix_ = val;}
 
   void SetSuffix(std::string val) {suffix_ = val;}
@@ -472,10 +470,6 @@ public:
     return output_twt_offset_;
   }
 
-  std::string GetNLayersFileName() {
-    return nlayers_file_name_;
-  }
-
   std::string GetPrefix() {
     return prefix_;
   }
@@ -614,7 +608,6 @@ private:
   bool output_vp_, output_reflections_, output_zvalues_, output_seismic_time_, output_seismic_depth_, output_seismic_timeshift_;
 
   bool output_time_surfaces_, output_depth_surfaces_, output_twt_, output_vrms_, output_twt_offset_;
-  std::string nlayers_file_name_;
   std::string prefix_, suffix_;
   double zero_thickness_limit_;
   bool output_time_segy_, output_depth_segy_, output_timeshift_segy_;

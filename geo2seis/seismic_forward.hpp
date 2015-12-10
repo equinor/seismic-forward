@@ -94,8 +94,7 @@ class SeismicForward {
                            NRLib::Grid2D<double>       &data_out,
                            const std::vector<size_t>   &n_min,
                            const std::vector<size_t>   &n_max,
-                           size_t                      &max_sample,
-                           bool                        &error);
+                           size_t                      &max_sample);
 
     static void FindNMOTheta(NRLib::Grid2D<double>       &thetagrid,
                              const std::vector<double> &twt_vec,
@@ -127,11 +126,6 @@ class SeismicForward {
                                  double                       twt_above,
                                  double                       twt_below);
 
-    static void ResampleTWTxOld(const NRLib::Grid2D<double> &twtx_grid,
-                                NRLib::Grid2D<double>       &twtx_grid_reg,
-                                const std::vector<double>   &twt_vec,
-                                const std::vector<double>   &twt_0);
-
     static void ResampleTWTx(const NRLib::Grid2D<double> &twtx_grid,
                                   const NRLib::Grid2D<double> &twtx_below,
                                   NRLib::Grid2D<double>       &twtx_grid_reg,
@@ -153,17 +147,15 @@ class SeismicForward {
                           const std::vector<double>   &offset);
 
     static void FindSeisLimits(const NRLib::Grid2D<double>       &twtx_grid,
-                                  const std::vector<double>   &twt_0,
-                                  std::vector<size_t> &n_min,
-                                  std::vector<size_t> &n_max,
-                                  double  tmax);
-
+                               const std::vector<double>   &twt_0,
+                               std::vector<size_t> &n_min,
+                               std::vector<size_t> &n_max,
+                               double  twt_wave);
 
     static void ExtrapolZandTwtVec(std::vector<double>        &zgrid_vec_extrapol,
                                    std::vector<double>        &twt_vec_extrapol,
                                    const std::vector<double>  &twt_vec,
                                    const NRLib::StormContGrid &zgrid,
-                                   double                      wavelet_depth_adj_fact,
                                    double                      vp_bot,
                                    double                      vs_bot,
                                    size_t                      i,
