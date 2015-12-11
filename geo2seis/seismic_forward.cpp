@@ -1047,9 +1047,9 @@ void SeismicForward::FindSeisLimits(const NRLib::Grid2D<double> &twtx_grid,
         break;
       }
     }
-    for (size_t i = twt_0.size() - 1; i >= 0; --i) {
-      if (twt_0[i] < twtx_min) {
-        i_min = i;
+    for (int i = twt_0.size() - 1; i >= 0; --i) {
+      if (twt_0[static_cast<size_t>(i)] < twtx_min) {
+        i_min = static_cast<size_t>(i);
         break;
       }
     }
