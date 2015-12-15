@@ -36,9 +36,9 @@
 	<scale> -1 </scale>
 </wavelet>
 <output-grid>
-    <depth>
+    <top-time>
       <top-time-surface> Input_top_surface_PS.irap </top-time-surface>
-    </depth>
+    </top-time>
 	<area>
 	  <x0>  472546 </x0>
 	  <y0> 6563310.00 </y0>
