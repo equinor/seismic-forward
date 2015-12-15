@@ -37,7 +37,7 @@ ModelSettings::ModelSettings(void) {
     offset_max_ = 0.0;
     area_given_ = false;
     top_time_surface_ = "";
-    top_time_constant_ = 0.0;
+    top_time_constant_ = 1000.0;
     dx_ = 25.0;
     dy_ = 25.0;
     dz_ = 4.0;

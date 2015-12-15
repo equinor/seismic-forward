@@ -513,6 +513,7 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("depth-window");
     legalCommands.push_back("area");
     legalCommands.push_back("depth");
+    legalCommands.push_back("top-time");
     legalCommands.push_back("cell-size");
     legalCommands.push_back("area-from-surface");
     legalCommands.push_back("area-from-segy");
@@ -545,7 +546,17 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode *node, std::string &errTxt) {
       printf("WARNING:: Area defined in two different ways. The area specified by the <area> command is used.\n");
     }
 
-    ParseDepth(root, errTxt);
+    if (ParseTopTime(root, errTxt, "top-time") == false) {
+      if (ParseTopTime(root, errTxt, "depth") == true) {
+        printf("WARNING:: The command <depth> has changed its name to <top-time>. Your xml-file should be updated.\n");
+      }
+    }
+    else {
+      //check for "depth" anyway in order to not get it in the junk
+	  //The option with "depth" should be removed in a while (per 15.12.15)
+      ParseDummyTopTime(root, errTxt);
+    }
+
     ParseCellSize(root, errTxt, area_from_segy);
     ParseSegyIndexes(root, errTxt, area_from_segy);
 
@@ -659,29 +670,46 @@ bool XmlModelFile::ParseArea(TiXmlNode *node, std::string &errTxt) {
 
 }
 
-bool XmlModelFile::ParseDepth(TiXmlNode *node, std::string &errTxt) {
-    TiXmlNode *root = node->FirstChildElement("depth");
-    if (root == 0) {
-        return (false);
-    }
 
-    std::vector<std::string> legalCommands;
-    legalCommands.push_back("top-time-surface");
-    legalCommands.push_back("top-time-constant");
+bool XmlModelFile::ParseTopTime(TiXmlNode *node, std::string &errTxt, std::string cname) {
+  TiXmlNode *root = node->FirstChildElement(cname);
+  if (root == 0) {
+    return (false);
+  }
 
-    std::string value;
+  std::vector<std::string> legalCommands;
+  legalCommands.push_back("top-time-surface");
+  legalCommands.push_back("top-time-constant");
 
-    if (ParseValue(root, "top-time-surface", value, errTxt) == true) {
-        modelSettings_->SetTopTimeSurface(value);
-    }
-    double val;
-    if (ParseValue(root, "top-time-constant", val, errTxt) == true) {
-        modelSettings_->SetTopTimeConstant(val);
-    }
+  std::string value;
 
-    CheckForJunk(root, errTxt, legalCommands);
-    return true;
+  if (ParseValue(root, "top-time-surface", value, errTxt) == true) {
+    modelSettings_->SetTopTimeSurface(value);
+  }
+  double val;
+  if (ParseValue(root, "top-time-constant", val, errTxt) == true) {
+    modelSettings_->SetTopTimeConstant(val);
+  }
 
+  CheckForJunk(root, errTxt, legalCommands);
+  return true;
+}
+
+bool XmlModelFile::ParseDummyTopTime(TiXmlNode *node, std::string &errTxt) {
+  TiXmlNode *root = node->FirstChildElement("depth");
+  if (root == 0) {
+    return (false);
+  }
+
+  std::vector<std::string> legalCommands;
+  legalCommands.push_back("top-time-surface");
+  legalCommands.push_back("top-time-constant");
+
+  std::string value;
+  ParseValue(root, "top-time-surface", value, errTxt);
+  ParseValue(root, "top-time-constant", value, errTxt);
+  CheckForJunk(root, errTxt, legalCommands);
+  return true;
 }
 
 bool XmlModelFile::ParseCellSize(TiXmlNode *node, std::string &errTxt, bool &area_from_segy) {

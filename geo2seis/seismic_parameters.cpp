@@ -1,4 +1,5 @@
 #include <seismic_parameters.hpp>
+#include <ctime>
 
 #include <nrlib/math/constants.hpp>
 #include <physics/wavelet.hpp>
@@ -30,12 +31,17 @@ SeismicParameters::SeismicParameters(ModelSettings *model_settings)
   segy_geometry_ = NULL;
 
   SetupWavelet();
+  //time_t t1 = time(0);   // get time now
   ReadEclipseGrid();
+  //PrintElapsedTime(t1, "reading eclipsegrid");
+  //t1 = time(0);
   FindGeometry();
+
 
   seismic_output_ = new SeismicOutput(model_settings_);
   FindSurfaceGeometry();
   CreateGrids();
+  //PrintElapsedTime(t1, "finding geometry and creating grids");
 }
 
 void SeismicParameters::CalculateAngleSpan() {
@@ -870,15 +876,15 @@ void SeismicParameters::CreateGrids() {
 
   NRLib::Volume volume = seismic_geometry_->createDepthVolume();
 
-  zgrid_    = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
-  vpgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
-  vsgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
-  rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
-  twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+  zgrid_    = new NRLib::StormContGrid(volume, nx, ny, nzrefl,     0.0);
+  vpgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
+  vsgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
+  rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
+  twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl,     0.0);
   
   if (model_settings_->GetNMOCorr() && model_settings_->GetPSSeismic()) {
-    twtssgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
-    twtppgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl);
+    twtssgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
+    twtppgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
   }
   else {
     twtssgrid_ = NULL;
@@ -886,7 +892,7 @@ void SeismicParameters::CreateGrids() {
   }
 
   if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()) {
-    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl); //dimensions??
+    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0); //dimensions??
   }
   else { 
     vrmsgrid_ = NULL;
@@ -902,52 +908,27 @@ void SeismicParameters::CreateGrids() {
     rgridvec_ = NULL;
   }
 
-  NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl);
+  NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl, 0.0);
+
+  if (model_settings_->GetOutputReflections()) {
+    (*rgridvec_)[0] = rgrid;
+    if (model_settings_->GetWhiteNoise()) {
+      (*rgridvec_)[1] = rgrid;
+    }
+  }
 
   std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
   std::vector<double> extra_parameter_default_values = model_settings_->GetExtraParameterDefaultValues();
   extra_parameter_grid_ = new std::vector<NRLib::StormContGrid>(extra_parameter_names.size());
   for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
-    (*extra_parameter_grid_)[i] = NRLib::StormContGrid(volume, nx, ny, nzrefl + 1);
+    (*extra_parameter_grid_)[i] = NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, extra_parameter_default_values[i]);
   }
-
-  std::vector<double> const_vp  = model_settings_->GetConstVp();
-  std::vector<double> const_vs  = model_settings_->GetConstVs();
-  std::vector<double> const_rho = model_settings_->GetConstRho();
 
   for (size_t i = 0; i < nx; i++) {
     for (size_t j = 0; j < ny; j++) {
-      for (size_t k = 0; k < nzrefl; k++) {
-        (*zgrid_)(i, j, k) = 0.0;
-        (*vpgrid_) (i, j, k) = missing_;
-        (*vsgrid_) (i, j, k) = missing_;
-        (*rhogrid_)(i, j, k) = missing_;
-        (*twtgrid_)(i, j, k) = 0.0;
-        rgrid(i, j, k) = 0.0;
-        if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()){
-          (*vrmsgrid_)(i, j, k) = 0.0;
-        }
-        if (model_settings_->GetNMOCorr() && model_settings_->GetPSSeismic()) {
-          (*twtssgrid_)(i, j, k) = 0.0;
-          (*twtppgrid_)(i, j, k) = 0.0;
-        }
-        for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
-          (*extra_parameter_grid_)[epi](i, j, k) = static_cast<float>(extra_parameter_default_values[epi]);
-        }
-      }
-      (*vpgrid_)(i, j, nzrefl)  = missing_;
-      (*vsgrid_)(i, j, nzrefl)  = missing_;
-      (*rhogrid_)(i, j, nzrefl) = missing_;
       for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
         (*extra_parameter_grid_)[epi](i, j, nzrefl) = 0.0;
       }
-    }
-  }
-
-  if (model_settings_->GetOutputReflections()){
-    (*rgridvec_)[0] = rgrid;
-    if (model_settings_->GetWhiteNoise()){
-      (*rgridvec_)[1] = rgrid;
     }
   }
   
@@ -961,7 +942,6 @@ void SeismicParameters::CreateGrids() {
   else {
       twt_timeshift_ = NULL;
   }
-
 }
 
 void SeismicParameters::PrintElapsedTime(time_t start_time, std::string work)
@@ -984,7 +964,7 @@ void SeismicParameters::PrintElapsedTime(time_t start_time, std::string work)
   zeros = std::string(2 - seconds_s.length(), '0');
   seconds_s = zeros + seconds_s;
 
-  std::cout << "\nTotal time " << work << ": "
+  std::cout << "Time " << work << ": "
     << hours_s << ':'
     << minutes_s << ':'
     << seconds_s

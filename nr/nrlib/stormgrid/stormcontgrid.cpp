@@ -35,31 +35,31 @@
 
 using namespace NRLib;
 
-const float STD_MISSING_CODE = -999.0F;
+const float StormContGrid::StdMissingCode = -999.0F;
 const std::string format_desc[2] = {"storm_petro_binary",
                                     "storm_petro_ascii"};
 
 
-StormContGrid::StormContGrid(size_t nx, size_t ny, size_t nz)
-  : Grid<float>(nx, ny, nz, STD_MISSING_CODE)
+StormContGrid::StormContGrid(size_t nx, size_t ny, size_t nz, float val)
+  : Grid<float>(nx, ny, nz, val)
 {
   // Default values
   file_format_ = STORM_BINARY;
-  missing_code_ = STD_MISSING_CODE;
+  missing_code_ = StdMissingCode;
   zone_number_ = 0;
   model_file_name_ = "ModelFile";
   variable_name_ = "UNKNOWN";
 }
 
-StormContGrid::StormContGrid(const Volume &vol, size_t nx, size_t ny, size_t nz)
+StormContGrid::StormContGrid(const Volume &vol, size_t nx, size_t ny, size_t nz, float val)
 :Volume(vol)
 {
   file_format_ = STORM_BINARY;
-  missing_code_ = STD_MISSING_CODE;
+  missing_code_ = StdMissingCode;
   zone_number_ = 0;
   model_file_name_ = "ModelFile";
   variable_name_ = "UNKNOWN";
-  Resize(nx,ny,nz);
+  Resize(nx,ny,nz, val);
 
 }
 

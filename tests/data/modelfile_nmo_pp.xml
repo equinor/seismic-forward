@@ -23,10 +23,10 @@
 <nmo-stretch>
 	<seafloor-depth>  150 </seafloor-depth>
 	<velocity-water> 1500 </velocity-water>
-	<offset>
-        <offset-0>   1000  </offset-0>
-	    <doffset>   0  </doffset>
-	    <offset-max> 1000  </offset-max>
+	<offset>  
+        <offset-0>   0  </offset-0>
+	    <doffset>   1000  </doffset>
+	    <offset-max> 3000  </offset-max>
 	</offset>
 </nmo-stretch>
 <wavelet>
@@ -93,4 +93,5 @@
 #<ps-seismic> yes </ps-seismic>
 <timeshift-twt> Input_timeshift_minus50_twt.storm </timeshift-twt> 
 <traces-in-memory> 4 </traces-in-memory>
+<max-threads> 1 </max-threads>
 </seismic-forward>

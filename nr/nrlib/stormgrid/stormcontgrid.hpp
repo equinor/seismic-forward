@@ -31,11 +31,12 @@
 namespace NRLib {
   class StormContGrid : public Grid<float>, public Volume {
   public:
+    static const float StdMissingCode;
     enum FileFormat {STORM_BINARY = 0, STORM_ASCII};
 
     explicit StormContGrid(const std::string& filename, Endianess file_format = END_BIG_ENDIAN);
-    explicit StormContGrid(size_t nx = 0, size_t ny = 0, size_t nz = 0);
-    explicit StormContGrid(const Volume &vol, size_t nx = 0, size_t ny = 0, size_t nz = 0);
+    explicit StormContGrid(size_t nx = 0, size_t ny = 0, size_t nz = 0, float val = StdMissingCode);
+    explicit StormContGrid(const Volume &vol, size_t nx = 0, size_t ny = 0, size_t nz = 0, float val = StdMissingCode);
 
     void SetMissingCode(float missing_code)
     { missing_code_ = missing_code; }

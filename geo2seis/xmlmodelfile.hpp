@@ -47,8 +47,12 @@ class XmlModelFile {
     bool ParseSeismicForward(TiXmlNode *node,
             std::string &errTxt);
 
-    bool ParseDepth(TiXmlNode *node,
-            std::string &errTxt);
+    bool ParseTopTime(TiXmlNode *node,
+                      std::string &errTxt,
+                      std::string cname);
+
+    bool ParseDummyTopTime(TiXmlNode *node,
+                           std::string &errTxt);
 
     bool ParseCellSize(TiXmlNode *node,
             std::string &errTxt,

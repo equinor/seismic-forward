@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_pp_seis )
   NRLib::SegY segy_answ(filename, 0, thf);
   filename = "nmo_pp_seismic_time.segy";
   NRLib::SegY segy_test(filename, 0, thf);
-  for (size_t tr = 0; tr < 4; ++tr){
+  for (size_t tr = 0; tr < 16; ++tr){
     NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
     NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
     float value_answ, value_test;
@@ -61,11 +61,11 @@ BOOST_AUTO_TEST_CASE( test_nmo_pp_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "nmo_pp_seismic_timeshift.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr) {
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;
-      for (size_t i = 1; i < 126; ++i){
+      for (size_t i = 1; i < 126; ++i) {
         value_answ = trace_answ->GetValue(i);
         value_test = trace_test->GetValue(i);
         BOOST_CHECK_CLOSE(value_answ, value_test, 1);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_pp_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "nmo_pp_seismic_depth.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_pp_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "nmo_pp_seismic_time_prenmo.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_ps_seis )
   NRLib::SegY segy_answ(filename, 0, thf);
   filename = "nmo_ps_seismic_time.segy";
   NRLib::SegY segy_test(filename, 0, thf);
-  for (size_t tr = 0; tr < 4; ++tr){
+  for (size_t tr = 0; tr < 16; ++tr){
     NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
     NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
     float value_answ, value_test;
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_ps_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "nmo_ps_seismic_timeshift.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_ps_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "nmo_ps_seismic_depth.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_ps_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "nmo_ps_seismic_time_prenmo.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE( test_pp_seis )
   NRLib::SegY segy_answ(filename, 0, thf);
   filename = "pp_seismic_time.segy";
   NRLib::SegY segy_test(filename, 0, thf);
-  for (size_t tr = 0; tr < 4; ++tr){
+  for (size_t tr = 0; tr < 16; ++tr){
     NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
     NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
     float value_answ, value_test;
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE( test_pp_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "pp_seismic_timeshift.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE( test_pp_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "pp_seismic_depth.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE( test_ps_seis )
   NRLib::SegY segy_answ(filename, 0, thf);
   filename = "ps_seismic_time.segy";
   NRLib::SegY segy_test(filename, 0, thf);
-  for (size_t tr = 0; tr < 4; ++tr){
+  for (size_t tr = 0; tr < 16; ++tr){
     NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
     NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
     float value_answ, value_test;
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE( test_ps_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "ps_seismic_timeshift.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE( test_ps_seis )
     NRLib::SegY segy_answ(filename, 0, thf);
     filename = "ps_seismic_depth.segy";
     NRLib::SegY segy_test(filename, 0, thf);
-    for (size_t tr = 0; tr < 4; ++tr){
+    for (size_t tr = 0; tr < 16; ++tr){
       NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
       NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
       float value_answ, value_test;

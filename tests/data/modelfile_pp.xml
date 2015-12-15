@@ -21,9 +21,9 @@
 	</parameter-names>
 </elastic-param>
 <angle>
-	<theta-0>    30 </theta-0>
-	<dtheta>    0  </dtheta>
-	<theta-max>  30 </theta-max>
+	<theta-0>    0 </theta-0>
+	<dtheta>    15  </dtheta>
+	<theta-max>  45 </theta-max>
 </angle>
 <wavelet>
 	<ricker>
@@ -88,4 +88,5 @@
 #<ps-seismic> yes </ps-seismic>
 <timeshift-twt> Input_timeshift_minus50_twt.storm </timeshift-twt> 
 <traces-in-memory> 4 </traces-in-memory>
+<max-threads> 1 </max-threads>
 </seismic-forward>

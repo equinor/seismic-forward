@@ -41,7 +41,7 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
     time_t t1 = time(0);   // get time now
 
     ///parallelisation
-    
+
     size_t n_traces;
     tbb::concurrent_queue<Trace*> seismic_traces = FindTracesInForward(seismic_parameters, n_traces);
     
@@ -55,7 +55,7 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
       n_threads = max_threads;
     }
     size_t queue_capacity = seismic_parameters.GetModelSettings()->GetTracesInMemory();
-    
+
     std::cout << n_threads << " threads are used, and queue capacity is " << queue_capacity << " traces.\n";
 
     PrintSeisType(false, ps_seis, theta_vec);
@@ -184,7 +184,7 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
       delete result_trace;
     }
 
-
+    std::cout << "\n";
     seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 
     //write storm grid if requested
@@ -1092,7 +1092,7 @@ void SeismicForward::SeisConvolutionNMO(NRLib::Grid2D<double>               &tim
 
   size_t nt = timegrid_pos.GetNI();
   size_t nc = refl_pos.GetNI();
-  double seis;
+  double seis, twtx_kk;
   double x, y, z;
   double topt        = 0.0;
   double rickerLimit = wavelet->GetTwtWavelet();
@@ -1107,8 +1107,9 @@ void SeismicForward::SeisConvolutionNMO(NRLib::Grid2D<double>               &tim
         if ((k > n_min[off] || k == n_min[off]) && k < (n_max[off] + 1)) {
           seis = 0.0;
           for (size_t kk = 0; kk < nc; kk++) {
-            if (fabs(twtx(kk, off) - t) < rickerLimit) {
-              double ricker = waveletScale * wavelet->FindWaveletPoint(twtx(kk, off) - t);
+            twtx_kk = twtx(kk, off);
+            if (fabs(twtx_kk - t) < rickerLimit) {
+              double ricker = waveletScale * wavelet->FindWaveletPoint(twtx_kk - t);
               seis += refl_pos(kk, off) * ricker;
             }
           }
@@ -1148,7 +1149,7 @@ void SeismicForward::SeisConvolution(NRLib::Grid2D<double>               &timegr
 
   size_t nt = timegrid_pos.GetNI();
   size_t nc = refl_pos.GetNI();
-  double seis;
+  double seis, twt_kk;
   double x, y, z;
   double topt        = 0.0;
   double rickerLimit = wavelet->GetTwtWavelet();
@@ -1163,8 +1164,9 @@ void SeismicForward::SeisConvolution(NRLib::Grid2D<double>               &timegr
         if (k > n_min && k < n_max) {
           seis = 0.0;
           for (size_t kk = 0; kk < nc; kk++) {
-            if (fabs(twt[kk] - t) < rickerLimit) {
-              double ricker = waveletScale * wavelet->FindWaveletPoint(twt[kk] - t);
+            twt_kk = twt[kk];
+            if (fabs(twt_kk - t) < rickerLimit) {
+              double ricker = waveletScale * wavelet->FindWaveletPoint(twt_kk - t);
               seis += refl_pos(kk, theta) * ricker;
             }
           }
