@@ -290,6 +290,8 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       double wavelet_scale        = param->seismic_parameters.GetWaveletScale();
       Wavelet * wavelet           = param->seismic_parameters.GetWavelet();
       double twt_wavelet          = wavelet->GetTwtWavelet();
+      double z_wavelet_bot        = param->seismic_parameters.GetModelSettings()->GetZWaveletBot();
+      double z_extrapol_factor    = param->seismic_parameters.GetModelSettings()->GetZExtrapolFactor();
 
       std::vector<size_t> n_min(param->offset_vec.size());
       std::vector<size_t> n_max(param->offset_vec.size());
@@ -332,9 +334,8 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         }
 
         //find twtx resample all 
-        double depth_extrapol  = 40;
-        double twt_ss_extrapol = 2000 / constvs[2] * depth_extrapol;
-        double twt_pp_extrapol = 2000 / constvp[2] * depth_extrapol;
+        double twt_ss_extrapol = 2000 / constvs[2] * z_wavelet_bot * z_extrapol_factor;
+        double twt_pp_extrapol = 2000 / constvp[2] * z_wavelet_bot * z_extrapol_factor;
         double twt_ps_extrapol = 0.5 * (twt_ss_extrapol + twt_pp_extrapol);
 
         double twt_below    = twt_vec   [nzrefl - 1] + twt_ps_extrapol;
@@ -349,8 +350,8 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
         ResampleTwtPS(twt_pp_vec_reg, twt_ss_vec_reg, twt_pp_vec, twt_ss_vec, twt_vec, param->twt_0, twt_w, twt_w, twt_w, twt_pp_below, twt_ss_below, twt_below);
 
         //find vrms for pp and ss -  for each layer and regularly sampled
-        param->seismic_parameters.FindVrms(vrms_pp_vec, vrms_pp_vec_reg, twt_pp_vec, twt_pp_vec_reg, vp_vec, constvp[2], i, j, true);
-        param->seismic_parameters.FindVrms(vrms_ss_vec, vrms_ss_vec_reg, twt_ss_vec, twt_ss_vec_reg, vs_vec, constvs[2], i, j, true);
+        param->seismic_parameters.FindVrms(vrms_pp_vec, vrms_pp_vec_reg, twt_pp_vec, twt_pp_vec_reg, vp_vec, constvp[2], twt_pp_extrapol, i, j, true);
+        param->seismic_parameters.FindVrms(vrms_ss_vec, vrms_ss_vec_reg, twt_ss_vec, twt_ss_vec_reg, vs_vec, constvs[2], twt_ss_extrapol, i, j, true);
         
         //find theta and offset - for each layer for each offset:
         param->seismic_parameters.FindPSNMOThetaAndOffset(theta_pos, offset_pp, offset_ss, twt_pp_vec, twt_ss_vec, vrms_pp_vec, vrms_ss_vec, param->offset_vec);
@@ -383,7 +384,8 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       else { //------------PP seismic------------
         std::vector<double> vrms_vec(nzrefl);
         std::vector<double> vrms_vec_reg(param->twt_0);
-        param->seismic_parameters.FindVrms(vrms_vec, vrms_vec_reg, twt_vec, param->twt_0, vp_vec, constvp[2], i, j, true);
+        double twt_wavelet_extrapol = twt_wavelet * z_extrapol_factor;
+        param->seismic_parameters.FindVrms(vrms_vec, vrms_vec_reg, twt_vec, param->twt_0, vp_vec, constvp[2], twt_wavelet_extrapol, i, j, true);
 
         //find theta - for each layer for each offset:
         FindNMOTheta(theta_pos, twt_vec, vrms_vec, param->offset_vec);
@@ -452,7 +454,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       if (nmo_output->GetDepthSegyOk() || nmo_output->GetDepthStackSegyOk() || param->seismic_parameters.GetDepthStormOutput()) {
         std::vector<double> zgrid_vec_extrapol(nzrefl+2);
         std::vector<double> twt_vec_extrapol(nzrefl+2);
-        ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, constvp[2], constvs[2], i, j, ps_seis);
+        ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, constvp[2], constvs[2], z_wavelet_bot*z_extrapol_factor, i, j, ps_seis);
         if (nmo_output->GetDepthSegyOk()) {
           ConvertSeis(twt_vec_extrapol, param->twt_0, zgrid_vec_extrapol, param->z_0, nmo_timegrid_pos, nmo_depthgrid_pos, max_sample);
         }
@@ -536,6 +538,7 @@ void SeismicForward::GenerateSeismicTraces(Output             *seis_output,
 
       double wavelet_scale        = param->seismic_parameters.GetWaveletScale();
       Wavelet * wavelet           = param->seismic_parameters.GetWavelet();
+      double z_wavelet_bot        = param->seismic_parameters.GetModelSettings()->GetZWaveletBot();
 
       NRLib::RegularSurface<double> &toptime        = param->seismic_parameters.GetTopTime();
       NRLib::StormContGrid          &zgrid          = param->seismic_parameters.GetZGrid();
@@ -596,7 +599,7 @@ void SeismicForward::GenerateSeismicTraces(Output             *seis_output,
       if (seis_output->GetDepthSegyOk() || seis_output->GetDepthStackSegyOk() || param->seismic_parameters.GetDepthStormOutput()) {
         std::vector<double> zgrid_vec_extrapol(nzrefl+2);
         std::vector<double> twt_vec_extrapol(nzrefl+2);
-        ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, constvp[2], constvs[2], i, j, ps_seis);
+        ExtrapolZandTwtVec(zgrid_vec_extrapol, twt_vec_extrapol, twt_vec, zgrid, constvp[2], constvs[2], z_wavelet_bot, i, j, ps_seis);
         if (seis_output->GetDepthSegyOk()) {
           ConvertSeis(twt_vec_extrapol, param->twt_0, zgrid_vec_extrapol, param->z_0, timegrid_pos, depthgrid_pos, timegrid_pos.GetNI());
         }
@@ -784,11 +787,11 @@ void SeismicForward::ExtrapolZandTwtVec(std::vector<double>        &zgrid_vec_ex
                                         const NRLib::StormContGrid &zgrid,
                                         double                      vp_bot,
                                         double                      vs_bot,
+                                        double                      z_wavelet_bot,
                                         size_t                      i,
                                         size_t                      j,
                                         bool                        ps_seis)
 {
-  double depth_extrapol = 40;
   double vel_bot;
   if (ps_seis)
     vel_bot = 2 / (1 / vp_bot + 1 / vs_bot);
@@ -801,8 +804,8 @@ void SeismicForward::ExtrapolZandTwtVec(std::vector<double>        &zgrid_vec_ex
     twt_vec_extrapol  [k+1] = twt_vec[k];
     zgrid_vec_extrapol[k+1] = zgrid(i, j, k);
   }
-  zgrid_vec_extrapol[nzrefl+1] = zgrid_vec_extrapol[nzrefl] + depth_extrapol;
-  twt_vec_extrapol  [nzrefl+1] = twt_vec_extrapol[nzrefl]   + 2000 * depth_extrapol / vel_bot;
+  zgrid_vec_extrapol[nzrefl+1] = zgrid_vec_extrapol[nzrefl] + z_wavelet_bot;
+  twt_vec_extrapol  [nzrefl+1] = twt_vec_extrapol[nzrefl]   + 2000 * z_wavelet_bot / vel_bot;
 }
 
 

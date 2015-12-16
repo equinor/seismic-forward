@@ -130,6 +130,7 @@ class SeismicParameters {
                   const std::vector<double> &twt_vec_reg,
                   const std::vector<double> &v_vec,
                   double                     const_v,
+                  double                     twt_wavelet_exstrapol,
                   size_t                     i,
                   size_t                     j,
                   bool                       include_regular) const;

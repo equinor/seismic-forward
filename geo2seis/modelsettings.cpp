@@ -43,6 +43,9 @@ ModelSettings::ModelSettings(void) {
     dz_ = 4.0;
     dt_ = 4.0;
     wavelet_scale_ = 1.0;
+    z_wavelet_top_ = 0.0;
+    z_wavelet_bot_ = 0.0;
+    z_extrapol_factor_ = 50.0;
     output_vp_ = false;
     output_reflections_ = false;
     output_zvalues_ = false;

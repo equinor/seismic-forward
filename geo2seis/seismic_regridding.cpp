@@ -14,12 +14,16 @@
 
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_parameters) {
   printf("Start finding Zvalues.\n");
+  //time_t t1 = time(0);   // get time now
   FindZValues(seismic_parameters);
+  //seismic_parameters.PrintElapsedTime(t1, "finding z values");
   printf("Zvalues found.\n");
 
   printf("Start finding elastic parameters.\n");
+  //t1 = time(0);
   FindVp(seismic_parameters);
   VpPostProcess(seismic_parameters);
+  //seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
   printf("Elastic parameters found.\n");
 
   seismic_parameters.DeleteEclipseGrid();
@@ -30,7 +34,9 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   Wavelet* wavelet                       = seismic_parameters.GetWavelet();
   
   //find twt grid
+  //t1 = time(0);
   FindTWT(seismic_parameters, toptime, bottime);
+  //seismic_parameters.PrintElapsedTime(t1, "finding twt");
 
   //generate, write and delete vrms grid if writing is requested
   if (seismic_parameters.GetModelSettings()->GetNMOCorr() && seismic_parameters.GetModelSettings()->GetOutputVrms()){
@@ -62,7 +68,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   size_t ns = static_cast<size_t>(floor(tmin / seismic_parameters.GetSeismicGeometry()->dt() + 0.5));
   tmin = ns * seismic_parameters.GetSeismicGeometry()->dt();
   double tmax = bottime.Max();
-  size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.GetSeismicGeometry()->dt()+0.5));
+  size_t nt = static_cast<size_t>(floor((tmax - tmin) / seismic_parameters.GetSeismicGeometry()->dt()+0.5)) + 1;
   seismic_parameters.GetSeismicGeometry()->setNt(nt);
   seismic_parameters.GetSeismicGeometry()->setTRange(tmin, tmax);
 
@@ -462,7 +468,9 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters)
                 NRLib::Line line(p1, p2, false, false);
                 NRLib::Point intersec_pt;
                 double dist = triangles_elastic[0].FindNearestPoint(line, intersec_pt); // To avoid numerical instabilities when point is on edge of triangle
+                //bool intersect = triangles_elastic[0].FindIntersection(line, intersec_pt, true);
                 if (dist < 0.00000000001) {
+                //if (intersect){
                   vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
                   triangles_elastic[2].FindIntersection(line, intersec_pt, true);
                   vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
@@ -474,8 +482,10 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters)
                   }
                 }
                 else {
+                  //intersect = triangles_elastic[1].FindIntersection(line, intersec_pt, true);
                   dist = triangles_elastic[1].FindNearestPoint(line, intersec_pt);
                   if (dist < 0.00000000001) {
+                  //if (intersect){
                     vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
                     triangles_elastic[3].FindIntersection(line, intersec_pt, true);
                     vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
@@ -813,7 +823,9 @@ void SeismicRegridding::FindVpEdges(const NRLib::EclipseGeometry        &geometr
           NRLib::Line line(p1, p2, false, false);
           NRLib::Point intersec_pt;
           double dist = triangles_elastic[0].FindNearestPoint(line, intersec_pt);
+          //bool intersect = triangles_elastic[0].FindIntersection(line, intersec_pt, true);
           if (dist < 0.00000000001) {
+          //if (intersect){
             vpgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);
             triangles_elastic[2].FindIntersection(line, intersec_pt, true);
             vsgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);
@@ -826,7 +838,9 @@ void SeismicRegridding::FindVpEdges(const NRLib::EclipseGeometry        &geometr
           }
           else {
             dist = triangles_elastic[1].FindNearestPoint(line, intersec_pt);
+            //intersect = triangles_elastic[1].FindIntersection(line, intersec_pt, true);
             if (dist < 0.00000000001) {
+            //if (intersect){
               vpgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);
               triangles_elastic[3].FindIntersection(line, intersec_pt, true);
               vsgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);

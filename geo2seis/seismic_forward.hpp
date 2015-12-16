@@ -158,6 +158,7 @@ class SeismicForward {
                                    const NRLib::StormContGrid &zgrid,
                                    double                      vp_bot,
                                    double                      vs_bot,
+                                   double                      z_wavelet_bot,
                                    size_t                      i,
                                    size_t                      j,
                                    bool                        ps_seis);

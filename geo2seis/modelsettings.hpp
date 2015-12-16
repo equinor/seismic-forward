@@ -97,6 +97,12 @@ public:
 
   void SetWaveletScale(double scale) {wavelet_scale_ = scale;}
 
+  void SetZWaveletTop(double wave) { z_wavelet_top_ = wave; }
+
+  void SetZWaveletBot(double wave) { z_wavelet_bot_ = wave; }
+  
+  void SetZExtrapolFactor(double fact) { z_extrapol_factor_ = fact; }
+  
   void SetOutputVp(bool value) {output_vp_ = value;}
 
   void SetOutputReflections(bool value) {output_reflections_ = value;}
@@ -426,6 +432,18 @@ public:
     return wavelet_scale_;
   }
 
+  double GetZWaveletTop() {
+    return z_wavelet_top_;
+  }
+
+  double GetZWaveletBot() {
+    return z_wavelet_bot_;
+  }
+
+  double GetZExtrapolFactor() {
+    return z_extrapol_factor_;
+  }
+
   bool GetOutputVp() {
     return output_vp_;
   }
@@ -605,6 +623,9 @@ private:
   double top_time_constant_;
   double dx_, dy_, dz_, dt_; // cell size
   double wavelet_scale_;
+  double z_wavelet_top_;
+  double z_wavelet_bot_;
+  double z_extrapol_factor_;
   bool output_vp_, output_reflections_, output_zvalues_, output_seismic_time_, output_seismic_depth_, output_seismic_timeshift_;
 
   bool output_time_surfaces_, output_depth_surfaces_, output_twt_, output_vrms_, output_twt_offset_;

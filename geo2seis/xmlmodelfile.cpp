@@ -346,6 +346,7 @@ bool XmlModelFile::ParseNMOStretch(TiXmlNode *node, std::string &errTxt) {
     std::vector<std::string> legalCommands;
     legalCommands.push_back("seafloor-depth");
     legalCommands.push_back("velocity-water");
+    legalCommands.push_back("extrapol-constant");
     legalCommands.push_back("offset");
 
     double value;
@@ -358,6 +359,9 @@ bool XmlModelFile::ParseNMOStretch(TiXmlNode *node, std::string &errTxt) {
       modelSettings_->SetVw(value);
     } else {
       errTxt += "Value for velocity in water is not given.\n";
+    }
+    if (ParseValue(root, "extrapol-constant", value, errTxt) == true) {
+      modelSettings_->SetZExtrapolFactor(value);
     }
     ParseOffset(root, errTxt);
 
