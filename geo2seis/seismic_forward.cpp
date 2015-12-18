@@ -465,15 +465,17 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
 
       //timeshift:
       if (nmo_output->GetTimeshiftSegyOk() || nmo_output->GetTimeshiftStackSegyOk() || param->seismic_parameters.GetTimeshiftStormOutput()) {
-        std::vector<double> timeshiftgrid_vec_extrapol(nzrefl+1);
-        std::vector<double> twt_vec_extrapol(nzrefl+1);
+        std::vector<double> timeshiftgrid_vec_extrapol(nzrefl+2);
+        std::vector<double> twt_vec_extrapol          (nzrefl+2);
         timeshiftgrid_vec_extrapol[0] = 0;
-        twt_vec_extrapol[0]           = 0;
+        twt_vec_extrapol          [0] = 0;
         NRLib::StormContGrid &twt_timeshift = param->seismic_parameters.GetTwtShiftGrid();
         for (size_t k = 0; k < nzrefl; ++k) {
           timeshiftgrid_vec_extrapol[k+1] = twt_timeshift(i,j,k);
           twt_vec_extrapol[k+1]           = twt_vec[k];
         }
+        timeshiftgrid_vec_extrapol[nzrefl + 1] = twt_timeshift(i,j,nzrefl-1) + z_extrapol_factor * twt_wavelet *twt_timeshift(i, j, nzrefl - 1)/ twt_vec[nzrefl - 1];
+        twt_vec_extrapol          [nzrefl + 1] = twt_vec[nzrefl -1]          + z_extrapol_factor * twt_wavelet;
         if (nmo_output->GetTimeshiftSegyOk()) {
           ConvertSeis(twt_vec_extrapol, param->twt_0, timeshiftgrid_vec_extrapol, param->twts_0, nmo_timegrid_pos, nmo_timeshiftgrid_pos, max_sample);
         }
@@ -807,7 +809,6 @@ void SeismicForward::ExtrapolZandTwtVec(std::vector<double>        &zgrid_vec_ex
   zgrid_vec_extrapol[nzrefl+1] = zgrid_vec_extrapol[nzrefl] + z_wavelet_bot;
   twt_vec_extrapol  [nzrefl+1] = twt_vec_extrapol[nzrefl]   + 2000 * z_wavelet_bot / vel_bot;
 }
-
 
 void SeismicForward::ConvertSeis(const std::vector<double>   &twt_vec,
                                  const std::vector<double>   &twt_0,
