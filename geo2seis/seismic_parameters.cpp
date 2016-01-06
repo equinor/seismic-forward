@@ -267,16 +267,16 @@ void SeismicParameters::FindNMOReflections(NRLib::Grid2D<double>       &r_vec,
       rho_vec[k - top_k_] = (*rhogrid_)(i, j, (k - top_k_));
       }
     for (size_t k = top_k_; k <= bottom_k_ + 1; k++) {
-        diffvp = vp_vec[k - top_k_ + 1] - vp_vec[k - top_k_];
-        meanvp = 0.5 *  (vp_vec[k - top_k_ + 1] + vp_vec[k - top_k_]);
-        diffvs = vs_vec[k - top_k_ + 1] - vs_vec[k - top_k_];
-        meanvs = 0.5 *  (vs_vec[k - top_k_ + 1] + vs_vec[k - top_k_]);
-        diffrho = rho_vec[k - top_k_ + 1] - rho_vec[k - top_k_];
+        diffvp  =        vp_vec [k - top_k_ + 1] - vp_vec [k - top_k_];
+        meanvp  = 0.5 * (vp_vec [k - top_k_ + 1] + vp_vec [k - top_k_]);
+        diffvs  =        vs_vec [k - top_k_ + 1] - vs_vec [k - top_k_];
+        meanvs  = 0.5 * (vs_vec [k - top_k_ + 1] + vs_vec [k - top_k_]);
+        diffrho =        rho_vec[k - top_k_ + 1] - rho_vec[k - top_k_];
         meanrho = 0.5 * (rho_vec[k - top_k_ + 1] + rho_vec[k - top_k_]);
-        zoeppritz->ComputeConstants(theta(k, off));
+        zoeppritz->ComputeConstants(theta(k - top_k_, off));
         r_vec(k - top_k_, off) = static_cast<float>(zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+        }
       }
-    }
   delete zoeppritz;
 }
 

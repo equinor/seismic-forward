@@ -1028,10 +1028,13 @@ bool XmlModelFile::ParseSeismicStack(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetOutputSeismicStackTimeStorm(val);
     }
 
-    if (ParseBool(root, "timeshift-storm", val, errTxt) == true) if (modelSettings_->GetTwtFileName() == "") {
-        errTxt += "The command <twt-timeshift> must be set if output parameter <seismic-stack><time-shift-storm> is given.\n";
-    } else {
+    if (ParseBool(root, "timeshift-storm", val, errTxt) == true) {
+      if (modelSettings_->GetTwtFileName() == "" && val == true) {
+        errTxt += "The command <twt-timeshift> must be set if output parameter <seismic-stack><timeshift-storm> is given.\n";
+      }
+      else {
         modelSettings_->SetOutputSeismicStackTimeShiftStorm(val);
+      }
     }
 
     if (ParseBool(root, "depth-storm", val, errTxt) == true) {
@@ -1042,10 +1045,13 @@ bool XmlModelFile::ParseSeismicStack(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetOutputSeismicStackTimeSegy(val);
     }
 
-    if (ParseBool(root, "timeshift-segy", val, errTxt) == true) if (modelSettings_->GetTwtFileName() == "") {
-        errTxt += "The command <twt-timeshift> must be set if output parameter <seismic-stack><time-shift-segy> is given.\n";
-    } else {
+    if (ParseBool(root, "timeshift-segy", val, errTxt) == true) {
+      if (modelSettings_->GetTwtFileName() == "" && val == true) {
+        errTxt += "The command <twt-timeshift> must be set if output parameter <seismic-stack><timeshift-segy> is given.\n";
+      }
+      else {
         modelSettings_->SetOutputSeismicStackTimeShiftSegy(val);
+      }
     }
 
     if (ParseBool(root, "depth-segy", val, errTxt) == true) {
