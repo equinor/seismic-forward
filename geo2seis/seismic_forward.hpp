@@ -26,28 +26,36 @@ class SeismicForward {
   private:
 
     static void MakeNMOSeismic(SeismicParameters &seismic_parameters);
+
     static void MakeSeismic(SeismicParameters &seismic_parameters);
 
     static tbb::concurrent_queue<Trace*> FindTracesInForward(SeismicParameters &seismic_parameters,
                                                              size_t            &n_traces);
 
     static bool GenerateTraceOk(SeismicParameters &seismic_parameters,
-                                size_t i,
-                                size_t j);
+                                size_t             i,
+                                size_t             j);
 
     static void WriteSeismicTraces(GenSeisTraceParams *param,
                                    Output             *seis_output);
 
-    static void WriteTrace(ResultTrace        *result_trace,
+    static void WriteTrace(ResultTrace       *result_trace,
                            SeismicParameters &seismic_parameters,
                            Output            *seis_output);
 
+    static void GenerateSeismicTracesQueue(Output             *seis_output,
+                                           GenSeisTraceParams *param);
+
     static void GenerateSeismicTraces(Output             *seis_output,
-                                      GenSeisTraceParams *param);
+                                      GenSeisTraceParams *param,
+                                      Trace              *trace);
+
+    static void GenerateNMOSeismicTracesQueue(Output             *nmo_output,
+                                              GenSeisTraceParams *param);
 
     static void GenerateNMOSeismicTraces(Output             *nmo_output,
-                                         GenSeisTraceParams *param);
-
+                                         GenSeisTraceParams *param,
+                                         Trace              *trace);
 
     static void SeisConvolutionNMO(NRLib::Grid2D<double>               &timegrid_pos,
                                    NRLib::Grid2D<double>               &refl_pos,
@@ -76,8 +84,8 @@ class SeismicForward {
                                 double                               dt,
                                 size_t                               i,
                                 size_t                               j,
-                                size_t           n_min,
-                                  size_t           n_max);
+                                size_t                               n_min,
+                                size_t                               n_max);
 
     static void ConvertSeis(const std::vector<double>   &twt_vec,
                             const std::vector<double>   &twt_0,
@@ -96,10 +104,10 @@ class SeismicForward {
                            const std::vector<size_t>   &n_max,
                            size_t                      &max_sample);
 
-    static void FindNMOTheta(NRLib::Grid2D<double>       &thetagrid,
+    static void FindNMOTheta(NRLib::Grid2D<double>     &thetagrid,
                              const std::vector<double> &twt_vec,
                              std::vector<double>       &vrms_vec,
-                             const std::vector<double>   &offset);
+                             const std::vector<double> &offset);
 
     static void ResampleTwtPS(std::vector<double> &twt_pp_reg,
                               std::vector<double> &twt_ss_reg,
@@ -113,8 +121,7 @@ class SeismicForward {
                               double twt_pp_below,
                               double twt_ss_below,
                               double twt_below);
-        
-      
+
     static void ResampleOffsetPS(const std::vector<double>   &twt,
                                  const NRLib::Grid2D<double> &offset_pp,
                                  const NRLib::Grid2D<double> &offset_pp_above,
@@ -127,30 +134,30 @@ class SeismicForward {
                                  double                       twt_below);
 
     static void ResampleTWTx(const NRLib::Grid2D<double> &twtx_grid,
-                                  const NRLib::Grid2D<double> &twtx_below,
-                                  NRLib::Grid2D<double>       &twtx_grid_reg,
-                                  const std::vector<double>   &twt_vec,
-                                  const double                &twt_below,
-                                  const std::vector<double>   &twt_0);
+                             const NRLib::Grid2D<double> &twtx_below,
+                             NRLib::Grid2D<double>       &twtx_grid_reg,
+                             const std::vector<double>   &twt_vec,
+                             const double                &twt_below,
+                             const std::vector<double>   &twt_0);
 
-    static void FindTWTxPS(NRLib::Grid2D<double>     &twtx_grid,
-                           const std::vector<double> &twt_ss_vec,
-                           const std::vector<double> &twt_pp_vec,
-                           const std::vector<double> &vrms_pp_vec,
-                           const std::vector<double> &vrms_ss_vec,
-                           const NRLib::Grid2D<double>  &offset_ss,
-                           const NRLib::Grid2D<double>  &offset_pp);
+    static void FindTWTxPS(NRLib::Grid2D<double>       &twtx_grid,
+                           const std::vector<double>   &twt_ss_vec,
+                           const std::vector<double>   &twt_pp_vec,
+                           const std::vector<double>   &vrms_pp_vec,
+                           const std::vector<double>   &vrms_ss_vec,
+                           const NRLib::Grid2D<double> &offset_ss,
+                           const NRLib::Grid2D<double> &offset_pp);
 
-    static void FindTWTx(NRLib::Grid2D<double>       &twtx_grid,
-                          const std::vector<double>   &twt_vec,
-                          const std::vector<double>       &vrms_vec,
-                          const std::vector<double>   &offset);
+    static void FindTWTx(NRLib::Grid2D<double>     &twtx_grid,
+                         const std::vector<double> &twt_vec,
+                         const std::vector<double> &vrms_vec,
+                         const std::vector<double> &offset);
 
-    static void FindSeisLimits(const NRLib::Grid2D<double>       &twtx_grid,
+    static void FindSeisLimits(const NRLib::Grid2D<double> &twtx_grid,
                                const std::vector<double>   &twt_0,
-                               std::vector<size_t> &n_min,
-                               std::vector<size_t> &n_max,
-                               double  twt_wave);
+                               std::vector<size_t>         &n_min,
+                               std::vector<size_t>         &n_max,
+                               double                       twt_wave);
 
     static void ExtrapolZandTwtVec(std::vector<double>        &zgrid_vec_extrapol,
                                    std::vector<double>        &twt_vec_extrapol,
@@ -167,9 +174,9 @@ class SeismicForward {
                                   float &monitor_size,
                                   float &next_monitor);
 
-    static void Monitor(size_t trace,
-                        float monitor_size,
-                        float &next_monitor);
+    static void Monitor(size_t  trace,
+                        float   monitor_size,
+                        float   &next_monitor);
 
     static void PrintSeisType(bool                 nmo,
                               bool                 ps_seis,
