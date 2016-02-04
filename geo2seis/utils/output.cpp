@@ -5,11 +5,11 @@
 #include "modelsettings.hpp"
 
 Output::Output(SeismicParameters &seismic_parameters,
-                     std::vector<double> twt_0,
-                     std::vector<double> z_0,
-                     std::vector<double> twts_0,
-                     std::vector<double> offset_vec,
-                     size_t time_samples_stretch)
+               std::vector<double> twt_0,
+               std::vector<double> z_0,
+               std::vector<double> twts_0,
+               std::vector<double> offset_vec,
+               size_t time_samples_stretch)
   : segy_ok_(false),
     time_segy_ok_(false),
     prenmo_time_segy_ok_(false),
@@ -117,30 +117,30 @@ Output::Output(SeismicParameters &seismic_parameters,
 }
 
 void Output::AddTrace(SeismicParameters     &seismic_parameters,
-                         NRLib::Grid2D<double> &timegrid_pos,
-                         NRLib::Grid2D<double> &prenmo_timegrid_pos,
-                         NRLib::Grid2D<double> &timegrid_stack_pos,
-                         NRLib::Grid2D<double> &depthgrid_pos,
-                         NRLib::Grid2D<double> &depthgrid_stack_pos,
-                         NRLib::Grid2D<double> &timeshiftgrid_pos,
-                         NRLib::Grid2D<double> &timeshiftgrid_stack_pos,
-                         NRLib::Grid2D<double> &twtx_reg,
-                         double                 x,
-                         double                 y,
-                         size_t                 i,
-                         size_t                 j)
+                      NRLib::Grid2D<double> &timegrid_pos,
+                      NRLib::Grid2D<double> &prenmo_timegrid_pos,
+                      NRLib::Grid2D<double> &timegrid_stack_pos,
+                      NRLib::Grid2D<double> &depthgrid_pos,
+                      NRLib::Grid2D<double> &depthgrid_stack_pos,
+                      NRLib::Grid2D<double> &timeshiftgrid_pos,
+                      NRLib::Grid2D<double> &timeshiftgrid_stack_pos,
+                      NRLib::Grid2D<double> &twtx_reg,
+                      double                 x,
+                      double                 y,
+                      size_t                 i,
+                      size_t                 j)
 {
   std::vector<double>               zero_vec(1);
   zero_vec[0] = 0;
   size_t nz = seismic_parameters.GetSeismicGeometry()->nz();
   size_t nt = seismic_parameters.GetSeismicGeometry()->nt();
   bool nmo = seismic_parameters.GetModelSettings()->GetNMOCorr();
-
+  
   //write seismic time
-  if (time_segy_ok_){
+  if (time_segy_ok_) {
     seismic_parameters.GetSeismicOutput()->WriteSegyGather(timegrid_pos, time_segy_, twt_0_, offset_vec_, true, x, y, nmo);
   }
-  if (prenmo_time_segy_ok_){
+  if (prenmo_time_segy_ok_) {
     seismic_parameters.GetSeismicOutput()->WriteSegyGather(prenmo_timegrid_pos, prenmo_time_segy_, twt_0_, offset_vec_, true, x, y, nmo);
   }
   if (time_stack_segy_ok_) {
@@ -162,22 +162,22 @@ void Output::AddTrace(SeismicParameters     &seismic_parameters,
     seismic_parameters.GetSeismicOutput()->WriteSegyGather(timeshiftgrid_pos, timeshift_segy_, twts_0_, offset_vec_, true, x, y, nmo);
   }
 
-  if (timeshift_stack_segy_ok_){
+  if (timeshift_stack_segy_ok_) {
     seismic_parameters.GetSeismicOutput()->WriteSegyGather(timeshiftgrid_stack_pos, timeshift_stack_segy_, twts_0_, zero_vec, true, x, y, nmo);
   }
   //save to storm grid for output, print storm when finish loop
   if (seismic_parameters.GetTimeStormOutput()) {
-    for (size_t k = 0; k < timegrid_->GetNK(); ++k){
+    for (size_t k = 0; k < timegrid_->GetNK(); ++k) {
       (*timegrid_)(i, j, k) = float(timegrid_stack_pos(k,0));
     }
   }
   if (seismic_parameters.GetDepthStormOutput()) {
-    for (size_t k = 0; k < depthgrid_->GetNK(); ++k){
+    for (size_t k = 0; k < depthgrid_->GetNK(); ++k) {
       (*depthgrid_)(i, j, k) = float(depthgrid_stack_pos(k,0));
     }
   }
   if (seismic_parameters.GetTimeshiftStormOutput()) {
-    for (size_t k = 0; k < timeshiftgrid_->GetNK(); ++k){
+    for (size_t k = 0; k < timeshiftgrid_->GetNK(); ++k) {
       (*timeshiftgrid_)(i, j, k) = float(timeshiftgrid_stack_pos(k,0));
     }
   }

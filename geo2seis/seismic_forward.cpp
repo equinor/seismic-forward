@@ -108,6 +108,8 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
         parameters.result_queue.try_pop(result_trace);
         WriteTrace(result_trace, parameters.seismic_parameters, &seis_output);
         Monitor(i, monitor_size, next_monitor);
+        delete trace;
+        delete result_trace;
       }
     }
 
@@ -216,6 +218,8 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
         parameters.result_queue.try_pop(result_trace);
         WriteTrace(result_trace, parameters.seismic_parameters, &nmo_output);
         Monitor(i, monitor_size, next_monitor);
+        delete result_trace;
+        delete trace;
       }
     }
 

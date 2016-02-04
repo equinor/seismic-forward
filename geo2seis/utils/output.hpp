@@ -26,10 +26,10 @@ class Output {
                   size_t                 i,
                   size_t                 j);
     void AddZeroTrace(SeismicParameters     &seismic_parameters,
-                     double                 x, 
-                     double                 y,
-                     size_t                 i,
-                     size_t                 j);
+                      double                 x, 
+                      double                 y,
+                      size_t                 i,
+                      size_t                 j);
     void WriteSeismicStorm(SeismicParameters     &seismic_parameters);
 
     const bool GetDepthSegyOk(void)          { return depth_segy_ok_;};
