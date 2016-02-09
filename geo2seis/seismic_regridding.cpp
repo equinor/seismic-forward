@@ -15,7 +15,13 @@
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_parameters) {
   printf("Start finding Zvalues.\n");
   //time_t t1 = time(0);   // get time now
-  FindZValues(seismic_parameters);
+  if (seismic_parameters.GetModelSettings()->GetRemoveNegativeDeltaZ()) {
+    //std::cout << "Removing negative delta z in the regridded z-grid.\n";
+    FindZValuesRemoveNegDelta(seismic_parameters);
+  }
+  else {
+    FindZValues(seismic_parameters);
+  }
   //seismic_parameters.PrintElapsedTime(t1, "finding z values");
   printf("Zvalues found.\n");
 
@@ -146,6 +152,57 @@ void SeismicRegridding::FindZValues(SeismicParameters &seismic_parameters) {
       zgrid(i, j, k + 1) = static_cast<float>(values(i, j));
     }
   }
+
+}
+
+void SeismicRegridding::FindZValuesRemoveNegDelta(SeismicParameters &seismic_parameters) {
+  NRLib::StormContGrid         &zgrid = seismic_parameters.GetZGrid();
+  const NRLib::EclipseGeometry &geometry = seismic_parameters.GetEclipseGrid().GetGeometry();
+  size_t top_k = seismic_parameters.GetTopK();
+  bool use_corner_point = seismic_parameters.GetModelSettings()->GetUseCornerpointInterpol();
+
+  double xmin = zgrid.GetXMin();
+  double ymin = zgrid.GetYMin();
+  double dx = zgrid.GetDX();
+  double dy = zgrid.GetDY();
+  double angle = zgrid.GetAngle();
+
+  size_t k = zgrid.GetNK() - 2;
+  NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
+  if (use_corner_point) {
+    geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
+  }
+  else {
+    geometry.FindLayerSurface(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
+  }
+
+  for (size_t i = 0; i < zgrid.GetNI(); i++) {
+    for (size_t j = 0; j < zgrid.GetNJ(); j++) {
+      zgrid(i, j, k + 1) = static_cast<float>(values(i, j));
+    }
+  }
+
+  for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
+    NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
+    if (use_corner_point) {
+      geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+    }
+    else {
+      geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+    }
+    for (size_t i = 0; i < zgrid.GetNI(); i++) {
+      for (size_t j = 0; j < zgrid.GetNJ(); j++) {
+        if (values(i, j) > zgrid(i, j, k + 1)) {
+          zgrid(i, j, k) = zgrid(i, j, k + 1);
+        }
+        else {
+          zgrid(i, j, k) = static_cast<float>(values(i, j));
+        }
+      }
+    }
+  }
+
+
 
 }
 

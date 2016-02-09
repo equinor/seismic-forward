@@ -141,6 +141,8 @@ public:
 
   void SetUseCornerpointInterpol(bool value) {use_cornerpoint_interpol_ = value;}
 
+  void SetRemoveNegativeDeltaZ(bool value) { remove_negative_delta_z_ = value; }
+
   void SetAreaFromSurface(std::string val) {area_from_surface_ = val;}
 
   ///--------------------------------------------------------------------------------------------------
@@ -520,6 +522,10 @@ public:
     return use_cornerpoint_interpol_;
   }
 
+  bool GetRemoveNegativeDeltaZ() {
+    return remove_negative_delta_z_;
+  }
+
   std::string GetAreaFromSurface() {
     return area_from_surface_;
   }
@@ -634,6 +640,7 @@ private:
   bool output_time_segy_, output_depth_segy_, output_timeshift_segy_;
   bool output_prenmo_time_segy_;
   bool use_cornerpoint_interpol_;
+  bool remove_negative_delta_z_;
   std::string area_from_surface_;
 
   bool elastic_parameters_time_segy_, elastic_parameters_depth_segy_, extra_parameters_time_segy_, extra_parameters_depth_segy_;

@@ -170,6 +170,7 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("parameter-names");
     legalCommands.push_back("zero-thickness-limit");
     legalCommands.push_back("cornerpt-interpolation-in-depth");
+    legalCommands.push_back("remove-negative-delta-z");
     legalCommands.push_back("extra-parameters");
 
     std::string value;
@@ -191,6 +192,11 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode *node, std::string &errTxt) {
     if (ParseBool(root, "cornerpt-interpolation-in-depth", bolval, errTxt) == true) {
         modelSettings_->SetUseCornerpointInterpol(bolval);
     }
+
+    if (ParseBool(root, "remove-negative-delta-z", bolval, errTxt) == true) {
+      modelSettings_->SetRemoveNegativeDeltaZ(bolval);
+    }
+
 
     size_t i = 0;
     while (ParseExtraParameters(root, errTxt)) {

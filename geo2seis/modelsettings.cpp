@@ -65,6 +65,7 @@ ModelSettings::ModelSettings(void) {
     output_timeshift_segy_ = false;
     output_prenmo_time_segy_ = false;
     use_cornerpoint_interpol_ = false;
+    remove_negative_delta_z_ = false;
     area_from_surface_ = "";
     elastic_parameters_time_segy_ = false;
     elastic_parameters_depth_segy_ = false;

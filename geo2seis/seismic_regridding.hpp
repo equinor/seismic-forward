@@ -20,6 +20,8 @@ class SeismicRegridding {
   private:
     static void FindZValues(SeismicParameters &seismic_parameters);
 
+    static void FindZValuesRemoveNegDelta(SeismicParameters &seismic_parameters);
+
     static void FindVp(SeismicParameters &seismic_parameters);
 
     static void VpPostProcess(SeismicParameters &seismic_parameters);
