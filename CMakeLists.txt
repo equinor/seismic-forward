@@ -25,13 +25,21 @@ if(NOT INTEL_STUDIO_FOUND)
  option(USE_INTEL_STUDIO OFF)
 endif(NOT INTEL_STUDIO_FOUND)
 
+find_package(OpenMP)
+if (OPENMP_FOUND)
+	add_definitions(-DWITH_OMP)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
+
 if(USE_INTEL_STUDIO)
     include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS} ${TBB_INCLUDE_DIRS})
     link_directories(${TBB_LIB_DIR})
     set(FFT_LIBRARIES ${MKL_LIBRARIES})
     set(MATH_LIBRARIES ${MKL_LIBRARIES} ${TBB_LIBRARIES})
     set(FFT_MATLAB_LIBRARIES -L${MKL_LIB_PATH} -lmkl_rt)
-    add_definitions(-DMKL)
+    add_definitions(-DMKL)	
 else()
     # Out-of-the-box on Unix Statoil systems this will not work and a path is required.
     # For example /prog/sdpsoft/gsl/lib/libgslcblas.a
