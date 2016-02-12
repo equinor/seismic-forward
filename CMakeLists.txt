@@ -15,7 +15,9 @@ if(APPLE)
     cmake_policy(SET CMP0042 OLD) #OSX RPATH
 endif(APPLE)
 
-set(CMAKE_BUILD_TYPE RELEASE)
+if (NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE RELEASE)
+endif()
 
 include(cmake/AddSource.cmake)
 
