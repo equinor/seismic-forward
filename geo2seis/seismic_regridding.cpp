@@ -7,7 +7,7 @@
 #include <physics/zoeppritz_ps.hpp>
 #include <physics/zoeppritz_pp.hpp>
 #include <physics/wavelet.hpp>
-#include <nrlib/random/random.hpp>
+#include <nrlib/random/randomgenerator.hpp>
 #include <nrlib/random/normal.hpp>
 #include <ctime>
 #include <seismic_geometry.hpp>
@@ -251,15 +251,17 @@ void SeismicRegridding::FindPointZValue(size_t i, size_t j, size_t k,
 }
 
 
-void SeismicRegridding::AddNoiseToReflectionsPos(unsigned long         seed, 
-                                                 double                std_dev, 
-                                                 NRLib::Grid2D<double> &refl) {
-  NRLib::Random::Initialize(seed);
+void SeismicRegridding::AddNoiseToReflectionsPos(unsigned long           seed,
+                                                 double                  std_dev,
+                                                 NRLib::Grid2D<double>  &refl)
+{
+  NRLib::RandomGenerator rg;
+  rg.Initialize(seed);
   NRLib::Normal normal_distibrution(0, std_dev);
 
   for (size_t i = 0; i < refl.GetNI(); ++i) {
     for (size_t j = 0; j < refl.GetNJ(); ++j) {
-      refl(i, j) += static_cast<float>(normal_distibrution.Draw());
+      refl(i, j) += static_cast<float>(normal_distibrution.Draw(rg));
     }
   }
 }

@@ -13,8 +13,8 @@
 class SeismicRegridding {
   public:
     static void MakeSeismicRegridding(SeismicParameters &seismic_parameters);
-    static void AddNoiseToReflectionsPos(unsigned long         seed,
-                                         double                std_dev,
+    static void AddNoiseToReflectionsPos(unsigned long           seed,
+                                         double                  std_dev,
                                          NRLib::Grid2D<double> &refl);
 
   private:
