@@ -114,8 +114,8 @@ bool Triangle::FindIntersection(const Line& line, Point& intersec_pt, bool inclu
 
 double Triangle::FindNearestPoint(const Line& line, Point& nearest_pt) const
 {
-  if (FindIntersection(line, nearest_pt, true))
-    return 0.0;
+  //if (FindIntersection(line, nearest_pt, true))
+  //  return 0.0;
 
   NRLib::Line edge = NRLib::Line::Segment(p1_, p2_);
   NRLib::Point dummy_point; // This point is not used.
