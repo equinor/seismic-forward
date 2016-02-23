@@ -22,7 +22,7 @@ class SeismicRegridding {
     static void FindZValues(SeismicParameters &seismic_parameters,
                             size_t             n_threads);
 
-    static void FindVp(SeismicParameters &seismic_parameters);
+    static void FindVp(SeismicParameters &seismic_parameters, size_t n_threads);
 
     static void VpPostProcess(SeismicParameters &seismic_parameters);
 
@@ -32,7 +32,8 @@ class SeismicRegridding {
 
     static void FindTWT(SeismicParameters &seismic_parameters,
                         NRLib::RegularSurface<double> &toptime,
-                        NRLib::RegularSurface<double> &bottime);
+                        NRLib::RegularSurface<double> &bottime,
+                        size_t n_threads);
 
     static void FindPointZValue(size_t i, size_t j, size_t k,
                                 NRLib::Point &point,
@@ -43,13 +44,23 @@ class SeismicRegridding {
                                 double zlimit,
                                 double default_top);
 
+    static void FillInGridValues(const NRLib::EclipseGeometry &geometry,
+                                 NRLib::Grid<double>          &grid_copy,
+                                 double                        default_value,
+                                 double                        zlimit,
+                                 double                        default_top,
+                                 size_t                        ni,
+                                 size_t                        nj,
+                                 size_t                        topk,
+                                 size_t                        botk);
+
     static void FindVpEdges(const NRLib::EclipseGeometry        &geometry,
                             size_t                               n_extra_param,
                             SeismicParameters                   &seismic_parameters,
-                            NRLib::Grid2D<double>               &value_above_vp,
+                            /*NRLib::Grid2D<double>               &value_above_vp,
                             NRLib::Grid2D<double>               &value_above_vs,
                             NRLib::Grid2D<double>               &value_above_rho,
-                            std::vector<NRLib::Grid2D<double> > &value_above_extra_param,
+                            std::vector<NRLib::Grid2D<double> > &value_above_extra_param,*/
                             const NRLib::Grid<double>           &vp_grid,
                             const NRLib::Grid<double>           &vs_grid,
                             const NRLib::Grid<double>           &rho_grid,
@@ -60,10 +71,10 @@ class SeismicRegridding {
     static void FindVpCorners(const NRLib::EclipseGeometry        &geometry,
                               size_t                              n_extra_param,
                               SeismicParameters                   &seismic_parameters,
-                              NRLib::Grid2D<double>               &value_above_vp,
+                              /*NRLib::Grid2D<double>               &value_above_vp,
                               NRLib::Grid2D<double>               &value_above_vs,
                               NRLib::Grid2D<double>               &value_above_rho,
-                              std::vector<NRLib::Grid2D<double> > &value_above_extra_param,
+                              std::vector<NRLib::Grid2D<double> > &value_above_extra_param,*/
                               const NRLib::Grid<double>           &vp_grid,
                               const NRLib::Grid<double>           &vs_grid,
                               const NRLib::Grid<double>           &rho_grid,
