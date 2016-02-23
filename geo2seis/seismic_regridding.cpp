@@ -157,20 +157,16 @@ void SeismicRegridding::FindZValues(SeismicParameters &seismic_parameters, size_
     }
   }
 
-  int  chunk_size;
-  chunk_size = 1;
-#ifdef WITH_OMP
-#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
-#endif
-  for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
-    NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
-    if (use_corner_point) {
-      geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-    }
-    else {
-      geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-    }
-    if (rem_neg_delta) {
+  //if n_threads = 1 the check of neg delta values should be done directly, not after inclusion in grid
+  if (rem_neg_delta && n_threads == 1) {
+    for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
+      NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
+      if (use_corner_point) {
+        geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      }
+      else {
+        geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      }
       for (size_t i = 0; i < zgrid.GetNI(); i++) {
         for (size_t j = 0; j < zgrid.GetNJ(); j++) {
           if (values(i, j) > zgrid(i, j, k + 1)) {
@@ -182,10 +178,40 @@ void SeismicRegridding::FindZValues(SeismicParameters &seismic_parameters, size_
         }
       }
     }
-    else {
+  }
+  else {
+    int  chunk_size;
+    chunk_size = 1;
+#ifdef WITH_OMP
+#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
+#endif
+    for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
+      NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
+      if (use_corner_point) {
+        geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      }
+      else {
+        geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      }
       for (size_t i = 0; i < zgrid.GetNI(); i++) {
         for (size_t j = 0; j < zgrid.GetNJ(); j++) {
           zgrid(i, j, k) = static_cast<float>(values(i, j));
+        }
+      }
+    }
+
+    if (rem_neg_delta) {
+      chunk_size = 10;
+#ifdef WITH_OMP
+#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
+#endif
+      for (int i = 0; i < zgrid.GetNI(); i++) {
+        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
+          for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
+            if (zgrid(i, j, k) > zgrid(i, j, k + 1)) {
+              zgrid(i, j, k) = zgrid(i, j, k + 1);
+            }
+          }
         }
       }
     }
