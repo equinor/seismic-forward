@@ -29,38 +29,30 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
 {
   if (seismic_parameters.GetTimeOutput() || seismic_parameters.GetDepthOutput() || seismic_parameters.GetTimeshiftOutput()) {
 
-    bool ps_seis                   = seismic_parameters.GetModelSettings()->GetPSSeismic();
+    bool ps_seis                     = seismic_parameters.GetModelSettings()->GetPSSeismic();
     std::vector<double> & theta_vec  = seismic_parameters.GetThetaVec();
     std::vector<double> twt_0, z_0, twts_0;
     size_t dummy;
+
     seismic_parameters.GenerateTwt0AndZ0(twt_0, z_0, twts_0, dummy, ps_seis);
-
-    //prepare segy and storm files:
     Output seis_output(seismic_parameters, twt_0, z_0, twts_0, theta_vec, twt_0.size());
-
     time_t t1 = time(0);   // get time now
 
     ///parallelisation
-
     size_t n_traces;
     tbb::concurrent_queue<Trace*> seismic_traces = FindTracesInForward(seismic_parameters, n_traces);
-    
-    size_t max_threads = seismic_parameters.GetModelSettings()->GetMaxThreads();
-    unsigned int n = std::thread::hardware_concurrency();
-    std::cout << n << " concurrent threads are supported.\n";
-    //std::cout << max_threads << " max_threads.\n";
-
-    size_t n_threads = static_cast<size_t>(n);
+    size_t max_threads    = seismic_parameters.GetModelSettings()->GetMaxThreads();
+    size_t queue_capacity = seismic_parameters.GetModelSettings()->GetTracesInMemory();
+    unsigned int n        = std::thread::hardware_concurrency();
+    size_t n_threads      = static_cast<size_t>(n);
     if (n_threads > max_threads) {
       n_threads = max_threads;
     }
-    size_t queue_capacity = seismic_parameters.GetModelSettings()->GetTracesInMemory();
-
     if (n_threads > 1) {
-      std::cout << n_threads << " threads are used, and queue capacity is " << queue_capacity << " traces.\n";
+      std::cout << n_threads << " of " << n << " available threads are used, and queue capacity is " << queue_capacity << " traces.\n";
     }
     else {
-      std::cout << n_threads << " thread is used.\n";
+      std::cout << n_threads << " of " << n << " available threads is used.\n";
     }
     PrintSeisType(false, ps_seis, theta_vec);
 
@@ -68,7 +60,6 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
     tbb::concurrent_queue<ResultTrace*> empty_queue;
     tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
     result_queue.set_capacity(queue_capacity);
-
     std::vector<std::thread*> worker_thread;
 
     std::vector<double> dummy_vec;
@@ -140,37 +131,29 @@ void SeismicForward::MakeSeismic(SeismicParameters &seismic_parameters)
 void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
 {
   if (seismic_parameters.GetTimeOutput() || seismic_parameters.GetDepthOutput() || seismic_parameters.GetTimeshiftOutput()) {
-
-    bool ps_seis                = seismic_parameters.GetModelSettings()->GetPSSeismic();
+    bool ps_seis                     = seismic_parameters.GetModelSettings()->GetPSSeismic();
     std::vector<double> & offset_vec = seismic_parameters.GetOffsetVec();
     std::vector<double> twt_0, z_0, twts_0;
     size_t time_samples_stretch;
     seismic_parameters.GenerateTwt0AndZ0(twt_0, z_0, twts_0, time_samples_stretch, ps_seis);
-
-    //prepare segy and storm files
     Output nmo_output(seismic_parameters, twt_0, z_0, twts_0, offset_vec, time_samples_stretch);
-
     time_t t1 = time(0);   // get time now
 
     ///parallelisation
     size_t n_traces;
     tbb::concurrent_queue<Trace*> seismic_traces = FindTracesInForward(seismic_parameters, n_traces);
-
-    size_t max_threads = seismic_parameters.GetModelSettings()->GetMaxThreads();
-    unsigned int n = std::thread::hardware_concurrency();
-    std::cout << n << " concurrent threads are supported.\n";
-    
-    size_t n_threads = static_cast<size_t>(n);
+    size_t max_threads    = seismic_parameters.GetModelSettings()->GetMaxThreads();
+    size_t queue_capacity = seismic_parameters.GetModelSettings()->GetTracesInMemory();
+    unsigned int n        = std::thread::hardware_concurrency();
+    size_t n_threads      = static_cast<size_t>(n);
     if (n_threads > max_threads) {
       n_threads = max_threads;
     }
-    size_t queue_capacity = seismic_parameters.GetModelSettings()->GetTracesInMemory();;
-
     if (n_threads > 1) {
-      std::cout << n_threads << " threads are used, and queue capacity is " << queue_capacity << " traces.\n";
+      std::cout << n_threads << " of " << n << " available threads are used, and queue capacity is " << queue_capacity << " traces.\n";
     }
     else {
-      std::cout << n_threads << " thread is used.\n";
+      std::cout << n_threads << " of " << n << " available threads is used.\n";
     }
 
     PrintSeisType(true, ps_seis, offset_vec);
@@ -178,7 +161,6 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
     tbb::concurrent_queue<ResultTrace*> empty_queue;
     tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
     result_queue.set_capacity(queue_capacity);
-
     std::vector<std::thread*> worker_thread;
 
     std::vector<double> dummy_vec;
@@ -222,7 +204,6 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters &seismic_parameters)
         delete trace;
       }
     }
-
 
     ResultTrace *result_trace;
     while (empty_queue.try_pop(result_trace)){
@@ -439,7 +420,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
       //find limits for where to generate seismic, for each offset
       FindSeisLimits(twtx, param->twt_0, n_min, n_max, twt_wavelet);
 
-      if (i == 1300 && j == 1050) {
+      if (false) {
         param->seismic_parameters.GetSeismicOutput()->PrintMatrix(offset_pp_below, "offset_pp_below.txt");
         param->seismic_parameters.GetSeismicOutput()->PrintMatrix(offset_ss_below, "offset_ss_below.txt");
         param->seismic_parameters.GetSeismicOutput()->PrintMatrix(offset_pp_above, "offset_pp_above.txt");
@@ -582,7 +563,12 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             *nmo_output,
     }
 
 
-    if (i == 1300 && j == 1050) {
+    if (false) {
+      std::vector<double> z_vector(zgrid.GetNK());
+      for (size_t ii = 0; ii < zgrid.GetNK(); ++ii) {
+        z_vector[ii] = zgrid(i, j, ii);
+      }
+      param->seismic_parameters.GetSeismicOutput()->PrintVector(z_vector, "z_vector.txt");
       param->seismic_parameters.GetSeismicOutput()->PrintVector(twt_vec,  "twt_vec.txt");
       param->seismic_parameters.GetSeismicOutput()->PrintMatrix(twtx,     "twtx.txt");
       param->seismic_parameters.GetSeismicOutput()->PrintMatrix(twtx_reg, "twtx_reg.txt");
@@ -833,7 +819,7 @@ bool SeismicForward::GenerateTraceOk(SeismicParameters &seismic_parameters,
   NRLib::StormContGrid &vsgrid    = seismic_parameters.GetVsGrid();
   NRLib::StormContGrid &rhogrid   = seismic_parameters.GetRhoGrid();
   NRLib::StormContGrid &twtgrid   = seismic_parameters.GetTwtGrid();
-  if (twtgrid(i, j, 0) != -999) {  
+  if (twtgrid(i, j, 0) != -999) {
     size_t nk = vpgrid.GetNK();
 
     for (size_t k = 1; k < nk - 1 ; k++) {
@@ -1157,10 +1143,18 @@ void SeismicForward::FindSeisLimits(const NRLib::Grid2D<double> &twtx_grid,
 {
   size_t i_min, i_max;
   size_t nzrefl = twtx_grid.GetNI();
-  double twtx_min, twtx_max;
+  double twtx_min = 10000, twtx_max = 0;
   for (size_t off = 0; off < n_min.size(); ++off) {
-    twtx_min = twtx_grid(0, off) - twt_wave;
-    twtx_max = twtx_grid(nzrefl - 1, off) + twt_wave;
+    for (size_t i = 0; i < nzrefl; ++i) {
+      if (twtx_grid(i, off) > twtx_max)
+        twtx_max = twtx_grid(i, off);
+      if (twtx_grid(i, off) < twtx_min)
+        twtx_min = twtx_grid(i, off);
+    }
+    twtx_min -= twt_wave;
+    twtx_max += twt_wave;
+    //twtx_min = twtx_grid(0, off) - twt_wave;
+    //twtx_max = twtx_grid(nzrefl - 1, off) + twt_wave;
     i_min = 0;
     i_max = twt_0.size() - 1;
     for (size_t i = 0; i < twt_0.size(); ++i) {

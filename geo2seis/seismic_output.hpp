@@ -75,7 +75,7 @@ class SeismicOutput {
     void PrintVectorSizeT(std::vector<size_t> vec, std::string filename);
     void PrintMatrix(NRLib::Grid2D<double> matrix, std::string filename);
 
-  private:
+private:
     void GenerateParameterGridForOutput(NRLib::StormContGrid &input_grid, NRLib::StormContGrid &time_or_depth_grid, NRLib::StormContGrid &output_grid, double delta_time_or_depth, double zero_time_or_depth, NRLib::RegularSurface<double> &toptime, size_t n_threads);
     size_t FindCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid);
 

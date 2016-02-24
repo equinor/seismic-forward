@@ -292,7 +292,7 @@ void SeismicRegridding::FillInGridValues(const NRLib::EclipseGeometry &geometry,
     for (size_t i = 0; i < ni; i++) {
       for (size_t j = 0; j < nj; j++) {
         if (geometry.IsActive(i, j, k) == false) {
-          if (k > 0) {
+          if (k > 0 && k > topk) {
             if (geometry.GetDZ(i, j, k) < zlimit) {
               grid_copy(i, j, k) = grid_copy(i, j, k - 1);
             }
