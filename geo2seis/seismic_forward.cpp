@@ -1143,8 +1143,8 @@ void SeismicForward::FindSeisLimits(const NRLib::Grid2D<double> &twtx_grid,
 {
   size_t i_min, i_max;
   size_t nzrefl = twtx_grid.GetNI();
-  double twtx_min = 10000, twtx_max = 0;
   for (size_t off = 0; off < n_min.size(); ++off) {
+    double twtx_min = 10000, twtx_max = 0;
     for (size_t i = 0; i < nzrefl; ++i) {
       if (twtx_grid(i, off) > twtx_max)
         twtx_max = twtx_grid(i, off);
