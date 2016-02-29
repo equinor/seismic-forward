@@ -472,49 +472,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
     FillInGridValues(geometry, parameter_grid_from_eclipse[ii], extra_parameter_default_values[ii], zlimit, extra_parameter_default_values[ii], egrid.GetNI(), egrid.GetNJ(), topk, botk);
   }
 
-  //for (size_t k = topk; k <= botk; k++) {
-  //  for (size_t i = 0; i < egrid.GetNI(); i++) {
-  //    for (size_t j = 0; j < egrid.GetNJ(); j++) {
-  //      if (geometry.IsActive(i, j, k) == false) {
-  //        if (k > 0) {
-  //          if (geometry.GetDZ(i, j, k) < zlimit) {
-  //            vp_grid(i, j, k)  = vp_grid(i, j, k - 1);
-  //            vs_grid(i, j, k)  = vs_grid(i, j, k - 1);
-  //            rho_grid(i, j, k) = rho_grid(i, j, k - 1);
-  //            for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
-  //              parameter_grid_from_eclipse[ii](i, j, k) = parameter_grid_from_eclipse[ii](i, j, k - 1);
-  //            }
-  //          }
-  //          else if (vp_grid(i, j, k - 1) == constvp[0]) {
-  //            vp_grid(i, j, k)  = constvp[0];
-  //            vs_grid(i, j, k)  = constvs[0];
-  //            rho_grid(i, j, k) = constrho[0];
-  //            for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
-  //              parameter_grid_from_eclipse[ii](i, j, k) = extra_parameter_default_values[ii];
-  //            }
-  //          }
-  //          else {
-  //            vp_grid(i, j, k)  = constvp[1];
-  //            vs_grid(i, j, k)  = constvs[1];
-  //            rho_grid(i, j, k) = constrho[1];
-  //            for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
-  //              parameter_grid_from_eclipse[ii](i, j, k) = extra_parameter_default_values[ii];
-  //            }
-  //          }
-  //        }
-  //        else {
-  //          vp_grid(i, j, k)  = constvp[0];
-  //          vs_grid(i, j, k)  = constvs[0];
-  //          rho_grid(i, j, k) = constrho[0];
-  //          for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
-  //            parameter_grid_from_eclipse[ii](i, j, k) = extra_parameter_default_values[ii];
-  //          }
-  //        }
-  //      }
-
-  //    }
-  //  }
-  //}
 
   //NRLib::Grid2D<double> value_above_vp (egrid.GetNI(), egrid.GetNJ(), constvp[0]);
   //NRLib::Grid2D<double> value_above_vs (egrid.GetNI(), egrid.GetNJ(), constvs[0]);
@@ -542,7 +499,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
       }
     }
   }
-  //size_t countA = 0, countB = 0, countC = 0, countD = 0, countE = 0, count_center_cell = 0;
   //size_t count_pointz = 0, count_cells = 0;
 
   //blocking - for parallelisation - if n_threads > 1
@@ -696,25 +652,12 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
                   NRLib::Line line(p1, p2, false, false);
                   NRLib::Point intersec_pt;
                   bool first_tri = false, sec_tri = false;
-                  if (triangles_elastic[0].FindIntersection(line, intersec_pt, true)) {
+                  if (triangles_elastic[0].FindNearestPoint(line, intersec_pt) < 0.00000000001) {
                     first_tri = true;
-                    //countA++;
-                  }
-                  else if (triangles_elastic[1].FindIntersection(line, intersec_pt, true)) {
-                    sec_tri = true;
-                    //countB++;
-                  }
-                  else if (triangles_elastic[0].FindNearestPoint(line, intersec_pt) < 0.00000000001) {
-                    first_tri = true;
-                    //countC++;
                   }
                   else if (triangles_elastic[1].FindNearestPoint(line, intersec_pt) < 0.00000000001) {
                     sec_tri = true;
-                    //countD++;
                   }
-                  //else {
-                  //  countE++;
-                  //}
                   if (first_tri) {
                     vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
                     triangles_elastic[2].FindIntersection(line, intersec_pt, true);
@@ -737,36 +680,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
                       extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
                     }
                   }
-                  //double dist = triangles_elastic[0].FindNearestPoint(line, intersec_pt); // To avoid numerical instabilities when point is on edge of triangle
-                  ////bool intersect = triangles_elastic[0].FindIntersection(line, intersec_pt, true);
-                  //if (dist < 0.00000000001) {
-                  ////if (intersect){
-                  //  vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  //  triangles_elastic[2].FindIntersection(line, intersec_pt, true);
-                  //  vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  //  triangles_elastic[4].FindIntersection(line, intersec_pt, true);
-                  //  rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  //  for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
-                  //    triangles_extra_param[iii * 2].FindIntersection(line, intersec_pt, true);
-                  //    extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  //  }
-                  //}
-                  //else {
-                  //  //intersect = triangles_elastic[1].FindIntersection(line, intersec_pt, true);
-                  //  dist = triangles_elastic[1].FindNearestPoint(line, intersec_pt);
-                  //  if (dist < 0.00000000001) {
-                  //  //if (intersect){
-                  //    vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  //    triangles_elastic[3].FindIntersection(line, intersec_pt, true);
-                  //    vsgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  //    triangles_elastic[5].FindIntersection(line, intersec_pt, true);
-                  //    rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  //    for (size_t iii = 0; iii < extra_parameter_names.size(); ++iii) {
-                  //      triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
-                  //      extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-                  //    }
-                  //  }
-                  //}
                 }
               }
             }
@@ -933,7 +846,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
                   parameter_grid_from_eclipse,
                   i, j, k, pt_vp);
   }
-  //std::cout << countA << " " << countB << " " << countC << " " << countD << " " << countE << "\n";
   //std::cout << "count_center_cell = " << count_center_cell << "\n";
   //std::cout << "count_cells = " << count_cells << "\n";
   //std::cout << "count_pointz = " << count_pointz << "\n";
@@ -1108,13 +1020,7 @@ void SeismicRegridding::FindVpEdges(const NRLib::EclipseGeometry        &geometr
           NRLib::Line line(p1, p2, false, false);
           NRLib::Point intersec_pt;
           bool first_tri = false, sec_tri = false;
-          if (triangles_elastic[0].FindIntersection(line, intersec_pt, true)) {
-            first_tri = true;
-          }
-          else if (triangles_elastic[1].FindIntersection(line, intersec_pt, true)) {
-            sec_tri = true;
-          }
-          else if (triangles_elastic[0].FindNearestPoint(line, intersec_pt) < 0.00000000001) {
+          if (triangles_elastic[0].FindNearestPoint(line, intersec_pt) < 0.00000000001) {
             first_tri = true;
           }
           else if (triangles_elastic[1].FindNearestPoint(line, intersec_pt) < 0.00000000001) {
@@ -1142,36 +1048,6 @@ void SeismicRegridding::FindVpEdges(const NRLib::EclipseGeometry        &geometr
               extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
             }
           }
-          //double dist = triangles_elastic[0].FindNearestPoint(line, intersec_pt);
-          ////bool intersect = triangles_elastic[0].FindIntersection(line, intersec_pt, true);
-          //if (dist < 0.00000000001) {
-          ////if (intersect){
-          //  vpgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);
-          //  triangles_elastic[2].FindIntersection(line, intersec_pt, true);
-          //  vsgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);
-          //  triangles_elastic[4].FindIntersection(line, intersec_pt, true);
-          //  rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-          //  for (size_t iii = 0; iii < n_extra_param; ++iii) {
-          //    triangles_extra_param[iii * 2].FindIntersection(line, intersec_pt, true);
-          //    extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-          //  }
-          //}
-          //else {
-          //  dist = triangles_elastic[1].FindNearestPoint(line, intersec_pt);
-          //  //intersect = triangles_elastic[1].FindIntersection(line, intersec_pt, true);
-          //  if (dist < 0.00000000001) {
-          //  //if (intersect){
-          //    vpgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);
-          //    triangles_elastic[3].FindIntersection(line, intersec_pt, true);
-          //    vsgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(intersec_pt.z);
-          //    triangles_elastic[5].FindIntersection(line, intersec_pt, true);
-          //    rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-          //    for (size_t iii = 0; iii < n_extra_param; ++iii) {
-          //      triangles_extra_param[iii * 2 + 1].FindIntersection(line, intersec_pt, true);
-          //      extra_parameter_grid[iii](ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
-          //    }
-          //  }
-          //}
         }
       }
     }
