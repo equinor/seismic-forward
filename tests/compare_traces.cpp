@@ -282,42 +282,146 @@ BOOST_AUTO_TEST_CASE(test_ps_seis_noise)
 }
 
 
-BOOST_AUTO_TEST_CASE(test_snorre)
+BOOST_AUTO_TEST_CASE(test_rem_negz)
 {
-  if (false) {
-    std::string inputfile = "modelfile_snorre_test.xml";
+  if (true) {
+    std::string inputfile = "modelfile_rem_negz.xml";
     XmlModelFile modelFile(inputfile);
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
       SeismicForward::DoSeismicForward(seismic_parameters);
-    }
 
-    size_t n_traces = 16, n_samples = 126, n_output = 4;
-    std::string prefix = "ps_noise";
-    std::vector<std::string> filenames(n_output);
-    filenames[0] = prefix + "_seismic_time.segy";
-    filenames[1] = prefix + "_seismic_timeshift.segy";
-    filenames[2] = prefix + "_seismic_depth.segy";
-    filenames[3] = prefix + "_seismic_time_prenmo.segy";
-
-    for (size_t fi = 0; fi < n_output; ++fi) {
-      NRLib::TraceHeaderFormat thf(2);
-      NRLib::SegY segy_test(filenames[fi], 0, thf);
-      NRLib::SegY segy_answ("answ_" + filenames[fi], 0, thf);
-      for (size_t tr = 0; tr < n_traces; ++tr) {
-        NRLib::SegYTrace *trace_answ = segy_answ.GetNextTrace();
-        NRLib::SegYTrace *trace_test = segy_test.GetNextTrace();
-        float value_answ, value_test;
-        for (size_t i = 1; i < n_samples; ++i) {
-          value_answ = trace_answ->GetValue(i);
-          value_test = trace_test->GetValue(i);
-          BOOST_CHECK_CLOSE(value_answ, value_test, 1);
+      size_t n_traces = 3, n_samples = 154, n_output = 1;
+      std::string prefix = "rem_negz";
+      std::vector<std::string> filenames(n_output);
+      filenames[0] = prefix + "_seismic_time.segy";
+      for (size_t fi = 0; fi < n_output; ++fi) {
+        NRLib::TraceHeaderFormat thf(2);
+        NRLib::SegY segy_test(filenames[fi], 0, thf);
+        NRLib::SegY segy_answ("answ_" + filenames[fi], 0, thf);
+        //for (size_t tr = 0; tr < n_traces; ++tr) {
+        size_t tr = 0;
+        NRLib::SegYTrace *trace_answ;
+        NRLib::SegYTrace *trace_test;
+        while (tr < 1243) {
+          trace_answ = segy_answ.GetNextTrace();
+          trace_test = segy_test.GetNextTrace();
+          tr++;
         }
+        float value_answ, value_test;
+        std::vector<double> answ_vec(n_samples);
+        for (size_t j = 0; j < n_traces; ++j) {
+          for (size_t i = 1; i < n_samples; ++i) {
+            value_answ = trace_answ->GetValue(i);
+            answ_vec[i] = value_answ;
+            value_test = trace_test->GetValue(i);
+            BOOST_CHECK_CLOSE(value_answ, value_test, 1);
+          }
+          //seismic_parameters.GetSeismicOutput()->PrintVector(answ_vec, NRLib::ToString(j) + "_answ_vec.txt");
+          trace_answ = segy_answ.GetNextTrace();
+          trace_test = segy_test.GetNextTrace();
+        }
+        n_samples = 259;
       }
     }
-    NRLib::LogKit::EndLog();
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_keep_negz)
+{
+  if (true) {
+    std::string inputfile = "modelfile_keep_negz.xml";
+    XmlModelFile modelFile(inputfile);
+    ModelSettings *model_settings = modelFile.getModelSettings();
+    if (modelFile.getParsingFailed() == false) {
+      SeismicParameters seismic_parameters = SeismicParameters(model_settings);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters);
+
+      size_t n_traces = 3, n_samples = 154, n_output = 1;
+      std::string prefix = "keep_negz";
+      std::vector<std::string> filenames(n_output);
+      filenames[0] = prefix + "_seismic_time.segy";
+      for (size_t fi = 0; fi < n_output; ++fi) {
+        NRLib::TraceHeaderFormat thf(2);
+        NRLib::SegY segy_test(filenames[fi], 0, thf);
+        NRLib::SegY segy_answ("answ_" + filenames[fi], 0, thf);
+        //for (size_t tr = 0; tr < n_traces; ++tr) {
+        size_t tr = 0;
+        NRLib::SegYTrace *trace_answ;
+        NRLib::SegYTrace *trace_test;
+        while (tr < 1243) {
+          trace_answ = segy_answ.GetNextTrace();
+          trace_test = segy_test.GetNextTrace();
+          tr++;
+        }
+        float value_answ, value_test;
+        std::vector<double> answ_vec(n_samples);
+        for (size_t j = 0; j < n_traces; ++j) {
+          for (size_t i = 1; i < n_samples; ++i) {
+            value_answ = trace_answ->GetValue(i);
+            answ_vec[i] = value_answ;
+            value_test = trace_test->GetValue(i);
+            BOOST_CHECK_CLOSE(value_answ, value_test, 1);
+          }
+          //seismic_parameters.GetSeismicOutput()->PrintVector(answ_vec, NRLib::ToString(j) + "_answ_vec.txt");
+          trace_answ = segy_answ.GetNextTrace();
+          trace_test = segy_test.GetNextTrace();
+        }
+        n_samples = 259;
+      }
+    }
+  }
+}
+
+
+BOOST_AUTO_TEST_CASE(test_cornerpt)
+{
+  if (true) {
+    std::string inputfile = "modelfile_cornerpt.xml";
+    XmlModelFile modelFile(inputfile);
+    ModelSettings *model_settings = modelFile.getModelSettings();
+    if (modelFile.getParsingFailed() == false) {
+      SeismicParameters seismic_parameters = SeismicParameters(model_settings);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters);
+
+      size_t n_traces = 3, n_samples = 154, n_output = 1;
+      std::string prefix = "cornerpt";
+      std::vector<std::string> filenames(n_output);
+      filenames[0] = prefix + "_seismic_time.segy";
+      for (size_t fi = 0; fi < n_output; ++fi) {
+        NRLib::TraceHeaderFormat thf(2);
+        NRLib::SegY segy_test(filenames[fi], 0, thf);
+        NRLib::SegY segy_answ("answ_" + filenames[fi], 0, thf);
+        //for (size_t tr = 0; tr < n_traces; ++tr) {
+        size_t tr = 0;
+        NRLib::SegYTrace *trace_answ;
+        NRLib::SegYTrace *trace_test;
+        while (tr < 1243) {
+          trace_answ = segy_answ.GetNextTrace();
+          trace_test = segy_test.GetNextTrace();
+          tr++;
+        }
+        float value_answ, value_test;
+        std::vector<double> answ_vec(n_samples);
+        for (size_t j = 0; j < n_traces; ++j) {
+          for (size_t i = 1; i < n_samples; ++i) {
+            value_answ = trace_answ->GetValue(i);
+            answ_vec[i] = value_answ;
+            value_test = trace_test->GetValue(i);
+            BOOST_CHECK_CLOSE(value_answ, value_test, 1);
+          }
+          //seismic_parameters.GetSeismicOutput()->PrintVector(answ_vec, NRLib::ToString(j) + "_answ_vec.txt");
+          trace_answ = segy_answ.GetNextTrace();
+          trace_test = segy_test.GetNextTrace();
+        }
+        n_samples = 259;
+      }
+      NRLib::LogKit::EndLog();
+    }
   }
 }
 

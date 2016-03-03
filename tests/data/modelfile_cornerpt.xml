@@ -1,0 +1,80 @@
+#In this test cornerpt-interpolation-in-depth is tested
+#In addition, this input grid has undefined values in top layer - giving ktop = 2
+<seismic-forward>
+<elastic-param>
+<eclipse-file > dztest.grdecl </eclipse-file>
+<default-values>
+<vp-top> 3200 </vp-top>
+<vp-mid> 3200 </vp-mid>
+<vp-bot> 4000 </vp-bot>
+<vs-top> 1600 </vs-top>
+<vs-mid> 1500 </vs-mid>
+<vs-bot> 2200 </vs-bot>
+<rho-top> 2500 </rho-top>
+<rho-mid> 2550 </rho-mid>
+<rho-bot> 2500 </rho-bot>
+</default-values>
+<parameter-names>
+<vp>  VP_DATA </vp>
+<vs>  VS_DATA </vs>
+<rho>  DENS_DATA </rho>
+</parameter-names>
+<cornerpt-interpolation-in-depth> yes </cornerpt-interpolation-in-depth>
+#<remove-negative-delta-z> yes </remove-negative-delta-z>
+</elastic-param>
+<nmo-stretch>
+<seafloor-depth> 300 </seafloor-depth>
+<velocity-water> 1500 </velocity-water>
+<offset>
+<offset-0>    0  </offset-0>
+<doffset>     1500  </doffset>
+<offset-max>  3000  </offset-max>
+</offset>
+</nmo-stretch>
+<wavelet>
+<ricker>
+<peak-frequency> 25 </peak-frequency>
+</ricker>
+<scale> 1.0 </scale>
+</wavelet>
+<output-grid>
+<top-time>
+<top-time-constant> 2200 </top-time-constant>
+</top-time>
+<cell-size>
+<dx> 25 </dx>
+<dy> 25 </dy>
+<dz> 5.0 </dz>
+<dt> 4.0 </dt>
+</cell-size>
+<time-window> 
+<top> 2420 </top>
+<bot> 3040 </bot>
+</time-window>
+<depth-window>
+<top>    2400 </top>
+<bot> 3700 </bot>
+</depth-window>
+<area>
+<x0>  454930.350365 </x0>
+<y0> 6805681.796203 </y0>
+<ly>     2094.51 </ly>
+<lx>      751.44 </lx>
+<angle>  60.30 </angle>
+</area>
+    <segy-indexes>
+	  <inline-start>  1 </inline-start>
+	  <xline-start>   1 </xline-start>
+	  <inline-step>   1 </inline-step>
+	  <xline-step>    1 </xline-step>
+	  <inline-direction> x </inline-direction>
+	</segy-indexes>
+</output-grid>
+<output-parameters>
+	<prefix> cornerpt       </prefix>
+	<seismic-depth-segy> yes </seismic-depth-segy>
+	<seismic-time-segy> yes </seismic-time-segy>
+</output-parameters>
+<traces-in-memory> 1000000 </traces-in-memory>
+#<max-threads> 1 </max-threads>
+</seismic-forward>
