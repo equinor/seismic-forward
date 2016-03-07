@@ -197,23 +197,30 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               &segyout,
   //Textual header:
   NRLib::TextualHeader header = NRLib::TextualHeader();
   header.SetLine(0, "SEGY OUTPUT FROM Seismic Forward Modeling / Geo2Seis, ver 4.0  2015");
-  std::string line = "Name: " + filename_out;
+  std::string line = "Name: " + filename_out, line2;
   header.SetLine(1, line);
   line = "  First inline: " + NRLib::ToString(geometry->GetMinIL()) + "      Last inline: " + NRLib::ToString(geometry->GetMaxIL());
   header.SetLine(2, "CDP:");
   header.SetLine(3, line);
   line = "  First xline:  " + NRLib::ToString(geometry->GetMinXL()) + "      Last xline: " + NRLib::ToString(geometry->GetMaxXL());
   header.SetLine(4, line);
-  if (nmo)
+  if (nmo) {
     line = "Offset (m)    min: " + NRLib::ToString(offset_vec[0]) + "    max: " + NRLib::ToString(offset_vec[offset_vec.size() - 1]);
-  else
-    line = "Angle  (m)    min: " + NRLib::ToString(offset_vec[0]/NRLib::Degree) + "    max: " + NRLib::ToString(offset_vec[offset_vec.size() - 1]/NRLib::Degree);
+  }
+  else {
+    line = "Angle  (m)    min: " + NRLib::ToString(offset_vec[0] / NRLib::Degree) + "    max: " + NRLib::ToString(offset_vec[offset_vec.size() - 1] / NRLib::Degree);
+  }
   header.SetLine(5, line);
-  if (time)
+  if (time) {
     line = "Time (ms)     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);
-  else
+    line2 = "Time increment (ms): " + NRLib::ToString(dz);
+  }
+  else {
     line = "Depth (m)     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);
+    line2 = "Depth increment (m): " + NRLib::ToString(dz);
+  }
   header.SetLine(6, line);
+  header.SetLine(7, line2);
 
   segyout.Initialize(filename_out, float(z0), static_cast<size_t>(nz), float(dz), header, thf, short(n_traces_per_ensamble));
   segyout.SetGeometry(geometry);

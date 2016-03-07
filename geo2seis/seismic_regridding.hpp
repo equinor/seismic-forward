@@ -35,14 +35,6 @@ class SeismicRegridding {
                         NRLib::RegularSurface<double> &bottime,
                         size_t n_threads);
 
-    static void FindPointZValue(size_t i, size_t j, size_t k,
-                                NRLib::Point &point,
-                                const NRLib::EclipseGeometry &geometry,
-                                const NRLib::Grid<double> &grid,
-                                const NRLib::Grid2D<double> &value_above,
-                                double default_value,
-                                double zlimit,
-                                double default_top);
 
     static void FillInGridValues(const NRLib::EclipseGeometry &geometry,
                                  NRLib::Grid<double>          &grid_copy,
