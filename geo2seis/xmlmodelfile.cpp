@@ -354,6 +354,7 @@ bool XmlModelFile::ParseNMOStretch(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("velocity-water");
     legalCommands.push_back("extrapol-constant");
     legalCommands.push_back("offset");
+    legalCommands.push_back("offset-without-stretch");
 
     double value;
     if (ParseValue(root, "seafloor-depth", value, errTxt) == true) {
@@ -370,6 +371,11 @@ bool XmlModelFile::ParseNMOStretch(TiXmlNode *node, std::string &errTxt) {
       modelSettings_->SetZExtrapolFactor(value);
     }
     ParseOffset(root, errTxt);
+
+    bool val; 
+    if (ParseBool(root, "offset-without-stretch", val, errTxt) == true) {
+      modelSettings_->SetOffsetWithoutStretch(val);
+    }
 
     CheckForJunk(root, errTxt, legalCommands, true);
     return true;
@@ -827,10 +833,10 @@ bool XmlModelFile::ParseDepthWindow(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetBotDepthWindow(value);
         modelSettings_->SetDepthWindowSpecified(true);
         if (top_value == false) {
-            printf("WARNING:: Value for <top> under <depth-window> is not given. Is set to top reservoir.\n");
+          printf("WARNING:: Value for <top> under <depth-window> is not given. Is set to top reservoir.\n");
         }
     } else if (top_value == true) {
-        printf("WARNING:: Value for <bot> under <depth-window> is not given. Is set to bottom reservoir.\n");
+      printf("WARNING:: Value for <bot> under <depth-window> is not given. Is set to bottom reservoir.\n");
     }
     CheckForJunk(root, errTxt, legalCommands);
     return true;
@@ -960,6 +966,10 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode *node, std::string &errTxt) {
 
     if (ParseBool(root, "seismic-time-prenmo-segy", value, errTxt) == true) {
       modelSettings_->SetOutputPrenmoTimeSegy(value);
+      if (modelSettings_->GetOffsetWithoutStretch() && value == true) {
+        modelSettings_->SetOutputPrenmoTimeSegy(false);
+        printf("WARNING:: <seismic-time-prenmo-segy> under <output-parameters> is specified. For seismic specified with <nmo-stretch> and <offset-withouth-stretch>, pre-nmo seismic will not be given.\n");
+      }
     }
 
     CheckForJunk(root, errTxt, legalCommands);

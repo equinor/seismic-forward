@@ -46,6 +46,7 @@ ModelSettings::ModelSettings(void) {
     z_wavelet_top_ = 0.0;
     z_wavelet_bot_ = 0.0;
     z_extrapol_factor_ = 50.0;
+    offset_without_stretch_ = false;
     output_vp_ = false;
     output_reflections_ = false;
     output_zvalues_ = false;

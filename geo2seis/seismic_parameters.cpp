@@ -31,7 +31,7 @@ SeismicParameters::SeismicParameters(ModelSettings *model_settings)
   segy_geometry_ = NULL;
 
   SetupWavelet();
-  //time_t t1 = time(0);   // get time now
+  time_t t1 = time(0);   // get time now
   ReadEclipseGrid();
   //PrintElapsedTime(t1, "reading eclipsegrid");
   //t1 = time(0);
@@ -60,7 +60,6 @@ void SeismicParameters::CalculateAngleSpan() {
     theta_vec_[i] = theta_0_ + i*dtheta_;
   }
 }
-
 
 void SeismicParameters::CalculateOffsetSpan() {
   offset_0_ = model_settings_->GetOffset0();
@@ -132,8 +131,6 @@ void SeismicParameters::FindLoopIndeces(int               &n_xl,
   }
 }
 
-
-
 void SeismicParameters::FindVrms(std::vector<double>       &vrms_vec,
                                  std::vector<double>       &vrms_vec_reg,
                                  const std::vector<double> &twt_vec,
@@ -198,18 +195,14 @@ void SeismicParameters::FindVrms(std::vector<double>       &vrms_vec,
     vrms_vec_in[index] = vrms_under;
 
     vrms_vec_reg = NRLib::Interpolation::Interpolate1D(twt_vec_in, vrms_vec_in, twt_vec_reg, "linear");
-  }  
+  }
 }
-
-
 
 void SeismicParameters::FindReflections(NRLib::Grid2D<double>       &r_vec,
                                         const std::vector<double>   &theta_vec,
                                         size_t                       i,
-                                        size_t                       j){
-
-
-
+                                        size_t                       j)
+{
   bool                ps_seis  = model_settings_->GetPSSeismic();
 
   Zoeppritz *zoeppritz = NULL;
@@ -246,8 +239,8 @@ void SeismicParameters::FindReflections(NRLib::Grid2D<double>       &r_vec,
 void SeismicParameters::FindNMOReflections(NRLib::Grid2D<double>       &r_vec,
                                            const NRLib::Grid2D<double> &theta,
                                            size_t                       i,
-                                           size_t                       j){
-
+                                           size_t                       j)
+{
   bool                ps_seis  = model_settings_->GetPSSeismic();
 
   Zoeppritz *zoeppritz = NULL;
@@ -303,7 +296,7 @@ void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> &twt_0,
                                           size_t              &time_samples_stretch,
                                           bool                 ps_seis)
 {
-  if (model_settings_->GetNMOCorr()){
+  if (model_settings_->GetNMOCorr() && model_settings_->GetOffsetWithoutStretch() == false){
     twt_0 = GenerateTwt0ForNMO(time_samples_stretch, ps_seis);
     z_0   = GenerateZ0ForNMO();
     if (model_settings_->GetTwtFileName() != "") {
@@ -441,7 +434,8 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
   return twt_0_;
 }
 
-std::vector<double>  SeismicParameters::GenerateZ0ForNMO(){
+std::vector<double>  SeismicParameters::GenerateZ0ForNMO()
+{
   size_t nz                      = seismic_geometry_->nz();
   double zmin                    = seismic_geometry_->z0();
   double dz                      = seismic_geometry_->dz();
@@ -522,7 +516,6 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
   return twt_0_s;
 }
 
-
 void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &thetagrid,
                                                 NRLib::Grid2D<double>     &offset_down_grid,
                                                 NRLib::Grid2D<double>     &offset_up_grid,
@@ -588,13 +581,13 @@ double SeismicParameters::FindSinThetaPSWithNewtonsMethod(double start_value,
     f_der_y = dD / (std::pow((1.0 - y_old), (3 / 2))) + dU*vr / (std::pow((1.0 - std::pow(vr, 2) * std::pow(y_old, 2)), (3 / 2)));
 
     if (f_der_y == 0) {
-      std::cout << "failure in newtons method: zero derivative.";
+      std::cout << "Failure in newtons method: zero derivative.\n";
       return 0;
     }
     y_new = y_old - f_y / f_der_y;
 
     if (std::abs(y_new) > 1.0) {
-      std::cout << "failure in newtons method: Value > 1.0 : y_old = " << y_old << ", y_new = " << y_new << ". New value: y_new = 0.1 suggested.\n";
+      std::cout << "Failure in newtons method: Value > 1.0 : y_old = " << y_old << ", y_new = " << y_new << ". New value: y_new = 0.1 suggested.\n";
       y_new = 0.1;
     }
 
@@ -605,56 +598,57 @@ double SeismicParameters::FindSinThetaPSWithNewtonsMethod(double start_value,
     y_old = y_new;
   }
   return y_new;
-
 }
 
+void SeismicParameters::ReadEclipseGrid() 
+{
+  std::string filename = model_settings_->GetEclipseFileName();
 
+  printf("Start reading Eclipsegrid from file.\n");
+  eclipse_grid_ = new NRLib::EclipseGrid(filename);
+  printf("Eclipsegrid read.\n");
 
-void SeismicParameters::ReadEclipseGrid() {
-    std::string filename = model_settings_->GetEclipseFileName();
-
-    printf("Start reading Eclipsegrid from file.\n");
-    eclipse_grid_ = new NRLib::EclipseGrid(filename);
-    printf("Eclipsegrid read.\n");
-
-    std::vector<std::string> names = model_settings_->GetParameterNames();
-    if (!eclipse_grid_->HasParameter(names[0])) {
-        std::cout << "Parameter " + names[0] + " is not found in Eclipse grid\n";
-        exit(0);
+  std::vector<std::string> names = model_settings_->GetParameterNames();
+  if (!eclipse_grid_->HasParameter(names[0])) {
+    std::cout << "Parameter " + names[0] + " is not found in Eclipse grid\n";
+    exit(0);
+  }
+  if (!eclipse_grid_->HasParameter(names[1])) {
+    std::cout << "Parameter " + names[1] + " is not found in Eclipse grid\n";
+    exit(0);
+  }
+  if (!eclipse_grid_->HasParameter(names[2])) {
+    std::cout << "Parameter " + names[2] + " is not found in Eclipse grid\n";
+    exit(0);
+  }
+  std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
+  for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
+    if (!eclipse_grid_->HasParameter(extra_parameter_names[i])) {
+      std::cout << "Parameter " + extra_parameter_names[i] + " is not found in Eclipse grid\n";
+      exit(0);
     }
-    if (!eclipse_grid_->HasParameter(names[1])) {
-        std::cout << "Parameter " + names[1] + " is not found in Eclipse grid\n";
-        exit(0);
-    }
-    if (!eclipse_grid_->HasParameter(names[2])) {
-        std::cout << "Parameter " + names[2] + " is not found in Eclipse grid\n";
-        exit(0);
-    }
-    std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
-    for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
-        if (!eclipse_grid_->HasParameter(extra_parameter_names[i])) {
-            std::cout << "Parameter " + extra_parameter_names[i] + " is not found in Eclipse grid\n";
-            exit(0);
-        }
-    }
+  }
 }
 
-
-void SeismicParameters::DeleteEclipseGrid() {
+void SeismicParameters::DeleteEclipseGrid()
+{
   delete eclipse_grid_;
 }
 
-void SeismicParameters::DeleteElasticParameterGrids() {
+void SeismicParameters::DeleteElasticParameterGrids()
+{
   delete vpgrid_;
   delete vsgrid_;
   delete rhogrid_;
 }
 
-void SeismicParameters::DeleteExtraParameterGrids() {
+void SeismicParameters::DeleteExtraParameterGrids()
+{
   delete extra_parameter_grid_;
 }
 
-void SeismicParameters::DeleteZandRandTWTGrids() {
+void SeismicParameters::DeleteZandRandTWTGrids()
+{
   if (twtgrid_ != NULL)
     delete twtgrid_;
   if (twtssgrid_ != NULL)
@@ -667,31 +661,31 @@ void SeismicParameters::DeleteZandRandTWTGrids() {
     delete twt_timeshift_;
 }
 
-void SeismicParameters::DeleteVrmsGrid() {
+void SeismicParameters::DeleteVrmsGrid()
+{
   delete vrmsgrid_;
 }
 
-void SeismicParameters::DeleteWavelet() {
+void SeismicParameters::DeleteWavelet()
+{
   delete wavelet_;
 }
 
-void SeismicParameters::DeleteGeometryAndOutput() {
+void SeismicParameters::DeleteGeometryAndOutput()
+{
   delete seismic_geometry_;
   delete segy_geometry_;
   delete seismic_output_;
   delete model_settings_;
 }
 
-
-
-
-void SeismicParameters::FindGeometry() {
+void SeismicParameters::FindGeometry()
+{
   seismic_geometry_->setDxDy(model_settings_->GetDx(), model_settings_->GetDy());
   seismic_geometry_->setDz(model_settings_->GetDz());
   seismic_geometry_->setDt(model_settings_->GetDt());
 
   const NRLib::EclipseGeometry &geometry = eclipse_grid_->GetGeometry();
-
 
   if (model_settings_->GetAreaFromSegy() != "") {
     std::cout << "Area from <area-from-segy>.\n";
@@ -750,7 +744,8 @@ void SeismicParameters::FindGeometry() {
   }
 }
 
-void SeismicParameters::FindSurfaceGeometry() {
+void SeismicParameters::FindSurfaceGeometry()
+{
   const NRLib::EclipseGeometry &geometry = eclipse_grid_->GetGeometry();
 
   double dx = seismic_geometry_->dx();
@@ -828,7 +823,6 @@ void SeismicParameters::FindSurfaceGeometry() {
     seismic_output_->WriteDepthSurfaces(topeclipse_, boteclipse_);
   }
 
-
   double min, max, d1 = 1e10, d2 = 0;
   bool found;
   for (size_t i = 0; i < geometry.GetNI(); ++i) {
@@ -884,7 +878,8 @@ void SeismicParameters::FindSurfaceGeometry() {
   seismic_geometry_->setZRange(d1, d2);
 }
 
-void SeismicParameters::CreateGrids() {
+void SeismicParameters::CreateGrids()
+{
   size_t nx = seismic_geometry_->nx();
   size_t ny = seismic_geometry_->ny();
   size_t nzrefl = seismic_geometry_->zreflectorcount();
@@ -985,5 +980,4 @@ void SeismicParameters::PrintElapsedTime(time_t start_time, std::string work)
     << seconds_s
     << "\n";
 }
-
 

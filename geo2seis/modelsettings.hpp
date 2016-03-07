@@ -102,6 +102,8 @@ public:
   void SetZWaveletBot(double wave) { z_wavelet_bot_ = wave; }
   
   void SetZExtrapolFactor(double fact) { z_extrapol_factor_ = fact; }
+
+  void SetOffsetWithoutStretch(bool value) { offset_without_stretch_ = value; }
   
   void SetOutputVp(bool value) {output_vp_ = value;}
 
@@ -446,6 +448,10 @@ public:
     return z_extrapol_factor_;
   }
 
+  bool GetOffsetWithoutStretch() {
+    return offset_without_stretch_;
+  }
+
   bool GetOutputVp() {
     return output_vp_;
   }
@@ -632,6 +638,7 @@ private:
   double z_wavelet_top_;
   double z_wavelet_bot_;
   double z_extrapol_factor_;
+  bool offset_without_stretch_;
   bool output_vp_, output_reflections_, output_zvalues_, output_seismic_time_, output_seismic_depth_, output_seismic_timeshift_;
 
   bool output_time_surfaces_, output_depth_surfaces_, output_twt_, output_vrms_, output_twt_offset_;

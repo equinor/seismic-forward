@@ -33,17 +33,17 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
 
   //------------------------Resample Z values--------------------------------
   printf("Start finding Zvalues.\n");
-  time_t t1 = time(0);   // get time now
+  //time_t t1 = time(0);   // get time now
   FindZValues(seismic_parameters, n_threads);
-  seismic_parameters.PrintElapsedTime(t1, "finding Zvalues");
+  //seismic_parameters.PrintElapsedTime(t1, "finding Zvalues");
   printf("Zvalues found.\n");
 
   //------------------------Resample elastic properties----------------------
   printf("Start finding elastic parameters.\n");
-  t1 = time(0);
+  //t1 = time(0);
   FindVp(seismic_parameters, n_threads);
   VpPostProcess(seismic_parameters);
-  seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
+  //seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
   printf("Elastic parameters found.\n");
 
   seismic_parameters.DeleteEclipseGrid();
@@ -52,9 +52,9 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   Wavelet* wavelet                       = seismic_parameters.GetWavelet();
 
   //------------------------Make TWT grid-----------------------------------
-  t1 = time(0);
+  //t1 = time(0);
   FindTWT(seismic_parameters, toptime, bottime, n_threads);
-  seismic_parameters.PrintElapsedTime(t1, "finding twt");
+  //seismic_parameters.PrintElapsedTime(t1, "finding twt");
 
   //---generate, write and delete vrms grid if writing is requested---------
   if (seismic_parameters.GetModelSettings()->GetNMOCorr() && seismic_parameters.GetModelSettings()->GetOutputVrms()){
@@ -95,7 +95,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
     seismic_parameters.GetSeismicOutput()->WriteTimeSurfaces(seismic_parameters);
   }
 
-  t1 = time(0);   // get time now
+  //t1 = time(0);   // get time now
   //---resample, write and delete EXTRA parameter grids---------
   if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy()) {
     seismic_parameters.GetSeismicOutput()->WriteExtraParametersTimeSegy(seismic_parameters, n_threads);
@@ -106,7 +106,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   seismic_parameters.DeleteExtraParameterGrids();
   //seismic_parameters.PrintElapsedTime(t1, "resampling extra parameters and write to segy");
 
-  t1 = time(0);   // get time now
+  //t1 = time(0);   // get time now
   //---resample and write ELASTIC parameters in segy------------
   if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy()) {
     seismic_parameters.GetSeismicOutput()->WriteElasticParametersTimeSegy(seismic_parameters, n_threads);
@@ -364,11 +364,8 @@ void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
       twtgrid(i, j, 0) = static_cast<float>(toptime.GetZ(x, y));
       if (ps_seismic && nmo_seismic) {
         double a = 2.0;
-        twtppgrid(i, j, 0) = 2 / (a + 1) * (twtgrid(i, j, 0) + 1000 * (a - 1) * z_w / v_w); //twtgrid is PS twt
+        twtppgrid(i, j, 0) = 2 / (a + 1) * (twtgrid(i, j, 0) + 1000 * (a - 1) * z_w / v_w);
         twtssgrid(i, j, 0) = 2 * twtgrid(i, j, 0) - twtppgrid(i, j, 0);
-        //std::cout << "twtgrid(i,j,0) = " << twtgrid(i, j, 0) << "\n";
-        //std::cout << "twtssgrid(i,j,0) = " << twtssgrid(i, j, 0) << "\n";
-        //std::cout << "twtppgrid(i,j,0) = " << twtppgrid(i, j, 0) << "\n";
       }
       if (toptime.IsMissing(twtgrid(i, j, 0)) == false) {
         for (size_t k = 1; k < nk; k++) {
@@ -499,7 +496,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
       }
     }
   }
-  //size_t count_pointz = 0, count_cells = 0;
 
   //blocking - for parallelisation - if n_threads > 1
   int nx = static_cast<int>(egrid.GetNI()) - 1;
@@ -558,7 +554,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
           if (geometry.IsPillarActive(i, j) && geometry.IsPillarActive(i + 1, j) && geometry.IsPillarActive(i, j + 1) && geometry.IsPillarActive(i + 1, j + 1) &&
             geometry.IsPillarActive(i + 2, j) && geometry.IsPillarActive(i + 2, j + 1) && geometry.IsPillarActive(i, j + 2) && geometry.IsPillarActive(i + 1, j + 2) &&
             geometry.IsPillarActive(i + 2, j + 2)) {
-            //count_cells++;
             if (k <= botk) {
               for (size_t pt = 0; pt < 4; ++pt)
                 pt_vp[pt] = geometry.FindCellCenterPoint(i + int(pt % 2), j + int(floor(double(pt) / 2)), k);
@@ -589,7 +584,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
               }
               else {
                 for (size_t pt = 0; pt < 4; ++pt) {
-                  //count_pointz++;
                   pt_vp[pt].z = vp_grid(i + int(pt % 2), j + int(floor(double(pt / 2))), k);
                   pt_vs[pt].z = vs_grid(i + int(pt % 2), j + int(floor(double(pt / 2))), k);
                   pt_rho[pt].z = rho_grid(i + int(pt % 2), j + int(floor(double(pt / 2))), k);
@@ -641,7 +635,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
                 for (size_t jj = start_jj; jj < end_jj; jj++) {
                   double x, y, z;
                   vpgrid.FindCenterOfCell(ii, jj, 0, x, y, z);
-                  //count_center_cell++;
 
                   NRLib::Point p1, p2;
                   p1.x = x;
@@ -846,9 +839,6 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
                   parameter_grid_from_eclipse,
                   i, j, k, pt_vp);
   }
-  //std::cout << "count_center_cell = " << count_center_cell << "\n";
-  //std::cout << "count_cells = " << count_cells << "\n";
-  //std::cout << "count_pointz = " << count_pointz << "\n";
 }
 
 void SeismicRegridding::FindVpEdges(const NRLib::EclipseGeometry        &geometry,
@@ -1204,7 +1194,6 @@ void SeismicRegridding::SetElasticTriangles(std::vector<NRLib::Point>           
     }
   }
 }
-
 
 bool SeismicRegridding::Is124Triangulate(std::vector<NRLib::Point> pt_vp)
 {

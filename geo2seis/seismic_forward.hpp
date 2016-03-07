@@ -146,12 +146,14 @@ class SeismicForward {
                            const std::vector<double>   &vrms_pp_vec,
                            const std::vector<double>   &vrms_ss_vec,
                            const NRLib::Grid2D<double> &offset_ss,
-                           const NRLib::Grid2D<double> &offset_pp);
+                           const NRLib::Grid2D<double> &offset_pp,
+                           bool                         offset_without_stretch);
 
     static void FindTWTx(NRLib::Grid2D<double>     &twtx_grid,
                          const std::vector<double> &twt_vec,
                          const std::vector<double> &vrms_vec,
-                         const std::vector<double> &offset);
+                         const std::vector<double> &offset,
+                         bool                       offset_without_stretch);
 
     static void FindSeisLimits(const NRLib::Grid2D<double> &twtx_grid,
                                const std::vector<double>   &twt_0,
@@ -180,7 +182,8 @@ class SeismicForward {
 
     static void PrintSeisType(bool                 nmo,
                               bool                 ps_seis,
-                              std::vector<double> &off_theta_vec);
+                              std::vector<double> &off_theta_vec,
+                              bool                 offset_without_stretch);
 
     static void PrintTime();
 
