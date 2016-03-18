@@ -29,9 +29,6 @@ class SeismicForward {
 
     static void MakeSeismic(SeismicParameters &seismic_parameters);
 
-    static tbb::concurrent_queue<Trace*> FindTracesInForward(SeismicParameters &seismic_parameters,
-                                                             size_t            &n_traces);
-
     static bool GenerateTraceOk(SeismicParameters &seismic_parameters,
                                 size_t             i,
                                 size_t             j);

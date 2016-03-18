@@ -97,6 +97,7 @@ ModelSettings::ModelSettings(void) {
     max_threads_ = 100;
     ps_seismic_ = false;
     nmo_corr_ = false;
+    resampl_tbb_ = true;
     v_w_ = 0.0;
     z_w_ = 0.0;
     top_time_window_ = -9999;

@@ -12,6 +12,9 @@
 #include <physics/zoeppritz.hpp>
 #include <physics/zoeppritz_ps.hpp>
 #include <physics/zoeppritz_pp.hpp>
+#include "tbb/compat/thread"
+#include <nrlib/random/randomgenerator.hpp>
+#include <nrlib/random/normal.hpp>
 
 
 SeismicParameters::SeismicParameters(ModelSettings *model_settings) 
@@ -644,7 +647,8 @@ void SeismicParameters::DeleteElasticParameterGrids()
 
 void SeismicParameters::DeleteExtraParameterGrids()
 {
-  delete extra_parameter_grid_;
+  for (size_t i = 0; i < extra_parameter_grid_.size(); ++i)
+    delete extra_parameter_grid_[i];
 }
 
 void SeismicParameters::DeleteZandRandTWTGrids()
@@ -929,15 +933,17 @@ void SeismicParameters::CreateGrids()
 
   std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
   std::vector<double> extra_parameter_default_values = model_settings_->GetExtraParameterDefaultValues();
-  extra_parameter_grid_ = new std::vector<NRLib::StormContGrid>(extra_parameter_names.size());
+  //extra_parameter_grid_ = new std::vector<NRLib::StormContGrid>(extra_parameter_names.size());
+  extra_parameter_grid_.resize(extra_parameter_names.size());
   for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
-    (*extra_parameter_grid_)[i] = NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, extra_parameter_default_values[i]);
+    extra_parameter_grid_[i] = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, extra_parameter_default_values[i]);
   }
 
-  for (size_t i = 0; i < nx; i++) {
-    for (size_t j = 0; j < ny; j++) {
-      for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
-        (*extra_parameter_grid_)[epi](i, j, nzrefl) = 0.0;
+  for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
+    NRLib::StormContGrid &par_grid = *(extra_parameter_grid_[epi]);
+    for (size_t i = 0; i < nx; i++) {
+      for (size_t j = 0; j < ny; j++) {
+        par_grid(i, j, nzrefl) = 0.0;
       }
     }
   }
@@ -980,4 +986,87 @@ void SeismicParameters::PrintElapsedTime(time_t start_time, std::string work)
     << seconds_s
     << "\n";
 }
+
+tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t &n_traces)
+{
+  tbb::concurrent_queue<Trace*> traces;
+  int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
+  bool ilxl_loop = false;
+  //find index min and max and whether loop over i,j or il,xl:
+  FindLoopIndeces(n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step, ilxl_loop);
+  //NRLib::SegyGeometry *geometry = GetSegyGeometry();
+  int il_steps = 0;
+  int xl_steps = 0;
+  //----------------------LOOP OVER I,J OR IL,XL---------------------------------
+  size_t job_number = 0;
+  for (int il = il_min; il <= il_max; il += il_step) {
+    ++il_steps;
+    xl_steps = 0;
+    for (int xl = xl_min; xl <= xl_max; xl += xl_step) {
+      ++xl_steps;
+      size_t i, j;
+      double x, y;
+      if (ilxl_loop) { //loop over il,xl, find corresponding x,y,i,j
+        segy_geometry_->FindXYFromILXL(il, xl, x, y);
+        segy_geometry_->FindIndex(x, y, i, j);
+      }
+      else { //loop over i,j, no segy output
+        i = il;
+        j = xl;
+        x = 0;
+        y = 0;
+      }
+      Trace * trace = new Trace(job_number, x, y, i, j);
+      traces.push(trace);
+      ++job_number;
+    }
+  }
+  n_traces = job_number;
+  return traces;
+}
+
+void SeismicParameters::AddNoiseToReflectionsPos(unsigned long           seed,
+  double                  std_dev,
+  NRLib::Grid2D<double>  &refl)
+{
+  NRLib::RandomGenerator rg;
+  rg.Initialize(seed);
+  NRLib::Normal normal_distibrution(0, std_dev);
+
+  for (size_t i = 0; i < refl.GetNI(); ++i) {
+    for (size_t j = 0; j < refl.GetNJ(); ++j) {
+      refl(i, j) += static_cast<float>(normal_distibrution.Draw(rg));
+    }
+  }
+}
+
+
+void SeismicParameters::MonitorInitialize(size_t n_traces,
+  float &monitor_size,
+  float &next_monitor)
+{
+  monitor_size = static_cast<float>(n_traces) * 0.02f;
+  if (monitor_size < 1.0f)
+    monitor_size = 1.0f;
+  next_monitor = monitor_size;
+  std::cout
+    << "\n  0%       20%       40%       60%       80%      100%"
+    << "\n  |    |    |    |    |    |    |    |    |    |    |  "
+    << "\n  ^";
+}
+
+void SeismicParameters::Monitor(size_t trace,
+  float monitor_size,
+  float &next_monitor)
+{
+  if (trace + 1 >= static_cast<size_t>(next_monitor)) {
+    next_monitor += monitor_size;
+    std::cout << "^";
+    fflush(stdout);
+    if (next_monitor > monitor_size * 51) {
+      std::cout << "\n";
+    }
+  }
+}
+
 

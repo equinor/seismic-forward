@@ -6,8 +6,11 @@
 #include <vector>
 #include "modelsettings.hpp"
 #include "seismic_parameters.hpp"
+#include <seismic_geometry.hpp>
 #include "nrlib/segy/segygeometry.hpp"
-
+//#include "utils/gen_resampl_param.hpp"
+//#include "utils/resampl_trace.hpp"
+//#include "utils/resampl_output.hpp"
 
 #include <nrlib/surface/regularsurface.hpp>
 #include <nrlib/stormgrid/stormcontgrid.hpp>
@@ -75,9 +78,10 @@ class SeismicOutput {
     void PrintVectorSizeT(std::vector<size_t> vec, std::string filename);
     void PrintMatrix(NRLib::Grid2D<double> matrix, std::string filename);
 
+
 private:
     void GenerateParameterGridForOutput(NRLib::StormContGrid &input_grid, NRLib::StormContGrid &time_or_depth_grid, NRLib::StormContGrid &output_grid, double delta_time_or_depth, double zero_time_or_depth, NRLib::RegularSurface<double> &toptime, size_t n_threads);
-    size_t FindCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid);
+    static size_t FindCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid);
 
     double top_time_window_;
     double bot_time_window_;

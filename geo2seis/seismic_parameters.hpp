@@ -8,6 +8,8 @@
 #include <nrlib/volume/volume.hpp>
 #include "modelsettings.hpp"
 #include "seismic_output.hpp"
+#include <tbb/concurrent_queue.h>
+#include <utils/trace.hpp>
 
 class Wavelet;
 class ModelSettings;
@@ -39,7 +41,7 @@ class SeismicParameters {
     inline NRLib::StormContGrid &GetTwtShiftGrid()                      const { return *twt_timeshift_; };
     inline NRLib::StormContGrid &GetVrmsGrid()                          const { return *vrmsgrid_; };
     inline std::vector<NRLib::StormContGrid> &GetRGrids()               const { return *rgridvec_; };
-    inline std::vector<NRLib::StormContGrid> &GetExtraParametersGrids() const { return *extra_parameter_grid_; };
+    inline std::vector<NRLib::StormContGrid*> GetExtraParametersGrids() const { return extra_parameter_grid_; }
     inline NRLib::EclipseGrid &GetEclipseGrid()                         const { return *eclipse_grid_; };
 
     inline NRLib::RegularSurface<double> &GetTopTime()                        { return top_time_; };
@@ -147,6 +149,21 @@ class SeismicParameters {
 
     static void PrintElapsedTime(time_t start_time, std::string work);
 
+    tbb::concurrent_queue<Trace*> FindTracesInForward(size_t            &n_traces);
+
+
+    static void AddNoiseToReflectionsPos(unsigned long           seed,
+                                         double                  std_dev,
+                                         NRLib::Grid2D<double> &refl);
+
+    static void MonitorInitialize(size_t n_traces,
+                                  float &monitor_size,
+                                  float &next_monitor);
+
+    static void Monitor(size_t  trace,
+                        float   monitor_size,
+                        float   &next_monitor);
+
     void DeleteEclipseGrid();
     void DeleteElasticParameterGrids();
     void DeleteExtraParameterGrids();
@@ -155,7 +172,7 @@ class SeismicParameters {
     void DeleteWavelet();
     void DeleteGeometryAndOutput();
 
-  private:
+private:
     void SetupWavelet();
     void ReadEclipseGrid();
     void FindGeometry();
@@ -205,8 +222,7 @@ class SeismicParameters {
     NRLib::StormContGrid *twt_timeshift_;
     NRLib::StormContGrid *vrmsgrid_;
     std::vector<NRLib::StormContGrid> *rgridvec_;
-    std::vector<NRLib::StormContGrid> *extra_parameter_grid_;   
-
+    std::vector<NRLib::StormContGrid*> extra_parameter_grid_;
 
     std::vector<double> twt_0_;
     std::vector<double> z_0_;

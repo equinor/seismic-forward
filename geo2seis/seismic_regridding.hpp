@@ -8,16 +8,31 @@
 #include <nrlib/eclipsegrid/eclipsegeometry.hpp>
 #include <nrlib/geometry/point.hpp>
 #include <nrlib/geometry/triangle.hpp>
-
+#include "utils/resampl_trace.hpp"
+#include "utils/resampl_output.hpp"
+#include "utils/gen_resampl_param.hpp"
 
 class SeismicRegridding {
   public:
     static void MakeSeismicRegridding(SeismicParameters &seismic_parameters);
-    static void AddNoiseToReflectionsPos(unsigned long           seed,
-                                         double                  std_dev,
-                                         NRLib::Grid2D<double> &refl);
 
   private:
+    static void WriteElasticParametersSegy(SeismicParameters &seismic_parameters, size_t n_threads, bool time);
+    static void WriteExtraParametersSegy(SeismicParameters &seismic_parameters, size_t n_threads, bool time);
+
+    static void WriteParametersTimeInParallel(SeismicParameters                 &seismic_parameters,
+                                              size_t                             n_threads,
+                                              std::vector<NRLib::StormContGrid*> &input_grid,
+                                              std::vector<std::string>           filenames);
+    static void WriteParametersDepthInParallel(SeismicParameters                 &seismic_parameters,
+                                               size_t                             n_threads,
+                                               std::vector<NRLib::StormContGrid*> &input_grid,
+                                               std::vector<std::string>           filenames);
+
+    static void GenerateParameterGridForOutput3(GenResamplParam * params, Trace *trace, ResamplOutput *resampl_output);
+    static void GenerateParameterGridForOutputQueue(GenResamplParam *params, ResamplOutput *resampl_output);
+    static void WriteResampledParameter(GenResamplParam *params, ResamplOutput *resampl_output);
+    static size_t FindCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid);
 
     static void FindZValues(SeismicParameters &seismic_parameters,
                             size_t             n_threads);
@@ -56,7 +71,7 @@ class SeismicRegridding {
                             const NRLib::Grid<double>           &vp_grid,
                             const NRLib::Grid<double>           &vs_grid,
                             const NRLib::Grid<double>           &rho_grid,
-                            std::vector<NRLib::Grid<double> >   & parameter_grid_from_eclipse,
+                            std::vector<NRLib::Grid<double> >   &parameter_grid_from_eclipse,
                             size_t i, size_t j, size_t k,
                             bool top, bool bot, bool right, bool left);
 

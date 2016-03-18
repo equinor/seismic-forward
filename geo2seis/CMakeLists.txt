@@ -20,6 +20,9 @@ set(CPP_FILES
 	utils/result_trace.cpp
 	utils/trace.cpp
 	utils/gen_seis_trace_params.cpp
+	utils/gen_resampl_param.cpp
+	utils/resampl_trace.cpp
+	utils/resampl_output.cpp
 )
 
 set(H_FILES
@@ -42,6 +45,9 @@ set(H_FILES
 	utils/result_trace.hpp
 	utils/trace.hpp
 	utils/gen_seis_trace_params.hpp
+	utils/gen_resampl_param.hpp
+	utils/resampl_trace.hpp
+	utils/resampl_output.hpp
 )
 
 

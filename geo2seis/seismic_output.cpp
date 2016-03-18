@@ -1,11 +1,9 @@
 #include <seismic_output.hpp>
-
 #include <utils/storm_writer.hpp>
 #include "utils/segy_writer.hpp"
 #include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
 #include "nrlib/geometry/interpolation.hpp"
-
 
 #ifdef WITH_OMP
 #include <omp.h>
@@ -38,7 +36,6 @@ SeismicOutput::SeismicOutput(ModelSettings *model_settings) {
 
   //-----------------UTM precision in segy header--------------------------
   scalco_ = model_settings->GetUtmPrecision();
-
 
   xline_x_axis_ = true;
   if (NRLib::Uppercase(inline_direction_) == "X") {
@@ -76,7 +73,6 @@ void SeismicOutput::SetSegyGeometry(SeismicParameters   &seismic_parameters,
   ilstepy *= inline_step_;
   xlstepx *= xline_step_;
   xlstepy *= xline_step_;
-
 
   if (seismic_parameters.GetSegyGeometry() == NULL){
     const NRLib::SegyGeometry *geometry = 
@@ -329,7 +325,6 @@ void SeismicOutput::WriteZeroSegyGather(NRLib::SegY               &segyout,
   }
 }
 
-
 void SeismicOutput::WriteDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse)
 {
   printf("Write depth surfaces on Storm format\n");
@@ -366,7 +361,6 @@ void SeismicOutput::WriteReflections(SeismicParameters &seismic_parameters, doub
   }
 }
 
-
 void SeismicOutput::WriteVrms(SeismicParameters    &seismic_parameters,
                               std::string           name_pp_or_ps)
 {
@@ -392,12 +386,12 @@ void SeismicOutput::WriteElasticParametersTimeSegy(SeismicParameters &seismic_pa
   double dt = seismic_parameters.GetSeismicGeometry()->dt();
 
   NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
-  NRLib::SegyGeometry *segy_geometry     = seismic_parameters.GetSegyGeometry();
-  NRLib::Volume volume_time              = seismic_parameters.GetSeismicGeometry()->createTimeVolume();
-  double t_min                           = toptime.Min();
-  
-  NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
-  NRLib::StormContGrid &vsgrid  = seismic_parameters.GetVsGrid();
+  NRLib::SegyGeometry *segy_geometry = seismic_parameters.GetSegyGeometry();
+  NRLib::Volume volume_time = seismic_parameters.GetSeismicGeometry()->createTimeVolume();
+  double t_min = toptime.Min();
+
+  NRLib::StormContGrid &vpgrid = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid &vsgrid = seismic_parameters.GetVsGrid();
   NRLib::StormContGrid &rhogrid = seismic_parameters.GetRhoGrid();
   NRLib::StormContGrid &twtgrid = seismic_parameters.GetTwtGrid();
 
@@ -429,11 +423,11 @@ void SeismicOutput::WriteExtraParametersTimeSegy(SeismicParameters &seismic_para
   double tmin                            = toptime.Min();
 
   NRLib::StormContGrid              &twtgrid              = seismic_parameters.GetTwtGrid();
-  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
+  std::vector<NRLib::StormContGrid*> extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
     
   for (size_t i = 0; i < extra_parameter_names_.size(); ++i) {
     NRLib::StormContGrid extra_parameter_time_grid(volume_time, nx, ny, nt);
-    GenerateParameterGridForOutput((extra_parameter_grid)[i], twtgrid, extra_parameter_time_grid, dt, tmin, toptime, n_threads);
+    GenerateParameterGridForOutput(*(extra_parameter_grid[i]), twtgrid, extra_parameter_time_grid, dt, tmin, toptime, n_threads);
     SEGY::WriteSegy(extra_parameter_time_grid, prefix_ + extra_parameter_names_[i] + "_time" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_time_window_, bot_time_window_, time_window_);
     extra_parameter_time_grid = NRLib::StormContGrid(0,0,0); // bør denne settes utenfor for-loopen, for nå brukes forekjsllig sted i minnet?? eller=?
   }
@@ -483,11 +477,11 @@ void SeismicOutput::WriteExtraParametersDepthSegy(SeismicParameters &seismic_par
   NRLib::StormContGrid &zgrid        = seismic_parameters.GetZGrid();
   NRLib::SegyGeometry *segy_geometry = seismic_parameters.GetSegyGeometry();
 
-  std::vector<NRLib::StormContGrid> &extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
+  std::vector<NRLib::StormContGrid*> extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
   
   for (size_t i = 0; i < extra_parameter_names_.size(); ++i) {
     NRLib::StormContGrid extra_parameter_depth_grid(volume, nx, ny, nz);
-    GenerateParameterGridForOutput((extra_parameter_grid)[i], zgrid, extra_parameter_depth_grid, dz, toptime.Min(), toptime, n_threads);
+    GenerateParameterGridForOutput(*(extra_parameter_grid[i]), zgrid, extra_parameter_depth_grid, dz, toptime.Min(), toptime, n_threads);
     SEGY::WriteSegy(extra_parameter_depth_grid, prefix_ + extra_parameter_names_[i] + "_depth" + suffix_ + ".segy", inline_start_, xline_start_, xline_x_axis_, inline_step_, xline_step_, segy_geometry, scalco_, top_depth_window_, bot_depth_window_, depth_window_);
     extra_parameter_depth_grid = NRLib::StormContGrid(0,0,0);
   }
@@ -526,9 +520,10 @@ void SeismicOutput::WriteTwt(SeismicParameters &seismic_parameters)
   twtgrid.WriteToFile(filename);
 }
 
-
 void SeismicOutput::GenerateParameterGridForOutput(NRLib::StormContGrid &input_grid, NRLib::StormContGrid &time_or_depth_grid, NRLib::StormContGrid &output_grid, double delta_time_or_depth, double zero_time_or_depth, NRLib::RegularSurface<double> &toptime, size_t n_threads)
 {
+  //std::vector<size_t> twt_0;// (output_grid.GetNK());
+  //std::vector<double> x_pos, y_pos;
   int  chunk_size;
   chunk_size = 50;
 #ifdef WITH_OMP
@@ -536,12 +531,18 @@ void SeismicOutput::GenerateParameterGridForOutput(NRLib::StormContGrid &input_g
 #endif
   for (int i = 0; i < output_grid.GetNI(); i++) {
     for (size_t j = 0; j < output_grid.GetNJ(); j++) {
+      //twt_0.resize(0);
+      //x_pos.resize(0);
+      //y_pos.resize(0);
       double x, y, z;
       input_grid.FindCenterOfCell(i, j, 0, x, y, z);
+      //x_pos.push_back(x);
+      //y_pos.push_back(y);
 
       double topt = toptime.GetZ(x, y);
       if (!toptime.IsMissing(topt)) { //check whether there are values in input_grid in this pillar - if not, cells in output_grid will be zero
         double location = zero_time_or_depth + 0.5 * delta_time_or_depth;
+        //twt_0.push_back(location);
         for (size_t k = 0; k < output_grid.GetNK(); k++) {
           //find cell index in time or depth grid
           size_t location_index = FindCellIndex(i, j, location, time_or_depth_grid);
@@ -550,13 +551,22 @@ void SeismicOutput::GenerateParameterGridForOutput(NRLib::StormContGrid &input_g
           }
           output_grid(i, j, k) = input_grid(i, j, location_index);
           location += delta_time_or_depth;
+          //twt_0.push_back(location_index);
+          //y_pos.push_back(input_grid(i, j, location_index));
         }
-      } 
+      }
       else {
         for (size_t k = 0; k < output_grid.GetNK(); k++) {
           output_grid(i, j, k) = 0.0;
         }
       }
+      //if (i == 18 && j == 18) {
+      //  PrintVectorSizeT(twt_0, "location_index_19_19.txt");
+      //  PrintVector(x_pos, "x_pos_seis_output.txt");
+      //  PrintVector(y_pos, "y_pos_seis_output.txt");
+      //  std::cout << "x and y: " << x << " " << y << "\n";
+      //}
+
     }
   }
 }
@@ -573,7 +583,6 @@ size_t SeismicOutput::FindCellIndex(size_t i, size_t j, double target_k, NRLib::
   }
   return found_k;
 }
-
 
 void SeismicOutput::WriteSeismicTimeStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset, bool is_stack)
 {
