@@ -222,8 +222,6 @@ void SeismicRegridding::WriteExtraParametersSegy(SeismicParameters &seismic_para
     for (size_t i = 0; i < filenames.size(); ++i) {
       filenames[i] = filenames[i] + "_time";
     }
-    //printf("Before entering WriteParametersTimeInParallel.\n");
-    //sleep(10);
     WriteParametersTimeInParallel(seismic_parameters, n_threads, extra_parameter_grid, filenames);
   }
   else {
@@ -251,9 +249,13 @@ void SeismicRegridding::WriteParametersDepthInParallel(SeismicParameters        
   NRLib::Volume                  volume_depth = seismic_parameters.GetSeismicGeometry()->createDepthVolume();
   NRLib::StormContGrid &zgrid                 = seismic_parameters.GetZGrid();
 
+  //find min z in a sample
+  size_t nzmin = static_cast<size_t>(floor(z0) / dz + 0.5);
+  double zmin_sampl = nzmin *dz;
+
   std::vector<double> z_0(nz);
   for (size_t k = 0; k < nz; ++k) {
-    z_0[k] = z0 + (k + 0.5) * dz;
+    z_0[k] = zmin_sampl + (k)* dz;
   }
 
   ResamplOutput resampl_output(seismic_parameters, time, z_0.size());
@@ -305,7 +307,6 @@ void SeismicRegridding::WriteParametersDepthInParallel(SeismicParameters        
   }
 }
 
-
 void SeismicRegridding::WriteParametersTimeInParallel(SeismicParameters                 &seismic_parameters,
                                                       size_t                             n_threads,
                                                       std::vector<NRLib::StormContGrid*> &input_grid,
@@ -324,14 +325,10 @@ void SeismicRegridding::WriteParametersTimeInParallel(SeismicParameters         
 
   std::vector<double> twt_0(nt);
   for (size_t k = 0; k < nt; ++k) {
-    twt_0[k] = t_min + (k + 0.5) * dt;
+    twt_0[k] = t_min + (k) * dt;
   }
-  //printf("Before constructor ResamplOutput.\n");
-  //sleep(10);
-  ResamplOutput resampl_output(seismic_parameters, time, twt_0.size());
 
-  //printf("Before ResamplOutput.AddResampleCase.\n");
-  //sleep(10);
+  ResamplOutput resampl_output(seismic_parameters, time, twt_0.size());
   for (size_t i = 0; i < filenames.size(); ++i) {
     resampl_output.AddResampleCase(filenames[i], *(input_grid[i]), time, twt_0, seismic_parameters);
   }
@@ -343,12 +340,8 @@ void SeismicRegridding::WriteParametersTimeInParallel(SeismicParameters         
   tbb::concurrent_bounded_queue<ResamplTrace*> result_queue;
   result_queue.set_capacity(queue_capacity);
   std::vector<std::thread*> worker_thread;
-  //printf("Before constructor GenResamplParam.\n");
-  //sleep(10);
   GenResamplParam parameters(seismic_parameters, twt_0, twtgrid, toptime, twt_0.size(), n_traces, time, empty_queue, result_queue, traces);
 
-  //printf("Before starting GenerateParameterGridForOutputQueue.\n");
-  //sleep(10);
   if (n_threads > 1) {
     for (size_t i = 0; i < n_threads - 1; ++i) {
       worker_thread.push_back(new std::thread(GenerateParameterGridForOutputQueue, &parameters, &resampl_output));
@@ -403,33 +396,35 @@ void SeismicRegridding::GenerateParameterGridForOutput3(GenResamplParam *params,
   size_t i = trace->GetI();
   size_t j = trace->GetJ();
 
-  //std::vector<size_t> twt_0;
-  //std::vector<double> x_pos, y_pos;
-
   double x, y, z;
   std::vector<NRLib::StormContGrid> &input_grid = resampl_output->GetInputGrid();
   input_grid[0].FindCenterOfCell(i, j, 0, x, y, z);
-  //x_pos.push_back(x);
-  //y_pos.push_back(y);
   double topt = params->toptime.GetZ(x, y);
   bool toptime_missing = params->toptime.IsMissing(topt);
 
+  std::vector<double> spline, input_vec(input_grid[0].GetNK() - 1), input_t(params->time_or_depth_grid.GetNK());
   std::vector<NRLib::Grid2D<double> > &output_vec = resampl_trace->GetTraces();
   if (!toptime_missing) { //check whether there are values in input_grid in this pillar - if not, cells in output_grid will be zero
-    for (size_t k = 0; k < output_vec[0].GetNI(); k++) {
-      //find cell index in time or depth grid
-      NRLib::StormContGrid &time_or_depth_grid = params->time_or_depth_grid;
-      double location = params->time_or_depth_vec_reg[k];
-      size_t location_index = FindCellIndex(i, j, location, time_or_depth_grid);
-      if (location_index == 999999) {          //if location is above all values in pillar of time_or_depth_grid,
-        location_index = input_grid[0].GetNK() - 1;    //output_grid is given the value of the bottom cell of input_grid
+    for (size_t k = 0; k < params->time_or_depth_grid.GetNK(); ++k) {
+      input_t[k] = params->time_or_depth_grid(i, j, k);
+    }
+    for (size_t l = 0; l < output_vec.size() - 1; ++l) {
+      for (size_t k = 0; k < params->time_or_depth_grid.GetNK(); ++k) {
+        input_vec[k] = input_grid[l](i, j, k);
       }
-      for (size_t l = 0; l < output_vec.size(); ++l) {
-        output_vec[l](k, 0) = input_grid[l](i, j, location_index);
-        //if (l == 0)
-        //  y_pos.push_back(input_grid[l](i, j, location_index));
+      spline = params->seismic_parameters.SplineInterp1D(input_t, input_vec, params->time_or_depth_vec_reg, input_grid[l](i, j, input_grid[l].GetNK() - 1));
+      for (size_t k = 0; k < spline.size(); ++k) {
+        if (params->time_or_depth_vec_reg[k] < input_t[0])
+          output_vec[l](k, 0) = input_vec[0];
+        else
+          output_vec[l](k, 0) = spline[k];
       }
-      //twt_0.push_back(location_index);
+      //if (i == 1502 && j == 1853) {
+      //  params->seismic_parameters.GetSeismicOutput()->PrintVector(input_vec, "input_vec_" + NRLib::ToString(l) + ".txt");
+      //  params->seismic_parameters.GetSeismicOutput()->PrintVector(input_t, "input_t_" + NRLib::ToString(l) + ".txt");
+      //  params->seismic_parameters.GetSeismicOutput()->PrintVector(params->time_or_depth_vec_reg, "twt0_" + NRLib::ToString(l) + ".txt");
+      //  params->seismic_parameters.GetSeismicOutput()->PrintMatrix(output_vec[l], "output_vec_" + NRLib::ToString(l) + ".txt");
+      //}
     }
   }
   else {
@@ -439,11 +434,6 @@ void SeismicRegridding::GenerateParameterGridForOutput3(GenResamplParam *params,
       }
     }
   }
-  //if (i == 19 && j == 19) {
-  //  params->seismic_parameters.GetSeismicOutput()->PrintVectorSizeT(twt_0, "location_index_regular_19_19.txt");
-  //  params->seismic_parameters.GetSeismicOutput()->PrintVector(x_pos, "x_pos_seis_regrid.txt");
-  //  params->seismic_parameters.GetSeismicOutput()->PrintVector(y_pos, "y_pos_seis_regrid.txt");
-  //}
   params->result_queue.push(resampl_trace);
 }
 

@@ -1069,4 +1069,31 @@ void SeismicParameters::Monitor(size_t trace,
   }
 }
 
+std::vector<double> SeismicParameters::SplineInterp1D(const std::vector<double> &x_in,
+                                                      const std::vector<double> &y_in,
+                                                      const std::vector<double> &x_out,
+                                                      double                     extrap_value)
+
+{
+  std::vector<double> x_in_copy(x_in.size());
+  std::vector<double> y_in_copy(y_in.size());
+  x_in_copy[0] = x_in[0];
+  y_in_copy[0] = y_in[0];
+  size_t index = 1;
+  for (size_t i = 1; i < x_in.size(); ++i) {
+    if (x_in[i] != x_in[i - 1]) {
+      x_in_copy[index] = x_in[i];
+      y_in_copy[index] = y_in[i];
+      ++index;
+    }
+  }
+  x_in_copy.resize(index);
+  y_in_copy.resize(index);
+  if (index == 1) {
+    std::vector<double> y_out(x_out.size(), extrap_value);
+    return y_out;
+  }
+  return NRLib::Interpolation::Interpolate1D(x_in_copy, y_in_copy, x_out, "spline", extrap_value);
+}
+
 
