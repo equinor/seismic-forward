@@ -19,7 +19,7 @@ if(WIN32)
     endif(NOT BOOST_LIBRARYDIR)
 endif(WIN32)
 
-find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+find_package(Boost 1.42 COMPONENTS unit_test_framework REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
