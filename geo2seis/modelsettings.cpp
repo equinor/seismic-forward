@@ -95,6 +95,7 @@ ModelSettings::ModelSettings(void) {
     twt_file_name_ = "";
     traces_in_memory_ = 100000;
     max_threads_ = 100;
+    default_underburden_ = false;
     ps_seismic_ = false;
     nmo_corr_ = false;
     resampl_tbb_ = true;

@@ -129,12 +129,9 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
         modelSettings_->SetTwtFileName(file_name);
     }
 
-    std::string ps;
-    modelSettings_->SetPSSeismic(false);
-    if (ParseValue(root, "ps-seismic", ps, errTxt) == true) {
-      if (ps == "yes") {
-        modelSettings_->SetPSSeismic(true);
-      }
+    bool bolval;
+    if (ParseBool(root, "ps-seismic", bolval, errTxt) == true) {
+      modelSettings_->SetPSSeismic(bolval);
     }
 
     double number;
@@ -145,11 +142,10 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt) {
     if (ParseValue(root, "max-threads", n_threads, errTxt)) {
       modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
     }
-    std::string du;
-    modelSettings_->SetDefaultUnderburden(false);
-    if (ParseValue(root, "default-underburden", du, errTxt)) {
-      if (du == "yes")
-        modelSettings_->SetDefaultUnderburden(true);
+
+    bool bolval2;
+    if (ParseBool(root, "default-underburden", bolval2, errTxt) == true) {
+      modelSettings_->SetDefaultUnderburden(bolval2);
     }
 
     ParseOutputParameters(root, errTxt);
@@ -538,7 +534,6 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("area-from-surface");
     legalCommands.push_back("area-from-segy");
     legalCommands.push_back("segy-indexes");
-    legalCommands.push_back("test");
     legalCommands.push_back("utm-precision");
     legalCommands.push_back("time-window");
 
@@ -689,7 +684,6 @@ bool XmlModelFile::ParseArea(TiXmlNode *node, std::string &errTxt) {
 
 
 }
-
 
 bool XmlModelFile::ParseTopTime(TiXmlNode *node, std::string &errTxt, std::string cname) {
   TiXmlNode *root = node->FirstChildElement(cname);

@@ -1016,6 +1016,9 @@ tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t &n_t
         x = 0;
         y = 0;
       }
+//      if (il == 5000 && xl == 4510)//6150)
+//      if (il == 1 && xl == 1)//6150)
+//        std::cout << "il, xl, i, j, x, y " << il << " " << xl << " " << i << " " << j << " " << x << " " << y << "\n";
       Trace * trace = new Trace(job_number, x, y, i, j);
       traces.push(trace);
       ++job_number;
@@ -1094,6 +1097,33 @@ std::vector<double> SeismicParameters::SplineInterp1D(const std::vector<double> 
     return y_out;
   }
   return NRLib::Interpolation::Interpolate1D(x_in_copy, y_in_copy, x_out, "spline", extrap_value);
+}
+
+
+std::vector<double> SeismicParameters::LinInterp1D(const std::vector<double> &x_in,
+  const std::vector<double> &y_in,
+  const std::vector<double> &x_out)
+
+{
+  std::vector<double> x_in_copy(x_in.size());
+  std::vector<double> y_in_copy(y_in.size());
+  x_in_copy[0] = x_in[0];
+  y_in_copy[0] = y_in[0];
+  size_t index = 1; //sjekk om denne skal være 0???
+  for (size_t i = 1; i < x_in.size(); ++i) {
+    if (x_in[i] != x_in[i - 1]) {
+      x_in_copy[index] = x_in[i];
+      y_in_copy[index] = y_in[i];
+      ++index;
+    }
+  }
+  x_in_copy.resize(index);
+  y_in_copy.resize(index);
+  if (index == 1) {
+    std::vector<double> y_out(x_out.size(), 0);
+    return y_out;
+  }
+  return NRLib::Interpolation::Interpolate1D(x_in_copy, y_in_copy, x_out, "linear");
 }
 
 

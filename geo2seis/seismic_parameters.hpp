@@ -164,6 +164,11 @@ class SeismicParameters {
                         float   monitor_size,
                         float   &next_monitor);
 
+    static std::vector<double> LinInterp1D(const std::vector<double> &x_in,
+                                           const std::vector<double> &y_in,
+                                           const std::vector<double> &x_out);
+
+
     static std::vector<double> SplineInterp1D(const std::vector<double> &x_in,
                                               const std::vector<double> &y_in,
                                               const std::vector<double> &x_out,

@@ -15,8 +15,8 @@ public:
                         const NRLib::StormContGrid &input_grid,
                         bool                  time,
                         std::vector<double>  &time_or_depth_vec_reg,
-                        /*NRLib::StormContGrid &time_or_depth_grid,*/
-                        SeismicParameters    &seismic_parameters);
+                        SeismicParameters    &seismic_parameters,
+                        double                default_bot);
 
   void AddTrace(SeismicParameters                   &seismic_parameters,
                 std::vector<double>                 &time_or_depth_vec_reg,
@@ -24,8 +24,9 @@ public:
                 double                               x,
                 double                               y);
 
-  std::vector<NRLib::Grid2D<double> > &GetTraces() { return traces_; };
-  std::vector<NRLib::StormContGrid>   &GetInputGrid() { return input_grid_; };
+  std::vector<NRLib::Grid2D<double> > &GetTraces()     { return traces_;      }
+  std::vector<NRLib::StormContGrid>   &GetInputGrid()  { return input_grid_;  }
+  std::vector<double>                 &GetDefaultBot() { return default_bot_; }
 
 private:
   bool                      segy_ok_;
@@ -36,6 +37,7 @@ private:
   double                              n_samples_;
   bool                                time_;
   std::vector<NRLib::StormContGrid>   input_grid_;
+  std::vector<double>                 default_bot_;
 
 };
 

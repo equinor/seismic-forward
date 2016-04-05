@@ -17,27 +17,41 @@ class SeismicRegridding {
     static void MakeSeismicRegridding(SeismicParameters &seismic_parameters);
 
   private:
-    static void WriteElasticParametersSegy(SeismicParameters &seismic_parameters, size_t n_threads, bool time);
-    static void WriteExtraParametersSegy(SeismicParameters &seismic_parameters, size_t n_threads, bool time);
+    static void WriteElasticParametersSegy(SeismicParameters &seismic_parameters,
+                                           size_t             n_threads,
+                                           bool               time);
 
-    static void WriteParametersTimeInParallel(SeismicParameters                 &seismic_parameters,
-                                              size_t                             n_threads,
+    static void WriteExtraParametersSegy(SeismicParameters &seismic_parameters,
+                                         size_t n_threads,
+                                         bool time);
+
+    static void WriteParametersTimeInParallel(SeismicParameters                  &seismic_parameters,
+                                              size_t                              n_threads,
                                               std::vector<NRLib::StormContGrid*> &input_grid,
-                                              std::vector<std::string>           filenames);
-    static void WriteParametersDepthInParallel(SeismicParameters                 &seismic_parameters,
-                                               size_t                             n_threads,
-                                               std::vector<NRLib::StormContGrid*> &input_grid,
-                                               std::vector<std::string>           filenames);
+                                              std::vector<std::string>            filenames,
+                                              std::vector<double>                &default_bot);
 
-    static void GenerateParameterGridForOutput3(GenResamplParam * params, Trace *trace, ResamplOutput *resampl_output);
-    static void GenerateParameterGridForOutputQueue(GenResamplParam *params, ResamplOutput *resampl_output);
-    static void WriteResampledParameter(GenResamplParam *params, ResamplOutput *resampl_output);
-    static size_t FindCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid);
+    static void WriteParametersDepthInParallel(SeismicParameters                  &seismic_parameters,
+                                               size_t                              n_threads,
+                                               std::vector<NRLib::StormContGrid*> &input_grid,
+                                               std::vector<std::string>            filenames,
+                                               std::vector<double>                &default_bot);
+
+    static void GenerateParameterGridForOutput(GenResamplParam * params,
+                                               Trace           *trace,
+                                               ResamplOutput   *resampl_output);
+
+    static void GenerateParameterGridForOutputQueue(GenResamplParam *params,
+                                                    ResamplOutput   *resampl_output);
+
+    static void WriteResampledParameter(GenResamplParam *params,
+                                        ResamplOutput   *resampl_output);
 
     static void FindZValues(SeismicParameters &seismic_parameters,
                             size_t             n_threads);
 
-    static void FindVp(SeismicParameters &seismic_parameters, size_t n_threads);
+    static void FindVp(SeismicParameters &seismic_parameters,
+                       size_t             n_threads);
 
     static void VpPostProcess(SeismicParameters &seismic_parameters);
 
@@ -45,10 +59,10 @@ class SeismicRegridding {
                          const NRLib::StormContGrid &vgrid,
                          const NRLib::StormContGrid &twtgrid);
 
-    static void FindTWT(SeismicParameters &seismic_parameters,
+    static void FindTWT(SeismicParameters             &seismic_parameters,
                         NRLib::RegularSurface<double> &toptime,
                         NRLib::RegularSurface<double> &bottime,
-                        size_t n_threads);
+                        size_t                         n_threads);
 
 
     static void FillInGridValues(const NRLib::EclipseGeometry &geometry,
@@ -64,10 +78,6 @@ class SeismicRegridding {
     static void FindVpEdges(const NRLib::EclipseGeometry        &geometry,
                             size_t                               n_extra_param,
                             SeismicParameters                   &seismic_parameters,
-                            /*NRLib::Grid2D<double>               &value_above_vp,
-                            NRLib::Grid2D<double>               &value_above_vs,
-                            NRLib::Grid2D<double>               &value_above_rho,
-                            std::vector<NRLib::Grid2D<double> > &value_above_extra_param,*/
                             const NRLib::Grid<double>           &vp_grid,
                             const NRLib::Grid<double>           &vs_grid,
                             const NRLib::Grid<double>           &rho_grid,
@@ -78,10 +88,6 @@ class SeismicRegridding {
     static void FindVpCorners(const NRLib::EclipseGeometry        &geometry,
                               size_t                              n_extra_param,
                               SeismicParameters                   &seismic_parameters,
-                              /*NRLib::Grid2D<double>               &value_above_vp,
-                              NRLib::Grid2D<double>               &value_above_vs,
-                              NRLib::Grid2D<double>               &value_above_rho,
-                              std::vector<NRLib::Grid2D<double> > &value_above_extra_param,*/
                               const NRLib::Grid<double>           &vp_grid,
                               const NRLib::Grid<double>           &vs_grid,
                               const NRLib::Grid<double>           &rho_grid,
