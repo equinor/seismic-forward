@@ -15,8 +15,7 @@ public:
                         const NRLib::StormContGrid &input_grid,
                         bool                  time,
                         std::vector<double>  &time_or_depth_vec_reg,
-                        SeismicParameters    &seismic_parameters,
-                        double                default_bot);
+                        SeismicParameters    &seismic_parameters);
 
   void AddTrace(SeismicParameters                   &seismic_parameters,
                 std::vector<double>                 &time_or_depth_vec_reg,
@@ -26,18 +25,17 @@ public:
 
   std::vector<NRLib::Grid2D<double> > &GetTraces()     { return traces_;      }
   std::vector<NRLib::StormContGrid>   &GetInputGrid()  { return input_grid_;  }
-  std::vector<double>                 &GetDefaultBot() { return default_bot_; }
 
 private:
   bool                      segy_ok_;
   std::vector<bool>         segy_files_ok_;
   std::vector<NRLib::SegY*> segy_files_;
-  NRLib::SegY segy_1_, segy_2_, segy_3_, segy_4_;// , segy_5_, segy_6_, segy_7_, segy_8_, segy_9_, segy_10_;
+  //Til Paal: Hvis du finner en bedre løsning på dette er det fint:
+  NRLib::SegY segy_1_, segy_2_, segy_3_, segy_4_, segy_5_, segy_6_, segy_7_, segy_8_, segy_9_, segy_10_;
   std::vector<NRLib::Grid2D<double> > traces_;
   double                              n_samples_;
   bool                                time_;
   std::vector<NRLib::StormContGrid>   input_grid_;
-  std::vector<double>                 default_bot_;
 
 };
 

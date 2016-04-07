@@ -230,6 +230,8 @@ public:
 
   void SetResamplTBB(bool value) { resampl_tbb_ = value; }
 
+  void SetResamplParamToSegyInterpol(bool value) { resampl_param_to_segy_with_interpol_ = value; }
+
   void SetVw(double value) {v_w_ = value;}
 
   void SetZw(double value) {z_w_ = value;}
@@ -614,6 +616,10 @@ public:
     return resampl_tbb_;
   }
 
+  bool GetResamplParamToSegyInterpol() {
+    return resampl_param_to_segy_with_interpol_;
+  }
+
   double GetVw() {
     return v_w_;
   }
@@ -686,6 +692,7 @@ private:
   bool ps_seismic_;
   bool nmo_corr_;
   bool resampl_tbb_;
+  bool resampl_param_to_segy_with_interpol_;
   double v_w_, z_w_;
 
   double top_time_window_, bot_time_window_, top_depth_window_, bot_depth_window_;

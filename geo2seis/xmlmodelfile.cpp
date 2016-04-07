@@ -168,6 +168,7 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode *node, std::string &errTxt) {
     legalCommands.push_back("cornerpt-interpolation-in-depth");
     legalCommands.push_back("remove-negative-delta-z");
     legalCommands.push_back("resampl-tbb");
+    legalCommands.push_back("resampl-param-to-segy-with-interpol");
     legalCommands.push_back("extra-parameters");
 
     std::string value;
@@ -196,6 +197,10 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode *node, std::string &errTxt) {
 
     if (ParseBool(root, "resampl-tbb", bolval, errTxt) == true) {
       modelSettings_->SetResamplTBB(bolval);
+    }
+
+    if (ParseBool(root, "resampl-param-to-segy-with-interpol", bolval, errTxt) == true) {
+      modelSettings_->SetResamplParamToSegyInterpol(bolval);
     }
 
     size_t i = 0;
