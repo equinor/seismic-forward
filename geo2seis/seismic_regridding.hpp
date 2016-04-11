@@ -27,12 +27,12 @@ class SeismicRegridding {
 
     static void WriteParametersTimeInParallel(SeismicParameters                  &seismic_parameters,
                                               size_t                              n_threads,
-                                              std::vector<NRLib::StormContGrid*> &input_grid,
+                                              std::vector<NRLib::StormContGrid*> input_grid,
                                               std::vector<std::string>            filenames);
 
     static void WriteParametersDepthInParallel(SeismicParameters                  &seismic_parameters,
                                                size_t                              n_threads,
-                                               std::vector<NRLib::StormContGrid*> &input_grid,
+                                               std::vector<NRLib::StormContGrid*> input_grid,
                                                std::vector<std::string>            filenames);
 
     static void GenerateParameterGridForOutput(GenResamplParam * params,

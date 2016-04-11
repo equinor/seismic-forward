@@ -12,7 +12,7 @@ public:
 
 
   void AddResampleCase(std::string            filename,
-                        const NRLib::StormContGrid &input_grid,
+                        NRLib::StormContGrid &input_grid,
                         bool                  time,
                         std::vector<double>  &time_or_depth_vec_reg,
                         SeismicParameters    &seismic_parameters);
@@ -24,7 +24,7 @@ public:
                 double                               y);
 
   std::vector<NRLib::Grid2D<double> > &GetTraces()     { return traces_;      }
-  std::vector<NRLib::StormContGrid>   &GetInputGrid()  { return input_grid_;  }
+  std::vector<NRLib::StormContGrid*>  GetInputGrid()  { return input_grid_;  }
 
 private:
   bool                      segy_ok_;
@@ -35,7 +35,7 @@ private:
   std::vector<NRLib::Grid2D<double> > traces_;
   double                              n_samples_;
   bool                                time_;
-  std::vector<NRLib::StormContGrid>   input_grid_;
+  std::vector<NRLib::StormContGrid*>   input_grid_;
 
 };
 

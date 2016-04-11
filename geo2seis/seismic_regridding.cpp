@@ -243,7 +243,7 @@ void SeismicRegridding::WriteExtraParametersSegy(SeismicParameters &seismic_para
 
 void SeismicRegridding::WriteParametersDepthInParallel(SeismicParameters                 &seismic_parameters,
                                                       size_t                             n_threads,
-                                                      std::vector<NRLib::StormContGrid*> &input_grid,
+                                                      std::vector<NRLib::StormContGrid*> input_grid,
                                                       std::vector<std::string>           filenames)
 {
   bool time = false;
@@ -315,7 +315,7 @@ void SeismicRegridding::WriteParametersDepthInParallel(SeismicParameters        
 
 void SeismicRegridding::WriteParametersTimeInParallel(SeismicParameters                 &seismic_parameters,
                                                       size_t                             n_threads,
-                                                      std::vector<NRLib::StormContGrid*> &input_grid,
+                                                      std::vector<NRLib::StormContGrid*> input_grid,
                                                       std::vector<std::string>           filenames)
 {
   bool time = true;
@@ -402,13 +402,14 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam *params,
   size_t j = trace->GetJ();
 
   double x, y, z;
-  std::vector<NRLib::StormContGrid> &input_grid = resampl_output->GetInputGrid();
-  input_grid[0].FindCenterOfCell(i, j, 0, x, y, z);
+  std::vector<NRLib::StormContGrid*> input_grid = resampl_output->GetInputGrid();
+  input_grid[0]->FindCenterOfCell(i, j, 0, x, y, z);
   double topt = params->toptime.GetZ(x, y);
   bool toptime_missing = params->toptime.IsMissing(topt);
   bool interpolate = params->seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
 
-  std::vector<double> linear_interp, input_vec(input_grid[0].GetNK() - 1), input_t(params->time_or_depth_grid.GetNK());
+  std::vector<double> linear_interp, input_vec(input_grid[0]->GetNK() - 1), input_t(params->time_or_depth_grid.GetNK());
+  
   std::vector<NRLib::Grid2D<double> > &output_vec = resampl_trace->GetTraces();
   if (!toptime_missing) { //check whether there are values in input_grid in this pillar - if not, cells in output_grid will be zero
     if (interpolate) {
@@ -416,15 +417,16 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam *params,
         input_t[k] = params->time_or_depth_grid(i, j, k);
       }
       for (size_t l = 0; l < output_vec.size(); ++l) {
+        NRLib::StormContGrid &input_grid_ref = *(input_grid[l]);
         for (size_t k = 0; k < params->time_or_depth_grid.GetNK(); ++k) {
-          input_vec[k] = input_grid[l](i, j, k);
+          input_vec[k] = input_grid_ref(i, j, k);
         }
         linear_interp = params->seismic_parameters.LinInterp1D(input_t, input_vec, params->time_or_depth_vec_reg);
         for (size_t k = 0; k < linear_interp.size(); ++k) {
           if (params->time_or_depth_vec_reg[k] < input_t[0])
-            output_vec[l](k, 0) = input_grid[l](i, j, 0);
+            output_vec[l](k, 0) = input_grid_ref(i, j, 0);
           else if (params->time_or_depth_vec_reg[k] > input_t[input_t.size() - 1]) {
-            output_vec[l](k, 0) = input_grid[l](i, j, input_grid[0].GetNK() - 1);
+            output_vec[l](k, 0) = input_grid_ref(i, j, input_grid_ref.GetNK() - 1);
           }
           else
             output_vec[l](k, 0) = linear_interp[k];
@@ -437,11 +439,13 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam *params,
         NRLib::StormContGrid &time_or_depth_grid = params->time_or_depth_grid;
         double location = params->time_or_depth_vec_reg[k];
         size_t location_index = FindCellIndex(i, j, location, time_or_depth_grid);
+        NRLib::StormContGrid &input_grid_ref = *(input_grid[0]);
         if (location_index == 999999) {          //if location is above all values in pillar of time_or_depth_grid,
-          location_index = input_grid[0].GetNK() - 1;    //output_grid is given the value of the bottom cell of input_gridndex) << " " << input_grid[0](i, j, location_index - 1) << "\n";
+          location_index = input_grid_ref.GetNK() - 1;    //output_grid is given the value of the bottom cell of input_gridndex) << " " << input_grid[0](i, j, location_index - 1) << "\n";
         }
         for (size_t l = 0; l < output_vec.size(); ++l) {
-          output_vec[l](k, 0) = input_grid[l](i, j, location_index);
+          NRLib::StormContGrid &input_grid_ref = *(input_grid[l]);
+          output_vec[l](k, 0) = input_grid_ref(i, j, location_index);
         }
       }
     }
