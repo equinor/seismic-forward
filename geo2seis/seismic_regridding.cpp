@@ -303,6 +303,7 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
   }
 }
 
+
 void SeismicRegridding::GenerateParameterGridForOutputQueue(GenResamplParam *params,
                                                             ResamplOutput   *resampl_output)
 {
@@ -894,8 +895,9 @@ void SeismicRegridding::FindVp(SeismicParameters &seismic_parameters, size_t n_t
       }
     }
   }
+
     ////-------------find edges---------------------
-  for (size_t k = topk; k <= botk + 1; k++) {
+  for (int k = topk; k <= botk + 1; k++) {
     for (size_t i = 0; i < egrid.GetNI() - 1; i++) {
       //bot edge
       size_t j = 0;
