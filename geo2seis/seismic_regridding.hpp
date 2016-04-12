@@ -25,17 +25,25 @@ class SeismicRegridding {
                                          size_t n_threads,
                                          bool time);
 
-    static void WriteParametersTimeInParallel(SeismicParameters                  &seismic_parameters,
-                                              size_t                              n_threads,
+    static void WriteParametersTimeSegy(SeismicParameters                  &seismic_parameters,
+                                        size_t                              n_threads,
+                                        std::vector<NRLib::StormContGrid*>  input_grid,
+                                        std::vector<std::string>            filenames);
+
+    static void WriteParametersDepthSegy(SeismicParameters                  &seismic_parameters,
+                                         size_t                              n_threads,
+                                         std::vector<NRLib::StormContGrid*>  input_grid,
+                                         std::vector<std::string>            filenames);
+
+    static void WriteParametersSegyInParallel(SeismicParameters                 &seismic_parameters,
+                                              size_t                             n_threads,
                                               std::vector<NRLib::StormContGrid*> input_grid,
-                                              std::vector<std::string>            filenames);
+                                              std::vector<std::string>           filenames,
+                                              std::vector<double>               &time_or_depth_vec_reg,
+                                              NRLib::StormContGrid              &time_or_depth_grid,
+                                              bool                               time);
 
-    static void WriteParametersDepthInParallel(SeismicParameters                  &seismic_parameters,
-                                               size_t                              n_threads,
-                                               std::vector<NRLib::StormContGrid*> input_grid,
-                                               std::vector<std::string>            filenames);
-
-    static void GenerateParameterGridForOutput(GenResamplParam * params,
+    static void GenerateParameterGridForOutput(GenResamplParam *params,
                                                Trace           *trace,
                                                ResamplOutput   *resampl_output);
 

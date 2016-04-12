@@ -14,7 +14,6 @@ set(CPP_FILES
     physics/zoeppritz_pp.cpp
     physics/zoeppritz_ps.cpp
 
-    utils/segy_writer.cpp
     utils/storm_writer.cpp
 	utils/output.cpp
 	utils/result_trace.cpp
@@ -39,7 +38,6 @@ set(H_FILES
     physics/zoeppritz_pp.hpp
     physics/zoeppritz_ps.hpp
 
-    utils/segy_writer.hpp
     utils/storm_writer.hpp
 	utils/output.hpp
 	utils/result_trace.hpp

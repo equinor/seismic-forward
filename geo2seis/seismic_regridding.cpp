@@ -100,85 +100,40 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   if (seismic_parameters.GetModelSettings()->GetOutputTimeSurfaces()) {
     seismic_parameters.GetSeismicOutput()->WriteTimeSurfaces(seismic_parameters);
   }
-  if (seismic_parameters.GetModelSettings()->GetResamplTBB()) {
-    bool interpolate = seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
-    time_t t1 = time(0);   // get time now
 
-    //---resample and write ELASTIC parameters in segy------------
-    if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
-      printf("Start resampling elastic parameters and write to SegY.\n");
-      if (interpolate)
-        printf("Resample with tbb - with interpolation.\n");
-      else
-        printf("Resample with tbb - index based.\n");
-    }
-    if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy()) {
-      WriteElasticParametersSegy(seismic_parameters, n_threads, true);
-    }
-    if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
-      WriteElasticParametersSegy(seismic_parameters, n_threads, false);
-    }
-    //printf("Finish resampling elastic parameters and write to SegY.\n");
-    //seismic_parameters.PrintElapsedTime(t1, "resampling elastic parameters and write to segy");
-    //t1 = time(0);
-    //---resample, write and delete EXTRA parameter grids---------
-    if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
-      printf("Start resampling extra parameters and write to SegY.\n");
-      if (interpolate)
-        printf("Resample with tbb - with interpolation.\n");
-      else
-        printf("Resample with tbb - index based.\n");
-    }
-    if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy()) {
-      WriteExtraParametersSegy(seismic_parameters, n_threads, true);
-    }
-    if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
-      WriteExtraParametersSegy(seismic_parameters, n_threads, false);
-    }
-    seismic_parameters.DeleteExtraParameterGrids();
-    //printf("Finish resampling extra parameters and write to SegY.\n");
-    if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()
-      || seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
-      seismic_parameters.PrintElapsedTime(t1, "resampling parameters and write to segy");
-    }
-    //printf("Start resampling extra parameters and write to SegY.\n");
+  bool interpolate = seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
+  time_t t1 = time(0);   // get time now
+  //---resample and write ELASTIC parameters in segy------------
+  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
+    if (interpolate)
+      printf("Start resampling elastic parameters and write to SegY - with interpolation.\n");
+    else
+      printf("Start resampling elastic parameters and write to SegY - index based.\n");
   }
-  else {
+  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy()) {
+    WriteElasticParametersSegy(seismic_parameters, n_threads, true);
+  }
+  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
+    WriteElasticParametersSegy(seismic_parameters, n_threads, false);
+  }
+  //---resample, write and delete EXTRA parameter grids---------
+  if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
+    if (interpolate)
+      printf("Start resampling extra parameters and write to SegY - with interpolation.\n");
+    else
+      printf("Start resampling extra parameters and write to SegY - index based.\n");
+  }
+  if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy()) {
+    WriteExtraParametersSegy(seismic_parameters, n_threads, true);
+  }
+  if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
+    WriteExtraParametersSegy(seismic_parameters, n_threads, false);
+  }
+  seismic_parameters.DeleteExtraParameterGrids();
 
-    time_t t1 = time(0);   // get time now
-    //---resample and write ELASTIC parameters in segy------------
-    if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
-      printf("Start resampling elastic parameters and write to SegY.\n");
-      printf("Resample with OpenMP.\n");
-    }
-    if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy()) {
-      seismic_parameters.GetSeismicOutput()->WriteElasticParametersTimeSegy(seismic_parameters, n_threads);
-    }
-    if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
-      seismic_parameters.GetSeismicOutput()->WriteElasticParametersDepthSegy(seismic_parameters, n_threads);
-    }
-    //printf("Finish resampling elastic parameters and write to SegY.\n");
-    //seismic_parameters.PrintElapsedTime(t1, "resampling elastic parameters and write to segy");
-    //t1 = time(0);
-    //printf("Start resampling extra parameters and write to SegY.\n");
-    //---resample, write and delete EXTRA parameter grids---------
-    if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
-      printf("Start resampling extra parameters and write to SegY.\n");
-      printf("Resample with OpenMP.\n");
-    }
-    if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy()) {
-      seismic_parameters.GetSeismicOutput()->WriteExtraParametersTimeSegy(seismic_parameters, n_threads);
-    }
-    if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
-      seismic_parameters.GetSeismicOutput()->WriteExtraParametersDepthSegy(seismic_parameters, n_threads);
-    }
-    seismic_parameters.DeleteExtraParameterGrids();
-    //printf("Finish resampling extra parameters and write to SegY.\n");
-
-    if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()
-      || seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
-      seismic_parameters.PrintElapsedTime(t1, "resampling parameters and write to segy");
-    }
+  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()
+    || seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
+    seismic_parameters.PrintElapsedTime(t1, "resampling parameters and write to SegY.");
   }
 
   //---write elastic parameters, z values and twt on storm format---
@@ -193,7 +148,9 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters &seismic_paramet
   }
 }
 
-void SeismicRegridding::WriteElasticParametersSegy(SeismicParameters &seismic_parameters, size_t n_threads, bool time) {
+void SeismicRegridding::WriteElasticParametersSegy(SeismicParameters &seismic_parameters,
+                                                   size_t             n_threads,
+                                                   bool               time) {
   std::vector<NRLib::StormContGrid*> input_grid(0);
   std::vector<std::string>           filenames(0);
 
@@ -209,19 +166,21 @@ void SeismicRegridding::WriteElasticParametersSegy(SeismicParameters &seismic_pa
     filenames.push_back("vs_time");
     filenames.push_back("rho_time");
 
-    WriteParametersTimeInParallel(seismic_parameters, n_threads, input_grid, filenames);
+    WriteParametersTimeSegy(seismic_parameters, n_threads, input_grid, filenames);
   }
   else {
     filenames.push_back( "vp_depth");
     filenames.push_back( "vs_depth");
     filenames.push_back("rho_depth");
 
-    WriteParametersDepthInParallel(seismic_parameters, n_threads, input_grid, filenames);
+    WriteParametersDepthSegy(seismic_parameters, n_threads, input_grid, filenames);
   }
   std::cout << "\n";
 }
 
-void SeismicRegridding::WriteExtraParametersSegy(SeismicParameters &seismic_parameters, size_t n_threads, bool time)
+void SeismicRegridding::WriteExtraParametersSegy(SeismicParameters &seismic_parameters,
+                                                 size_t             n_threads,
+                                                 bool               time)
 {
   std::vector<NRLib::StormContGrid*> extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
   std::vector<std::string> filenames                      = seismic_parameters.GetModelSettings()->GetExtraParameterNames();
@@ -230,32 +189,28 @@ void SeismicRegridding::WriteExtraParametersSegy(SeismicParameters &seismic_para
     for (size_t i = 0; i < filenames.size(); ++i) {
       filenames[i] = filenames[i] + "_time";
     }
-    WriteParametersTimeInParallel(seismic_parameters, n_threads, extra_parameter_grid, filenames);
+    WriteParametersTimeSegy(seismic_parameters, n_threads, extra_parameter_grid, filenames);
   }
   else {
     for (size_t i = 0; i < filenames.size(); ++i) {
       filenames[i] = filenames[i] + "_depth";
     }
-    WriteParametersDepthInParallel(seismic_parameters, n_threads, extra_parameter_grid, filenames);
+    WriteParametersDepthSegy(seismic_parameters, n_threads, extra_parameter_grid, filenames);
   }
   std::cout << "\n";
 }
 
-void SeismicRegridding::WriteParametersDepthInParallel(SeismicParameters                 &seismic_parameters,
-                                                      size_t                             n_threads,
-                                                      std::vector<NRLib::StormContGrid*> input_grid,
-                                                      std::vector<std::string>           filenames)
+void SeismicRegridding::WriteParametersDepthSegy(SeismicParameters                  &seismic_parameters,
+                                                 size_t                              n_threads,
+                                                 std::vector<NRLib::StormContGrid*>  input_grid,
+                                                 std::vector<std::string>            filenames)
 {
   bool time = false;
-  size_t nx = seismic_parameters.GetSeismicGeometry()->nx();
-  size_t ny = seismic_parameters.GetSeismicGeometry()->ny();
   size_t nz = seismic_parameters.GetSeismicGeometry()->nz();
   double dz = seismic_parameters.GetSeismicGeometry()->dz();
   double z0 = seismic_parameters.GetSeismicGeometry()->z0();
 
-  NRLib::RegularSurface<double> &toptime      = seismic_parameters.GetTopTime();
-  NRLib::Volume                  volume_depth = seismic_parameters.GetSeismicGeometry()->createDepthVolume();
-  NRLib::StormContGrid &zgrid                 = seismic_parameters.GetZGrid();
+  NRLib::StormContGrid &zgrid = seismic_parameters.GetZGrid();
 
   //find min z in a sample
   size_t nzmin = static_cast<size_t>(floor(z0) / dz + 0.5);
@@ -265,67 +220,20 @@ void SeismicRegridding::WriteParametersDepthInParallel(SeismicParameters        
     z_0[k] = zmin_sampl + (k)* dz;
   }
 
-  ResamplOutput resampl_output(seismic_parameters, time, z_0.size());
-  for (size_t i = 0; i < filenames.size(); ++i) {
-    resampl_output.AddResampleCase(filenames[i], *(input_grid[i]), time, z_0, seismic_parameters);
-  }
-  size_t n_traces;
-  tbb::concurrent_queue<Trace*> traces = seismic_parameters.FindTracesInForward(n_traces);
-  size_t queue_capacity = seismic_parameters.GetModelSettings()->GetTracesInMemory();
-
-  tbb::concurrent_queue<ResamplTrace*> empty_queue;
-  tbb::concurrent_bounded_queue<ResamplTrace*> result_queue;
-  result_queue.set_capacity(queue_capacity);
-  std::vector<std::thread*> worker_thread;
-
-  GenResamplParam parameters(seismic_parameters, z_0, zgrid, toptime, z_0.size(), n_traces, time, empty_queue, result_queue, traces);
-
-  if (n_threads > 1) {
-    for (size_t i = 0; i < n_threads - 1; ++i) {
-      worker_thread.push_back(new std::thread(GenerateParameterGridForOutputQueue, &parameters, &resampl_output));
-    }
-    std::thread write_thread(WriteResampledParameter, &parameters, &resampl_output);
-
-    for (size_t i = 0; i < n_threads - 1; ++i) {
-      worker_thread[i]->join();
-      delete worker_thread[i];
-    }
-    write_thread.join();
-  }
-  else {
-    float monitor_size, next_monitor;
-    seismic_parameters.MonitorInitialize(n_traces, monitor_size, next_monitor);
-    for (size_t i = 0; i < n_traces; ++i) {
-      Trace *trace;
-      parameters.traces.try_pop(trace);
-      GenerateParameterGridForOutput(&parameters, trace, &resampl_output);
-      ResamplTrace *resampl_trace;
-      parameters.result_queue.try_pop(resampl_trace);
-      resampl_output.AddTrace(seismic_parameters, parameters.time_or_depth_vec_reg, resampl_trace->GetTraces(), resampl_trace->GetX(), resampl_trace->GetY());
-      seismic_parameters.Monitor(i, monitor_size, next_monitor);
-      delete trace;
-      delete resampl_trace;
-    }
-  }
-  ResamplTrace *resampl_trace;
-  while (empty_queue.try_pop(resampl_trace)) {
-    delete resampl_trace;
-  }
+  WriteParametersSegyInParallel(seismic_parameters, n_threads, input_grid, filenames, z_0, zgrid, time);
 }
 
-void SeismicRegridding::WriteParametersTimeInParallel(SeismicParameters                 &seismic_parameters,
-                                                      size_t                             n_threads,
-                                                      std::vector<NRLib::StormContGrid*> input_grid,
-                                                      std::vector<std::string>           filenames)
+
+void SeismicRegridding::WriteParametersTimeSegy(SeismicParameters                  &seismic_parameters,
+                                                size_t                              n_threads,
+                                                std::vector<NRLib::StormContGrid*>  input_grid,
+                                                std::vector<std::string>            filenames)
 {
   bool time = true;
-  size_t nx = seismic_parameters.GetSeismicGeometry()->nx();
-  size_t ny = seismic_parameters.GetSeismicGeometry()->ny();
   size_t nt = seismic_parameters.GetSeismicGeometry()->nt();
   double dt = seismic_parameters.GetSeismicGeometry()->dt();
 
   NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
-  NRLib::Volume                  volume_time = seismic_parameters.GetSeismicGeometry()->createTimeVolume();
   NRLib::StormContGrid          &twtgrid = seismic_parameters.GetTwtGrid();
   double t_min = toptime.Min();
 
@@ -334,9 +242,22 @@ void SeismicRegridding::WriteParametersTimeInParallel(SeismicParameters         
     twt_0[k] = t_min + (k) * dt;
   }
 
-  ResamplOutput resampl_output(seismic_parameters, time, twt_0.size());
+  WriteParametersSegyInParallel(seismic_parameters, n_threads, input_grid, filenames, twt_0, twtgrid, time);
+}
+
+void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters                  &seismic_parameters,
+                                                      size_t                              n_threads,
+                                                      std::vector<NRLib::StormContGrid*>  input_grid,
+                                                      std::vector<std::string>            filenames,
+                                                      std::vector<double>                &time_or_depth_vec_reg,
+                                                      NRLib::StormContGrid               &time_or_depth_grid,
+                                                      bool                                time)
+{
+  NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
+
+  ResamplOutput resampl_output(seismic_parameters, time, time_or_depth_vec_reg.size());
   for (size_t i = 0; i < filenames.size(); ++i) {
-    resampl_output.AddResampleCase(filenames[i], *(input_grid[i]), time, twt_0, seismic_parameters);
+    resampl_output.AddResampleCase(filenames[i], *(input_grid[i]), time, time_or_depth_vec_reg, seismic_parameters);
   }
   size_t n_traces;
   tbb::concurrent_queue<Trace*> traces = seismic_parameters.FindTracesInForward(n_traces);
@@ -346,7 +267,8 @@ void SeismicRegridding::WriteParametersTimeInParallel(SeismicParameters         
   tbb::concurrent_bounded_queue<ResamplTrace*> result_queue;
   result_queue.set_capacity(queue_capacity);
   std::vector<std::thread*> worker_thread;
-  GenResamplParam parameters(seismic_parameters, twt_0, twtgrid, toptime, twt_0.size(), n_traces, time, empty_queue, result_queue, traces);
+
+  GenResamplParam parameters(seismic_parameters, time_or_depth_vec_reg, time_or_depth_grid, toptime, time_or_depth_vec_reg.size(), n_traces, time, empty_queue, result_queue, traces);
 
   if (n_threads > 1) {
     for (size_t i = 0; i < n_threads - 1; ++i) {
@@ -381,7 +303,8 @@ void SeismicRegridding::WriteParametersTimeInParallel(SeismicParameters         
   }
 }
 
-void SeismicRegridding::GenerateParameterGridForOutputQueue(GenResamplParam *params, ResamplOutput *resampl_output)
+void SeismicRegridding::GenerateParameterGridForOutputQueue(GenResamplParam *params,
+                                                            ResamplOutput   *resampl_output)
 {
   Trace *trace;
   while (params->traces.try_pop(trace)) {
@@ -390,8 +313,8 @@ void SeismicRegridding::GenerateParameterGridForOutputQueue(GenResamplParam *par
 }
 
 void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam *params,
-  Trace           *trace,
-  ResamplOutput   *resampl_output)
+                                                       Trace           *trace,
+                                                       ResamplOutput   *resampl_output)
 {
   ResamplTrace *resampl_trace;
   if (!params->empty_queue.try_pop(resampl_trace)) {
@@ -408,17 +331,20 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam *params,
   bool toptime_missing = params->toptime.IsMissing(topt);
   bool interpolate = params->seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
 
-  std::vector<double> linear_interp, input_vec(input_grid[0]->GetNK() - 1), input_t(params->time_or_depth_grid.GetNK());
+  std::vector<double> linear_interp, input_vec(input_grid[0]->GetNK() - 1), input_t(params->time_or_depth_grid->GetNK());
+
+  NRLib::StormContGrid &time_or_depth_grid_ref = *(params->time_or_depth_grid);
   
   std::vector<NRLib::Grid2D<double> > &output_vec = resampl_trace->GetTraces();
   if (!toptime_missing) { //check whether there are values in input_grid in this pillar - if not, cells in output_grid will be zero
     if (interpolate) {
-      for (size_t k = 0; k < params->time_or_depth_grid.GetNK(); ++k) {
-        input_t[k] = params->time_or_depth_grid(i, j, k);
+      for (size_t k = 0; k < params->time_or_depth_grid->GetNK(); ++k) {
+        input_t[k] = time_or_depth_grid_ref(i, j, k);
+        //input_t[k] = params->time_or_depth_grid(i, j, k);
       }
       for (size_t l = 0; l < output_vec.size(); ++l) {
         NRLib::StormContGrid &input_grid_ref = *(input_grid[l]);
-        for (size_t k = 0; k < params->time_or_depth_grid.GetNK(); ++k) {
+        for (size_t k = 0; k < params->time_or_depth_grid->GetNK(); ++k) {
           input_vec[k] = input_grid_ref(i, j, k);
         }
         linear_interp = params->seismic_parameters.LinInterp1D(input_t, input_vec, params->time_or_depth_vec_reg);
@@ -436,9 +362,9 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam *params,
     else {
       for (size_t k = 0; k < output_vec[0].GetNI(); k++) {
         //find cell index in time or depth grid
-        NRLib::StormContGrid &time_or_depth_grid = params->time_or_depth_grid;
+        NRLib::StormContGrid &time_or_depth_grid_ref = *(params->time_or_depth_grid);
         double location = params->time_or_depth_vec_reg[k];
-        size_t location_index = FindCellIndex(i, j, location, time_or_depth_grid);
+        size_t location_index = FindCellIndex(i, j, location, time_or_depth_grid_ref);
         NRLib::StormContGrid &input_grid_ref = *(input_grid[0]);
         if (location_index == 999999) {          //if location is above all values in pillar of time_or_depth_grid,
           location_index = input_grid_ref.GetNK() - 1;    //output_grid is given the value of the bottom cell of input_gridndex) << " " << input_grid[0](i, j, location_index - 1) << "\n";
@@ -460,7 +386,8 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam *params,
   params->result_queue.push(resampl_trace);
 }
 
-void SeismicRegridding::WriteResampledParameter(GenResamplParam *params, ResamplOutput *resampl_output)
+void SeismicRegridding::WriteResampledParameter(GenResamplParam *params,
+                                                ResamplOutput   *resampl_output)
 {
   float monitor_size, next_monitor;
   params->seismic_parameters.MonitorInitialize(params->n_traces, monitor_size, next_monitor);
@@ -484,7 +411,10 @@ void SeismicRegridding::WriteResampledParameter(GenResamplParam *params, Resampl
   }
 }
 
-size_t SeismicRegridding::FindCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid)
+size_t SeismicRegridding::FindCellIndex(size_t                i,
+                                        size_t                j,
+                                        double                target_k,
+                                        NRLib::StormContGrid &grid)
 {
   size_t found_k = 999999;
   size_t nz = grid.GetNK();
@@ -510,18 +440,14 @@ void SeismicRegridding::FindZValues(SeismicParameters &seismic_parameters, size_
   double dx    = zgrid.GetDX();
   double dy    = zgrid.GetDY();
   double angle = zgrid.GetAngle();
-  //NRLib::StormContGrid         zgrid2 = seismic_parameters.GetZGrid();
   size_t k = zgrid.GetNK() - 2;
   NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
-  //NRLib::Grid2D<double> values2(zgrid.GetNI(), zgrid.GetNJ(), 0);
   if (use_corner_point) {
     geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
   }
   else {
     geometry.FindLayerSurface(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
   }
-    //seismic_parameters.GetSeismicOutput()->PrintMatrix(values, "corner_pt_surface.txt");
-    //seismic_parameters.GetSeismicOutput()->PrintMatrix(values2, "mid_pt_surface.txt");
 
   for (size_t i = 0; i < zgrid.GetNI(); i++) {
     for (size_t j = 0; j < zgrid.GetNJ(); j++) {
@@ -529,9 +455,6 @@ void SeismicRegridding::FindZValues(SeismicParameters &seismic_parameters, size_
     }
   }
 
-  //double max_neg = 0;
-  //size_t max_i, max_j, max_k;
-  //if n_threads = 1 the check of neg delta values should be done directly, not after inclusion in grid
   if (rem_neg_delta && n_threads == 1) {
     for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
       NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
@@ -541,23 +464,10 @@ void SeismicRegridding::FindZValues(SeismicParameters &seismic_parameters, size_
       else {
         geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
       }
-      //if (k == 125 || k == 126) {
-      //  seismic_parameters.GetSeismicOutput()->PrintMatrix(values, "surface_" + NRLib::ToString(k) + ".txt");
-      //}
       for (size_t i = 0; i < zgrid.GetNI(); i++) {
         for (size_t j = 0; j < zgrid.GetNJ(); j++) {
-          //zgrid(i, j, k) = 0;
           if (values(i, j) > zgrid(i, j, k + 1)) {
             zgrid(i, j, k) = zgrid(i, j, k + 1);
-            //zgrid(i, j, k) = values(i, j) - zgrid2(i, j, k + 1);
-            //std::cout << "here!!!!!";
-            //if (values(i, j) - zgrid(i, j, k + 1) > max_neg) {
-            //  max_neg = values(i, j) - zgrid(i, j, k + 1);
-            //  max_i = i; 
-            //  max_j = j;
-            //  max_k = k;
-            //}
-
           }
           else {
             zgrid(i, j, k) = static_cast<float>(values(i, j));
@@ -565,8 +475,6 @@ void SeismicRegridding::FindZValues(SeismicParameters &seismic_parameters, size_
         }
       }
     }
-    //zgrid = NRLib::StormContGrid(zgrid2);
-    //std::cout << "Max negative delta z, i, j = " << max_neg << " " << max_i << " " << max_j << " " << max_k << "\n";
   }
   else {
     int  chunk_size;

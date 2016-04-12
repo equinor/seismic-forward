@@ -98,7 +98,6 @@ ModelSettings::ModelSettings(void) {
     default_underburden_ = false;
     ps_seismic_ = false;
     nmo_corr_ = false;
-    resampl_tbb_ = true;
     resampl_param_to_segy_with_interpol_ = false;
     v_w_ = 0.0;
     z_w_ = 0.0;

@@ -59,10 +59,6 @@ class SeismicOutput {
     void WriteDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse);
 
     void WriteTimeSurfaces(SeismicParameters &seismic_parameters);
-    void WriteElasticParametersTimeSegy(SeismicParameters &seismic_parameters, size_t n_threads);
-    void WriteElasticParametersDepthSegy(SeismicParameters &seismic_parameters, size_t n_threads);
-    void WriteExtraParametersTimeSegy(SeismicParameters &seismic_parameters, size_t n_threads);
-    void WriteExtraParametersDepthSegy(SeismicParameters &seismic_parameters, size_t n_threads);
 
     void WriteVpVsRho(SeismicParameters &seismic_parameters);
     void WriteZValues(SeismicParameters &seismic_parameters);
@@ -80,9 +76,6 @@ class SeismicOutput {
 
 
 private:
-    void GenerateParameterGridForOutput(NRLib::StormContGrid &input_grid, NRLib::StormContGrid &time_or_depth_grid, NRLib::StormContGrid &output_grid, double delta_time_or_depth, double zero_time_or_depth, NRLib::RegularSurface<double> &toptime, size_t n_threads);
-    static size_t FindCellIndex(size_t i, size_t j, double target_k, NRLib::StormContGrid &grid);
-
     double top_time_window_;
     double bot_time_window_;
     bool   time_window_;
