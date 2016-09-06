@@ -20,11 +20,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
-//#include <stdio.h>
-//#include <time.h>
-#include <assert.h>
 #include <fstream>
-//#include <string>
 #include <ctime>
 
 #include "nrlib/iotools/fileio.hpp"
@@ -54,7 +50,7 @@ int main(int argc, char *argv[]) {
     bool failedModelFile = false;
     std::cout << "************************************************************************ \n";
     std::cout << "                Seismic Forward Modeling / Geo2Seis                      \n";
-    std::cout << "                           ver 4.0  2015                                 \n";
+    std::cout << "                           ver 4.1  2016                                 \n";
     std::cout << "                   Norsk Regnesentral & Statoil                          \n";
     std::cout << "************************************************************************ \n\n";
 
