@@ -17,7 +17,7 @@
 #include <nrlib/random/normal.hpp>
 
 
-SeismicParameters::SeismicParameters(ModelSettings *model_settings) 
+SeismicParameters::SeismicParameters(ModelSettings *model_settings)
  : missing_(-999.0)
 {
   this->model_settings_ = model_settings;
@@ -295,7 +295,7 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
 
 void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> &twt_0,
                                           std::vector<double> &z_0,
-                                          std::vector<double> &twts_0, 
+                                          std::vector<double> &twts_0,
                                           size_t              &time_samples_stretch,
                                           bool                 ps_seis)
 {
@@ -336,7 +336,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
                                                           bool ps_seis)
 {
   //Account for stretch by making twt0 sufficiently long. Stretch upwards is also taken into account
-  //through "xtra_samples_top". 
+  //through "xtra_samples_top".
   //Max twt value and location is found from twtgrid and twtx is calculated for the largest offset.
   //"Time samples stretch" is number of samples in nmo-corrected seismic trace.
 
@@ -426,7 +426,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
     nt_stretch    = static_cast<size_t>(floor((tmax_stretch - tmin) / dt + 0.5));
     nt_seis       = static_cast<size_t>(floor((twtx_max     - tmin) / dt + 0.5));
   }
- 
+
   twt_0_.resize(nt_seis);
   for (size_t i = 0; i < nt_seis; ++i){
     twt_0_[i] = (t0 - nt_top * dt) + i*dt;
@@ -498,7 +498,7 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
 
   double delta_top = ts_0 - t_0;
   double delta_bot = ts_max - t_max;
-  
+
   size_t n_samples_top = 0;
   size_t n_samples_bot = 0;
   if (delta_top < 0) { //shift upwards...include more samples in the top
@@ -557,7 +557,7 @@ void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &theta
       theta_down = asin(y_out);
       if (save_theta) {
         thetagrid(k, off) = theta_down;
-      }      
+      }
       offset_down_grid(k, off) = tan(theta_down)*dD;
       offset_up_grid(k, off)   = tan(theta_up)  *dU;
       start_value = y_out;
@@ -603,7 +603,7 @@ double SeismicParameters::FindSinThetaPSWithNewtonsMethod(double start_value,
   return y_new;
 }
 
-void SeismicParameters::ReadEclipseGrid() 
+void SeismicParameters::ReadEclipseGrid()
 {
   std::string filename = model_settings_->GetEclipseFileName();
 
@@ -781,7 +781,7 @@ void SeismicParameters::FindSurfaceGeometry()
 
     bot_time_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, top_time_.Max());
     const_top_given = false;
-  } 
+  }
   else {
     double t1 = model_settings_->GetTopTimeConstant();
     top_time_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, t1);
@@ -859,7 +859,7 @@ void SeismicParameters::FindSurfaceGeometry()
   }
   double twt_wavelet   = wavelet_->GetTwtWavelet();
   std::vector<double> constvp = model_settings_->GetConstVp();
-  
+
   double z_top_wavelet = twt_wavelet * constvp[0] / 2000;
   double z_bot_wavelet = twt_wavelet * constvp[2] / 2000;
   if (model_settings_->GetPSSeismic()) {
@@ -869,7 +869,7 @@ void SeismicParameters::FindSurfaceGeometry()
     z_top_wavelet = twt_wavelet * vel_top / 2000;
     z_bot_wavelet = twt_wavelet * vel_bot / 2000;
   }
-  
+
   model_settings_->SetZWaveletTop(z_top_wavelet);
   model_settings_->SetZWaveletBot(z_bot_wavelet);
 
@@ -895,7 +895,7 @@ void SeismicParameters::CreateGrids()
   vsgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
   rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
   twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl,     0.0);
-  
+
   if (model_settings_->GetNMOCorr() && model_settings_->GetPSSeismic()) {
     twtssgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
     twtppgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
@@ -908,7 +908,7 @@ void SeismicParameters::CreateGrids()
   if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()) {
     vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0); //dimensions??
   }
-  else { 
+  else {
     vrmsgrid_ = NULL;
   }
 
@@ -947,7 +947,7 @@ void SeismicParameters::CreateGrids()
       }
     }
   }
-  
+
   if (model_settings_->GetTwtFileName() != "") {
     twt_timeshift_ = new NRLib::StormContGrid(model_settings_->GetTwtFileName());
     if ((*twt_timeshift_).GetNI() != nx || (*twt_timeshift_).GetNJ() != ny || (*twt_timeshift_).GetNK() != nzrefl) {
@@ -1109,7 +1109,7 @@ std::vector<double> SeismicParameters::LinInterp1D(const std::vector<double> &x_
   std::vector<double> y_in_copy(y_in.size());
   x_in_copy[0] = x_in[0];
   y_in_copy[0] = y_in[0];
-  size_t index = 1; //sjekk om denne skal være 0???
+  size_t index = 1; //sjekk om denne skal vÃ¦re 0???
   for (size_t i = 1; i < x_in.size(); ++i) {
     if (x_in[i] != x_in[i - 1]) {
       x_in_copy[index] = x_in[i];
@@ -1125,5 +1125,3 @@ std::vector<double> SeismicParameters::LinInterp1D(const std::vector<double> &x_
   }
   return NRLib::Interpolation::Interpolate1D(x_in_copy, y_in_copy, x_out, "linear");
 }
-
-

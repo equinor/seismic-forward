@@ -74,9 +74,9 @@ void SeismicOutput::SetSegyGeometry(SeismicParameters   &seismic_parameters,
   xlstepy *= xline_step_;
 
   if (seismic_parameters.GetSegyGeometry() == NULL){
-    const NRLib::SegyGeometry *geometry = 
+    const NRLib::SegyGeometry *geometry =
       new NRLib::SegyGeometry(vol.GetXMin(), vol.GetYMin(), dx, dy,
-                              nx, ny, inline_start_ - 0.5, xline_start_ - 0.5, 
+                              nx, ny, inline_start_ - 0.5, xline_start_ - 0.5,
                               ilstepx, ilstepy, xlstepx, xlstepy, rot);
     seismic_parameters.SetSegyGeometry(geometry);
     delete geometry;
@@ -142,7 +142,7 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               &segyout,
   double z_min = twt_0[0];
   double z_max = twt_0[n_samples-1];
   double dz    = twt_0[1] - twt_0[0];
-  double z0     = 0.0; //vurdere å bruke z_min selv uten vindu??
+  double z0     = 0.0; //vurdere Ã¥ bruke z_min selv uten vindu??
   int    nz     = static_cast<int>(ceil(z_max/dz));
   if ((time == true && time_window_) || (time == false && depth_window_)) {
     if (time == true ) {
@@ -333,7 +333,7 @@ void SeismicOutput::WriteDepthSurfaces(const NRLib::RegularSurface<double> &top_
   bottom_eclipse.WriteToFile(filename);
 }
 
-void SeismicOutput::WriteTimeSurfaces(SeismicParameters &seismic_parameters) 
+void SeismicOutput::WriteTimeSurfaces(SeismicParameters &seismic_parameters)
 {
   NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
   NRLib::RegularSurface<double> &bottime = seismic_parameters.GetBottomTime();
@@ -367,7 +367,7 @@ void SeismicOutput::WriteVrms(SeismicParameters    &seismic_parameters,
   std::string message;
   if (name_pp_or_ps != "") {
     message = "Write vrms grid for " + name_pp_or_ps + " on Storm format.\n";
-    name_pp_or_ps = "_" + name_pp_or_ps;    
+    name_pp_or_ps = "_" + name_pp_or_ps;
   }
   else {
     message = "Write vrms grid on Storm format.\n";
