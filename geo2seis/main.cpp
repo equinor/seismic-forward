@@ -4,9 +4,9 @@
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// �    Redistributions of source code must retain the above copyright notice, this
+// o  Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
-// �    Redistributions in binary form must reproduce the above copyright notice, this list of
+// o  Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials
 //    provided with the distribution.
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
@@ -27,13 +27,12 @@
 #include "nrlib/surface/regularsurface.hpp"
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/iotools/logkit.hpp"
-#include "modelsettings.hpp"
-#include "xmlmodelfile.hpp"
+
 #include "seismic_parameters.hpp"
 #include "seismic_regridding.hpp"
 #include "seismic_forward.hpp"
-
-
+#include "modelsettings.hpp"
+#include "xmlmodelfile.hpp"
 
 
 int main(int argc, char *argv[]) {
@@ -54,8 +53,9 @@ int main(int argc, char *argv[]) {
     std::cout << "                   Norsk Regnesentral & Statoil                          \n";
     std::cout << "************************************************************************ \n\n";
 
-    XmlModelFile modelFile(inputfile);
-    ModelSettings *model_settings = modelFile.getModelSettings();
+    XmlModelFile    modelFile(inputfile);
+    ModelSettings * model_settings = modelFile.getModelSettings();
+
     if (modelFile.getParsingFailed()) {
         failedModelFile = true;
     }
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
       seismic_parameters.PrintElapsedTime(t1, "for preprocesses");
       SeismicForward::DoSeismicForward(seismic_parameters);
       //seismic_parameters.PrintElapsedTime(t1, "for total program");
-    } 
+    }
     else {
         printf("Press a key and then enter to continue.\n");
         int x;
@@ -75,5 +75,4 @@ int main(int argc, char *argv[]) {
 
     }
     NRLib::LogKit::EndLog();
-
 }

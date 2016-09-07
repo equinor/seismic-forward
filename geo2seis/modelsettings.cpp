@@ -19,95 +19,114 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <stdio.h>
-#include <string.h>
 #include "nrlib/iotools/logkit.hpp"
+
 #include "modelsettings.hpp"
 
-ModelSettings::ModelSettings(void) {
+#include <string.h>
+#include <stdio.h>
+
+ModelSettings::ModelSettings(void)
+{
     constvp_.resize(3);
     constvs_.resize(3);
     constrho_.resize(3);
     parameter_names_.resize(3);
-    theta_0_ = 0.0;  // default values
-    dtheta_ = 0.0;
-    theta_max_ = 0.0;
-    offset_0_ = 0.0;
-    doffset_ = 0.0;
-    offset_max_ = 0.0;
-    area_given_ = false;
-    top_time_surface_ = "";
-    top_time_constant_ = 1000.0;
-    dx_ = 25.0;
-    dy_ = 25.0;
-    dz_ = 4.0;
-    dt_ = 4.0;
-    wavelet_scale_ = 1.0;
-    z_wavelet_top_ = 0.0;
-    z_wavelet_bot_ = 0.0;
-    z_extrapol_factor_ = 50.0;
-    offset_without_stretch_ = false;
-    output_vp_ = false;
-    output_reflections_ = false;
-    output_zvalues_ = false;
-    output_seismic_time_ = false;
-    output_seismic_depth_ = false;
-    output_seismic_timeshift_ = false;
-    output_time_surfaces_ = false;
-    output_depth_surfaces_ = false;
-    output_twt_ = false;
-    output_vrms_ = false;
-    output_twt_offset_ = false;
-    prefix_ = "";
-    suffix_ = "";
-    zero_thickness_limit_ = 0.1;
-    output_time_segy_ = false;
-    output_depth_segy_ = false;
-    output_timeshift_segy_ = false;
-    output_prenmo_time_segy_ = false;
-    use_cornerpoint_interpol_ = false;
-    remove_negative_delta_z_ = false;
-    area_from_surface_ = "";
-    elastic_parameters_time_segy_ = false;
-    elastic_parameters_depth_segy_ = false;
-    extra_parameters_time_segy_ = false;
-    extra_parameters_depth_segy_ = false;
-    inline_start_ = 0;
-    xline_start_ = 0;
-    inline_direction_ = "y";
-    inline_step_ = 1;
-    xline_step_ = 1;
-    seismic_stack_time_storm_ = false;
+
+    prefix_                         = "";
+    suffix_                         = "";
+
+    seed_                           = static_cast<unsigned long>(std::time(0));
+    standard_deviation_             = 1.0;
+    zero_thickness_limit_           = 0.1;
+    twt_file_name_                  = "";
+    traces_in_memory_               = 100000;
+    max_threads_                    = 100;
+    white_noise_                    = false;
+    default_underburden_            = false;
+    ps_seismic_                     = false;
+    nmo_corr_                       = false;
+
+
+    theta_0_                        = 0.0;  // default values
+    dtheta_                         = 0.0;
+    theta_max_                      = 0.0;
+    offset_0_                       = 0.0;
+    doffset_                        = 0.0;
+    offset_max_                     = 0.0;
+
+    top_time_surface_               = "";
+    top_time_constant_              = 1000.0;
+    dx_                             = 25.0;
+    dy_                             = 25.0;
+    dz_                             = 4.0;
+    dt_                             = 4.0;
+
+    area_given_                     = false;
+    area_from_surface_              = "";
+    area_from_segy_                 = "";
+
+    il0_in_                         = 189;
+    xl0_in_                         = 193;
+    utmx_in_                        = 181;
+    utmy_in_                        = 185;
+    utm_precision_                  = -10;
+
+    inline_start_                   = 0;
+    xline_start_                    = 0;
+    inline_direction_               = "y";
+    inline_step_                    = 1;
+    xline_step_                     = 1;
+
+    wavelet_scale_                  = 1.0;
+    z_wavelet_top_                  = 0.0;
+    z_wavelet_bot_                  = 0.0;
+    z_extrapol_factor_              = 50.0;
+    offset_without_stretch_         = false;
+
+    top_time_window_                = -9999;
+    bot_time_window_                = -9999;
+    top_depth_window_               = -9999;
+    bot_depth_window_               = -9999;
+
+    time_window_specified_          = false;
+    depth_window_specified_         = false;
+
+    use_cornerpoint_interpol_       = false;
+    remove_negative_delta_z_        = false;
+    elastic_parameters_time_segy_   = false;
+    elastic_parameters_depth_segy_  = false;
+    extra_parameters_time_segy_     = false;
+    extra_parameters_depth_segy_    = false;
+    seismic_stack_time_storm_       = false;
     seismic_stack_time_shift_storm_ = false;
-    seismic_stack_depth_storm_ = false;
-    seismic_stack_time_segy_ = false;
-    seismic_stack_time_shift_segy_ = false;
-    seismic_stack_depth_segy_ = false;
-    white_noise_ = false;
-    standard_deviation_ = 1.0;
-    seed_ = static_cast<unsigned long>(std::time(0));
-    il0_in_ = 189;
-    xl0_in_ = 193;
-    utmx_in_ = 181;
-    utmy_in_ = 185;
-    area_from_segy_ = "";
-    utm_precision_ = -10;
-    twt_file_name_ = "";
-    traces_in_memory_ = 100000;
-    max_threads_ = 100;
-    default_underburden_ = false;
-    ps_seismic_ = false;
-    nmo_corr_ = false;
+    seismic_stack_depth_storm_      = false;
+    seismic_stack_time_segy_        = false;
+    seismic_stack_time_shift_segy_  = false;
+    seismic_stack_depth_segy_       = false;
+
+    v_w_                            = 0.0;
+    z_w_                            = 0.0;
+
     resampl_param_to_segy_with_interpol_ = false;
-    v_w_ = 0.0;
-    z_w_ = 0.0;
-    top_time_window_ = -9999;
-    bot_time_window_ = -9999;
-    top_depth_window_ = -9999;
-    bot_depth_window_ = -9999;
-    time_window_specified_ = false;
-    depth_window_specified_ = false;
+
+    output_vp_                      = false;
+    output_reflections_             = false;
+    output_zvalues_                 = false;
+    output_seismic_time_            = false;
+    output_seismic_depth_           = false;
+    output_seismic_timeshift_       = false;
+    output_time_surfaces_           = false;
+    output_depth_surfaces_          = false;
+    output_twt_                     = false;
+    output_vrms_                    = false;
+    output_twt_offset_              = false;
+    output_time_segy_               = false;
+    output_depth_segy_              = false;
+    output_timeshift_segy_          = false;
+    output_prenmo_time_segy_        = false;
 }
 
-ModelSettings::~ModelSettings(void) {
+ModelSettings::~ModelSettings(void)
+{
 }
