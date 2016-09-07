@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include <time.h>
 
 #include "nrlib/exception/exception.hpp"
 

@@ -23,9 +23,6 @@
 
 #include "modelsettings.hpp"
 
-#include <string.h>
-#include <stdio.h>
-
 ModelSettings::ModelSettings(void)
 {
     constvp_.resize(3);
@@ -46,8 +43,7 @@ ModelSettings::ModelSettings(void)
     default_underburden_            = false;
     ps_seismic_                     = false;
     nmo_corr_                       = false;
-
-
+    
     theta_0_                        = 0.0;  // default values
     dtheta_                         = 0.0;
     theta_max_                      = 0.0;

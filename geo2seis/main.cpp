@@ -23,9 +23,9 @@
 #include <fstream>
 #include <ctime>
 
-#include "nrlib/iotools/fileio.hpp"
-#include "nrlib/surface/regularsurface.hpp"
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
+#include "nrlib/surface/regularsurface.hpp"
+#include "nrlib/iotools/fileio.hpp"
 #include "nrlib/iotools/logkit.hpp"
 
 #include "seismic_parameters.hpp"

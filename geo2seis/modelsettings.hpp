@@ -255,7 +255,7 @@ public:
   bool                      GetPSSeismic()                            { return ps_seismic_                     ;}
   size_t                    GetTracesInMemory(void)                   { return traces_in_memory_               ;}
   size_t                    GetMaxThreads(void)                       { return max_threads_                    ;}
-  size_t                    GetDefaultUnderburden(void)               { return default_underburden_            ;}
+  bool                      GetDefaultUnderburden(void)               { return default_underburden_            ;}
   bool                      GetNMOCorr()                              { return nmo_corr_                       ;}
   bool                      GetResamplParamToSegyInterpol()           { return resampl_param_to_segy_with_interpol_ ;}
   double                    GetVw()                                   { return v_w_                            ;}
@@ -326,8 +326,6 @@ private:
   std::string               area_from_segy_;
   std::string               area_from_surface_;
   bool                      area_given_;
-  bool                      topsurface_;
-  bool                      botsurface_;
   std::string               top_time_surface_;
   double                    top_time_constant_;
 
