@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_pp_seis )
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
     }
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(test_nmo_pp_seis_noise)
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
     }
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_ps_seis )
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
     }
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(test_off_pp_seis)
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
     }
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(test_off_ps_seis)
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
     }
 
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(test_off_ps_seis)
     std::cout << "\n";
   }
 }
-BOOST_AUTO_TEST_CASE( test_pp_seis ) 
+BOOST_AUTO_TEST_CASE( test_pp_seis )
 {
   if (true) {
     bool check_small = true;
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE( test_pp_seis )
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
     }
 
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE( test_ps_seis )
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
     }
 
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(test_ps_seis_noise)
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
     }
 
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(test_rem_negz)
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
 
       size_t n_traces = 3, n_samples = 154, n_output = 1;
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(test_keep_negz)
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
 
       size_t n_traces = 3, n_samples = 154, n_output = 1;
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(test_cornerpt)
     ModelSettings *model_settings = modelFile.getModelSettings();
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-      SeismicRegridding::MakeSeismicRegridding(seismic_parameters);
+      SeismicRegridding::MakeSeismicRegridding(seismic_parameters, 1);
       SeismicForward::DoSeismicForward(seismic_parameters);
 
       size_t n_traces = 3, n_samples = 154, n_output = 1;

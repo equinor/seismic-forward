@@ -25,104 +25,125 @@
 
 ModelSettings::ModelSettings(void)
 {
-    constvp_.resize(3);
-    constvs_.resize(3);
-    constrho_.resize(3);
-    parameter_names_.resize(3);
+  constvp_.resize(3);
+  constvs_.resize(3);
+  constrho_.resize(3);
+  parameter_names_.resize(3);
 
-    prefix_                         = "";
-    suffix_                         = "";
+  log_level_                           = NRLib::LogKit::L_Low;
 
-    seed_                           = static_cast<unsigned long>(std::time(0));
-    standard_deviation_             = 1.0;
-    zero_thickness_limit_           = 0.1;
-    twt_file_name_                  = "";
-    traces_in_memory_               = 100000;
-    max_threads_                    = 100;
-    white_noise_                    = false;
-    default_underburden_            = false;
-    ps_seismic_                     = false;
-    nmo_corr_                       = false;
-    
-    theta_0_                        = 0.0;  // default values
-    dtheta_                         = 0.0;
-    theta_max_                      = 0.0;
-    offset_0_                       = 0.0;
-    doffset_                        = 0.0;
-    offset_max_                     = 0.0;
+  prefix_                              = "";
+  suffix_                              = "";
 
-    top_time_surface_               = "";
-    top_time_constant_              = 1000.0;
-    dx_                             = 25.0;
-    dy_                             = 25.0;
-    dz_                             = 4.0;
-    dt_                             = 4.0;
+  seed_                                = static_cast<unsigned long>(std::time(0));
+  standard_deviation_                  = 1.0;
+  zero_thickness_limit_                = 0.1;
+  twt_file_name_                       = "";
+  traces_in_memory_                    = 100000;
+  max_threads_                         = 100;
+  white_noise_                         = false;
+  default_underburden_                 = false;
+  ps_seismic_                          = false;
+  nmo_corr_                            = false;
 
-    area_given_                     = false;
-    area_from_surface_              = "";
-    area_from_segy_                 = "";
+  theta_0_                             = 0.0;  // default values
+  dtheta_                              = 0.0;
+  theta_max_                           = 0.0;
+  offset_0_                            = 0.0;
+  doffset_                             = 0.0;
+  offset_max_                          = 0.0;
 
-    il0_in_                         = 189;
-    xl0_in_                         = 193;
-    utmx_in_                        = 181;
-    utmy_in_                        = 185;
-    utm_precision_                  = -10;
+  top_time_surface_                    = "";
+  top_time_constant_                   = 1000.0;
+  dx_                                  = 25.0;
+  dy_                                  = 25.0;
+  dz_                                  = 4.0;
+  dt_                                  = 4.0;
 
-    inline_start_                   = 0;
-    xline_start_                    = 0;
-    inline_direction_               = "y";
-    inline_step_                    = 1;
-    xline_step_                     = 1;
+  area_given_                          = false;
+  area_from_surface_                   = "";
+  area_from_segy_                      = "";
 
-    wavelet_scale_                  = 1.0;
-    z_wavelet_top_                  = 0.0;
-    z_wavelet_bot_                  = 0.0;
-    z_extrapol_factor_              = 50.0;
-    offset_without_stretch_         = false;
+  il0_in_                              = 189;
+  xl0_in_                              = 193;
+  utmx_in_                             = 181;
+  utmy_in_                             = 185;
+  utm_precision_                       = -10;
 
-    top_time_window_                = -9999;
-    bot_time_window_                = -9999;
-    top_depth_window_               = -9999;
-    bot_depth_window_               = -9999;
+  inline_start_                        = 0;
+  xline_start_                         = 0;
+  inline_direction_                    = "y";
+  inline_step_                         = 1;
+  xline_step_                          = 1;
 
-    time_window_specified_          = false;
-    depth_window_specified_         = false;
+  wavelet_scale_                       = 1.0;
+  z_wavelet_top_                       = 0.0;
+  z_wavelet_bot_                       = 0.0;
+  z_extrapol_factor_                   = 50.0;
+  offset_without_stretch_              = false;
 
-    use_cornerpoint_interpol_       = false;
-    remove_negative_delta_z_        = false;
-    elastic_parameters_time_segy_   = false;
-    elastic_parameters_depth_segy_  = false;
-    extra_parameters_time_segy_     = false;
-    extra_parameters_depth_segy_    = false;
-    seismic_stack_time_storm_       = false;
-    seismic_stack_time_shift_storm_ = false;
-    seismic_stack_depth_storm_      = false;
-    seismic_stack_time_segy_        = false;
-    seismic_stack_time_shift_segy_  = false;
-    seismic_stack_depth_segy_       = false;
+  top_time_window_                     = -9999;
+  bot_time_window_                     = -9999;
+  top_depth_window_                    = -9999;
+  bot_depth_window_                    = -9999;
 
-    v_w_                            = 0.0;
-    z_w_                            = 0.0;
+  time_window_specified_               = false;
+  depth_window_specified_              = false;
 
-    resampl_param_to_segy_with_interpol_ = false;
+  use_cornerpoint_interpol_            = false;
+  remove_negative_delta_z_             = false;
+  elastic_parameters_time_segy_        = false;
+  elastic_parameters_depth_segy_       = false;
+  extra_parameters_time_segy_          = false;
+  extra_parameters_depth_segy_         = false;
+  seismic_stack_time_storm_            = false;
+  seismic_stack_time_shift_storm_      = false;
+  seismic_stack_depth_storm_           = false;
+  seismic_stack_time_segy_             = false;
+  seismic_stack_time_shift_segy_       = false;
+  seismic_stack_depth_segy_            = false;
 
-    output_vp_                      = false;
-    output_reflections_             = false;
-    output_zvalues_                 = false;
-    output_seismic_time_            = false;
-    output_seismic_depth_           = false;
-    output_seismic_timeshift_       = false;
-    output_time_surfaces_           = false;
-    output_depth_surfaces_          = false;
-    output_twt_                     = false;
-    output_vrms_                    = false;
-    output_twt_offset_              = false;
-    output_time_segy_               = false;
-    output_depth_segy_              = false;
-    output_timeshift_segy_          = false;
-    output_prenmo_time_segy_        = false;
+  v_w_                                 = 0.0;
+  z_w_                                 = 0.0;
+
+  resampl_param_to_segy_with_interpol_ = false;
+
+  output_vp_                           = false;
+  output_reflections_                  = false;
+  output_zvalues_                      = false;
+  output_seismic_time_                 = false;
+  output_seismic_depth_                = false;
+  output_seismic_timeshift_            = false;
+  output_time_surfaces_                = false;
+  output_depth_surfaces_               = false;
+  output_twt_                          = false;
+  output_vrms_                         = false;
+  output_twt_offset_                   = false;
+  output_time_segy_                    = false;
+  output_depth_segy_                   = false;
+  output_timeshift_segy_               = false;
+  output_prenmo_time_segy_             = false;
 }
 
 ModelSettings::~ModelSettings(void)
 {
+}
+
+void ModelSettings::PrintSettings(void)
+{
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"Seed                                      : %10d\n",GetSeed());
+
+  if (GetNMOCorr()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOffset span\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.2f\n",GetOffset0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.2f\n",GetDOffset());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.2f\n",GetOffsetMax());
+  }
+  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nAVA angle span\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.2f\n",GetTheta0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.2f\n",GetDTheta());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.2f\n",GetThetaMax());
+  }
 }

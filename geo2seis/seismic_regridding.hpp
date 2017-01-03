@@ -14,7 +14,8 @@
 
 class SeismicRegridding {
   public:
-    static void MakeSeismicRegridding(SeismicParameters &seismic_parameters);
+    static void MakeSeismicRegridding(SeismicParameters & seismic_parameters,
+                                      int                 n_theta);
 
   private:
     static void WriteElasticParametersSegy(SeismicParameters &seismic_parameters,

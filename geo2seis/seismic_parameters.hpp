@@ -17,19 +17,18 @@ class SeismicGeometry;
 class SeismicOutput;
 
 namespace NRLib {
-    class EclipseGrid;
-    class EclipseGeometry;
-    class SegyGeometry;
-    class StormContGrid;
+  class EclipseGrid;
+  class EclipseGeometry;
+  class SegyGeometry;
+  class StormContGrid;
 }
 
-
-class SeismicParameters {
+class SeismicParameters
+{
   public:
     SeismicParameters(ModelSettings *model_settings);
 
     ~SeismicParameters() {};
-
 
     inline NRLib::StormContGrid &GetVpGrid()                            const { return *vpgrid_; };
     inline NRLib::StormContGrid &GetVsGrid()                            const { return *vsgrid_; };
@@ -90,8 +89,8 @@ class SeismicParameters {
                          int               &xl_step,
                          bool              &segy);
 
-    void FindMaxTwtIndex(size_t &i_max, 
-                         size_t &j_max, 
+    void FindMaxTwtIndex(size_t &i_max,
+                         size_t &j_max,
                          double &max_value);
 
     void GenerateTwt0AndZ0(std::vector<double> &twt_0,
@@ -100,7 +99,7 @@ class SeismicParameters {
                            size_t              &time_samples_stretch,
                            bool                 ps_seis);
 
-    std::vector<double> GenerateTwt0ForNMO(size_t &time_stretch_samples, 
+    std::vector<double> GenerateTwt0ForNMO(size_t &time_stretch_samples,
                                            bool    ps_seis);
 
     std::vector<double> GenerateZ0ForNMO();
@@ -141,7 +140,7 @@ class SeismicParameters {
                              const NRLib::Grid2D<double> &theta_vec,
                              size_t                       i,
                              size_t                       j);
-    
+
     void  FindReflections(NRLib::Grid2D<double>       &r_vec,
                           const std::vector<double>   &theta_vec,
                           size_t                       i,

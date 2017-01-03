@@ -16,11 +16,15 @@
 #include <nrlib/random/randomgenerator.hpp>
 #include <nrlib/random/normal.hpp>
 
-
-SeismicParameters::SeismicParameters(ModelSettings *model_settings)
+//------------------------------------------------------------------
+SeismicParameters::SeismicParameters(ModelSettings * model_settings)
+//------------------------------------------------------------------
  : missing_(-999.0)
 {
-  this->model_settings_ = model_settings;
+  model_settings_   = model_settings;
+
+
+
 
   seismic_geometry_ = new SeismicGeometry();
 
@@ -47,9 +51,12 @@ SeismicParameters::SeismicParameters(ModelSettings *model_settings)
   //PrintElapsedTime(t1, "finding geometry and creating grids");
 }
 
-void SeismicParameters::CalculateAngleSpan() {
-  theta_0_ = model_settings_->GetTheta0();
-  dtheta_ = model_settings_->GetDTheta();
+//------------------------------------------
+void SeismicParameters::CalculateAngleSpan()
+//------------------------------------------
+{
+  theta_0_   = model_settings_->GetTheta0();
+  dtheta_    = model_settings_->GetDTheta();
   theta_max_ = model_settings_->GetThetaMax();
 
   if (dtheta_ == 0) {
@@ -62,11 +69,19 @@ void SeismicParameters::CalculateAngleSpan() {
   for (size_t i = 0; i < ntheta_; ++i) {
     theta_vec_[i] = theta_0_ + i*dtheta_;
   }
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated angles:");
+  for (size_t i = 0 ; i < ntheta_ ; i++)
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.2f", theta_vec_[i]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
 }
 
-void SeismicParameters::CalculateOffsetSpan() {
-  offset_0_ = model_settings_->GetOffset0();
-  doffset_ = model_settings_->GetDOffset();
+//-------------------------------------------
+void SeismicParameters::CalculateOffsetSpan()
+//-------------------------------------------
+{
+  offset_0_   = model_settings_->GetOffset0();
+  doffset_    = model_settings_->GetDOffset();
   offset_max_ = model_settings_->GetOffsetMax();
 
   if (doffset_ == 0) {
@@ -75,13 +90,22 @@ void SeismicParameters::CalculateOffsetSpan() {
   else {
     noffset_ = size_t((offset_max_ - offset_0_) / doffset_) + 1;
   }
+
   offset_vec_.resize(noffset_);
   for (size_t i = 0; i < noffset_; ++i) {
     offset_vec_[i] = offset_0_ + i*doffset_;
   }
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"Calculated offsets:");
+  for (size_t i = 0 ; i < noffset_ ; i++)
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.2f",offset_vec_[i]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
 }
 
-void SeismicParameters::SetupWavelet() {
+//------------------------------------
+void SeismicParameters::SetupWavelet()
+//------------------------------------
+{
   if (model_settings_->GetRicker()) {
     double peakF = model_settings_->GetPeakFrequency();
     wavelet_ = new Wavelet(peakF);
