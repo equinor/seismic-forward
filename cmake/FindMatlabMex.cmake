@@ -71,6 +71,7 @@ ELSE(WIN32)
       PATHS
       /prog/matlab/R2012B/bin # Statoil location
       ${MATLAB_ROOT}/bin
+      $ENV{MATLAB_ROOT}/bin
       /opt/matlab/bin
       /usr/local/matlab/bin
       $ENV{HOME}/matlab/bin
@@ -110,4 +111,3 @@ MARK_AS_ADVANCED(
   MATLABMEX_FOUND
   MATLAB_ROOT
 )
-

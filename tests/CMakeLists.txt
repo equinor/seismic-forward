@@ -4,7 +4,7 @@ project(Testing)
 
 set(SOURCE_FILES
     main.cpp
-	compare_traces.cpp
+    compare_traces.cpp
     test_test.cpp)
 
 enable_testing()
