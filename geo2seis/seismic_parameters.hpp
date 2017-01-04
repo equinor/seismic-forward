@@ -48,25 +48,18 @@ class SeismicParameters
     inline NRLib::RegularSurface<double> &GetTopEclipse()                     { return topeclipse_; };
     inline NRLib::RegularSurface<double> &GetBottomEclipse()                  { return boteclipse_; };
 
-    inline ModelSettings*       GetModelSettings()                      const { return model_settings_;};
-    inline SeismicOutput*       GetSeismicOutput()                      const { return seismic_output_; };
-    inline SeismicGeometry*     GetSeismicGeometry()                    const { return seismic_geometry_; };
-    inline Wavelet*             GetWavelet()                            const { return wavelet_; };
-    inline double               GetWaveletScale()                       const { return wavelet_scale_; };
-    inline NRLib::SegyGeometry* GetSegyGeometry()                       const { return segy_geometry_; };
+    inline ModelSettings*        GetModelSettings()                      const { return model_settings_;};
+    inline SeismicOutput*        GetSeismicOutput()                      const { return seismic_output_; };
+    inline SeismicGeometry*      GetSeismicGeometry()                    const { return seismic_geometry_; };
+    inline Wavelet*              GetWavelet()                            const { return wavelet_; };
+    inline double                GetWaveletScale()                       const { return wavelet_scale_; };
+    inline NRLib::SegyGeometry*  GetSegyGeometry()                       const { return segy_geometry_; };
 
-    inline size_t               GetTopK()                               const { return top_k_;      }
-    inline size_t               GetBottomK()                            const { return bottom_k_;   }
-    inline std::vector<double> &GetThetaVec()                                 { return theta_vec_;  }
-    inline std::vector<double> &GetOffsetVec()                                { return offset_vec_; }
-    inline float                GetMissingVal()                         const { return missing_;    }
-
-    //inline double               GetTheta0()                             const { return theta_0_;  }
-    //inline double               GetDTheta()                             const { return dtheta_;   }
-    //inline size_t               GetNTheta()                             const { return ntheta_;   }
-    //inline double               GetOffset0()                            const { return offset_0_; }
-    //inline double               GetDOffset()                            const { return doffset_;  }
-    //inline size_t               GetNOffset()                            const { return noffset_;  }
+    inline size_t                GetTopK()                               const { return top_k_;      }
+    inline size_t                GetBottomK()                            const { return bottom_k_;   }
+    inline std::vector<double> & GetThetaVec()                                 { return theta_vec_;  }
+    inline std::vector<double> & GetOffsetVec()                                { return offset_vec_; }
+    inline float                 GetMissingVal()                         const { return missing_;    }
 
     inline bool GetTimeOutput()           const;
     inline bool GetDepthOutput()          const;
@@ -78,100 +71,101 @@ class SeismicParameters
     inline bool GetTimeshiftStormOutput() const;
     inline bool GetStormOutput()          const;
 
-    void SetSegyGeometry(const NRLib::SegyGeometry &geometry);
+    void SetSegyGeometry(const NRLib::SegyGeometry & geometry);
 
-    void FindLoopIndeces(int               &n_xl,
-                         int               &il_min,
-                         int               &il_max,
-                         int               &il_step,
-                         int               &xl_min,
-                         int               &xl_max,
-                         int               &xl_step,
-                         bool              &segy);
+    void FindLoopIndeces(int  & n_xl,
+                         int  & il_min,
+                         int  & il_max,
+                         int  & il_step,
+                         int  & xl_min,
+                         int  & xl_max,
+                         int  & xl_step,
+                         bool & segy);
 
-    void FindMaxTwtIndex(size_t &i_max,
-                         size_t &j_max,
-                         double &max_value);
+    void FindMaxTwtIndex(size_t & i_max,
+                         size_t & j_max,
+                         double & max_value);
 
-    void GenerateTwt0AndZ0(std::vector<double> &twt_0,
-                           std::vector<double> &z_0,
-                           std::vector<double> &twts_0,
-                           size_t              &time_samples_stretch,
-                           bool                 ps_seis);
+    void GenerateTwt0AndZ0(std::vector<double> & twt_0,
+                           std::vector<double> & z_0,
+                           std::vector<double> & twts_0,
+                           size_t              & time_samples_stretch,
+                           bool                  ps_seis);
 
-    std::vector<double> GenerateTwt0ForNMO(size_t &time_stretch_samples,
-                                           bool    ps_seis);
+    std::vector<double> GenerateTwt0ForNMO(size_t & time_stretch_samples,
+                                           bool     ps_seis);
 
     std::vector<double> GenerateZ0ForNMO();
 
     std::vector<double> GenerateTWT0Shift(double twt_0_min,
                                           size_t n_samples);
 
-    static void FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &thetagrid,
-                                        NRLib::Grid2D<double>     &offset_down_grid,
-                                        NRLib::Grid2D<double>     &offset_up_grid,
-                                        const std::vector<double> &twt_pp_vec,
-                                        const std::vector<double> &twt_ps_vec,
-                                        const std::vector<double> &vrms_pp_vec,
-                                        const std::vector<double> &vrms_ss_vec,
-                                        const std::vector<double> &offset,
-                                        bool                      save_theta = true);
+    static void FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     & thetagrid,
+                                        NRLib::Grid2D<double>     & offset_down_grid,
+                                        NRLib::Grid2D<double>     & offset_up_grid,
+                                        const std::vector<double> & twt_pp_vec,
+                                        const std::vector<double> & twt_ps_vec,
+                                        const std::vector<double> & vrms_pp_vec,
+                                        const std::vector<double> & vrms_ss_vec,
+                                        const std::vector<double> & offset,
+                                        bool                        save_theta = true);
 
-    static double FindSinThetaPSWithNewtonsMethod(double start_value,
-                                                  double offset,
-                                                  double dU,
-                                                  double dD,
-                                                  double vr,
-                                                  double tol,
-                                                  size_t &n_it);
+    static double FindSinThetaPSWithNewtonsMethod(double   start_value,
+                                                  double   offset,
+                                                  double   dU,
+                                                  double   dD,
+                                                  double   vr,
+                                                  double   tol,
+                                                  size_t & n_it);
 
-    void FindVrms(std::vector<double>       &vrms_vec,
-                  std::vector<double>       &vrms_vec_reg,
-                  const std::vector<double> &twt_vec,
-                  const std::vector<double> &twt_vec_reg,
-                  const std::vector<double> &v_vec,
-                  double                     const_v,
-                  double                     twt_wavelet_exstrapol,
-                  size_t                     i,
-                  size_t                     j,
-                  bool                       include_regular) const;
+    void FindVrms(std::vector<double>       & vrms_vec,
+                  std::vector<double>       & vrms_vec_reg,
+                  const std::vector<double> & twt_vec,
+                  const std::vector<double> & twt_vec_reg,
+                  const std::vector<double> & v_vec,
+                  double                      const_v,
+                  double                      twt_wavelet_exstrapol,
+                  size_t                      i,
+                  size_t                      j,
+                  bool                        include_regular) const;
 
-    void  FindNMOReflections(NRLib::Grid2D<double>       &r_vec,
-                             const NRLib::Grid2D<double> &theta_vec,
-                             size_t                       i,
-                             size_t                       j);
+    void  FindNMOReflections(NRLib::Grid2D<double>       & r_vec,
+                             const NRLib::Grid2D<double> & theta_vec,
+                             size_t                        i,
+                             size_t                        j);
 
-    void  FindReflections(NRLib::Grid2D<double>       &r_vec,
-                          const std::vector<double>   &theta_vec,
-                          size_t                       i,
-                          size_t                       j);
+    void  FindReflections(NRLib::Grid2D<double>       & r_vec,
+                          const std::vector<double>   & theta_vec,
+                          size_t                        i,
+                          size_t                        j);
 
-    static void PrintElapsedTime(time_t start_time, std::string work);
+    static void PrintElapsedTime(time_t      start_time,
+                                 std::string work);
 
-    tbb::concurrent_queue<Trace*> FindTracesInForward(size_t            &n_traces);
+    tbb::concurrent_queue<Trace*> FindTracesInForward(size_t & n_traces);
 
 
     static void AddNoiseToReflectionsPos(unsigned long           seed,
                                          double                  std_dev,
-                                         NRLib::Grid2D<double> &refl);
+                                         NRLib::Grid2D<double> & refl);
 
-    static void MonitorInitialize(size_t n_traces,
-                                  float &monitor_size,
-                                  float &next_monitor);
+    static void MonitorInitialize(size_t   n_traces,
+                                  float  & monitor_size,
+                                  float  & next_monitor);
 
-    static void Monitor(size_t  trace,
-                        float   monitor_size,
-                        float   &next_monitor);
+    static void Monitor(size_t   trace,
+                        float    monitor_size,
+                        float  & next_monitor);
 
-    static std::vector<double> LinInterp1D(const std::vector<double> &x_in,
-                                           const std::vector<double> &y_in,
-                                           const std::vector<double> &x_out);
+    static std::vector<double> LinInterp1D(const std::vector<double> & x_in,
+                                           const std::vector<double> & y_in,
+                                           const std::vector<double> & x_out);
 
 
-    static std::vector<double> SplineInterp1D(const std::vector<double> &x_in,
-                                              const std::vector<double> &y_in,
-                                              const std::vector<double> &x_out,
-                                              double                     extrap_value);
+    static std::vector<double> SplineInterp1D(const std::vector<double> & x_in,
+                                              const std::vector<double> & y_in,
+                                              const std::vector<double> & x_out,
+                                              double                      extrap_value);
 
     void DeleteEclipseGrid();
     void DeleteElasticParameterGrids();
@@ -182,107 +176,111 @@ class SeismicParameters
     void DeleteGeometryAndOutput();
 
 private:
-    void SetupWavelet();
-    void ReadEclipseGrid();
-    void FindGeometry();
-    void FindSurfaceGeometry();
-    void CalculateAngleSpan();
-    void CalculateOffsetSpan();
-    void CreateGrids();
+  void CalculateOffsetSpan(double offset_0,
+                           double doffset,
+                           double offset_max);
 
-    ModelSettings *model_settings_;
-    SeismicGeometry *seismic_geometry_;
-    SeismicOutput *seismic_output_;
+  void CalculateAngleSpan(double theta_0,
+                          double dtheta,
+                          double theta_max);
 
-    size_t ntheta_;
-    double theta_0_;
-    double dtheta_;
-    double theta_max_;
-    std::vector<double> theta_vec_;
+  void SetupWavelet();
 
-    size_t noffset_;
-    double offset_0_;
-    double doffset_;
-    double offset_max_;
-    std::vector<double> offset_vec_;
+  void ReadEclipseGrid();
 
-    Wavelet *wavelet_;
-    double   wavelet_scale_;
+  void FindGeometry();
 
-    NRLib::EclipseGrid *eclipse_grid_;
+  void FindSurfaceGeometry();
 
-    size_t top_k_;
-    size_t bottom_k_;
+  void CreateGrids();
 
-    NRLib::RegularSurface<double> top_time_;
-    NRLib::RegularSurface<double> bot_time_;
-    NRLib::RegularSurface<double> topeclipse_;
-    NRLib::RegularSurface<double> boteclipse_;
+  ModelSettings                         * model_settings_;
+  SeismicGeometry                       * seismic_geometry_;
+  SeismicOutput                         * seismic_output_;
 
-    NRLib::SegyGeometry *segy_geometry_;
+  std::vector<double>                     theta_vec_;
+  std::vector<double>                     offset_vec_;
 
-    NRLib::StormContGrid *zgrid_;
-    NRLib::StormContGrid *vpgrid_;
-    NRLib::StormContGrid *vsgrid_;
-    NRLib::StormContGrid *rhogrid_;
-    NRLib::StormContGrid *twtgrid_;
-    NRLib::StormContGrid *twtssgrid_;
-    NRLib::StormContGrid *twtppgrid_;
-    NRLib::StormContGrid *twt_timeshift_;
-    NRLib::StormContGrid *vrmsgrid_;
-    std::vector<NRLib::StormContGrid> *rgridvec_;
-    std::vector<NRLib::StormContGrid*> extra_parameter_grid_;
+  Wavelet                               * wavelet_;
+  double                                  wavelet_scale_;
 
-    std::vector<double> twt_0_;
-    std::vector<double> z_0_;
+  NRLib::EclipseGrid                    * eclipse_grid_;
 
-    float missing_;
+  size_t                                  top_k_;
+  size_t                                  bottom_k_;
+
+  NRLib::RegularSurface<double>           top_time_;
+  NRLib::RegularSurface<double>           bot_time_;
+  NRLib::RegularSurface<double>           topeclipse_;
+  NRLib::RegularSurface<double>           boteclipse_;
+
+  NRLib::SegyGeometry                   * segy_geometry_;
+
+  NRLib::StormContGrid                  * zgrid_;
+  NRLib::StormContGrid                  * vpgrid_;
+  NRLib::StormContGrid                  * vsgrid_;
+  NRLib::StormContGrid                  * rhogrid_;
+  NRLib::StormContGrid                  * twtgrid_;
+  NRLib::StormContGrid                  * twtssgrid_;
+  NRLib::StormContGrid                  * twtppgrid_;
+  NRLib::StormContGrid                  * twt_timeshift_;
+  NRLib::StormContGrid                  * vrmsgrid_;
+  std::vector<NRLib::StormContGrid>     * rgridvec_;
+  std::vector<NRLib::StormContGrid*>      extra_parameter_grid_;
+
+  std::vector<double>                     twt_0_;
+  std::vector<double>                     z_0_;
+
+  float                                   missing_;
 };
 
 bool SeismicParameters::GetTimeOutput() const {
   return (model_settings_->GetOutputTimeSegy()
-    || model_settings_->GetOutputSeismicStackTimeSegy()
-    || model_settings_->GetOutputSeismicTime()
-    || model_settings_->GetOutputSeismicStackTimeStorm()
-    || model_settings_->GetOutputPrenmoTimeSegy());
+          || model_settings_->GetOutputSeismicStackTimeSegy()
+          || model_settings_->GetOutputSeismicTime()
+          || model_settings_->GetOutputSeismicStackTimeStorm()
+          || model_settings_->GetOutputPrenmoTimeSegy());
 }
 
 bool SeismicParameters::GetDepthOutput() const {
   return (model_settings_->GetOutputDepthSegy()
-    || model_settings_->GetOutputSeismicStackDepthSegy()
-    || model_settings_->GetOutputSeismicDepth()
-    || model_settings_->GetOutputSeismicStackDepthStorm());
+          || model_settings_->GetOutputSeismicStackDepthSegy()
+          || model_settings_->GetOutputSeismicDepth()
+          || model_settings_->GetOutputSeismicStackDepthStorm());
 }
 
 bool SeismicParameters::GetTimeshiftOutput() const {
   return (model_settings_->GetOutputTimeshiftSegy()
-    || model_settings_->GetOutputSeismicStackTimeShiftSegy()
-    || model_settings_->GetOutputSeismicTimeshift()
-    || model_settings_->GetOutputSeismicStackTimeShiftStorm());
+          || model_settings_->GetOutputSeismicStackTimeShiftSegy()
+          || model_settings_->GetOutputSeismicTimeshift()
+          || model_settings_->GetOutputSeismicStackTimeShiftStorm());
 }
 bool SeismicParameters::GetStackOutput() const {
   return (model_settings_->GetOutputSeismicStackTimeSegy()
-    || model_settings_->GetOutputSeismicStackDepthSegy()
-    || model_settings_->GetOutputSeismicStackTimeShiftSegy()
-    || model_settings_->GetOutputSeismicStackTimeStorm()
-    || model_settings_->GetOutputSeismicStackDepthStorm()
-    || model_settings_->GetOutputSeismicStackTimeShiftStorm());
+          || model_settings_->GetOutputSeismicStackDepthSegy()
+          || model_settings_->GetOutputSeismicStackTimeShiftSegy()
+          || model_settings_->GetOutputSeismicStackTimeStorm()
+          || model_settings_->GetOutputSeismicStackDepthStorm()
+          || model_settings_->GetOutputSeismicStackTimeShiftStorm());
 }
 bool SeismicParameters::GetSegyOutput() const {
   return (model_settings_->GetOutputTimeSegy()
-    || model_settings_->GetOutputSeismicStackTimeSegy()
-    || model_settings_->GetOutputDepthSegy()
-    || model_settings_->GetOutputSeismicStackDepthSegy()
-    || model_settings_->GetOutputTimeshiftSegy()
-    || model_settings_->GetOutputSeismicStackTimeShiftSegy()
-    || model_settings_->GetOutputPrenmoTimeSegy());
+          || model_settings_->GetOutputSeismicStackTimeSegy()
+          || model_settings_->GetOutputDepthSegy()
+          || model_settings_->GetOutputSeismicStackDepthSegy()
+          || model_settings_->GetOutputTimeshiftSegy()
+          || model_settings_->GetOutputSeismicStackTimeShiftSegy()
+          || model_settings_->GetOutputPrenmoTimeSegy());
 }
+
 bool SeismicParameters::GetTimeStormOutput() const {
   return (model_settings_->GetOutputSeismicStackTimeStorm() || model_settings_->GetOutputSeismicTime());
 }
+
 bool SeismicParameters::GetDepthStormOutput() const {
   return (model_settings_->GetOutputSeismicStackDepthStorm() || model_settings_->GetOutputSeismicDepth());
 }
+
 bool SeismicParameters::GetTimeshiftStormOutput() const {
   return (model_settings_->GetOutputSeismicStackTimeShiftStorm() || model_settings_->GetOutputSeismicTimeshift());
 }
