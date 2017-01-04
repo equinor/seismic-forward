@@ -33,6 +33,9 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
                        model_settings->GetThetaMax());
   }
 
+
+  // GET WAVELET
+
   if (model_settings->GetRicker()) {
     double peakF = model_settings->GetPeakFrequency();
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nMaking Ricker wavelet with peak frequency %.1f Hz\n", peakF);
@@ -47,6 +50,7 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
   }
   wavelet_scale_ = model_settings->GetWaveletScale();
 
+
   ReadEclipseGrid(eclipse_grid_,
                   model_settings->GetEclipseFileName(),
                   model_settings->GetParameterNames(),
@@ -57,11 +61,16 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
                eclipse_grid_->GetGeometry(),
                model_settings);
 
-  FindSurfaceGeometry(top_time_,
-                      bot_time_,
-                      seismic_geometry_,
-                      eclipse_grid_->GetGeometry(),
-                      model_settings_);
+  FindTopAndBaseSurfaces(top_time_,
+                         bot_time_,
+                         topeclipse_,
+                         boteclipse_,
+                         top_k_,
+                         bottom_k_,
+                         seismic_geometry_,
+                         eclipse_grid_->GetGeometry(),
+                         wavelet_,
+                         model_settings_);
 
   CreateGrids();
 }
@@ -225,13 +234,18 @@ void SeismicParameters::FindGeometry(SeismicGeometry              *& seismic_geo
                               text.c_str(), x0, y0, lx, ly, angle);
 }
 
-//-------------------------------------------------------------------------------------------
-void SeismicParameters::FindSurfaceGeometry(NRLib::RegularSurface<double> & top_time,
-                                            NRLib::RegularSurface<double> & bot_time,
-                                            SeismicGeometry               * seismic_geometry,
-                                            const NRLib::EclipseGeometry  & eclipse_geometry,
-                                            ModelSettings                 * model_settings)
-//-------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & top_time,
+                                               NRLib::RegularSurface<double> & bot_time,
+                                               NRLib::RegularSurface<double> & topeclipse,
+                                               NRLib::RegularSurface<double> & boteclipse,
+                                               size_t                        & top_k,
+                                               size_t                        & bot_k,
+                                               SeismicGeometry               * seismic_geometry,
+                                               const NRLib::EclipseGeometry  & eclipse_geometry,
+                                               Wavelet                       * wavelet,
+                                               ModelSettings                 * model_settings)
+//----------------------------------------------------------------------------------------------
 {
   double xmin     = seismic_geometry->xmin();
   double ymin     = seismic_geometry->ymin();
@@ -281,45 +295,45 @@ void SeismicParameters::FindSurfaceGeometry(NRLib::RegularSurface<double> & top_
   //
   // Finding top and base Eclipse surfaces in depth
   //
-  topeclipse_ = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
-  boteclipse_ = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
+  topeclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
+  boteclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
 
-  top_k_      = eclipse_geometry.FindTopLayer();
-  bottom_k_   = eclipse_geometry.FindBottomLayer();
+  top_k      = eclipse_geometry.FindTopLayer();
+  bot_k      = eclipse_geometry.FindBottomLayer();
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nTop layer of Eclipse grid                 : %4d", top_k_);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nBase layer of Eclipse grid                : %4d\n", bottom_k_);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nTop layer of Eclipse grid                 : %4d", top_k);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nBase layer of Eclipse grid                : %4d\n", bot_k);
 
-  seismic_geometry->setZReflectorCount(static_cast<size_t>(bottom_k_ + 2 - top_k_));
+  seismic_geometry->setZReflectorCount(static_cast<size_t>(bot_k + 2 - top_k));
 
-  double etdx = topeclipse_.GetDX();
-  double etdy = topeclipse_.GetDY();
-  double ebdx = boteclipse_.GetDX();
-  double ebdy = boteclipse_.GetDY();
+  double etdx = topeclipse.GetDX();
+  double etdy = topeclipse.GetDY();
+  double ebdx = boteclipse.GetDX();
+  double ebdy = boteclipse.GetDY();
 
   NRLib::Grid2D<double> tvalues(nx, ny, 0.0);
   NRLib::Grid2D<double> bvalues(nx, ny, 0.0);
 
   if (model_settings->GetUseCornerpointInterpol()) {
-    eclipse_geometry.FindLayerSurfaceCornerpoint(tvalues, top_k_   , 0, etdx, etdy, x0, y0, 0.0, 0);
-    eclipse_geometry.FindLayerSurfaceCornerpoint(bvalues, bottom_k_, 1, ebdx, ebdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayerSurfaceCornerpoint(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayerSurfaceCornerpoint(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, 0);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
    }
   else {
-    eclipse_geometry.FindLayerSurface(tvalues, top_k_   , 0, etdx, etdy, x0, y0, 0.0, 0);
-    eclipse_geometry.FindLayerSurface(bvalues, bottom_k_, 1, ebdx, ebdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayerSurface(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayerSurface(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, 0);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
   }
 
-  for (size_t i = 0; i < topeclipse_.GetNI(); i++) {
-    for (size_t j = 0; j < topeclipse_.GetNJ(); j++) {
-      topeclipse_(i, j) = tvalues(i, j);
-      boteclipse_(i, j) = bvalues(i, j);
+  for (size_t i = 0; i < topeclipse.GetNI(); i++) {
+    for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
+      topeclipse(i, j) = tvalues(i, j);
+      boteclipse(i, j) = bvalues(i, j);
     }
   }
 
   if (model_settings->GetOutputDepthSurfaces()) {
-    seismic_output_->WriteDepthSurfaces(topeclipse_, boteclipse_);
+    seismic_output_->WriteDepthSurfaces(topeclipse, boteclipse);
   }
 
   double min;
@@ -331,12 +345,12 @@ void SeismicParameters::FindSurfaceGeometry(NRLib::RegularSurface<double> & top_
   for (size_t i = 0; i < eclipse_geometry.GetNI(); ++i) {
     for (size_t j = 0; j < eclipse_geometry.GetNJ(); ++j) {
       found = false;
-      min = eclipse_geometry.FindZTopInCellActiveColumn(i, j, top_k_, found);
+      min = eclipse_geometry.FindZTopInCellActiveColumn(i, j, top_k, found);
       if (found && min < d1) {
         d1 = min;
       }
       found = false;
-      max = eclipse_geometry.FindZBotInCellActiveColumn(i, j, bottom_k_, found);
+      max = eclipse_geometry.FindZBotInCellActiveColumn(i, j, bot_k, found);
       if (found && max > d2) {
         d2 = max;
       }
@@ -362,17 +376,17 @@ void SeismicParameters::FindSurfaceGeometry(NRLib::RegularSurface<double> & top_
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nUsing %s velocity                         : %8.2f\n", text.c_str(), const_v);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculating Eclipse top time surface\n");
 
-    for (size_t i = 0; i < top_time_.GetNI(); i++)
-      for (size_t j = 0; j < top_time_.GetNJ(); j++) {
-        top_time_(i, j) = t1 + 2000.0*(topeclipse_(i, j) - d1)/const_v;
-        bot_time_(i, j) = top_time_(i, j);
+    for (size_t i = 0; i < top_time.GetNI(); i++)
+      for (size_t j = 0; j < top_time.GetNJ(); j++) {
+        top_time(i, j) = t1 + 2000.0*(topeclipse(i, j) - d1)/const_v;
+        bot_time(i, j) = top_time(i, j);
       }
   }
 
   //
   // Finding additional grid size due to wavelet length
   //
-  double twt_wavelet = wavelet_->GetTwtWavelet();
+  double twt_wavelet = wavelet->GetTwtWavelet();
   std::vector<double> constvp = model_settings->GetConstVp();
 
   double z_top_wavelet = twt_wavelet*constvp[0]/2000;
@@ -394,8 +408,8 @@ void SeismicParameters::FindSurfaceGeometry(NRLib::RegularSurface<double> & top_
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse top surface lift due to wavelet   : %8.2f", z_top_wavelet);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse base surface lift due to wavelet  : %8.2f\n", z_bot_wavelet);
 
-  topeclipse_.Add(-1 * z_top_wavelet); // add one wavelet length to bot and subtract from top
-  boteclipse_.Add(     z_bot_wavelet);
+  topeclipse.Add(-1 * z_top_wavelet); // add one wavelet length to bot and subtract from top
+  boteclipse.Add(     z_bot_wavelet);
 
   d1 -= z_top_wavelet;
   d2 += z_bot_wavelet;
@@ -404,6 +418,84 @@ void SeismicParameters::FindSurfaceGeometry(NRLib::RegularSurface<double> & top_
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid minimum value                        : %8.2f", d1);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid maximum value                        : %8.2f\n", d2);
+}
+
+void SeismicParameters::CreateGrids()
+{
+  size_t nx = seismic_geometry_->nx();
+  size_t ny = seismic_geometry_->ny();
+  size_t nzrefl = seismic_geometry_->zreflectorcount();
+
+  NRLib::Volume volume = seismic_geometry_->createDepthVolume();
+
+  zgrid_    = new NRLib::StormContGrid(volume, nx, ny, nzrefl,     0.0);
+  vpgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
+  vsgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
+  rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
+  twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl,     0.0);
+
+  if (model_settings_->GetNMOCorr() && model_settings_->GetPSSeismic()) {
+    twtssgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
+    twtppgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
+  }
+  else {
+    twtssgrid_ = NULL;
+    twtppgrid_ = NULL;
+  }
+
+  if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()) {
+    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0); //dimensions??
+  }
+  else {
+    vrmsgrid_ = NULL;
+  }
+
+  if (model_settings_->GetOutputReflections()){
+    if (model_settings_->GetWhiteNoise())
+      rgridvec_ = new std::vector<NRLib::StormContGrid>(2);
+    else
+      rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
+  }
+  else {
+    rgridvec_ = NULL;
+  }
+
+  NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl, 0.0);
+
+  if (model_settings_->GetOutputReflections()) {
+    (*rgridvec_)[0] = rgrid;
+    if (model_settings_->GetWhiteNoise()) {
+      (*rgridvec_)[1] = rgrid;
+    }
+  }
+
+  std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
+  std::vector<double> extra_parameter_default_values = model_settings_->GetExtraParameterDefaultValues();
+  //extra_parameter_grid_ = new std::vector<NRLib::StormContGrid>(extra_parameter_names.size());
+  extra_parameter_grid_.resize(extra_parameter_names.size());
+  for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
+    extra_parameter_grid_[i] = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, extra_parameter_default_values[i]);
+  }
+
+  for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
+    NRLib::StormContGrid &par_grid = *(extra_parameter_grid_[epi]);
+    for (size_t i = 0; i < nx; i++) {
+      for (size_t j = 0; j < ny; j++) {
+        par_grid(i, j, nzrefl) = 0.0;
+      }
+    }
+  }
+
+  if (model_settings_->GetTwtFileName() != "") {
+    twt_timeshift_ = new NRLib::StormContGrid(model_settings_->GetTwtFileName());
+    if ((*twt_timeshift_).GetNI() != nx || (*twt_timeshift_).GetNJ() != ny || (*twt_timeshift_).GetNK() != nzrefl) {
+      printf("TWT timeshift from file has wrong dimension. Aborting. \n");
+      exit(1);
+    }
+  }
+  else {
+    twt_timeshift_ = NULL;
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -968,83 +1060,6 @@ void SeismicParameters::DeleteGeometryAndOutput()
 
 
 
-void SeismicParameters::CreateGrids()
-{
-  size_t nx = seismic_geometry_->nx();
-  size_t ny = seismic_geometry_->ny();
-  size_t nzrefl = seismic_geometry_->zreflectorcount();
-
-  NRLib::Volume volume = seismic_geometry_->createDepthVolume();
-
-  zgrid_    = new NRLib::StormContGrid(volume, nx, ny, nzrefl,     0.0);
-  vpgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
-  vsgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
-  rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
-  twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl,     0.0);
-
-  if (model_settings_->GetNMOCorr() && model_settings_->GetPSSeismic()) {
-    twtssgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
-    twtppgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
-  }
-  else {
-    twtssgrid_ = NULL;
-    twtppgrid_ = NULL;
-  }
-
-  if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()) {
-    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0); //dimensions??
-  }
-  else {
-    vrmsgrid_ = NULL;
-  }
-
-  if (model_settings_->GetOutputReflections()){
-    if (model_settings_->GetWhiteNoise())
-      rgridvec_ = new std::vector<NRLib::StormContGrid>(2);
-    else
-      rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
-  }
-  else {
-    rgridvec_ = NULL;
-  }
-
-  NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl, 0.0);
-
-  if (model_settings_->GetOutputReflections()) {
-    (*rgridvec_)[0] = rgrid;
-    if (model_settings_->GetWhiteNoise()) {
-      (*rgridvec_)[1] = rgrid;
-    }
-  }
-
-  std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
-  std::vector<double> extra_parameter_default_values = model_settings_->GetExtraParameterDefaultValues();
-  //extra_parameter_grid_ = new std::vector<NRLib::StormContGrid>(extra_parameter_names.size());
-  extra_parameter_grid_.resize(extra_parameter_names.size());
-  for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
-    extra_parameter_grid_[i] = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, extra_parameter_default_values[i]);
-  }
-
-  for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
-    NRLib::StormContGrid &par_grid = *(extra_parameter_grid_[epi]);
-    for (size_t i = 0; i < nx; i++) {
-      for (size_t j = 0; j < ny; j++) {
-        par_grid(i, j, nzrefl) = 0.0;
-      }
-    }
-  }
-
-  if (model_settings_->GetTwtFileName() != "") {
-    twt_timeshift_ = new NRLib::StormContGrid(model_settings_->GetTwtFileName());
-    if ((*twt_timeshift_).GetNI() != nx || (*twt_timeshift_).GetNJ() != ny || (*twt_timeshift_).GetNK() != nzrefl) {
-      printf("TWT timeshift from file has wrong dimension. Aborting. \n");
-      exit(1);
-    }
-  }
-  else {
-      twt_timeshift_ = NULL;
-  }
-}
 
 void SeismicParameters::PrintElapsedTime(time_t start_time, std::string work)
 {

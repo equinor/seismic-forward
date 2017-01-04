@@ -194,11 +194,16 @@ private:
                     const NRLib::EclipseGeometry  & eclipse_geometry,
                     ModelSettings                 * model_settings);
 
-  void FindSurfaceGeometry(NRLib::RegularSurface<double> & top_time,
-                           NRLib::RegularSurface<double> & bot_time,
-                           SeismicGeometry               * seismic_geometry,
-                           const NRLib::EclipseGeometry  & eclipse_geometry,
-                           ModelSettings                 * model_settings);
+  void FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & top_time,
+                              NRLib::RegularSurface<double> & bot_time,
+                              NRLib::RegularSurface<double> & topeclipse,
+                              NRLib::RegularSurface<double> & boteclipse,
+                              size_t                        & top_k,
+                              size_t                        & bot_k,
+                              SeismicGeometry               * seismic_geometry,
+                              const NRLib::EclipseGeometry  & eclipse_geometry,
+                              Wavelet                       * wavelet,
+                              ModelSettings                 * model_settings);
 
   void CreateGrids();
 
