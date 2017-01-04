@@ -1,20 +1,13 @@
 #include "wavelet.hpp"
 
 #include <iostream>
-#include <stdio.h>
-#include <time.h>
-#include <assert.h>
 #include <fstream>
-
-
 #include <list>
 #include <complex>
 
 #include "nrlib/iotools/logkit.hpp"
 #include "nrlib/iotools/fileio.hpp"
-#include "nrlib/iotools/stringtools.hpp"
 #include "nrlib/surface/regularsurface.hpp"
-#include "nrlib/math/constants.hpp"
 #include "nrlib/fft/fft.hpp"
 
 Wavelet::Wavelet(std::string filename, std::string file_format) : is_ricker_(false)
@@ -124,14 +117,14 @@ double Wavelet::FindWaveletPoint(double t)
     double rickerConst = NRLib::Pi * NRLib::Pi * peak_frequency_ * peak_frequency_ * 1e-6;
     double c = rickerConst * t * t;
     return (1 - 2 * c) * exp(-c);
-  } 
+  }
   else {
     if (wavelet_.size() > 0 && time_sampling_in_ms_ > 0) {
 
       size_t i;
       if (t < time_vector_[0]) {
         i = 0;
-      } 
+      }
       else {
         double start = (t - time_vector_[0]) / time_sampling_in_ms_;
         i = static_cast<size_t>(start);
@@ -145,11 +138,11 @@ double Wavelet::FindWaveletPoint(double t)
       else if (i > 0) {
         double a = (time_vector_[i] - t) / (time_vector_[i] - time_vector_[i - 1]);
         return a * wavelet_[i - 1] + (1 - a) * wavelet_[i];
-      } 
+      }
       else {
         return 0;
       }
-    } 
+    }
     else {
       return 0;
     }
@@ -184,7 +177,7 @@ void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &w
   //
   wavelet_out.resize(fine_data_fft.size());
   NRLib::ComputeFFTInv1D(fine_data_fft, wavelet_out, false);
-  
+
   // Scale wavelet out according to change of length
 
   wavelet_out.resize(fine_data_fft.size() - scale_factor + 1);

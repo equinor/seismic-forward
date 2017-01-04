@@ -35,7 +35,7 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
 
   if (model_settings->GetRicker()) {
     double peakF = model_settings->GetPeakFrequency();
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nMaking Ricker wavelet with peak frequency %.2f\n", peakF);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nMaking Ricker wavelet with peak frequency %.1f Hz\n", peakF);
     wavelet_ = new Wavelet(peakF);
   }
   else {
@@ -57,7 +57,12 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
                eclipse_grid_->GetGeometry(),
                model_settings);
 
-  FindSurfaceGeometry();
+  FindSurfaceGeometry(top_time_,
+                      bot_time_,
+                      seismic_geometry_,
+                      eclipse_grid_->GetGeometry(),
+                      model_settings_);
+
   CreateGrids();
 }
 
@@ -79,7 +84,7 @@ void SeismicParameters::CalculateOffsetSpan(double offset_0,
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated offsets:");
   for (size_t i = 0 ; i < noffset ; i++)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.2f",offset_vec_[i]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.1f",offset_vec_[i]);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
 }
 
@@ -102,7 +107,7 @@ void SeismicParameters::CalculateAngleSpan(double theta_0,
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated angles:");
   for (size_t i = 0 ; i < ntheta ; i++)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.2f", theta_vec_[i]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.1f", theta_vec_[i]);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
 }
 
@@ -218,6 +223,187 @@ void SeismicParameters::FindGeometry(SeismicGeometry              *& seismic_geo
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n-------------------------------------------------------------------------------------");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nArea from %-15s %12.2f %12.2f   %10.2f %10.2f    %6.2f\n",
                               text.c_str(), x0, y0, lx, ly, angle);
+}
+
+//-------------------------------------------------------------------------------------------
+void SeismicParameters::FindSurfaceGeometry(NRLib::RegularSurface<double> & top_time,
+                                            NRLib::RegularSurface<double> & bot_time,
+                                            SeismicGeometry               * seismic_geometry,
+                                            const NRLib::EclipseGeometry  & eclipse_geometry,
+                                            ModelSettings                 * model_settings)
+//-------------------------------------------------------------------------------------------
+{
+  double xmin     = seismic_geometry->xmin();
+  double ymin     = seismic_geometry->ymin();
+  double dx       = seismic_geometry->dx();
+  double dy       = seismic_geometry->dy();
+  double lxsurf   = seismic_geometry->xsurfacelength();
+  double lysurf   = seismic_geometry->ysurfacelength();
+  size_t nxsurfec = seismic_geometry->nxsurfaceeclipse();
+  size_t nysurfec = seismic_geometry->nysurfaceeclipse();
+
+  double x0       = xmin - dx;
+  double y0       = ymin - dy;
+  double lx       = lxsurf + 2*dx;
+  double ly       = lysurf + 2*dy;
+  size_t nx       = nxsurfec + 2;
+  size_t ny       = nysurfec + 2;
+
+  //
+  // Finding top and base time surfaces
+  //
+  bool const_top_given = true;
+  if (model_settings->GetTopTimeSurfaceFile() != "") {
+    const_top_given = false;
+    NRLib::RegularSurfaceRotated<double> top_time_rotated = NRLib::RegularSurfaceRotated<double>(model_settings->GetTopTimeSurfaceFile());
+    double topmin = top_time_rotated.Min();
+
+    top_time = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, topmin);
+    top_time.SetMissingValue(top_time_rotated.GetMissingValue());
+    for (size_t i = 0; i < top_time.GetNI(); i++) {
+      for (size_t j = 0; j < top_time.GetNJ(); j++) {
+        double x, y;
+        top_time.GetXY(i, j, x, y);
+        top_time(i, j) = top_time_rotated.GetZ(x, y);
+      }
+    }
+    bot_time = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, top_time.Max());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nTaking top time surface from file \'%s\'",model_settings->GetTopTimeSurfaceFile().c_str());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nSetting base time surface to maximum of top time : %.2f\n",top_time.Max());
+  }
+  else {
+    double t1 = model_settings->GetTopTimeConstant();
+    top_time = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, t1);
+    bot_time = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, t1);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nSetting top and base time surfaces to     : %8.2f\n",t1);
+  }
+
+  //
+  // Finding top and base Eclipse surfaces in depth
+  //
+  topeclipse_ = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
+  boteclipse_ = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
+
+  top_k_      = eclipse_geometry.FindTopLayer();
+  bottom_k_   = eclipse_geometry.FindBottomLayer();
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nTop layer of Eclipse grid                 : %4d", top_k_);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nBase layer of Eclipse grid                : %4d\n", bottom_k_);
+
+  seismic_geometry->setZReflectorCount(static_cast<size_t>(bottom_k_ + 2 - top_k_));
+
+  double etdx = topeclipse_.GetDX();
+  double etdy = topeclipse_.GetDY();
+  double ebdx = boteclipse_.GetDX();
+  double ebdy = boteclipse_.GetDY();
+
+  NRLib::Grid2D<double> tvalues(nx, ny, 0.0);
+  NRLib::Grid2D<double> bvalues(nx, ny, 0.0);
+
+  if (model_settings->GetUseCornerpointInterpol()) {
+    eclipse_geometry.FindLayerSurfaceCornerpoint(tvalues, top_k_   , 0, etdx, etdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayerSurfaceCornerpoint(bvalues, bottom_k_, 1, ebdx, ebdy, x0, y0, 0.0, 0);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
+   }
+  else {
+    eclipse_geometry.FindLayerSurface(tvalues, top_k_   , 0, etdx, etdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayerSurface(bvalues, bottom_k_, 1, ebdx, ebdy, x0, y0, 0.0, 0);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
+  }
+
+  for (size_t i = 0; i < topeclipse_.GetNI(); i++) {
+    for (size_t j = 0; j < topeclipse_.GetNJ(); j++) {
+      topeclipse_(i, j) = tvalues(i, j);
+      boteclipse_(i, j) = bvalues(i, j);
+    }
+  }
+
+  if (model_settings->GetOutputDepthSurfaces()) {
+    seismic_output_->WriteDepthSurfaces(topeclipse_, boteclipse_);
+  }
+
+  double min;
+  double max;
+  double d1 = 1e10;
+  double d2 =  0.0;
+
+  bool found;
+  for (size_t i = 0; i < eclipse_geometry.GetNI(); ++i) {
+    for (size_t j = 0; j < eclipse_geometry.GetNJ(); ++j) {
+      found = false;
+      min = eclipse_geometry.FindZTopInCellActiveColumn(i, j, top_k_, found);
+      if (found && min < d1) {
+        d1 = min;
+      }
+      found = false;
+      max = eclipse_geometry.FindZBotInCellActiveColumn(i, j, bottom_k_, found);
+      if (found && max > d2) {
+        d2 = max;
+      }
+    }
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse grid minimum value                : %8.2f", d1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse grid maximum value                : %8.2f\n", d2);
+
+  //
+  // Finding top and base Eclipse surfaces in time
+  //
+
+  // NBNB-PAL: Testen nedenfor er ikke god ettersom en flate spesifisert fra fil kan være konstant
+  if (const_top_given) {
+    std::string text = "PP";
+    double const_v   = model_settings->GetConstVp()[0];
+    double const_vs  = model_settings->GetConstVs()[0];
+    double t1        = model_settings->GetTopTimeConstant();
+    if (model_settings->GetPSSeismic()) {
+      const_v = 2/(1/const_v + 1/const_vs);
+      text = "PS";
+    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nUsing %s velocity                         : %8.2f\n", text.c_str(), const_v);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculating Eclipse top time surface\n");
+
+    for (size_t i = 0; i < top_time_.GetNI(); i++)
+      for (size_t j = 0; j < top_time_.GetNJ(); j++) {
+        top_time_(i, j) = t1 + 2000.0*(topeclipse_(i, j) - d1)/const_v;
+        bot_time_(i, j) = top_time_(i, j);
+      }
+  }
+
+  //
+  // Finding additional grid size due to wavelet length
+  //
+  double twt_wavelet = wavelet_->GetTwtWavelet();
+  std::vector<double> constvp = model_settings->GetConstVp();
+
+  double z_top_wavelet = twt_wavelet*constvp[0]/2000;
+  double z_bot_wavelet = twt_wavelet*constvp[2]/2000;
+
+  std::string text = "PP";
+  if (model_settings->GetPSSeismic()) {
+    std::vector<double> constvs = model_settings->GetConstVs();
+    double vel_top = 2/(1/constvp[0] + 1/constvs[0]);
+    double vel_bot = 2/(1/constvp[2] + 1/constvs[2]);
+    z_top_wavelet = twt_wavelet*vel_top/2000;
+    z_bot_wavelet = twt_wavelet*vel_bot/2000;
+    text = "PS";
+  }
+  model_settings->SetZWaveletTop(z_top_wavelet);
+  model_settings->SetZWaveletBot(z_bot_wavelet);
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nWavelet time length is                    : %8.2f\n", twt_wavelet);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse top surface lift due to wavelet   : %8.2f", z_top_wavelet);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse base surface lift due to wavelet  : %8.2f\n", z_bot_wavelet);
+
+  topeclipse_.Add(-1 * z_top_wavelet); // add one wavelet length to bot and subtract from top
+  boteclipse_.Add(     z_bot_wavelet);
+
+  d1 -= z_top_wavelet;
+  d2 += z_bot_wavelet;
+
+  seismic_geometry->setZRange(d1, d2);
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid minimum value                        : %8.2f", d1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid maximum value                        : %8.2f\n", d2);
 }
 
 //---------------------------------------------------------------------------
@@ -781,139 +967,6 @@ void SeismicParameters::DeleteGeometryAndOutput()
 }
 
 
-void SeismicParameters::FindSurfaceGeometry()
-{
-  const NRLib::EclipseGeometry &geometry = eclipse_grid_->GetGeometry();
-
-  double dx = seismic_geometry_->dx();
-  double dy = seismic_geometry_->dy();
-
-  double lxsurf = seismic_geometry_->xsurfacelength();
-  double lysurf = seismic_geometry_->ysurfacelength();
-
-  double xmin = seismic_geometry_->xmin();
-  double ymin = seismic_geometry_->ymin();
-
-  size_t nxsurfec = seismic_geometry_->nxsurfaceeclipse();
-  size_t nysurfec = seismic_geometry_->nysurfaceeclipse();
-
-  bool const_top_given = true;
-  if (model_settings_->GetTopTimeSurfaceFile() != "") {
-    NRLib::RegularSurfaceRotated<double> top_time_rotated = NRLib::RegularSurfaceRotated<double>(model_settings_->GetTopTimeSurfaceFile());
-    double topmin = top_time_rotated.Min();
-    top_time_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, topmin);
-    top_time_.SetMissingValue(top_time_rotated.GetMissingValue());
-    for (size_t i = 0; i < top_time_.GetNI(); i++) {
-      for (size_t j = 0; j < top_time_.GetNJ(); j++) {
-        double x, y;
-        top_time_.GetXY(i, j, x, y);
-        double value = top_time_rotated.GetZ(x, y);
-        top_time_(i, j) = value;
-      }
-    }
-
-    bot_time_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, top_time_.Max());
-    const_top_given = false;
-  }
-  else {
-    double t1 = model_settings_->GetTopTimeConstant();
-    top_time_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, t1);
-    bot_time_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, t1);
-  }
-
-  topeclipse_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, -999.0);
-  boteclipse_ = NRLib::RegularSurface<double>(xmin - dx, ymin - dy, lxsurf + 2 * dx, lysurf + 2 * dy, nxsurfec + 2, nysurfec + 2, -999.0);
-
-  top_k_    = geometry.FindTopLayer();
-  bottom_k_ = geometry.FindBottomLayer();
-
-  seismic_geometry_->setZReflectorCount(static_cast<size_t>(bottom_k_ + 2 - top_k_));
-
-  NRLib::Grid2D<double> values(nxsurfec + 2, nysurfec + 2, 0.0);
-  if (model_settings_->GetUseCornerpointInterpol()) {
-    geometry.FindLayerSurfaceCornerpoint(values, top_k_, 0, topeclipse_.GetDX(), topeclipse_.GetDY(), xmin - dx, ymin - dy, 0.0, 0);
-  }
-  else {
-    geometry.FindLayerSurface(values, top_k_, 0, topeclipse_.GetDX(), topeclipse_.GetDY(), xmin - dx, ymin - dy, 0.0, 0);
-  }
-
-  for (size_t i = 0; i < topeclipse_.GetNI(); i++) {
-    for (size_t j = 0; j < topeclipse_.GetNJ(); j++) {
-      topeclipse_(i, j) = values(i, j);
-    }
-  }
-
-  if (model_settings_->GetUseCornerpointInterpol()) {
-    geometry.FindLayerSurfaceCornerpoint(values, bottom_k_, 1, boteclipse_.GetDX(), boteclipse_.GetDY(), xmin - dx, ymin - dy, 0.0, 0);
-  }
-  else {
-    geometry.FindLayerSurface(values, bottom_k_, 1, boteclipse_.GetDX(), boteclipse_.GetDY(), xmin - dx, ymin - dy, 0.0, 0);
-  }
-
-  for (size_t i = 0; i < boteclipse_.GetNI(); i++) {
-    for (size_t j = 0; j < boteclipse_.GetNJ(); j++) {
-      boteclipse_(i, j) = values(i, j);
-    }
-  }
-
-  if (model_settings_->GetOutputDepthSurfaces()) {
-    seismic_output_->WriteDepthSurfaces(topeclipse_, boteclipse_);
-  }
-
-  double min, max, d1 = 1e10, d2 = 0;
-  bool found;
-  for (size_t i = 0; i < geometry.GetNI(); ++i) {
-    for (size_t j = 0; j < geometry.GetNJ(); ++j) {
-      found = false;
-      min = geometry.FindZTopInCellActiveColumn(i, j, top_k_, found);
-      if (found && min < d1) {
-        d1 = min;
-      }
-      found = false;
-      max = geometry.FindZBotInCellActiveColumn(i, j, bottom_k_, found);
-      if (found && max > d2) {
-        d2 = max;
-      }
-    }
-  }
-
-  if (const_top_given) {
-    double const_v = model_settings_->GetConstVp()[0];
-    if (model_settings_->GetPSSeismic()) {
-      double const_vs = model_settings_->GetConstVs()[0];
-      const_v = 2 / (1 / const_v + 1 / const_vs);
-    }
-    double t1 = model_settings_->GetTopTimeConstant();
-    for (size_t i = 0; i < top_time_.GetNI(); i++)
-      for (size_t j = 0; j < top_time_.GetNJ(); j++) {
-        top_time_(i, j) = t1 + 2000.0 * (topeclipse_(i, j) - d1) / const_v;
-        bot_time_(i, j) = top_time_(i, j);
-      }
-  }
-  double twt_wavelet   = wavelet_->GetTwtWavelet();
-  std::vector<double> constvp = model_settings_->GetConstVp();
-
-  double z_top_wavelet = twt_wavelet * constvp[0] / 2000;
-  double z_bot_wavelet = twt_wavelet * constvp[2] / 2000;
-  if (model_settings_->GetPSSeismic()) {
-    std::vector<double> constvs = model_settings_->GetConstVs();
-    double vel_top = 2 / (1 / constvp[0] + 1 / constvs[0]);
-    double vel_bot = 2 / (1 / constvp[2] + 1 / constvs[2]);
-    z_top_wavelet = twt_wavelet * vel_top / 2000;
-    z_bot_wavelet = twt_wavelet * vel_bot / 2000;
-  }
-
-  model_settings_->SetZWaveletTop(z_top_wavelet);
-  model_settings_->SetZWaveletBot(z_bot_wavelet);
-
-  topeclipse_.Add(-1 * z_top_wavelet); // add one wavelet length to bot and subtract from top
-  boteclipse_.Add(     z_bot_wavelet);
-
-  d1 -= z_top_wavelet;
-  d2 += z_bot_wavelet;
-
-  seismic_geometry_->setZRange(d1, d2);
-}
 
 void SeismicParameters::CreateGrids()
 {
