@@ -184,11 +184,15 @@ private:
                           double dtheta,
                           double theta_max);
 
-  void SetupWavelet();
+    void ReadEclipseGrid(NRLib::EclipseGrid             *& eclipse_grid,
+                         const std::string               & filename,
+                         const std::vector<std::string>  & names,
+                         const std::vector<std::string>  & extra_parameter_names);
 
-  void ReadEclipseGrid();
-
-  void FindGeometry();
+  void FindGeometry(SeismicGeometry              *& seismic_geometry,
+                    NRLib::SegyGeometry          *& segy_geometry,
+                    const NRLib::EclipseGeometry  & eclipse_geometry,
+                    ModelSettings                 * model_settings);
 
   void FindSurfaceGeometry();
 
@@ -204,17 +208,16 @@ private:
   Wavelet                               * wavelet_;
   double                                  wavelet_scale_;
 
-  NRLib::EclipseGrid                    * eclipse_grid_;
-
   size_t                                  top_k_;
   size_t                                  bottom_k_;
+
+  NRLib::EclipseGrid                    * eclipse_grid_;
+  NRLib::SegyGeometry                   * segy_geometry_;
 
   NRLib::RegularSurface<double>           top_time_;
   NRLib::RegularSurface<double>           bot_time_;
   NRLib::RegularSurface<double>           topeclipse_;
   NRLib::RegularSurface<double>           boteclipse_;
-
-  NRLib::SegyGeometry                   * segy_geometry_;
 
   NRLib::StormContGrid                  * zgrid_;
   NRLib::StormContGrid                  * vpgrid_;

@@ -1,14 +1,8 @@
 #include <seismic_parameters.hpp>
-#include <ctime>
 
-#include <nrlib/math/constants.hpp>
 #include <physics/wavelet.hpp>
 #include <nrlib/eclipsegrid/eclipsegrid.hpp>
-#include <nrlib/surface/regularsurfacerotated.hpp>
-#include <nrlib/segy/segygeometry.hpp>
-#include <nrlib/stormgrid/stormcontgrid.hpp>
 #include "nrlib/geometry/interpolation.hpp"
-#include "seismic_geometry.hpp"
 #include <physics/zoeppritz.hpp>
 #include <physics/zoeppritz_ps.hpp>
 #include <physics/zoeppritz_pp.hpp>
@@ -23,9 +17,11 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
 {
   model_settings_   = model_settings;
 
-  seismic_geometry_ = new SeismicGeometry();
+  seismic_output_   = new SeismicOutput(model_settings);
   segy_geometry_    = NULL;
 
+
+  //NBNB-PAL De to settingene nedenfor kan/bør gjøres i modelsettings ...
   if (model_settings->GetNMOCorr()) {
     CalculateOffsetSpan(model_settings->GetOffset0(),
                         model_settings->GetDOffset(),
@@ -37,18 +33,32 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
                        model_settings->GetThetaMax());
   }
 
-  SetupWavelet();
-  time_t t1 = time(0);   // get time now
-  ReadEclipseGrid();
-  //PrintElapsedTime(t1, "reading eclipsegrid");
-  //t1 = time(0);
-  FindGeometry();
+  if (model_settings->GetRicker()) {
+    double peakF = model_settings->GetPeakFrequency();
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nMaking Ricker wavelet with peak frequency %.2f\n", peakF);
+    wavelet_ = new Wavelet(peakF);
+  }
+  else {
+    const std::string & file_name   = model_settings->GetWaveletFileName();
+    const std::string & file_format = model_settings->GetWaveletFileFormat();
 
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nReading wavelet from file \'%s\'\n", file_name.c_str());
+    wavelet_ = new Wavelet(file_name, file_format);
+  }
+  wavelet_scale_ = model_settings->GetWaveletScale();
 
-  seismic_output_ = new SeismicOutput(model_settings_);
+  ReadEclipseGrid(eclipse_grid_,
+                  model_settings->GetEclipseFileName(),
+                  model_settings->GetParameterNames(),
+                  model_settings->GetExtraParameterNames());
+
+  FindGeometry(seismic_geometry_,
+               segy_geometry_,
+               eclipse_grid_->GetGeometry(),
+               model_settings);
+
   FindSurfaceGeometry();
   CreateGrids();
-  //PrintElapsedTime(t1, "finding geometry and creating grids");
 }
 
 //------------------------------------------------------------
@@ -67,7 +77,7 @@ void SeismicParameters::CalculateOffsetSpan(double offset_0,
     offset_vec_[i] = offset_0 + i*doffset;
   }
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"Calculated offsets:");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated offsets:");
   for (size_t i = 0 ; i < noffset ; i++)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.2f",offset_vec_[i]);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
@@ -96,23 +106,123 @@ void SeismicParameters::CalculateAngleSpan(double theta_0,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
 }
 
-//------------------------------------
-void SeismicParameters::SetupWavelet()
-//------------------------------------
+//----------------------------------------------------------------------------------------------
+void SeismicParameters::ReadEclipseGrid(NRLib::EclipseGrid             *& eclipse_grid,
+                                        const std::string               & filename,
+                                        const std::vector<std::string>  & names,
+                                        const std::vector<std::string>  & extra_parameter_names)
+//----------------------------------------------------------------------------------------------
 {
-  if (model_settings_->GetRicker()) {
-    double peakF = model_settings_->GetPeakFrequency();
-    wavelet_ = new Wavelet(peakF);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nReading Eclipse grid from file \'%s'\n", filename.c_str());
+
+  eclipse_grid = new NRLib::EclipseGrid(filename);
+
+  bool error = false;
+
+  for (size_t i = 0; i < names.size(); ++i) {
+    if (!eclipse_grid->HasParameter(names[i])) {
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter \'%s\' is not found!\n", names[i].c_str());
+      error = true;
+    }
   }
-  else {
-    std::string wavelet_file_format = model_settings_->GetWaveletFileFormat();
-    std::string wavelet_file_name = model_settings_->GetWaveletFileName();
-    wavelet_ = new Wavelet(wavelet_file_name, wavelet_file_format);
+
+  for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
+    if (!eclipse_grid->HasParameter(extra_parameter_names[i])) {
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter \'%s\' is not found!\n", extra_parameter_names[i].c_str());
+      error = true;
+    }
   }
-  wavelet_scale_ = model_settings_->GetWaveletScale();
+
+  if (error) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nAborting ...\n");
+    exit(1);
+  }
 }
 
-void SeismicParameters::SetSegyGeometry(const NRLib::SegyGeometry &geometry)
+
+//------------------------------------------------------------------------------------
+void SeismicParameters::FindGeometry(SeismicGeometry              *& seismic_geometry,
+                                     NRLib::SegyGeometry          *& segy_geometry,
+                                     const NRLib::EclipseGeometry  & eclipse_geometry,
+                                     ModelSettings                 * model_settings)
+//------------------------------------------------------------------------------------
+{
+  seismic_geometry = new SeismicGeometry();
+  seismic_geometry->setDxDy(model_settings->GetDx(), model_settings->GetDy());
+  seismic_geometry->setDz(model_settings->GetDz());
+  seismic_geometry->setDt(model_settings->GetDt());
+
+  double x0, y0, lx, ly, angle;
+  std::string text;
+
+  if (model_settings->GetAreaFromSegy() != "") {
+    text = "SegY";
+    int scalcoloc = 71;
+    NRLib::TraceHeaderFormat::coordSys_t coord = NRLib::TraceHeaderFormat::UTM;
+    NRLib::TraceHeaderFormat *thf = new NRLib::TraceHeaderFormat(scalcoloc,
+                                                                 model_settings->GetUtmxIn(),
+                                                                 model_settings->GetUtmyIn(),
+                                                                 model_settings->GetIL0In(),
+                                                                 model_settings->GetXL0In(),
+                                                                 coord);
+    double z0 = 0.0;
+    NRLib::Volume * volume = NULL;
+    std::vector<NRLib::TraceHeaderFormat *> thfvec;
+    thfvec.push_back(thf);
+
+    NRLib::SegY segy(model_settings->GetAreaFromSegy(),
+                     static_cast<float>(z0),
+                     thfvec);
+    segy.ReadAllTraces(volume, z0);
+    segy.CreateRegularGrid();
+    const NRLib::SegyGeometry * tmp_segy_geometry = segy.GetGeometry();
+
+    segy_geometry = new NRLib::SegyGeometry(tmp_segy_geometry);
+    segy_geometry->WriteGeometry();
+    segy_geometry->WriteILXL();
+
+    x0        = tmp_segy_geometry->GetX0();
+    y0        = tmp_segy_geometry->GetY0();
+    lx        = tmp_segy_geometry->Getlx();
+    ly        = tmp_segy_geometry->Getly();
+    angle     = tmp_segy_geometry->GetAngle();
+    double dx = tmp_segy_geometry->GetDx();
+    double dy = tmp_segy_geometry->GetDy();
+
+    seismic_geometry->setDxDy(dx, dy);
+  }
+  else if (model_settings->GetAreaGiven()) {
+    text = "model file";
+    x0    = model_settings->GetX0();
+    y0    = model_settings->GetY0();
+    lx    = model_settings->GetLx();
+    ly    = model_settings->GetLy();
+    angle = model_settings->GetAngle();
+  }
+  else if (model_settings_->GetAreaFromSurface() != "") {
+    text = "surface";
+    NRLib::RegularSurfaceRotated<double> toptime_rot = NRLib::RegularSurfaceRotated<double>(model_settings->GetAreaFromSurface());
+    x0    = toptime_rot.GetXRef();
+    y0    = toptime_rot.GetYRef();
+    lx    = toptime_rot.GetLengthX();
+    ly    = toptime_rot.GetLengthY();
+    angle = toptime_rot.GetAngle();
+  }
+  else {
+    text = "Eclipse grid";
+    eclipse_geometry.FindEnclosingVolume(x0, y0, lx, ly, angle);
+  }
+  seismic_geometry->setGeometry(x0, y0, lx, ly, angle);
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n                                     x            y           lx         ly     angle");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n-------------------------------------------------------------------------------------");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nArea from %-15s %12.2f %12.2f   %10.2f %10.2f    %6.2f\n",
+                              text.c_str(), x0, y0, lx, ly, angle);
+}
+
+//---------------------------------------------------------------------------
+void SeismicParameters::SetSegyGeometry(const NRLib::SegyGeometry & geometry)
+//---------------------------------------------------------------------------
 {
   if (segy_geometry_ != NULL) {
     delete segy_geometry_;
@@ -131,10 +241,10 @@ void SeismicParameters::FindLoopIndeces(int               &n_xl,
 {
   if (segy_geometry_ == NULL) {
     il_min  = 0;
-    il_max  = seismic_geometry_->nx();
+    il_max  = static_cast<int>(seismic_geometry_->nx());
     il_step = 1;
     xl_min  = 0;
-    xl_max  = seismic_geometry_->ny()-1;
+    xl_max  = static_cast<int>(seismic_geometry_->ny()-1);
     xl_step = 1;
     n_xl = xl_max;
     segy = false;
@@ -620,36 +730,6 @@ double SeismicParameters::FindSinThetaPSWithNewtonsMethod(double start_value,
   return y_new;
 }
 
-void SeismicParameters::ReadEclipseGrid()
-{
-  std::string filename = model_settings_->GetEclipseFileName();
-
-  printf("Start reading Eclipsegrid from file.\n");
-  eclipse_grid_ = new NRLib::EclipseGrid(filename);
-  printf("Eclipsegrid read.\n");
-
-  std::vector<std::string> names = model_settings_->GetParameterNames();
-  if (!eclipse_grid_->HasParameter(names[0])) {
-    std::cout << "Parameter " + names[0] + " is not found in Eclipse grid\n";
-    exit(0);
-  }
-  if (!eclipse_grid_->HasParameter(names[1])) {
-    std::cout << "Parameter " + names[1] + " is not found in Eclipse grid\n";
-    exit(0);
-  }
-  if (!eclipse_grid_->HasParameter(names[2])) {
-    std::cout << "Parameter " + names[2] + " is not found in Eclipse grid\n";
-    exit(0);
-  }
-  std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
-  for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
-    if (!eclipse_grid_->HasParameter(extra_parameter_names[i])) {
-      std::cout << "Parameter " + extra_parameter_names[i] + " is not found in Eclipse grid\n";
-      exit(0);
-    }
-  }
-}
-
 void SeismicParameters::DeleteEclipseGrid()
 {
   delete eclipse_grid_;
@@ -700,70 +780,6 @@ void SeismicParameters::DeleteGeometryAndOutput()
   delete model_settings_;
 }
 
-void SeismicParameters::FindGeometry()
-{
-  seismic_geometry_->setDxDy(model_settings_->GetDx(), model_settings_->GetDy());
-  seismic_geometry_->setDz(model_settings_->GetDz());
-  seismic_geometry_->setDt(model_settings_->GetDt());
-
-  const NRLib::EclipseGeometry &geometry = eclipse_grid_->GetGeometry();
-
-  if (model_settings_->GetAreaFromSegy() != "") {
-    std::cout << "Area from <area-from-segy>.\n";
-    int scalcoloc = 71;
-    NRLib::TraceHeaderFormat::coordSys_t coord = NRLib::TraceHeaderFormat::UTM;
-    NRLib::TraceHeaderFormat *thf = new NRLib::TraceHeaderFormat(scalcoloc, model_settings_->GetUtmxIn(), model_settings_->GetUtmyIn(), model_settings_->GetIL0In(), model_settings_->GetXL0In(), coord);
-    double z0 = 0.0;
-    NRLib::Volume *volume = NULL;
-    std::vector<NRLib::TraceHeaderFormat *> thfvec;
-    thfvec.push_back(thf);
-
-    NRLib::SegY segy(model_settings_->GetAreaFromSegy(), static_cast<float>(z0), thfvec);
-    segy.ReadAllTraces(volume, z0);
-    segy.CreateRegularGrid();
-    const NRLib::SegyGeometry *temp_segy_geometry = segy.GetGeometry();
-
-    segy_geometry_ = new NRLib::SegyGeometry(temp_segy_geometry);
-    segy_geometry_->WriteGeometry();
-    segy_geometry_->WriteILXL();
-
-    double x0    = temp_segy_geometry->GetX0();
-    double y0    = temp_segy_geometry->GetY0();
-    double lx    = temp_segy_geometry->Getlx();
-    double ly    = temp_segy_geometry->Getly();
-    double angle = temp_segy_geometry->GetAngle();
-    double dx    = temp_segy_geometry->GetDx();
-    double dy    = temp_segy_geometry->GetDy();
-
-    seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
-    seismic_geometry_->setDxDy(dx, dy);
-  }
-  else if (model_settings_->GetAreaGiven()) {
-    std::cout << "Area from <area>.\n";
-    double x0 = model_settings_->GetX0();
-    double y0 = model_settings_->GetY0();
-    double lx = model_settings_->GetLx();
-    double ly = model_settings_->GetLy();
-    double angle = model_settings_->GetAngle();
-    seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
-  }
-  else if (model_settings_->GetAreaFromSurface() != "") {
-    std::cout << "Area from <area-from-surface>.\n";
-    NRLib::RegularSurfaceRotated<double> toptime_rot = NRLib::RegularSurfaceRotated<double>(model_settings_->GetAreaFromSurface());
-    double x0 = toptime_rot.GetXRef();
-    double y0 = toptime_rot.GetYRef();
-    double lx = toptime_rot.GetLengthX();
-    double ly = toptime_rot.GetLengthY();
-    double angle = toptime_rot.GetAngle();
-    seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
-  }
-  else {
-    std::cout << "Area from Eclipsegrid.\n";
-    double x0, y0, lx, ly, angle;
-    geometry.FindEnclosingVolume(x0, y0, lx, ly, angle);
-    seismic_geometry_->setGeometry(x0, y0, lx, ly, angle);
-  }
-}
 
 void SeismicParameters::FindSurfaceGeometry()
 {
