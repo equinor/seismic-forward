@@ -4,9 +4,9 @@
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// •  Redistributions of source code must retain the above copyright notice, this
+// ï¿½  Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
-// •  Redistributions in binary form must reproduce the above copyright notice, this list of
+// ï¿½  Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials
 //    provided with the distribution.
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
@@ -1276,15 +1276,16 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double> &z_sur
 }
 
 // Corner point interpolation.  This routine does not work with reverse faults.
-void EclipseGeometry::FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> &z_surface,
-                                       size_t k,
-                                       int lower_or_upper,
-                                       double dx,
-                                       double dy,
-                                       double x0,
-                                       double y0,
-                                       double angle,
-                                       bool bilinear_else_triangles) const
+
+void EclipseGeometry::FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> & z_surface,
+                                                  size_t                  k,
+                                                  int                     lower_or_upper,
+                                                  double                  dx,
+                                                  double                  dy,
+                                                  double                  x0,
+                                                  double                  y0,
+                                                  double                  angle,
+                                                  bool                    bilinear_else_triangles) const
 {
   size_t m=z_surface.GetNJ();
   size_t n=z_surface.GetNI();

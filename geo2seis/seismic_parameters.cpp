@@ -470,6 +470,9 @@ void SeismicParameters::CreateGrids(SeismicGeometry * seismic_geometry,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n\n");
 }
 
+
+//========================================== BELOW IS UNPROCESSED ==========================================
+
 //---------------------------------------------------------------------------
 void SeismicParameters::SetSegyGeometry(const NRLib::SegyGeometry & geometry)
 //---------------------------------------------------------------------------

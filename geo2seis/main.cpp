@@ -70,11 +70,9 @@ int main(int argc, char *argv[]) {
     if (n_threads > n_threads_avail)
       n_threads = n_threads_avail;
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"Threads in use                            :   %3d / %3d\n",n_threads, n_threads_avail);
-
     NRLib::LogKit::WriteHeader("Model settings");
     model_settings->PrintSettings();
-
-    time_t t1 = time(0);   // get time now
+    time_t t1 = time(0);
     NRLib::LogKit::WriteHeader("Setting up grid");
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
     NRLib::LogKit::WriteHeader("Load earth model");

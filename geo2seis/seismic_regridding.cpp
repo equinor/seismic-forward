@@ -1,25 +1,29 @@
-#include <seismic_regridding.hpp>
+#include "nrlib/eclipsegrid/eclipsegrid.hpp"
+#include "nrlib/random/randomgenerator.hpp"
+#include "nrlib/random/normal.hpp"
 
-#include <nrlib/eclipsegrid/eclipsegrid.hpp>
+#include "physics/wavelet.hpp"
 
-#include <physics/wavelet.hpp>
-#include <nrlib/random/randomgenerator.hpp>
-#include <nrlib/random/normal.hpp>
 #include "tbb/compat/thread"
+
+#include "seismic_regridding.hpp"
 
 #ifdef WITH_OMP
 #include <omp.h>
 #endif
 
+//-----------------------------------------------------------------------------------
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parameters,
                                               int                 n_threads)
+//-----------------------------------------------------------------------------------
 {
-  //------------------------Resample Z values--------------------------------
+  // Resample Z values
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"Start finding Zvalues.\n");
   //time_t t1 = time(0);   // get time now
   FindZValues(seismic_parameters, n_threads);
   //seismic_parameters.PrintElapsedTime(t1, "finding Zvalues");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"ZValues found.\n");
+
 
   //------------------------Resample elastic properties----------------------
   printf("Start finding elastic parameters.\n");
@@ -124,6 +128,102 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
     seismic_parameters.GetSeismicOutput()->WriteTwt(seismic_parameters);
   }
 }
+
+//-------------------------------------------------------------------------
+void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
+                                    size_t              n_threads)
+//-------------------------------------------------------------------------
+{
+  NRLib::StormContGrid         & zgrid            = seismic_parameters.GetZGrid();
+  const NRLib::EclipseGeometry & geometry         = seismic_parameters.GetEclipseGrid().GetGeometry();
+  const size_t                   top_k            = seismic_parameters.GetTopK();
+  const bool                     use_corner_point = seismic_parameters.GetModelSettings()->GetUseCornerpointInterpol();
+  const bool                     rem_neg_delta    = seismic_parameters.GetModelSettings()->GetRemoveNegativeDeltaZ();
+
+  const double                   xmin             = zgrid.GetXMin();
+  const double                   ymin             = zgrid.GetYMin();
+  const double                   dx               = zgrid.GetDX();
+  const double                   dy               = zgrid.GetDY();
+  const double                   angle            = zgrid.GetAngle();
+  const size_t                   k                = zgrid.GetNK() - 2;
+
+  NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
+  if (use_corner_point) {
+    geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFinding z-values in Eclipse grid layer %d using corner-point interpolation.", k + top_k);
+  }
+  else {
+    geometry.FindLayerSurface(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFinding z-values in Eclipse grid layer %d.", k + top_k);
+  }
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nAssigning z-values to z-grid layer %d.", k + 1);
+  for (size_t i = 0; i < zgrid.GetNI(); i++) {
+    for (size_t j = 0; j < zgrid.GetNJ(); j++) {
+      zgrid(i, j, k + 1) = static_cast<float>(values(i, j));
+    }
+  }
+
+  if (rem_neg_delta && n_threads == 1) {
+    for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
+      NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
+      if (use_corner_point) {
+        geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      }
+      else {
+        geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      }
+      for (size_t i = 0; i < zgrid.GetNI(); i++) {
+        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
+          if (values(i, j) > zgrid(i, j, k + 1)) {
+            zgrid(i, j, k) = zgrid(i, j, k + 1);
+          }
+          else {
+            zgrid(i, j, k) = static_cast<float>(values(i, j));
+          }
+        }
+      }
+    }
+  }
+  else {
+    int  chunk_size;
+    chunk_size = 1;
+#ifdef WITH_OMP
+#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
+#endif
+    for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
+      NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
+      if (use_corner_point) {
+        geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      }
+      else {
+        geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      }
+      for (size_t i = 0; i < zgrid.GetNI(); i++) {
+        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
+          zgrid(i, j, k) = static_cast<float>(values(i, j));
+        }
+      }
+    }
+
+    if (rem_neg_delta) {
+      chunk_size = 10;
+#ifdef WITH_OMP
+#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
+#endif
+      for (int i = 0; i < zgrid.GetNI(); i++) {
+        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
+          for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
+            if (zgrid(i, j, k) > zgrid(i, j, k + 1)) {
+              zgrid(i, j, k) = zgrid(i, j, k + 1);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 
 void SeismicRegridding::WriteElasticParametersSegy(SeismicParameters &seismic_parameters,
                                                    size_t             n_threads,
@@ -404,95 +504,6 @@ size_t SeismicRegridding::FindCellIndex(size_t                i,
   return found_k;
 }
 
-void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
-                                    size_t              n_threads)
-{
-  NRLib::StormContGrid         & zgrid            = seismic_parameters.GetZGrid();
-  const NRLib::EclipseGeometry & geometry         = seismic_parameters.GetEclipseGrid().GetGeometry();
-  size_t                         top_k            = seismic_parameters.GetTopK();
-  bool                           use_corner_point = seismic_parameters.GetModelSettings()->GetUseCornerpointInterpol();
-  bool                           rem_neg_delta    = seismic_parameters.GetModelSettings()->GetRemoveNegativeDeltaZ();
-
-  double                         xmin             = zgrid.GetXMin();
-  double                         ymin             = zgrid.GetYMin();
-  double                         dx               = zgrid.GetDX();
-  double                         dy               = zgrid.GetDY();
-  double                         angle            = zgrid.GetAngle();
-  size_t                         k                = zgrid.GetNK() - 2;
-
-  NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
-  if (use_corner_point) {
-    geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
-  }
-  else {
-    geometry.FindLayerSurface(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
-  }
-
-  for (size_t i = 0; i < zgrid.GetNI(); i++) {
-    for (size_t j = 0; j < zgrid.GetNJ(); j++) {
-      zgrid(i, j, k + 1) = static_cast<float>(values(i, j));
-    }
-  }
-
-  if (rem_neg_delta && n_threads == 1) {
-    for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
-      NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
-      if (use_corner_point) {
-        geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      }
-      else {
-        geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      }
-      for (size_t i = 0; i < zgrid.GetNI(); i++) {
-        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
-          if (values(i, j) > zgrid(i, j, k + 1)) {
-            zgrid(i, j, k) = zgrid(i, j, k + 1);
-          }
-          else {
-            zgrid(i, j, k) = static_cast<float>(values(i, j));
-          }
-        }
-      }
-    }
-  }
-  else {
-    int  chunk_size;
-    chunk_size = 1;
-#ifdef WITH_OMP
-#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
-#endif
-    for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
-      NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
-      if (use_corner_point) {
-        geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      }
-      else {
-        geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      }
-      for (size_t i = 0; i < zgrid.GetNI(); i++) {
-        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
-          zgrid(i, j, k) = static_cast<float>(values(i, j));
-        }
-      }
-    }
-
-    if (rem_neg_delta) {
-      chunk_size = 10;
-#ifdef WITH_OMP
-#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
-#endif
-      for (int i = 0; i < zgrid.GetNI(); i++) {
-        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
-          for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
-            if (zgrid(i, j, k) > zgrid(i, j, k + 1)) {
-              zgrid(i, j, k) = zgrid(i, j, k + 1);
-            }
-          }
-        }
-      }
-    }
-  }
-}
 
 void SeismicRegridding::FindVrms(SeismicParameters          &seismic_parameters,
                                  const NRLib::StormContGrid &vgrid,
