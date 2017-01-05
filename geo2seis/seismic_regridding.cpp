@@ -14,24 +14,21 @@
 
 //-----------------------------------------------------------------------------------
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parameters,
-                                              int                 n_threads)
+                                              size_t              n_threads)
 //-----------------------------------------------------------------------------------
 {
   // Resample Z values
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"Start finding Zvalues.\n");
   //time_t t1 = time(0);   // get time now
   FindZValues(seismic_parameters, n_threads);
   //seismic_parameters.PrintElapsedTime(t1, "finding Zvalues");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"ZValues found.\n");
-
 
   //------------------------Resample elastic properties----------------------
-  printf("Start finding elastic parameters.\n");
+  printf("\nStart finding elastic parameters.");
   //t1 = time(0);
   FindVp(seismic_parameters, n_threads);
   VpPostProcess(seismic_parameters);
   //seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
-  printf("Elastic parameters found.\n");
+  printf("\nElastic parameters found.\n");
 
   seismic_parameters.DeleteEclipseGrid();
   NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
@@ -87,9 +84,9 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   //---resample and write ELASTIC parameters in segy------------
   if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
     if (interpolate)
-      printf("Start resampling elastic parameters and write to SegY - with interpolation.\n");
+      printf("\nStart resampling elastic parameters and write to SegY - with interpolation.");
     else
-      printf("Start resampling elastic parameters and write to SegY - index based.\n");
+      printf("\nStart resampling elastic parameters and write to SegY - index based.");
   }
   if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy()) {
     WriteElasticParametersSegy(seismic_parameters, n_threads, true);
@@ -100,9 +97,9 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   //---resample, write and delete EXTRA parameter grids---------
   if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
     if (interpolate)
-      printf("Start resampling extra parameters and write to SegY - with interpolation.\n");
+      printf("\nStart resampling extra parameters and write to SegY - with interpolation.");
     else
-      printf("Start resampling extra parameters and write to SegY - index based.\n");
+      printf("\nStart resampling extra parameters and write to SegY - index based.");
   }
   if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy()) {
     WriteExtraParametersSegy(seismic_parameters, n_threads, true);
@@ -145,81 +142,80 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   const double                   dx               = zgrid.GetDX();
   const double                   dy               = zgrid.GetDY();
   const double                   angle            = zgrid.GetAngle();
-  const size_t                   k                = zgrid.GetNK() - 2;
 
-  NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
+  const size_t                   ni               = zgrid.GetNI();
+  const size_t                   nj               = zgrid.GetNJ();
+  const size_t                   nk               = zgrid.GetNK();
+
+  NRLib::StormContGrid negdz(zgrid);
+
+  NRLib::Grid2D<double> vals(ni, nj, 0);
+  std::string text;
+
   if (use_corner_point) {
-    geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFinding z-values in Eclipse grid layer %d using corner-point interpolation.", k + top_k);
+    geometry.FindLayerSurfaceCornerpoint(vals, nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, 0);
+    text = " using corner-point interpolation";
   }
   else {
-    geometry.FindLayerSurface(values, k + top_k, 1, dx, dy, xmin, ymin, angle, 0);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFinding z-values in Eclipse grid layer %d.", k + top_k);
+    geometry.FindLayerSurface(vals, nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, 0);
   }
+  SetGridLayerFromSurface(zgrid, vals, static_cast<size_t>(nk - 1));
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nAssigning z-values to z-grid layer %d.", k + 1);
-  for (size_t i = 0; i < zgrid.GetNI(); i++) {
-    for (size_t j = 0; j < zgrid.GetNJ(); j++) {
-      zgrid(i, j, k + 1) = static_cast<float>(values(i, j));
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid%s.",text.c_str());
+
+#ifdef WITH_OMP
+    int chunk_size = 1;
+#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
+#endif
+  for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
+    NRLib::Grid2D<double> values(ni, nj, 0);
+    if (use_corner_point) {
+      geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
     }
+    else {
+      geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+    }
+    SetGridLayerFromSurface(zgrid, values, static_cast<size_t>(k));
   }
 
-  if (rem_neg_delta && n_threads == 1) {
-    for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
-      NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
-      if (use_corner_point) {
-        geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      }
-      else {
-        geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      }
-      for (size_t i = 0; i < zgrid.GetNI(); i++) {
-        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
-          if (values(i, j) > zgrid(i, j, k + 1)) {
-            zgrid(i, j, k) = zgrid(i, j, k + 1);
+  int count = 0;
+#ifdef WITH_OMP
+  chunk_size = std::min(1, int(ni/(2*static_cast<int>(n_threads))));
+#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
+#endif
+  for (size_t i = 0; i < ni ; i++) {
+    for (size_t j = 0; j < nj ; j++) {
+      for (int k = static_cast<int>(nk - 2); k >= 0; --k) {
+        float z1 = zgrid(i, j, static_cast<size_t>(k    ));
+        float z2 = zgrid(i, j, static_cast<size_t>(k + 1));
+        if (z1 > z2) {
+          negdz(i, j, static_cast<size_t>(k)) = z1 - z2;
+          if (rem_neg_delta) {
+            zgrid(i, j, static_cast<size_t>(k)) = z2;
           }
-          else {
-            zgrid(i, j, k) = static_cast<float>(values(i, j));
-          }
+          count++;
         }
       }
     }
+  }
+  if (count > 0) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found and removed: %d", count);
+    negdz.WriteToFile("negdz.storm");
   }
   else {
-    int  chunk_size;
-    chunk_size = 1;
-#ifdef WITH_OMP
-#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
-#endif
-    for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
-      NRLib::Grid2D<double> values(zgrid.GetNI(), zgrid.GetNJ(), 0);
-      if (use_corner_point) {
-        geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      }
-      else {
-        geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      }
-      for (size_t i = 0; i < zgrid.GetNI(); i++) {
-        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
-          zgrid(i, j, k) = static_cast<float>(values(i, j));
-        }
-      }
-    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNo crossing depth values found!");
+  }
+}
 
-    if (rem_neg_delta) {
-      chunk_size = 10;
-#ifdef WITH_OMP
-#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
-#endif
-      for (int i = 0; i < zgrid.GetNI(); i++) {
-        for (size_t j = 0; j < zgrid.GetNJ(); j++) {
-          for (int k = zgrid.GetNK() - 2; k >= 0; --k) {
-            if (zgrid(i, j, k) > zgrid(i, j, k + 1)) {
-              zgrid(i, j, k) = zgrid(i, j, k + 1);
-            }
-          }
-        }
-      }
+//-----------------------------------------------------------------------------------
+void SeismicRegridding::SetGridLayerFromSurface(NRLib::StormContGrid        & zgrid,
+                                                const NRLib::Grid2D<double> & values,
+                                                size_t                        k)
+//-----------------------------------------------------------------------------------
+{
+  for (size_t i = 0; i < zgrid.GetNI() ; i++) {
+    for (size_t j = 0; j < zgrid.GetNJ() ; j++) {
+      zgrid(i, j, k) = static_cast<float>(values(i, j));
     }
   }
 }
@@ -227,7 +223,8 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
 
 void SeismicRegridding::WriteElasticParametersSegy(SeismicParameters &seismic_parameters,
                                                    size_t             n_threads,
-                                                   bool               time) {
+                                                   bool               time)
+{
   std::vector<NRLib::StormContGrid*> input_grid(0);
   std::vector<std::string>           filenames(0);
 

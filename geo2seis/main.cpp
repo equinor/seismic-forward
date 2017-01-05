@@ -45,13 +45,13 @@ int main(int argc, char *argv[]) {
   NRLib::LogKit::SetScreenLog(NRLib::LogKit::L_Low);
   NRLib::LogKit::StartBuffering();
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n***************************************************************************************************");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                         *****");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                     Seismic Forward Modeling / Geo2Seis                                 *****");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                version 4.2 beta                                         *****");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                 Copyright (c) 2017 by Norsk Regnesentral / Statoil                      *****");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                         *****");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n***************************************************************************************************\n\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n****************************************************************************************************");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                      Seismic Forward Modeling / Geo2Seis                                 *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                 version 4.2 beta                                         *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                  Copyright (c) 2017 by Norsk Regnesentral / Statoil                      *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n****************************************************************************************************\n\n");
 
   std::string inputfile(argv[1]);
   XmlModelFile    modelFile(inputfile);
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
     time_t t1 = time(0);
     NRLib::LogKit::WriteHeader("Setting up grid");
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-    NRLib::LogKit::WriteHeader("Load earth model");
+    NRLib::LogKit::WriteHeader("Regridding depth");
     SeismicRegridding::MakeSeismicRegridding(seismic_parameters, n_threads);
     seismic_parameters.PrintElapsedTime(t1, "for preprocesses");
     NRLib::LogKit::WriteHeader("Forward modelling");
