@@ -7,7 +7,6 @@
 
 #include "physics/zoeppritz_ps.hpp"
 #include "physics/zoeppritz_pp.hpp"
-#include "physics/zoeppritz.hpp"
 #include "physics/wavelet.hpp"
 
 #include "seismic_parameters.hpp"
@@ -53,7 +52,8 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
                          wavelet_,
                          model_settings);
 
-  CreateGrids();
+  CreateGrids(seismic_geometry_,
+              model_settings);
 }
 
 
@@ -375,83 +375,99 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid maximum value                        : %8.2f\n", d2);
 }
 
-void SeismicParameters::CreateGrids()
+//---------------------------------------------------------------------
+void SeismicParameters::CreateGrids(SeismicGeometry * seismic_geometry,
+                                    ModelSettings   * model_settings)
+//---------------------------------------------------------------------
 {
-  size_t nx = seismic_geometry_->nx();
-  size_t ny = seismic_geometry_->ny();
-  size_t nzrefl = seismic_geometry_->zreflectorcount();
+  size_t                           nx                 = seismic_geometry->nx();
+  size_t                           ny                 = seismic_geometry->ny();
+  size_t                           nzrefl             = seismic_geometry->zreflectorcount();
+  NRLib::Volume                    volume             = seismic_geometry->createDepthVolume();
 
-  NRLib::Volume volume = seismic_geometry_->createDepthVolume();
+  bool                             nmo_corr           = model_settings->GetNMOCorr();
+  bool                             ps_seismic         = model_settings->GetPSSeismic();
+  bool                             white_noise        = model_settings->GetWhiteNoise();
+  bool                             output_vrms        = model_settings->GetOutputVrms();
+  bool                             output_refl        = model_settings->GetOutputReflections();
+  const std::vector<std::string> & xtr_par_names      = model_settings->GetExtraParameterNames();
+  const std::vector<double>      & xtr_par_def_values = model_settings->GetExtraParameterDefaultValues();
+  const std::string              & twt_filename       = model_settings->GetTwtFileName();
 
-  zgrid_    = new NRLib::StormContGrid(volume, nx, ny, nzrefl,     0.0);
-  vpgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
-  vsgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
-  rhogrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
-  twtgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl,     0.0);
+  zgrid_   = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
+  twtgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
+  vpgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
+  vsgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
+  rhogrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
 
-  if (model_settings_->GetNMOCorr() && model_settings_->GetPSSeismic()) {
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nMaking grids:");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  z, TWT               %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx * ny * nzrefl);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Vp, Vs, Rho          %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx * ny * (nzrefl + 1));
+
+  if (nmo_corr && ps_seismic) {
     twtssgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
     twtppgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
-  }
-  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  TWTss, TWTpp       %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx * ny * nzrefl);
+  } else {
     twtssgrid_ = NULL;
     twtppgrid_ = NULL;
   }
 
-  if (model_settings_->GetNMOCorr() && model_settings_->GetOutputVrms()) {
+  if (nmo_corr && output_vrms) {
     vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0); //dimensions??
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vrms               %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
   }
-  else {
+  else
     vrmsgrid_ = NULL;
-  }
 
-  if (model_settings_->GetOutputReflections()){
-    if (model_settings_->GetWhiteNoise())
+  if (output_refl) {
+    if (white_noise) {
       rgridvec_ = new std::vector<NRLib::StormContGrid>(2);
-    else
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  White noise        %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
+    }
+    else {
       rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Refl. coef.        %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
+    }
+    NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl, 0.0);
+
+    (*rgridvec_)[0] = rgrid;
+    if (white_noise) {
+      (*rgridvec_)[1] = rgrid;
+    }
   }
   else {
     rgridvec_ = NULL;
   }
 
-  NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl, 0.0);
-
-  if (model_settings_->GetOutputReflections()) {
-    (*rgridvec_)[0] = rgrid;
-    if (model_settings_->GetWhiteNoise()) {
-      (*rgridvec_)[1] = rgrid;
-    }
-  }
-
-  std::vector<std::string> extra_parameter_names = model_settings_->GetExtraParameterNames();
-  std::vector<double> extra_parameter_default_values = model_settings_->GetExtraParameterDefaultValues();
-  //extra_parameter_grid_ = new std::vector<NRLib::StormContGrid>(extra_parameter_names.size());
-  extra_parameter_grid_.resize(extra_parameter_names.size());
-  for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
-    extra_parameter_grid_[i] = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1,
-                                                        static_cast<float>(extra_parameter_default_values[i]));
-  }
-
-  for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {
-    NRLib::StormContGrid &par_grid = *(extra_parameter_grid_[epi]);
-    for (size_t i = 0; i < nx; i++) {
-      for (size_t j = 0; j < ny; j++) {
-        par_grid(i, j, nzrefl) = 0.0;
-      }
-    }
-  }
-
-  if (model_settings_->GetTwtFileName() != "") {
-    twt_timeshift_ = new NRLib::StormContGrid(model_settings_->GetTwtFileName());
+  if (twt_filename != "") {
+    twt_timeshift_ = new NRLib::StormContGrid(model_settings->GetTwtFileName());
     if ((*twt_timeshift_).GetNI() != nx || (*twt_timeshift_).GetNJ() != ny || (*twt_timeshift_).GetNK() != nzrefl) {
-      printf("TWT timeshift from file has wrong dimension. Aborting. \n");
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nTWT timeshift from file has wrong dimension.\nAborting...\n");
       exit(1);
     }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  TWT time shift     %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
   }
   else {
     twt_timeshift_ = NULL;
   }
+
+  size_t n = xtr_par_names.size();
+  if (n > 1) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Extra par. (%d)       %4d x %4d x %4d : %10d\n", n, nx, ny, nzrefl, nx * ny * nzrefl);
+    extra_parameter_grid_.resize(n);
+    for (size_t p = 0; p < n; ++p) {
+      extra_parameter_grid_[p] = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, static_cast<float>(xtr_par_def_values[p]));
+      for (size_t i = 0; i < nx; i++) {
+        for (size_t j = 0; j < ny; j++) {
+          (*extra_parameter_grid_[p])(i, j, nzrefl) = 0.0;
+        }
+      }
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling in default value %.2f for extra parameter \'%s\'",
+                                  xtr_par_def_values[p], xtr_par_names[p].c_str());
+    }
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n\n");
 }
 
 //---------------------------------------------------------------------------

@@ -159,30 +159,37 @@ void ModelSettings::SetDerivedVariables(void)
 
 void ModelSettings::PrintSettings(void)
 {
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"Seed                                      : %10d\n",GetSeed());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seed                                      : %10d\n", GetSeed());
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNMO correction                            : %10s\n", GetNMOCorr() ? "yes" : "no");
 
   if (GetNMOCorr()) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOffset span\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.2f\n",GetOffset0());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.2f\n",GetDOffset());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.2f\n",GetOffsetMax());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated offsets:");
-    for (size_t i = 0 ; i < GetOffsetVec().size() ; i++)
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.1f",offset_vec_[i]);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
-
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.1f\n", GetOffset0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.1f\n", GetDOffset());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.1f\n", GetOffsetMax());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOffsets                                   :  ");
+    size_t n = GetOffsetVec().size();
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"{%.1f,",offset_vec_[0]);
+    for (size_t i = 1 ; i < n - 1 ; i++)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %.1f,",offset_vec_[i]);
+    if (n > 1)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %.1f",offset_vec_[n - 1]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"}\n");
   }
   else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nAVA angle span\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.2f\n",GetTheta0());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.2f\n",GetDTheta());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.2f\n",GetThetaMax());
-
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated angles:");
-    for (size_t i = 0 ; i < GetThetaVec().size() ; i++)
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.1f", theta_vec_[i]);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
-
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.1f\n", GetTheta0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.1f\n", GetDTheta());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.1f\n", GetThetaMax());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Angles                                    :  ");
+    size_t n = GetThetaVec().size();
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, " {%.1f,", theta_vec_[0]);
+    for (size_t i = 1 ; i < n - 1 ; i++)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, " %.1f,", theta_vec_[i]);
+    if (n > 1)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, " %.1f", theta_vec_[n - 1]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "}\n");
   }
 }

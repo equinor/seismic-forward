@@ -204,7 +204,8 @@ private:
                               Wavelet                       * wavelet,
                               ModelSettings                 * model_settings);
 
-  void CreateGrids();
+  void CreateGrids(SeismicGeometry * seismic_geometry,
+                   ModelSettings   * model_settings);
 
   ModelSettings                         * model_settings_;
   SeismicGeometry                       * seismic_geometry_;
