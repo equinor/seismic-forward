@@ -35,6 +35,8 @@ public:
 
   ~ModelSettings(void);
 
+  void                      SetDerivedVariables(void);
+
   void                      PrintSettings(void);
 
   int                       GetLogLevel()                             { return log_level_                      ;}
@@ -68,6 +70,9 @@ public:
   std::vector<double>       GetConstVp()                              { return constvp_                        ;}
   std::vector<double>       GetConstVs()                              { return constvs_                        ;}
   std::vector<double>       GetConstRho()                             { return constrho_                       ;}
+
+  std::vector<double>     & GetThetaVec()                             { return theta_vec_                      ;}
+  std::vector<double>     & GetOffsetVec()                            { return offset_vec_                     ;}
 
   double                    GetTheta0()                               { return theta_0_                        ;}
   double                    GetDTheta()                               { return dtheta_                         ;}
@@ -288,9 +293,12 @@ private:
   double                    theta_0_;        // seismic angle
   double                    dtheta_;         // seismic angle
   double                    theta_max_;      // seismic angle
+  std::vector<double>       theta_vec_;      // seismic angle
   double                    offset_0_;       // seismic offset
   double                    doffset_;        // seismic offset
   double                    offset_max_;     // seismic offset
+
+  std::vector<double>       offset_vec_;
 
   std::string               eclipse_file_name_;
   double                    x0_;             // area parameters

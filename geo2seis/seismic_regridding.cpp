@@ -73,7 +73,6 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   seismic_parameters.GetSeismicGeometry()->setNt(nt);
   seismic_parameters.GetSeismicGeometry()->setTRange(tmin, tmax);
 
-
   //---write toptime and bottime---------------------------------
   if (seismic_parameters.GetModelSettings()->GetOutputTimeSurfaces()) {
     seismic_parameters.GetSeismicOutput()->WriteTimeSurfaces(seismic_parameters);

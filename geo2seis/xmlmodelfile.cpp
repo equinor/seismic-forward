@@ -34,7 +34,6 @@
 #include "modelsettings.hpp"
 #include "xmlmodelfile.hpp"
 
-
 XmlModelFile::XmlModelFile(const std::string  & fileName)
 {
   modelSettings_ = new ModelSettings();
@@ -70,7 +69,8 @@ XmlModelFile::XmlModelFile(const std::string  & fileName)
     }
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nAborting\n");
     failed_ = true;
-  } else {
+  }
+  else {
     std::string errTxt = "";
     if (ParseSeismicForward(&doc, errTxt) == false) {
       errTxt = "'" + std::string(fileName) + "' is not a SeismicForward model file (lacks the <seismic-forward> keyword.)\n";
@@ -83,6 +83,9 @@ XmlModelFile::XmlModelFile(const std::string  & fileName)
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nAborting\n");
       failed_ = true;
     }
+    else {
+      modelSettings_->SetDerivedVariables();
+    };
   }
 }
 

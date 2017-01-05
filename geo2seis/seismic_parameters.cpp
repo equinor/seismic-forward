@@ -1,14 +1,16 @@
-#include <seismic_parameters.hpp>
-
-#include <physics/wavelet.hpp>
-#include <nrlib/eclipsegrid/eclipsegrid.hpp>
+#include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/geometry/interpolation.hpp"
-#include <physics/zoeppritz.hpp>
-#include <physics/zoeppritz_ps.hpp>
-#include <physics/zoeppritz_pp.hpp>
+#include "nrlib/random/randomgenerator.hpp"
+#include "nrlib/random/normal.hpp"
+
 #include "tbb/compat/thread"
-#include <nrlib/random/randomgenerator.hpp>
-#include <nrlib/random/normal.hpp>
+
+#include "physics/zoeppritz_ps.hpp"
+#include "physics/zoeppritz_pp.hpp"
+#include "physics/zoeppritz.hpp"
+#include "physics/wavelet.hpp"
+
+#include "seismic_parameters.hpp"
 
 //------------------------------------------------------------------
 SeismicParameters::SeismicParameters(ModelSettings * model_settings)
@@ -20,36 +22,15 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
   seismic_output_   = new SeismicOutput(model_settings);
   segy_geometry_    = NULL;
 
+  theta_vec_        = model_settings->GetThetaVec();
+  offset_vec_       = model_settings->GetOffsetVec();
+  wavelet_scale_    = model_settings->GetWaveletScale();
 
-  //NBNB-PAL De to settingene nedenfor kan/bør gjøres i modelsettings ...
-  if (model_settings->GetNMOCorr()) {
-    CalculateOffsetSpan(model_settings->GetOffset0(),
-                        model_settings->GetDOffset(),
-                        model_settings->GetOffsetMax());
-  }
-  else {
-    CalculateAngleSpan(model_settings->GetTheta0(),
-                       model_settings->GetDTheta(),
-                       model_settings->GetThetaMax());
-  }
-
-
-  // GET WAVELET
-
-  if (model_settings->GetRicker()) {
-    double peakF = model_settings->GetPeakFrequency();
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nMaking Ricker wavelet with peak frequency %.1f Hz\n", peakF);
-    wavelet_ = new Wavelet(peakF);
-  }
-  else {
-    const std::string & file_name   = model_settings->GetWaveletFileName();
-    const std::string & file_format = model_settings->GetWaveletFileFormat();
-
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nReading wavelet from file \'%s\'\n", file_name.c_str());
-    wavelet_ = new Wavelet(file_name, file_format);
-  }
-  wavelet_scale_ = model_settings->GetWaveletScale();
-
+  SetupWavelet(wavelet_,
+               model_settings->GetRicker(),
+               model_settings->GetPeakFrequency(),
+               model_settings->GetWaveletFileName(),
+               model_settings->GetWaveletFileFormat());
 
   ReadEclipseGrid(eclipse_grid_,
                   model_settings->GetEclipseFileName(),
@@ -70,54 +51,28 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
                          seismic_geometry_,
                          eclipse_grid_->GetGeometry(),
                          wavelet_,
-                         model_settings_);
+                         model_settings);
 
   CreateGrids();
 }
 
-//------------------------------------------------------------
-void SeismicParameters::CalculateOffsetSpan(double offset_0,
-                                            double doffset,
-                                            double offset_max)
-//------------------------------------------------------------
+
+//----------------------------------------------------------------------
+void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
+                                     bool                 use_ricker,
+                                     double               peakF,
+                                     const std::string  & file_name,
+                                     const std::string  & file_format)
+//------------------------------------------------------------------------
 {
-  size_t noffset = 1u;
-  if (doffset > 0.0) {
-    noffset  = size_t((offset_max - offset_0) / doffset) + 1u;
+  if (use_ricker) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nMaking Ricker wavelet with peak frequency %.1f Hz\n", peakF);
+    wavelet = new Wavelet(peakF);
   }
-
-  offset_vec_.resize(noffset);
-  for (size_t i = 0; i < noffset; ++i) {
-    offset_vec_[i] = offset_0 + i*doffset;
+  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nReading wavelet from file \'%s\'\n", file_name.c_str());
+    wavelet = new Wavelet(file_name, file_format);
   }
-
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated offsets:");
-  for (size_t i = 0 ; i < noffset ; i++)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.1f",offset_vec_[i]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
-}
-
-//----------------------------------------------------------
-void SeismicParameters::CalculateAngleSpan(double theta_0,
-                                           double dtheta,
-                                           double theta_max)
-//----------------------------------------------------------
-{
-  size_t ntheta = 1u;
-
-  if (dtheta > 0.0) {
-    ntheta = static_cast<size_t>((theta_max - theta_0) / dtheta + 1.01);
-  }
-
-  theta_vec_.resize(ntheta);
-  for (size_t i = 0; i < ntheta; ++i) {
-    theta_vec_[i] = theta_0 + i*dtheta;
-  }
-
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated angles:");
-  for (size_t i = 0 ; i < ntheta ; i++)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.1f", theta_vec_[i]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
 }
 
 //----------------------------------------------------------------------------------------------
@@ -474,7 +429,8 @@ void SeismicParameters::CreateGrids()
   //extra_parameter_grid_ = new std::vector<NRLib::StormContGrid>(extra_parameter_names.size());
   extra_parameter_grid_.resize(extra_parameter_names.size());
   for (size_t i = 0; i < extra_parameter_names.size(); ++i) {
-    extra_parameter_grid_[i] = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, extra_parameter_default_values[i]);
+    extra_parameter_grid_[i] = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1,
+                                                        static_cast<float>(extra_parameter_default_values[i]));
   }
 
   for (size_t epi = 0; epi < extra_parameter_names.size(); ++epi) {

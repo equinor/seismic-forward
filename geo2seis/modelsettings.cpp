@@ -129,6 +129,34 @@ ModelSettings::~ModelSettings(void)
 {
 }
 
+void ModelSettings::SetDerivedVariables(void)
+{
+  //
+  // Setup angle or offset vectors
+  //
+  if (nmo_corr_) {
+    size_t noffset = 1u;
+    if (doffset_ > 0.0) {
+      noffset  = size_t((offset_max_ - offset_0_) / doffset_) + 1u;
+    }
+    offset_vec_.resize(noffset);
+    for (size_t i = 0; i < noffset; ++i) {
+      offset_vec_[i] = offset_0_ + i*doffset_;
+    }
+  }
+  else {
+    size_t ntheta = 1u;
+
+    if (dtheta_ > 0.0) {
+      ntheta = static_cast<size_t>((theta_max_ - theta_0_) / dtheta_ + 1.01);
+    }
+    theta_vec_.resize(ntheta);
+    for (size_t i = 0; i < ntheta; ++i) {
+      theta_vec_[i] = theta_0_ + i*dtheta_;
+    }
+  }
+}
+
 void ModelSettings::PrintSettings(void)
 {
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
@@ -139,11 +167,22 @@ void ModelSettings::PrintSettings(void)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.2f\n",GetOffset0());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.2f\n",GetDOffset());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.2f\n",GetOffsetMax());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated offsets:");
+    for (size_t i = 0 ; i < GetOffsetVec().size() ; i++)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.1f",offset_vec_[i]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
+
   }
   else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nAVA angle span\n");
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.2f\n",GetTheta0());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.2f\n",GetDTheta());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.2f\n",GetThetaMax());
+
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculated angles:");
+    for (size_t i = 0 ; i < GetThetaVec().size() ; i++)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %5.1f", theta_vec_[i]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
+
   }
 }

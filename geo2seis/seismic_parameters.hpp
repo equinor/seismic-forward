@@ -57,8 +57,8 @@ class SeismicParameters
 
     inline size_t                GetTopK()                               const { return top_k_;      }
     inline size_t                GetBottomK()                            const { return bottom_k_;   }
-    inline std::vector<double> & GetThetaVec()                                 { return theta_vec_;  }
-    inline std::vector<double> & GetOffsetVec()                                { return offset_vec_; }
+  inline std::vector<double> & GetThetaVec()                                 { return theta_vec_;  }
+  inline std::vector<double> & GetOffsetVec()                                { return offset_vec_; }
     inline float                 GetMissingVal()                         const { return missing_;    }
 
     inline bool GetTimeOutput()           const;
@@ -176,18 +176,17 @@ class SeismicParameters
     void DeleteGeometryAndOutput();
 
 private:
-  void CalculateOffsetSpan(double offset_0,
-                           double doffset,
-                           double offset_max);
 
-  void CalculateAngleSpan(double theta_0,
-                          double dtheta,
-                          double theta_max);
+  void SetupWavelet(Wavelet           *& wavelet,
+                    bool                 use_ricker,
+                    double               peakF,
+                    const std::string  & file_name,
+                    const std::string  & file_format);
 
-    void ReadEclipseGrid(NRLib::EclipseGrid             *& eclipse_grid,
-                         const std::string               & filename,
-                         const std::vector<std::string>  & names,
-                         const std::vector<std::string>  & extra_parameter_names);
+  void ReadEclipseGrid(NRLib::EclipseGrid             *& eclipse_grid,
+                       const std::string               & filename,
+                       const std::vector<std::string>  & names,
+                       const std::vector<std::string>  & extra_parameter_names);
 
   void FindGeometry(SeismicGeometry              *& seismic_geometry,
                     NRLib::SegyGeometry          *& segy_geometry,

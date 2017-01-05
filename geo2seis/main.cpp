@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
     model_settings->PrintSettings();
 
     time_t t1 = time(0);   // get time now
-    NRLib::LogKit::WriteHeader("Setting up seismic parameters");
+    NRLib::LogKit::WriteHeader("Setting up grid");
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
     NRLib::LogKit::WriteHeader("Load earth model");
     SeismicRegridding::MakeSeismicRegridding(seismic_parameters, n_threads);
