@@ -12,17 +12,18 @@
 #include <omp.h>
 #endif
 
+
+#include "nrlib/surface/regularsurface.hpp"
+
 //-----------------------------------------------------------------------------------
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parameters,
                                               size_t              n_threads)
 //-----------------------------------------------------------------------------------
 {
-  // Resample Z values
   //time_t t1 = time(0);   // get time now
   FindZValues(seismic_parameters, n_threads);
   //seismic_parameters.PrintElapsedTime(t1, "finding Zvalues");
 
-  //------------------------Resample elastic properties----------------------
   printf("\nStart finding elastic parameters.");
   //t1 = time(0);
   FindVp(seismic_parameters, n_threads);
@@ -160,6 +161,11 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
     geometry.FindLayerSurface(vals, nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, 0);
   }
   SetGridLayerFromSurface(zgrid, vals, static_cast<size_t>(nk - 1));
+
+
+  NRLib::RegularSurface<double> s(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), vals);
+  s.WriteToFile("base_layer_z_values.storm");
+
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid%s.",text.c_str());
 

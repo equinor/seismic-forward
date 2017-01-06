@@ -22,6 +22,8 @@
 #include "nrlib/iotools/logkit.hpp"
 
 #include "modelsettings.hpp"
+#include <iostream>
+#include <cstdlib>
 
 ModelSettings::ModelSettings(void)
 {
@@ -160,26 +162,71 @@ void ModelSettings::SetDerivedVariables(void)
 void ModelSettings::PrintSettings(void)
 {
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Max threads                               : %10d\n", GetMaxThreads());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Traces in memory                          : %10d\n", GetTracesInMemory());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Log level                                 : %10d\n", GetLogLevel());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Prefix                                    : %10s\n", GetPrefix().c_str());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Suffix                                    : %10s\n", GetSuffix().c_str());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seed                                      : %10d\n", GetSeed());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNMO correction                            : %10s\n", GetNMOCorr() ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic data type                         : %10s\n", GetPSSeismic()                  ? "PS"  : "PP");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "NMO correction                            : %10s\n", GetNMOCorr()                    ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Offset without stretch                    : %10s\n", GetOffsetWithoutStretch()       ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Remove negative thicknesses               : %10s\n", GetRemoveNegativeDeltaZ()       ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use corner-point interpolation            : %10s\n", GetUseCornerpointInterpol()     ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use default underburden                   : %10s\n", GetDefaultUnderburden()         ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Resample parameters to Segy with interpol.: %10s\n", GetResamplParamToSegyInterpol() ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Add white noise                           : %10s\n", GetWhiteNoise()                 ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Standard deviation                      : %10.1f\n", GetStandardDeviation());
 
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
+  //
+  //  WAVELET
+  //
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Wavelet\n");
+  if (GetRicker()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Ricker with peak frequency              : %10.1f\n", GetPeakFrequency());
+  }
+  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File                                    : %10.1f\n", GetWaveletFileName().c_str());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Format                                  : %10.1f\n", GetWaveletFileFormat().c_str());
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Scale                                   : %10.1f\n", GetWaveletScale());
+  if (GetZWaveletTop() != 0.0) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  z-extension above grid                  : %10.1f\n", GetZWaveletTop());
+  }
+  if (GetZWaveletBot() != 0.0) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  z-extension belov grid                  : %10.1f\n", GetZWaveletBot());
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
+  //
+  //  ANGLES and OFFSETS
+  //
   if (GetNMOCorr()) {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOffset span\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Offset span\n");
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.1f\n", GetOffset0());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.1f\n", GetDOffset());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.1f\n", GetOffsetMax());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOffsets                                   :  ");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Offsets                                 :  ");
     size_t n = GetOffsetVec().size();
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"{%.1f,",offset_vec_[0]);
     for (size_t i = 1 ; i < n - 1 ; i++)
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %.1f,",offset_vec_[i]);
     if (n > 1)
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %.1f",offset_vec_[n - 1]);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"}\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"}\n\n");
   }
   else {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nAVA angle span\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "AVA angle span\n");
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.1f\n", GetTheta0());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.1f\n", GetDTheta());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.1f\n", GetThetaMax());
@@ -190,6 +237,123 @@ void ModelSettings::PrintSettings(void)
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, " %.1f,", theta_vec_[i]);
     if (n > 1)
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, " %.1f", theta_vec_[n - 1]);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "}\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "}\n\n");
   }
+
+  //
+  //  AREA
+  //
+  if (GetAreaFromSegy() != "") {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Area is taken from SegY file\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File name                               : %10s\n\n", GetAreaFromSegy().c_str());
+  }
+  else if (GetAreaGiven()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Area is specified in model file:\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  x-start                                 : %10.1f\n", GetX0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  y-start                                 : %10.1f\n", GetY0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  x-length                                : %10.1f\n", GetLx());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  y-length                                : %10.1f\n", GetLy());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  angle                                   : %10.1f\n", GetAngle());
+  }
+  else if (GetAreaFromSurface() != "") {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Area is taken from surface\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File name                               : %10s\n", GetAreaFromSurface().c_str());
+  }
+  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Area is taken from Eclipse grid\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File name                               : %10s\n", GetEclipseFileName().c_str());
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
+  size_t n = GetExtraParameterNames().size();
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Extra parameters                          : %10s\n", n > 0 ? "yes" : "no");
+  if (n > 0) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Names and default values:\n");
+    for (size_t i = 0 ; i < n ; i++)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "    %20s                  : %10.1f\n",extra_parameter_names_[i].c_str(), extra_parameter_default_values_[i]);
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
+  //
+  //  OUTPUT
+  //
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic data:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time                                    : %10s\n", GetOutputSeismicTime()                ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time shift                              : %10s\n", GetOutputSeismicTimeshift()           ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth                                   : %10s\n", GetOutputSeismicDepth()               ? "yes" : "no");
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic stack time/depth in SEGY format:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time                                    : %10s\n", GetOutputSeismicStackTimeSegy()       ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time shift                              : %10s\n", GetOutputSeismicStackTimeShiftSegy()  ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth                                   : %10s\n", GetOutputSeismicStackDepthSegy()      ? "yes" : "no");
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic stack time/depth in STORM format:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time                                    : %10s\n", GetOutputSeismicStackTimeStorm()      ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time shift                              : %10s\n", GetOutputSeismicStackTimeShiftStorm() ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth                                   : %10s\n", GetOutputSeismicStackDepthStorm()     ? "yes" : "no");
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Elastic parameters output:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time                                    : %10s\n", GetOutputElasticParametersTimeSegy()  ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth                                   : %10s\n", GetOutputElasticParametersDepthSegy() ? "yes" : "no");
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Extra parameters output:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time                                    : %10s\n", GetOutputExtraParametersTimeSegy()    ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth                                   : %10s\n", GetOutputExtraParametersDepthSegy()   ? "yes" : "no");
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Other output:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  TWT                                     : %10s\n", GetOutputTwt()                        ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  TWT offset                              : %10s\n", GetOutputTwtOffset()                  ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vrms                                    : %10s\n", GetOutputVrms()                       ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vp                                      : %10s\n", GetOutputVp()                         ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Reflections                             : %10s\n", GetOutputReflections()                ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time surfaces                           : %10s\n", GetOutputTimeSurfaces()               ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth surfaces                          : %10s\n", GetOutputDepthSurfaces()              ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time                                    : %10s\n", GetOutputTimeSegy()                   ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time pre NMO                            : %10s\n", GetOutputPrenmoTimeSegy()             ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time shift                              : %10s\n", GetOutputTimeshiftSegy()              ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth                                   : %10s\n", GetOutputDepthSegy()                  ? "yes" : "no");
+
+
+/*
+
+  std::vector<double>       GetConstVp()                              { return constvp_                        ;}
+  std::vector<double>       GetConstVs()                              { return constvs_                        ;}
+  std::vector<double>       GetConstRho()                             { return constrho_                       ;}
+
+  int                       GetSegyInlineStart()                      { return inline_start_                   ;}
+  int                       GetSegyXlineStart()                       { return xline_start_                    ;}
+  std::string               GetSegyInlineDirection()                  { return inline_direction_               ;}
+  int                       GetSegyInlineStep()                       { return inline_step_                    ;}
+  int                       GetSegyXlineStep()                        { return xline_step_                     ;}
+
+  double                    GetTopTimeConstant()                      { return top_time_constant_              ;}
+  std::string               GetTopTimeSurfaceFile()                   { return top_time_surface_               ;}
+  double                    GetZExtrapolFactor()                      { return z_extrapol_factor_              ;}
+  double                    GetZeroThicknessLimit()                   { return zero_thickness_limit_           ;}
+
+    double                    GetDx()                                   { return dx_                             ;}
+  double                    GetDy()                                   { return dy_                             ;}
+  double                    GetDz()                                   { return dz_                             ;}
+  double                    GetDt()                                   { return dt_                             ;}
+
+  int                       GetIL0In()                                { return il0_in_                         ;}
+  int                       GetXL0In()                                { return xl0_in_                         ;}
+  int                       GetUtmxIn()                               { return utmx_in_                        ;}
+  int                       GetUtmyIn()                               { return utmy_in_                        ;}
+  short                     GetUtmPrecision()                         { return utm_precision_                  ;}
+
+  double                    GetTopTimeWindow()                        { return top_time_window_                ;}
+  double                    GetBotTimeWindow()                        { return bot_time_window_                ;}
+  double                    GetTopDepthWindow()                       { return top_depth_window_               ;}
+  double                    GetBotDepthWindow()                       { return bot_depth_window_               ;}
+
+  bool                      GetTimeWindowSpecified()                  { return time_window_specified_          ;}
+  bool                      GetDepthWindowSpecified()                 { return depth_window_specified_         ;}
+
+  std::string               GetTwtFileName()                    const { return twt_file_name_                  ;}
+  double                    GetVw()                                   { return v_w_                            ;}
+  double                    GetZw()                                   { return z_w_                            ;}
+
+*/
+
 }
