@@ -32,6 +32,7 @@ ModelSettings::ModelSettings(void)
   constrho_.resize(3);
   parameter_names_.resize(3);
 
+  log_file_name_                       = "Logfile";
   log_level_                           = NRLib::LogKit::L_Low;
 
   prefix_                              = "";
@@ -133,6 +134,17 @@ ModelSettings::~ModelSettings(void)
 
 void ModelSettings::SetDerivedVariables(void)
 {
+
+  //
+  // Log file
+  //
+  if (GetPrefix() != "")
+    log_file_name_ = GetPrefix() + "_" + log_file_name_;
+  if (GetSuffix() != "")
+    log_file_name_ += "_" + GetSuffix();
+
+  log_file_name_ += ".txt";
+
   //
   // Setup angle or offset vectors
   //

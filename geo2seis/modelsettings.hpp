@@ -39,6 +39,7 @@ public:
 
   void                      PrintSettings(void);
 
+  std::string             & GetLogFileName()                          { return log_file_name_                  ;}
   int                       GetLogLevel()                             { return log_level_                      ;}
   bool                      GetOutputElasticParametersTimeSegy()      { return elastic_parameters_time_segy_   ;}
   bool                      GetOutputElasticParametersDepthSegy()     { return elastic_parameters_depth_segy_  ;}
@@ -269,9 +270,10 @@ public:
 
 private:
 
-  int                       log_level_;
   std::string               prefix_;
   std::string               suffix_;
+  std::string               log_file_name_;
+  int                       log_level_;
 
   unsigned long             seed_;
   short                     utm_precision_;

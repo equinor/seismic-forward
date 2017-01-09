@@ -58,7 +58,8 @@ int main(int argc, char *argv[]) {
   ModelSettings * model_settings = modelFile.getModelSettings();
 
   if (!modelFile.getParsingFailed()) {
-    NRLib::LogKit::SetFileLog("logfile.txt", model_settings->GetLogLevel());
+    NRLib::LogKit::SetFileLog(model_settings->GetLogFileName(),
+                              model_settings->GetLogLevel());
     NRLib::LogKit::EndBuffering();
 
     //---find number of threads available and specified------------

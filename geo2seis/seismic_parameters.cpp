@@ -237,14 +237,14 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
       }
     }
     bot_time = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, top_time.Max());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nTaking top time surface from file \'%s\'",model_settings->GetTopTimeSurfaceFile().c_str());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nSetting base time surface to maximum of top time : %.2f\n",top_time.Max());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nTaking top time surface from file \'%s\'", model_settings->GetTopTimeSurfaceFile().c_str());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nSetting base time surface to maximum of top time : %.2f\n", top_time.Max());
   }
   else {
     double t1 = model_settings->GetTopTimeConstant();
     top_time = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, t1);
     bot_time = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, t1);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nSetting top and base time surfaces to     : %8.2f\n",t1);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nSetting top and base time surfaces to     : %8.2f\n", t1);
   }
 
   //

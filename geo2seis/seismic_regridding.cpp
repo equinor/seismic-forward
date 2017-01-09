@@ -12,8 +12,9 @@
 #include <omp.h>
 #endif
 
-
+#include "nrlib/surface/regularsurfacerotated.hpp"
 #include "nrlib/surface/regularsurface.hpp"
+#include "nrlib/surface/surfaceio.hpp"
 
 //-----------------------------------------------------------------------------------
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parameters,
@@ -148,8 +149,6 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   const size_t                   nj               = zgrid.GetNJ();
   const size_t                   nk               = zgrid.GetNK();
 
-  NRLib::StormContGrid negdz(zgrid);
-
   NRLib::Grid2D<double> vals(ni, nj, 0);
   std::string text;
 
@@ -162,12 +161,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   }
   SetGridLayerFromSurface(zgrid, vals, static_cast<size_t>(nk - 1));
 
-
-  NRLib::RegularSurface<double> s(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), vals);
-  s.WriteToFile("base_layer_z_values.storm");
-
-
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid%s.",text.c_str());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid%s.\n",text.c_str());
 
 #ifdef WITH_OMP
     int chunk_size = 1;
@@ -184,7 +178,11 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
     SetGridLayerFromSurface(zgrid, values, static_cast<size_t>(k));
   }
 
-  int count = 0;
+  NRLib::StormContGrid negdz(zgrid);
+
+  int    count   = 0;
+  double max_neg = 0.0;
+  int    max_k   = nk;
 #ifdef WITH_OMP
   chunk_size = std::min(1, int(ni/(2*static_cast<int>(n_threads))));
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
@@ -195,21 +193,62 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
         float z1 = zgrid(i, j, static_cast<size_t>(k    ));
         float z2 = zgrid(i, j, static_cast<size_t>(k + 1));
         if (z1 > z2) {
-          negdz(i, j, static_cast<size_t>(k)) = z1 - z2;
+          negdz(i, j, static_cast<size_t>(k)) = z2 - z1;
+#ifdef PARALLEL
+#pragma omp critical
+#endif
+          if (z2 - z1 < max_neg) {
+            max_neg = z2 - z1;
+            max_k   = k;
+          }
           if (rem_neg_delta) {
             zgrid(i, j, static_cast<size_t>(k)) = z2;
           }
+#ifdef PARALLEL
+#pragma omp critical
+#endif
           count++;
         }
       }
     }
   }
   if (count > 0) {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found and removed: %d", count);
-    negdz.WriteToFile("negdz.storm");
+    if (rem_neg_delta)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found and removed   : %5d", count);
+    else
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found               : %5d", count);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value                    : %5.2f (layer %d->%d)\n", max_neg, max_k, max_k + 1);
   }
   else {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNo crossing depth values found!");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNo crossing depth values found!\n");
+  }
+
+
+  //
+  // NBNB-PAL: xxxxxxxxxxxx DEbugging
+  //
+  bool debug_neg_dz = false;
+  if (count > 0 && debug_neg_dz) {
+    negdz.WriteToFile("negdz.storm");
+    NRLib::Grid2D<double> vals1(ni, nj, 0);
+    NRLib::Grid2D<double> vals2(ni, nj, 0);
+    if (use_corner_point) {
+      geometry.FindLayerSurfaceCornerpoint(vals1, max_k     + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      geometry.FindLayerSurfaceCornerpoint(vals2, max_k + 1 + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+    }
+    else {
+      geometry.FindLayerSurface(vals1, max_k     + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      geometry.FindLayerSurface(vals2, max_k + 1 + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+    }
+    NRLib::RegularSurfaceRotated<double> s1(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), ni, nj, zgrid.GetAngle(), 0.00);
+    NRLib::RegularSurfaceRotated<double> s2(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), ni, nj, zgrid.GetAngle(), 0.00);
+    for (size_t i = 0 ; i < ni ; i++)
+      for (size_t j = 0 ; j < nj ; j++) {
+        s1(i, j) = vals1(i, j);
+        s2(i, j) = vals2(i, j) - vals1(i, j);
+      }
+    s1.WriteToFile("largest_negative_dz_layer.irap" , NRLib::SURF_IRAP_CLASSIC_ASCII);
+    s2.WriteToFile("largest_negative_dz_values.irap", NRLib::SURF_IRAP_CLASSIC_ASCII);
   }
 }
 
