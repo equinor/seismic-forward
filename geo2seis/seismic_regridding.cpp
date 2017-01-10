@@ -1,12 +1,15 @@
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
+#include "nrlib/iotools/fileio.hpp"
 
 #include "physics/wavelet.hpp"
 
 #include "tbb/compat/thread"
 
 #include "seismic_regridding.hpp"
+
+#include <fstream>
 
 #ifdef WITH_OMP
 #include <omp.h>
@@ -149,42 +152,43 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   const size_t                   nj               = zgrid.GetNJ();
   const size_t                   nk               = zgrid.GetNK();
 
-  NRLib::Grid2D<double> vals(ni, nj, 0);
-  std::string text;
+  if (use_corner_point)
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using corner-point interpolation.\n");
+  else
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid.\n");
+
+  std::vector<NRLib::Grid2D<double> > values(nk);
+  for (size_t k = 0 ; k < nk ; k++) {
+    values[k] = NRLib::Grid2D<double>(ni, nj, 0.0);
+  }
 
   if (use_corner_point) {
-    geometry.FindLayerSurfaceCornerpoint(vals, nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, 0);
-    text = " using corner-point interpolation";
+    geometry.FindLayerSurfaceCornerpoint(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, 0);
   }
   else {
-    geometry.FindLayerSurface(vals, nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, 0);
+    geometry.FindLayerSurface(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, 0);
   }
-  SetGridLayerFromSurface(zgrid, vals, static_cast<size_t>(nk - 1));
+  SetGridLayerFromSurface(zgrid, values[nk - 1], static_cast<size_t>(nk - 1));
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid%s.\n",text.c_str());
 
 #ifdef WITH_OMP
-    int chunk_size = 1;
+  int chunk_size = 1;
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
   for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
-    NRLib::Grid2D<double> values(ni, nj, 0);
     if (use_corner_point) {
-      geometry.FindLayerSurfaceCornerpoint(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      geometry.FindLayerSurfaceCornerpoint(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
     }
     else {
-      geometry.FindLayerSurface(values, k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      geometry.FindLayerSurface(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
     }
-    SetGridLayerFromSurface(zgrid, values, static_cast<size_t>(k));
+    SetGridLayerFromSurface(zgrid, values[k], static_cast<size_t>(k));
   }
 
-  NRLib::StormContGrid negdz(zgrid);
+  std::vector<std::vector<double> > negative_dz_pts;
 
-  int    count   = 0;
-  double max_neg = 0.0;
-  int    max_k   = nk;
 #ifdef WITH_OMP
-  chunk_size = std::min(1, int(ni/(2*static_cast<int>(n_threads))));
+  chunk_size = std::max(1, int(ni/(2*static_cast<int>(n_threads))));
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
   for (size_t i = 0; i < ni ; i++) {
@@ -193,43 +197,66 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
         float z1 = zgrid(i, j, static_cast<size_t>(k    ));
         float z2 = zgrid(i, j, static_cast<size_t>(k + 1));
         if (z1 > z2) {
-          negdz(i, j, static_cast<size_t>(k)) = z2 - z1;
-#ifdef PARALLEL
-#pragma omp critical
-#endif
-          if (z2 - z1 < max_neg) {
-            max_neg = z2 - z1;
-            max_k   = k;
-          }
           if (rem_neg_delta) {
             zgrid(i, j, static_cast<size_t>(k)) = z2;
           }
-#ifdef PARALLEL
+          double x,y,z;
+          zgrid.FindCenterOfCell(i, j, k, x, y, z);
+          std::vector<double> neg(5);
+          neg[0] = static_cast<double>(k);
+          neg[1] = x;
+          neg[2] = y;
+          neg[3] = values[k](i,j);
+          neg[4] = z2 - z1;
+#ifdef WITH_OMP
 #pragma omp critical
 #endif
-          count++;
+          negative_dz_pts.push_back(neg);
         }
       }
     }
   }
-  if (count > 0) {
+
+  size_t n = negative_dz_pts.size();
+
+  double max_neg = 0.0;
+  int    max_k   = nk;
+  for (size_t i = 0 ; i < n ; i++) {
+    double z21 = negative_dz_pts[i][4];
+    if (z21 < max_neg) {
+      max_neg = z21;
+      max_k   = static_cast<int>(negative_dz_pts[i][0]);
+    }
+  }
+
+  if (n > 0) {
     if (rem_neg_delta)
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found and removed   : %5d", count);
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found and removed   : %5d", n);
     else
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found               : %5d", count);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value                    : %5.2f (layer %d->%d)\n", max_neg, max_k, max_k + 1);
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found               : %5d", n);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value                    : %5.2f (layer %d starting from 0)\n", max_neg, max_k);
   }
   else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNo crossing depth values found!\n");
   }
 
+  bool debug_neg_dz = true;
+  if (n > 0 && debug_neg_dz) {
+    std::fstream fout;
+    NRLib::OpenWrite(fout, "negative_dz_points.rmsinternal");
+    fout << "Float Negative dz" << std::endl;
+    for (size_t i = 0 ; i < negative_dz_pts.size() ; i++) {
+      fout << std::fixed
+           << std::setprecision(2)
+           << std::setw(12) << negative_dz_pts[i][1]
+           << std::setw(12) << negative_dz_pts[i][2]
+           << std::setw(8)  << negative_dz_pts[i][3]
+           << std::setw(8)  << negative_dz_pts[i][4]
+           << std::endl;
+    }
+    fout.close();
 
-  //
-  // NBNB-PAL: xxxxxxxxxxxx DEbugging
-  //
-  bool debug_neg_dz = false;
-  if (count > 0 && debug_neg_dz) {
-    negdz.WriteToFile("negdz.storm");
+    /*
     NRLib::Grid2D<double> vals1(ni, nj, 0);
     NRLib::Grid2D<double> vals2(ni, nj, 0);
     if (use_corner_point) {
@@ -249,6 +276,8 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
       }
     s1.WriteToFile("largest_negative_dz_layer.irap" , NRLib::SURF_IRAP_CLASSIC_ASCII);
     s2.WriteToFile("largest_negative_dz_values.irap", NRLib::SURF_IRAP_CLASSIC_ASCII);
+     */
+
   }
 }
 
@@ -1623,5 +1652,3 @@ void SeismicRegridding::VpPostProcess(SeismicParameters &seismic_parameters)
     }
   }
 }
-
-
