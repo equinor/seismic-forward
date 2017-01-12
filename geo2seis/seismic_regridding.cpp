@@ -346,7 +346,7 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
     parameter_grid_from_eclipse.push_back(one_parameter_grid);
   }
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting default values for Vp, Vs, Rho and extra parameters.");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting default values for Vp, Vs, Rho and extra parameters in reservoir.");
 
   //-----prepare eclipsegrid - include default values and value above where delta < zlimit
   FillInGridValues(geometry, vp_grid , constvp[0] , constvp[1] , zlimit, egrid.GetNI(), egrid.GetNJ(), topk, botk);
@@ -356,17 +356,11 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
     FillInGridValues(geometry, parameter_grid_from_eclipse[ii], extra_parameter_default_values[ii], extra_parameter_default_values[ii], zlimit, egrid.GetNI(), egrid.GetNJ(), topk, botk);
   }
 
-  double vp_angle   = vpgrid.GetAngle();
-  double cosvpangle = cos(vp_angle);
-  double sinvpangle = sin(vp_angle);
-  double x_min_rot  = vpgrid.GetXMin() * cos(vp_angle) + vpgrid.GetYMin() * sin(vp_angle);
-  double y_min_rot  = vpgrid.GetYMin() * cos(vp_angle) - vpgrid.GetXMin() * sin(vp_angle);
-
   //default value in top
   for (size_t i = 0; i < vpgrid.GetNI(); i++) {
     for (size_t j = 0; j < vpgrid.GetNJ(); j++) {
-      vpgrid(i, j, 0)  = static_cast<float>(constvp[0]);
-      vsgrid(i, j, 0)  = static_cast<float>(constvs[0]);
+      vpgrid (i, j, 0) = static_cast<float>(constvp[0]);
+      vsgrid (i, j, 0) = static_cast<float>(constvs[0]);
       rhogrid(i, j, 0) = static_cast<float>(constrho[0]);
       for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
         NRLib::StormContGrid &param_grid = *(extra_parameter_grid[ii]);
@@ -376,58 +370,65 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
   }
 
   //blocking - for parallelisation - if n_threads > 1
-  int nx = static_cast<int>(egrid.GetNI()) - 1;
-  int ny = static_cast<int>(egrid.GetNJ()) - 1;
-  int n_blocks_x = 1, n_blocks_y = 1, n_blocks = 1;
-  int nxb = nx, nyb = ny;
+  int    n_blocks_x = 1;
+  int    n_blocks_y = 1;
+  int    n_blocks   = 1;
+  size_t nx         = egrid.GetNI() - 1;
+  size_t ny         = egrid.GetNJ() - 1;
+  size_t nxb        = nx;
+  size_t nyb        = ny;
   if (n_threads > 1){
     n_blocks_x = 10;
     n_blocks_y = 10;
-    n_blocks = n_blocks_x * n_blocks_y;
-    nxb = static_cast<int>(floor(static_cast<double>(nx) / static_cast<double>(n_blocks_x) + 0.5));
-    nyb = static_cast<int>(floor(static_cast<double>(ny) / static_cast<double>(n_blocks_y) + 0.5));
+    n_blocks   = n_blocks_x * n_blocks_y;
+    nxb = static_cast<size_t>(floor(static_cast<double>(nx) / static_cast<double>(n_blocks_x) + 0.5));
+    nyb = static_cast<size_t>(floor(static_cast<double>(ny) / static_cast<double>(n_blocks_y) + 0.5));
   }
 
-  int  chunk_size;
-  chunk_size = 1;
+  double angle      = vpgrid.GetAngle();
+  double cosA       = cos(angle);
+  double sinA       = sin(angle);
+  double x_min_rot  = vpgrid.GetXMin() * cosA + vpgrid.GetYMin() * sinA;
+  double y_min_rot  = vpgrid.GetYMin() * cosA - vpgrid.GetXMin() * sinA;
+
 #ifdef WITH_OMP
+  int  chunk_size = 1;
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
-  for (int block = 0; block < n_blocks; ++block) {
-    //std::cout << "block " << block << "\n";
-    int block_x = int(block%n_blocks_x);
-    int block_y = std::floor(static_cast<double>(block) / static_cast<double>(n_blocks_x));
+  for (int block = 0 ; block < n_blocks ; ++block) {
 
-    // find min and max of block
-    int imin = max(static_cast<int>(block_x*nxb), 0);
-    int imax;
-    if (block_x == (n_blocks_x - 1))
-      imax = nx;
-    else
-      imax = min(static_cast<int>((block_x + 1)*nxb), nx);
+    size_t block_x = static_cast<size_t>(int(block % n_blocks_x));
+    size_t block_y = std::floor(static_cast<double>(block) / static_cast<double>(n_blocks_x));
+    size_t imin    = std::max(block_x*nxb, static_cast<size_t>(0)); // find min and max of block
+    size_t jmin    = std::max(block_y*nyb, static_cast<size_t>(0));
+    size_t imax    = nx;
+    size_t jmax    = ny;
 
-    int jmin = max(static_cast<int>(block_y*nyb), 0);
-    int jmax;
-    if (block_y == (n_blocks_y - 1))
-      jmax = ny;
-    else
-      jmax = min(static_cast<int>((block_y + 1)*nyb), ny);
+    if (block_x != (n_blocks_x - 1))
+      imax = std::min((block_x + 1)*nxb, nx);
+    if (block_y != (n_blocks_y - 1))
+      jmax = std::min((block_y + 1)*nyb, ny);
 
-    double                    cell_min_x, cell_max_x, cell_min_y, cell_max_y;
-    size_t                    start_ii, start_jj, end_ii, end_jj;
     std::vector<double>       x_rot(4), y_rot(4);
     std::vector<bool>         inside(4);
     std::vector<NRLib::Point> pt_vp(4), pt_vs(4), pt_rho(4);
+
     std::vector<std::vector<NRLib::Point> > pt_extra_param(extra_parameter_names.size());
     for (size_t i = 0; i < extra_parameter_names.size(); ++i)
       pt_extra_param[i] = pt_vp;
 
     for (size_t k = topk; k <= botk + 1; k++) {
-      for (size_t i = static_cast<size_t>(imin); i < static_cast<size_t>(imax); ++i) {
-        for (size_t j = static_cast<size_t>(jmin); j < static_cast<size_t>(jmax); ++j) {
+      for (size_t i = imin; i < imax; ++i) {
+        for (size_t j = jmin; j < jmax; ++j) {
 
-          if (geometry.IsPillarActive(i, j) && geometry.IsPillarActive(i + 1, j) && geometry.IsPillarActive(i, j + 1) && geometry.IsPillarActive(i + 1, j + 1) &&
-              geometry.IsPillarActive(i + 2, j) && geometry.IsPillarActive(i + 2, j + 1) && geometry.IsPillarActive(i, j + 2) && geometry.IsPillarActive(i + 1, j + 2) &&
+          if (geometry.IsPillarActive(i    , j    ) &&
+              geometry.IsPillarActive(i + 1, j    ) &&
+              geometry.IsPillarActive(i    , j + 1) &&
+              geometry.IsPillarActive(i + 1, j + 1) &&
+              geometry.IsPillarActive(i + 2, j    ) &&
+              geometry.IsPillarActive(i + 2, j + 1) &&
+              geometry.IsPillarActive(i    , j + 2) &&
+              geometry.IsPillarActive(i + 1, j + 2) &&
               geometry.IsPillarActive(i + 2, j + 2)) {
             if (k <= botk) {
               for (size_t pt = 0; pt < 4; ++pt)
@@ -475,19 +476,19 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
               SetElasticTriangles(pt_vp, pt_vs, pt_rho, pt_extra_param, triangulate_124, triangles_elastic, triangles_extra_param);
 
               for (size_t pt = 0; pt < 4; ++pt) {
-                x_rot[pt] = pt_vp[pt].x * cosvpangle + pt_vp[pt].y *sinvpangle;
-                y_rot[pt] = pt_vp[pt].y * cosvpangle - pt_vp[pt].x *sinvpangle;
+                x_rot[pt] = pt_vp[pt].x * cosA + pt_vp[pt].y *sinA;
+                y_rot[pt] = pt_vp[pt].y * cosA - pt_vp[pt].x *sinA;
               }
 
-              cell_min_x = min(min(x_rot[0], x_rot[1]), min(x_rot[2], x_rot[3]));
-              cell_min_y = min(min(y_rot[0], y_rot[1]), min(y_rot[2], y_rot[3]));
-              cell_max_x = max(max(x_rot[0], x_rot[1]), max(x_rot[2], x_rot[3]));
-              cell_max_y = max(max(y_rot[0], y_rot[1]), max(y_rot[2], y_rot[3]));
+              double cell_min_x = min(min(x_rot[0], x_rot[1]), min(x_rot[2], x_rot[3]));
+              double cell_min_y = min(min(y_rot[0], y_rot[1]), min(y_rot[2], y_rot[3]));
+              double cell_max_x = max(max(x_rot[0], x_rot[1]), max(x_rot[2], x_rot[3]));
+              double cell_max_y = max(max(y_rot[0], y_rot[1]), max(y_rot[2], y_rot[3]));
 
-              start_ii = static_cast<unsigned int>(max(0.0, (cell_min_x - x_min_rot) / vpgrid.GetDX() - 0.5));
-              start_jj = static_cast<unsigned int>(max(0.0, (cell_min_y - y_min_rot) / vpgrid.GetDY() - 0.5));
-              end_ii   = static_cast<unsigned int>(max(0.0, (cell_max_x - x_min_rot) / vpgrid.GetDX() + 1.0));
-              end_jj   = static_cast<unsigned int>(max(0.0, (cell_max_y - y_min_rot) / vpgrid.GetDY() + 1.0));
+              size_t start_ii = static_cast<unsigned int>(max(0.0, (cell_min_x - x_min_rot) / vpgrid.GetDX() - 0.5));
+              size_t start_jj = static_cast<unsigned int>(max(0.0, (cell_min_y - y_min_rot) / vpgrid.GetDY() - 0.5));
+              size_t end_ii   = static_cast<unsigned int>(max(0.0, (cell_max_x - x_min_rot) / vpgrid.GetDX() + 1.0));
+              size_t end_jj   = static_cast<unsigned int>(max(0.0, (cell_max_y - y_min_rot) / vpgrid.GetDY() + 1.0));
               if (end_ii > vpgrid.GetNI()) {
                 end_ii = vpgrid.GetNI();
               }
