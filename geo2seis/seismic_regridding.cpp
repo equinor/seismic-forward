@@ -26,23 +26,27 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
 //-----------------------------------------------------------------------------------
 {
   //time_t t1 = time(0);   // get time now
+  NRLib::LogKit::WriteHeader("Finding depth values");
   FindZValues(seismic_parameters,
+              model_settings,
               n_threads);
   //seismic_parameters.PrintElapsedTime(t1, "finding Zvalues");
 
-  printf("\nStart finding elastic parameters.");
   //t1 = time(0);
-  FindVp(seismic_parameters,
-         model_settings,
-         n_threads);
+  NRLib::LogKit::WriteHeader("Fill parameter grids");
+  FindParameters(seismic_parameters,
+                 model_settings,
+                 n_threads);
+
+  printf("\nPostprocess parameters.\n");
   VpPostProcess(seismic_parameters);
   //seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
-  printf("\nElastic parameters found.\n");
 
   seismic_parameters.DeleteEclipseGrid();
-  NRLib::RegularSurface<double> &toptime = seismic_parameters.GetTopTime();
-  NRLib::RegularSurface<double> &bottime = seismic_parameters.GetBottomTime();
-  Wavelet* wavelet                       = seismic_parameters.GetWavelet();
+
+  NRLib::RegularSurface<double> & toptime = seismic_parameters.GetTopTime();
+  NRLib::RegularSurface<double> & bottime = seismic_parameters.GetBottomTime();
+  Wavelet                       * wavelet = seismic_parameters.GetWavelet();
 
   //------------------------Make TWT grid-----------------------------------
   //t1 = time(0);
@@ -50,8 +54,8 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   //seismic_parameters.PrintElapsedTime(t1, "finding twt");
 
   //---generate, write and delete vrms grid if writing is requested---------
-  if (seismic_parameters.GetModelSettings()->GetNMOCorr() && seismic_parameters.GetModelSettings()->GetOutputVrms()){
-    if (seismic_parameters.GetModelSettings()->GetPSSeismic()) {
+  if (model_settings->GetNMOCorr() && model_settings->GetOutputVrms()){
+    if (model_settings->GetPSSeismic()) {
       NRLib::StormContGrid &twtssgrid = seismic_parameters.GetTwtSSGrid();
       NRLib::StormContGrid &twtppgrid = seismic_parameters.GetTwtPPGrid();
       NRLib::StormContGrid &vpgrid    = seismic_parameters.GetVpGrid();
@@ -84,67 +88,68 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   seismic_parameters.GetSeismicGeometry()->setTRange(tmin, tmax);
 
   //---write toptime and bottime---------------------------------
-  if (seismic_parameters.GetModelSettings()->GetOutputTimeSurfaces()) {
+  if (model_settings->GetOutputTimeSurfaces()) {
     seismic_parameters.GetSeismicOutput()->WriteTimeSurfaces(seismic_parameters);
   }
 
-  bool interpolate = seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
+  bool interpolate = model_settings->GetResamplParamToSegyInterpol();
   time_t t1 = time(0);   // get time now
   //---resample and write ELASTIC parameters in segy------------
-  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
+  if (model_settings->GetOutputElasticParametersTimeSegy() || model_settings->GetOutputElasticParametersDepthSegy()) {
     if (interpolate)
       printf("\nStart resampling elastic parameters and write to SegY - with interpolation.");
     else
       printf("\nStart resampling elastic parameters and write to SegY - index based.");
   }
-  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy()) {
+  if (model_settings->GetOutputElasticParametersTimeSegy()) {
     WriteElasticParametersSegy(seismic_parameters, n_threads, true);
   }
-  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()) {
+  if (model_settings->GetOutputElasticParametersDepthSegy()) {
     WriteElasticParametersSegy(seismic_parameters, n_threads, false);
   }
   //---resample, write and delete EXTRA parameter grids---------
-  if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
+  if (model_settings->GetOutputExtraParametersTimeSegy() || model_settings->GetOutputExtraParametersDepthSegy()) {
     if (interpolate)
       printf("\nStart resampling extra parameters and write to SegY - with interpolation.");
     else
       printf("\nStart resampling extra parameters and write to SegY - index based.");
   }
-  if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy()) {
+  if (model_settings->GetOutputExtraParametersTimeSegy()) {
     WriteExtraParametersSegy(seismic_parameters, n_threads, true);
   }
-  if (seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
+  if (model_settings->GetOutputExtraParametersDepthSegy()) {
     WriteExtraParametersSegy(seismic_parameters, n_threads, false);
   }
   seismic_parameters.DeleteExtraParameterGrids();
 
-  if (seismic_parameters.GetModelSettings()->GetOutputElasticParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputElasticParametersDepthSegy()
-    || seismic_parameters.GetModelSettings()->GetOutputExtraParametersTimeSegy() || seismic_parameters.GetModelSettings()->GetOutputExtraParametersDepthSegy()) {
+  if (model_settings->GetOutputElasticParametersTimeSegy() || model_settings->GetOutputElasticParametersDepthSegy()
+    || model_settings->GetOutputExtraParametersTimeSegy() || model_settings->GetOutputExtraParametersDepthSegy()) {
     seismic_parameters.PrintElapsedTime(t1, "resampling parameters and write to SegY.");
   }
 
   //---write elastic parameters, z values and twt on storm format---
-  if (seismic_parameters.GetModelSettings()->GetOutputVp()) {
+  if (model_settings->GetOutputVp()) {
     seismic_parameters.GetSeismicOutput()->WriteVpVsRho(seismic_parameters);
   }
-  if (seismic_parameters.GetModelSettings()->GetOutputZvalues()) {
+  if (model_settings->GetOutputZvalues()) {
     seismic_parameters.GetSeismicOutput()->WriteZValues(seismic_parameters);
   }
-  if (seismic_parameters.GetModelSettings()->GetOutputTwt()) {
+  if (model_settings->GetOutputTwt()) {
     seismic_parameters.GetSeismicOutput()->WriteTwt(seismic_parameters);
   }
 }
 
 //-------------------------------------------------------------------------
 void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
+                                    ModelSettings     * model_settings,
                                     size_t              n_threads)
 //-------------------------------------------------------------------------
 {
   NRLib::StormContGrid         & zgrid            = seismic_parameters.GetZGrid();
   const NRLib::EclipseGeometry & geometry         = seismic_parameters.GetEclipseGrid().GetGeometry();
   const size_t                   top_k            = seismic_parameters.GetTopK();
-  const bool                     use_corner_point = seismic_parameters.GetModelSettings()->GetUseCornerpointInterpol();
-  const bool                     rem_neg_delta    = seismic_parameters.GetModelSettings()->GetRemoveNegativeDeltaZ();
+  const bool                     use_corner_point = model_settings->GetUseCornerpointInterpol();
+  const bool                     rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
 
   const double                   xmin             = zgrid.GetXMin();
   const double                   ymin             = zgrid.GetYMin();
@@ -305,9 +310,9 @@ void SeismicRegridding::SetGridLayerFromSurface(NRLib::StormContGrid        & zg
 }
 
 //----------------------------------------------------------------------
-void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
-                               ModelSettings     * model_settings,
-                               size_t              n_threads)
+void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
+                                       ModelSettings     * model_settings,
+                                       size_t              n_threads)
 //----------------------------------------------------------------------
 {
   NRLib::StormContGrid               & vpgrid                         = seismic_parameters.GetVpGrid();
@@ -370,19 +375,19 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
   }
 
   //blocking - for parallelisation - if n_threads > 1
-  int    n_blocks_x = 1;
-  int    n_blocks_y = 1;
-  int    n_blocks   = 1;
-  size_t nx         = egrid.GetNI() - 1;
-  size_t ny         = egrid.GetNJ() - 1;
-  size_t nxb        = nx;
-  size_t nyb        = ny;
+  size_t nbx = 1;
+  size_t nby = 1;
+  size_t nb  = 1;
+  size_t nx  = egrid.GetNI() - 1;
+  size_t ny  = egrid.GetNJ() - 1;
+  size_t nxb = nx;
+  size_t nyb = ny;
   if (n_threads > 1){
-    n_blocks_x = 10;
-    n_blocks_y = 10;
-    n_blocks   = n_blocks_x * n_blocks_y;
-    nxb = static_cast<size_t>(floor(static_cast<double>(nx) / static_cast<double>(n_blocks_x) + 0.5));
-    nyb = static_cast<size_t>(floor(static_cast<double>(ny) / static_cast<double>(n_blocks_y) + 0.5));
+    nbx = 10;
+    nby = 10;
+    nb  = nbx*nby;
+    nxb = static_cast<size_t>(floor(static_cast<double>(nx) / static_cast<double>(nbx) + 0.5));
+    nyb = static_cast<size_t>(floor(static_cast<double>(ny) / static_cast<double>(nby) + 0.5));
   }
 
   double angle      = vpgrid.GetAngle();
@@ -395,19 +400,19 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
   int  chunk_size = 1;
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
-  for (int block = 0 ; block < n_blocks ; ++block) {
+  for (size_t b = 0 ; b < nb ; ++b) {
 
-    size_t block_x = static_cast<size_t>(int(block % n_blocks_x));
-    size_t block_y = std::floor(static_cast<double>(block) / static_cast<double>(n_blocks_x));
-    size_t imin    = std::max(block_x*nxb, static_cast<size_t>(0)); // find min and max of block
-    size_t jmin    = std::max(block_y*nyb, static_cast<size_t>(0));
-    size_t imax    = nx;
-    size_t jmax    = ny;
+    size_t ibx  = b % nbx;
+    size_t iby  = static_cast<size_t>(std::floor(static_cast<double>(b) / static_cast<double>(nbx)));
+    size_t imin = std::max(ibx*nxb, static_cast<size_t>(0)); // find min and max of block
+    size_t jmin = std::max(iby*nyb, static_cast<size_t>(0));
+    size_t imax = nx;
+    size_t jmax = ny;
 
-    if (block_x != (n_blocks_x - 1))
-      imax = std::min((block_x + 1)*nxb, nx);
-    if (block_y != (n_blocks_y - 1))
-      jmax = std::min((block_y + 1)*nyb, ny);
+    if (ibx != (nbx - 1))
+      imax = std::min((ibx + 1)*nxb, nx);
+    if (iby != (nby - 1))
+      jmax = std::min((iby + 1)*nyb, ny);
 
     std::vector<double>       x_rot(4), y_rot(4);
     std::vector<bool>         inside(4);
@@ -430,6 +435,7 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
               geometry.IsPillarActive(i    , j + 2) &&
               geometry.IsPillarActive(i + 1, j + 2) &&
               geometry.IsPillarActive(i + 2, j + 2)) {
+
             if (k <= botk) {
               for (size_t pt = 0; pt < 4; ++pt)
                 pt_vp[pt] = geometry.FindCellCenterPoint(i + int(pt % 2), j + int(floor(double(pt) / 2)), k);
@@ -442,7 +448,7 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
               inside[pt] = vpgrid.IsInside(pt_vp[pt].x, pt_vp[pt].y);
             if (inside[0] || inside[1] || inside[2] || inside[3]) {
               for (size_t pt = 0; pt < 4; ++pt) {
-                pt_vs[pt] = pt_vp[pt];
+                pt_vs[pt]  = pt_vp[pt];
                 pt_rho[pt] = pt_vp[pt];
                 for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
                   pt_extra_param[ii][pt] = pt_vp[pt];
@@ -450,8 +456,8 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
               }
               if (k == botk + 1) {
                 for (size_t pt = 0; pt < 4; ++pt) {
-                  pt_vp[pt].z = constvp[2];
-                  pt_vs[pt].z = constvs[2];
+                  pt_vp[pt].z  = constvp[2];
+                  pt_vs[pt].z  = constvs[2];
                   pt_rho[pt].z = constrho[2];
                   for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
                     pt_extra_param[ii][pt].z = 0.0;
@@ -460,8 +466,8 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
               }
               else {
                 for (size_t pt = 0; pt < 4; ++pt) {
-                  pt_vp[pt].z = vp_grid(i + int(pt % 2), j + int(floor(double(pt / 2))), k);
-                  pt_vs[pt].z = vs_grid(i + int(pt % 2), j + int(floor(double(pt / 2))), k);
+                  pt_vp[pt].z  = vp_grid (i + int(pt % 2), j + int(floor(double(pt / 2))), k);
+                  pt_vs[pt].z  = vs_grid (i + int(pt % 2), j + int(floor(double(pt / 2))), k);
                   pt_rho[pt].z = rho_grid(i + int(pt % 2), j + int(floor(double(pt / 2))), k);
                   for (size_t ii = 0; ii < extra_parameter_names.size(); ++ii) {
                     pt_extra_param[ii][pt].z = parameter_grid_from_eclipse[ii](i + int(pt % 2), j + int(floor(double(pt / 2))), k);
@@ -485,29 +491,34 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
               double cell_max_x = max(max(x_rot[0], x_rot[1]), max(x_rot[2], x_rot[3]));
               double cell_max_y = max(max(y_rot[0], y_rot[1]), max(y_rot[2], y_rot[3]));
 
-              size_t start_ii = static_cast<unsigned int>(max(0.0, (cell_min_x - x_min_rot) / vpgrid.GetDX() - 0.5));
-              size_t start_jj = static_cast<unsigned int>(max(0.0, (cell_min_y - y_min_rot) / vpgrid.GetDY() - 0.5));
-              size_t end_ii   = static_cast<unsigned int>(max(0.0, (cell_max_x - x_min_rot) / vpgrid.GetDX() + 1.0));
-              size_t end_jj   = static_cast<unsigned int>(max(0.0, (cell_max_y - y_min_rot) / vpgrid.GetDY() + 1.0));
+              size_t start_ii = static_cast<size_t>(max(0.0, (cell_min_x - x_min_rot) / vpgrid.GetDX() - 0.5));
+              size_t start_jj = static_cast<size_t>(max(0.0, (cell_min_y - y_min_rot) / vpgrid.GetDY() - 0.5));
+              size_t end_ii   = static_cast<size_t>(max(0.0, (cell_max_x - x_min_rot) / vpgrid.GetDX() + 1.0));
+              size_t end_jj   = static_cast<size_t>(max(0.0, (cell_max_y - y_min_rot) / vpgrid.GetDY() + 1.0));
+
               if (end_ii > vpgrid.GetNI()) {
                 end_ii = vpgrid.GetNI();
               }
               if (end_jj > vpgrid.GetNJ()) {
                 end_jj = vpgrid.GetNJ();
               }
+
               for (size_t ii = start_ii; ii < end_ii; ii++) {
                 for (size_t jj = start_jj; jj < end_jj; jj++) {
+
                   double x, y, z;
                   vpgrid.FindCenterOfCell(ii, jj, 0, x, y, z);
 
                   NRLib::Point p1, p2;
-                  p1.x = x;
-                  p1.y = y;
-                  p1.z = pt_vp[0].z;
-                  p2 = p1;
+                  p1.x  = x;
+                  p1.y  = y;
+                  p1.z  = pt_vp[0].z;
+                  p2    = p1;
                   p2.z += 1000;
+
                   NRLib::Line line(p1, p2, false, false);
                   NRLib::Point intersec_pt;
+
                   if (triangles_elastic[0].FindNearestPoint(line, intersec_pt) < 0.00000000001) {
                     vpgrid(ii, jj, (k - topk) + 1) = static_cast<float>(intersec_pt.z);
                     triangles_elastic[2].FindIntersection(line, intersec_pt, true);
@@ -540,6 +551,7 @@ void SeismicRegridding::FindVp(SeismicParameters & seismic_parameters,
       }
     }
   }
+
   ////-------------find edges---------------------
   for (size_t k = topk; k <= botk + 1; k++) {
     for (size_t i = 0; i < egrid.GetNI() - 1; i++) {

@@ -23,6 +23,7 @@ public:
 
 private:
   static void FindZValues(SeismicParameters & seismic_parameters,
+                          ModelSettings     * model_settings,
                           size_t              n_threads);
 
   static void SetGridLayerFromSurface(NRLib::StormContGrid        & zgrid,
@@ -30,9 +31,9 @@ private:
                                       size_t                        k);
 
 
-  static void FindVp(SeismicParameters & seismic_parameters,
-                     ModelSettings     * model_settings,
-                     size_t              n_threads);
+  static void FindParameters(SeismicParameters & seismic_parameters,
+                             ModelSettings     * model_settings,
+                             size_t              n_threads);
 
   static void FillInGridValues(const NRLib::EclipseGeometry & geometry,
                                NRLib::Grid<double>          & grid_copy,
