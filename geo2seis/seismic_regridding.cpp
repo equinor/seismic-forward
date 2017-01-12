@@ -192,7 +192,8 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
   for (size_t i = 0; i < ni ; i++) {
-    for (size_t j = 0; j < nj ; j++) {
+    std::vector<std::vector<double> > neg_dz_pts;
+    for (size_t j = 0; j < nj; j++) {
       for (int k = static_cast<int>(nk - 2); k >= 0; --k) {
         float z1 = zgrid(i, j, static_cast<size_t>(k    ));
         float z2 = zgrid(i, j, static_cast<size_t>(k + 1));
@@ -200,20 +201,24 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
           if (rem_neg_delta) {
             zgrid(i, j, static_cast<size_t>(k)) = z2;
           }
-          double x,y,z;
+          double x, y, z;
           zgrid.FindCenterOfCell(i, j, k, x, y, z);
           std::vector<double> neg(5);
           neg[0] = static_cast<double>(k);
           neg[1] = x;
           neg[2] = y;
-          neg[3] = values[k](i,j);
+          neg[3] = values[k](i, j);
           neg[4] = z2 - z1;
+          neg_dz_pts.push_back(neg);
+        }
+      }
+    }
 #ifdef WITH_OMP
 #pragma omp critical
 #endif
-          negative_dz_pts.push_back(neg);
-        }
-      }
+    {
+      negative_dz_pts.reserve(negative_dz_pts.size() + neg_dz_pts.size());
+      negative_dz_pts.insert(negative_dz_pts.end(), neg_dz_pts.begin(), neg_dz_pts.end());
     }
   }
 
