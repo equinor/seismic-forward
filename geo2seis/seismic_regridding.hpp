@@ -18,6 +18,7 @@ class SeismicRegridding
 {
 public:
   static void MakeSeismicRegridding(SeismicParameters & seismic_parameters,
+                                    ModelSettings     * model_settings,
                                     size_t              n_theta);
 
 private:
@@ -28,6 +29,20 @@ private:
                                       const NRLib::Grid2D<double> & values,
                                       size_t                        k);
 
+
+  static void FindVp(SeismicParameters & seismic_parameters,
+                     ModelSettings     * model_settings,
+                     size_t              n_threads);
+
+  static void FillInGridValues(const NRLib::EclipseGeometry & geometry,
+                               NRLib::Grid<double>          & grid_copy,
+                               double                         default_top,
+                               double                         default_value,
+                               double                         zlimit,
+                               size_t                         ni,
+                               size_t                         nj,
+                               size_t                         topk,
+                               size_t                         botk);
 
   static void WriteElasticParametersSegy(SeismicParameters & seismic_parameters,
                                          size_t              n_threads,
@@ -70,9 +85,6 @@ private:
                               double                 target_k,
                               NRLib::StormContGrid & grid);
 
-  static void FindVp(SeismicParameters & seismic_parameters,
-                     size_t              n_threads);
-
   static void VpPostProcess(SeismicParameters & seismic_parameters);
 
   static void FindVrms(SeismicParameters          & seismic_parameters,
@@ -84,16 +96,6 @@ private:
                       NRLib::RegularSurface<double> & bottime,
                       size_t                          n_threads);
 
-
-  static void FillInGridValues(const NRLib::EclipseGeometry & geometry,
-                               NRLib::Grid<double>          & grid_copy,
-                               double                         default_value,
-                               double                         zlimit,
-                               double                         default_top,
-                               size_t                         ni,
-                               size_t                         nj,
-                               size_t                         topk,
-                               size_t                         botk);
 
   static void FindVpEdges(const NRLib::EclipseGeometry        & geometry,
                           size_t                                n_extra_param,

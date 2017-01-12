@@ -77,7 +77,9 @@ int main(int argc, char *argv[]) {
     NRLib::LogKit::WriteHeader("Setting up grid");
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
     NRLib::LogKit::WriteHeader("Regridding depth");
-    SeismicRegridding::MakeSeismicRegridding(seismic_parameters, n_threads);
+    SeismicRegridding::MakeSeismicRegridding(seismic_parameters,
+                                             model_settings,
+                                             n_threads);
     seismic_parameters.PrintElapsedTime(t1, "for preprocesses");
     NRLib::LogKit::WriteHeader("Forward modelling");
     SeismicForward::DoSeismicForward(seismic_parameters);

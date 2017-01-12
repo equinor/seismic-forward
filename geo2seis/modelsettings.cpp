@@ -277,6 +277,16 @@ void ModelSettings::PrintSettings(void)
   }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
+  const std::vector<double> & vp  = GetConstVp();
+  const std::vector<double> & vs  = GetConstVs();
+  const std::vector<double> & rho = GetConstRho();
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Default values for overburden, reservoir and underburden: \n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vp                                      : %7.1f ->%7.1f ->%7.1f\n", vp[0] , vp[1] , vp[2]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vs                                      : %7.1f ->%7.1f ->%7.1f\n", vs[0] , vs[1] , vs[2]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Rho                                     : %7.1f ->%7.1f ->%7.1f\n", rho[0], rho[1], rho[2]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
   size_t n = GetExtraParameterNames().size();
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Extra parameters                          : %10s\n", n > 0 ? "yes" : "no");
   if (n > 0) {
@@ -328,10 +338,6 @@ void ModelSettings::PrintSettings(void)
 
 /*
 
-  std::vector<double>       GetConstVp()                              { return constvp_                        ;}
-  std::vector<double>       GetConstVs()                              { return constvs_                        ;}
-  std::vector<double>       GetConstRho()                             { return constrho_                       ;}
-
   int                       GetSegyInlineStart()                      { return inline_start_                   ;}
   int                       GetSegyXlineStart()                       { return xline_start_                    ;}
   std::string               GetSegyInlineDirection()                  { return inline_direction_               ;}
@@ -343,7 +349,7 @@ void ModelSettings::PrintSettings(void)
   double                    GetZExtrapolFactor()                      { return z_extrapol_factor_              ;}
   double                    GetZeroThicknessLimit()                   { return zero_thickness_limit_           ;}
 
-    double                    GetDx()                                   { return dx_                             ;}
+  double                    GetDx()                                   { return dx_                             ;}
   double                    GetDy()                                   { return dy_                             ;}
   double                    GetDz()                                   { return dz_                             ;}
   double                    GetDt()                                   { return dt_                             ;}
