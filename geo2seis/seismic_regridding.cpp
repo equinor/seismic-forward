@@ -56,10 +56,10 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   //---generate, write and delete vrms grid if writing is requested---------
   if (model_settings->GetNMOCorr() && model_settings->GetOutputVrms()){
     if (model_settings->GetPSSeismic()) {
-      NRLib::StormContGrid &twtssgrid = seismic_parameters.GetTwtSSGrid();
-      NRLib::StormContGrid &twtppgrid = seismic_parameters.GetTwtPPGrid();
-      NRLib::StormContGrid &vpgrid    = seismic_parameters.GetVpGrid();
-      NRLib::StormContGrid &vsgrid    = seismic_parameters.GetVsGrid();
+      NRLib::StormContGrid & twtssgrid = seismic_parameters.GetTwtSSGrid();
+      NRLib::StormContGrid & twtppgrid = seismic_parameters.GetTwtPPGrid();
+      NRLib::StormContGrid & vpgrid    = seismic_parameters.GetVpGrid();
+      NRLib::StormContGrid & vsgrid    = seismic_parameters.GetVsGrid();
       FindVrms(seismic_parameters, vpgrid, twtppgrid);
       seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters, "PP");
       FindVrms(seismic_parameters, vsgrid, twtssgrid);
@@ -217,7 +217,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
           neg[0] = static_cast<double>(k);
           neg[1] = x;
           neg[2] = y;
-          neg[3] = values[k](i, j);
+          neg[3] = values[kk](i, j);
           neg[4] = z2 - z1;
           neg_dz_pts.push_back(neg);
         }
@@ -257,6 +257,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
 
   bool debug_neg_dz = true;
   if (n > 0 && debug_neg_dz) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExporting points where there are negative dz values (z-value is the conflicting value)!\n");
     std::fstream fout;
     NRLib::OpenWrite(fout, "negative_dz_points.rmsinternal");
     fout << "Float Negative dz" << std::endl;
@@ -393,8 +394,8 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   double angle      = vpgrid.GetAngle();
   double cosA       = cos(angle);
   double sinA       = sin(angle);
-  double x_min_rot  = vpgrid.GetXMin() * cosA + vpgrid.GetYMin() * sinA;
-  double y_min_rot  = vpgrid.GetYMin() * cosA - vpgrid.GetXMin() * sinA;
+  double x_min_rot  = vpgrid.GetXMin()*cosA + vpgrid.GetYMin()*sinA;
+  double y_min_rot  = vpgrid.GetYMin()*cosA - vpgrid.GetXMin()*sinA;
 
 #ifdef WITH_OMP
   int  chunk_size = 1;

@@ -188,22 +188,54 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seed                                      : %10d\n", GetSeed());
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic data type                         : %10s\n", GetPSSeismic()                  ? "PS"  : "PP");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "NMO correction                            : %10s\n", GetNMOCorr()                    ? "yes" : "no");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Offset without stretch                    : %10s\n", GetOffsetWithoutStretch()       ? "yes" : "no");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Remove negative thicknesses               : %10s\n", GetRemoveNegativeDeltaZ()       ? "yes" : "no");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use corner-point interpolation            : %10s\n", GetUseCornerpointInterpol()     ? "yes" : "no");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use default underburden                   : %10s\n", GetDefaultUnderburden()         ? "yes" : "no");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Resample parameters to Segy with interpol.: %10s\n", GetResamplParamToSegyInterpol() ? "yes" : "no");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Add white noise                           : %10s\n", GetWhiteNoise()                 ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic data type                         : %10s\n"  , GetPSSeismic()                  ? "PS"  : "PP");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "NMO correction                            : %10s\n"  , GetNMOCorr()                    ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Offset without stretch                    : %10s\n"  , GetOffsetWithoutStretch()       ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Remove negative thicknesses               : %10s\n"  , GetRemoveNegativeDeltaZ()       ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Minimum thickness for Eclipse grid cells  : %10.1f\n", GetZeroThicknessLimit());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use corner-point interpolation            : %10s\n"  , GetUseCornerpointInterpol()     ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use default underburden                   : %10s\n"  , GetDefaultUnderburden()         ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Resample parameters to Segy with interpol.: %10s\n"  , GetResamplParamToSegyInterpol() ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Add white noise                           : %10s\n"  , GetWhiteNoise()                 ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Standard deviation                      : %10.1f\n", GetStandardDeviation());
-
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
+  //
+  //  ANGLES and OFFSETS
+  //
+  if (GetNMOCorr()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "NMO correction settings\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Sea floor depth                         : %10.1f\n", GetZw());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vp velocity in water                    : %10.1f\n", GetVw());
+/*
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Offset span\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "    Minimum                               : %10.1f\n", GetOffset0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "    Delta                                 : %10.1f\n", GetDOffset());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "    Maximum                               : %10.1f\n", GetOffsetMax());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
+*/
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Offsets                                 :  ");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %.1f",offset_vec_[0]);
+    for (size_t i = 1 ; i < GetOffsetVec().size() ; i++)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," -> %.1f",offset_vec_[i]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n");
+  }
+  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "AVA angle span\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.1f\n", GetTheta0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.1f\n", GetDTheta());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.1f\n", GetThetaMax());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Angles                                    :  ");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  %.1f", theta_vec_[0]);
+    for (size_t i = 1 ; i < GetThetaVec().size() ; i++)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, " -> %.1f", theta_vec_[i]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+  }
 
   //
   //  WAVELET
   //
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Wavelet\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nWavelet\n");
   if (GetRicker()) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Ricker with peak frequency              : %10.1f\n", GetPeakFrequency());
   }
@@ -220,71 +252,20 @@ void ModelSettings::PrintSettings(void)
   }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
-  //
-  //  ANGLES and OFFSETS
-  //
-  if (GetNMOCorr()) {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Offset span\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.1f\n", GetOffset0());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.1f\n", GetDOffset());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.1f\n", GetOffsetMax());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Offsets                                 :  ");
-    size_t n = GetOffsetVec().size();
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"{%.1f,",offset_vec_[0]);
-    for (size_t i = 1 ; i < n - 1 ; i++)
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %.1f,",offset_vec_[i]);
-    if (n > 1)
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low," %.1f",offset_vec_[n - 1]);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"}\n\n");
-  }
-  else {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "AVA angle span\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum                                 : %10.1f\n", GetTheta0());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Delta                                   : %10.1f\n", GetDTheta());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Maximum                                 : %10.1f\n", GetThetaMax());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Angles                                    :  ");
-    size_t n = GetThetaVec().size();
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, " {%.1f,", theta_vec_[0]);
-    for (size_t i = 1 ; i < n - 1 ; i++)
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, " %.1f,", theta_vec_[i]);
-    if (n > 1)
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, " %.1f", theta_vec_[n - 1]);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "}\n\n");
-  }
-
-  //
-  //  AREA
-  //
-  if (GetAreaFromSegy() != "") {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Area is taken from SegY file\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File name                               : %10s\n\n", GetAreaFromSegy().c_str());
-  }
-  else if (GetAreaGiven()) {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Area is specified in model file:\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  x-start                                 : %10.1f\n", GetX0());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  y-start                                 : %10.1f\n", GetY0());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  x-length                                : %10.1f\n", GetLx());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  y-length                                : %10.1f\n", GetLy());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  angle                                   : %10.1f\n", GetAngle());
-  }
-  else if (GetAreaFromSurface() != "") {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Area is taken from surface\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File name                               : %10s\n", GetAreaFromSurface().c_str());
-  }
-  else {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Area is taken from Eclipse grid\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File name                               : %10s\n", GetEclipseFileName().c_str());
-  }
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
-
   const std::vector<double> & vp  = GetConstVp();
   const std::vector<double> & vs  = GetConstVs();
   const std::vector<double> & rho = GetConstRho();
 
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Parameters names:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vp                                      : %10s\n", GetParameterNames()[0].c_str());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vs                                      : %10s\n", GetParameterNames()[1].c_str());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Rho                                     : %10s\n", GetParameterNames()[2].c_str());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Default values for overburden, reservoir and underburden: \n");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vp                                      : %7.1f ->%7.1f ->%7.1f\n", vp[0] , vp[1] , vp[2]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vs                                      : %7.1f ->%7.1f ->%7.1f\n", vs[0] , vs[1] , vs[2]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Rho                                     : %7.1f ->%7.1f ->%7.1f\n", rho[0], rho[1], rho[2]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vp                                      :%7.1f ->%7.1f ->%7.1f\n", vp[0] , vp[1] , vp[2]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vs                                      :%7.1f ->%7.1f ->%7.1f\n", vs[0] , vs[1] , vs[2]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Rho                                     :%7.1f ->%7.1f ->%7.1f\n", rho[0], rho[1], rho[2]);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
   size_t n = GetExtraParameterNames().size();
@@ -297,9 +278,59 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
   //
+  //  AREA
+  //
+  if (GetAreaFromSegy() != "") {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Output area is taken from SegY file:\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File name                               : %10s\n\n", GetAreaFromSegy().c_str());
+  }
+  else if (GetAreaGiven()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Output area is specified in model file:\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  x-start                                 : %10.1f\n", GetX0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  y-start                                 : %10.1f\n", GetY0());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  x-length                                : %10.1f\n", GetLx());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  y-length                                : %10.1f\n", GetLy());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  angle                                   : %10.1f\n", GetAngle());
+  }
+  else if (GetAreaFromSurface() != "") {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Output area is taken from surface:\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File name                               : %10s\n", GetAreaFromSurface().c_str());
+  }
+  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Output area is taken from Eclipse grid:\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File name                               : %10s\n", GetEclipseFileName().c_str());
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Cell size:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  dx                                      : %10.1f\n", GetDx());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  dy                                      : %10.1f\n", GetDy());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  dt                                      : %10.1f\n", GetDt());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  dz                                      : %10.1f\n", GetDz());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+
+  if (GetTopTimeSurfaceFile() != "")
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Top time surface                          : %10s\n"  , GetTopTimeSurfaceFile().c_str());
+  else
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Top time value                            : %10.1f\n", GetTopTimeConstant());
+
+  if (GetTimeWindowSpecified()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Specified time window:\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Top:                                    : %10.1f\n", GetTopTimeWindow());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Base:                                   : %10.1f\n", GetBotTimeWindow());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+  }
+  if (GetDepthWindowSpecified()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Specified depth window:\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Top:                                    : %10.1f\n", GetTopDepthWindow());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Base:                                   : %10.1f\n", GetBotDepthWindow());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+  }
+
+  //
   //  OUTPUT
   //
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic data:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic data output:\n");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time                                    : %10s\n", GetOutputSeismicTime()                ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time shift                              : %10s\n", GetOutputSeismicTimeshift()           ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth                                   : %10s\n", GetOutputSeismicDepth()               ? "yes" : "no");
@@ -337,22 +368,13 @@ void ModelSettings::PrintSettings(void)
 
 
 /*
-
   int                       GetSegyInlineStart()                      { return inline_start_                   ;}
   int                       GetSegyXlineStart()                       { return xline_start_                    ;}
   std::string               GetSegyInlineDirection()                  { return inline_direction_               ;}
   int                       GetSegyInlineStep()                       { return inline_step_                    ;}
   int                       GetSegyXlineStep()                        { return xline_step_                     ;}
 
-  double                    GetTopTimeConstant()                      { return top_time_constant_              ;}
-  std::string               GetTopTimeSurfaceFile()                   { return top_time_surface_               ;}
   double                    GetZExtrapolFactor()                      { return z_extrapol_factor_              ;}
-  double                    GetZeroThicknessLimit()                   { return zero_thickness_limit_           ;}
-
-  double                    GetDx()                                   { return dx_                             ;}
-  double                    GetDy()                                   { return dy_                             ;}
-  double                    GetDz()                                   { return dz_                             ;}
-  double                    GetDt()                                   { return dt_                             ;}
 
   int                       GetIL0In()                                { return il0_in_                         ;}
   int                       GetXL0In()                                { return xl0_in_                         ;}
@@ -360,17 +382,7 @@ void ModelSettings::PrintSettings(void)
   int                       GetUtmyIn()                               { return utmy_in_                        ;}
   short                     GetUtmPrecision()                         { return utm_precision_                  ;}
 
-  double                    GetTopTimeWindow()                        { return top_time_window_                ;}
-  double                    GetBotTimeWindow()                        { return bot_time_window_                ;}
-  double                    GetTopDepthWindow()                       { return top_depth_window_               ;}
-  double                    GetBotDepthWindow()                       { return bot_depth_window_               ;}
-
-  bool                      GetTimeWindowSpecified()                  { return time_window_specified_          ;}
-  bool                      GetDepthWindowSpecified()                 { return depth_window_specified_         ;}
-
   std::string               GetTwtFileName()                    const { return twt_file_name_                  ;}
-  double                    GetVw()                                   { return v_w_                            ;}
-  double                    GetZw()                                   { return z_w_                            ;}
 
 */
 
