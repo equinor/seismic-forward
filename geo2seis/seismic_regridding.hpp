@@ -40,8 +40,6 @@ private:
                                double                         default_top,
                                double                         default_value,
                                double                         zlimit,
-                               size_t                         ni,
-                               size_t                         nj,
                                size_t                         topk,
                                size_t                         botk);
 
@@ -98,9 +96,8 @@ private:
                       size_t                          n_threads);
 
 
-  static void FindVpEdges(const NRLib::EclipseGeometry        & geometry,
-                          size_t                                n_extra_param,
-                          SeismicParameters                   & seismic_parameters,
+  static void FindVpEdges(SeismicParameters                   & seismic_parameters,
+                          const NRLib::EclipseGeometry        & geometry,
                           const NRLib::Grid<double>           & vp_grid,
                           const NRLib::Grid<double>           & vs_grid,
                           const NRLib::Grid<double>           & rho_grid,
@@ -113,9 +110,8 @@ private:
                           bool                                  right,
                           bool                                  left);
 
-  static void FindVpCorners(const NRLib::EclipseGeometry        & geometry,
-                            size_t                                n_extra_param,
-                            SeismicParameters                   & seismic_parameters,
+  static void FindVpCorners(SeismicParameters                   & seismic_parameters,
+                            const NRLib::EclipseGeometry        & geometry,
                             const NRLib::Grid<double>           & vp_grid,
                             const NRLib::Grid<double>           & vs_grid,
                             const NRLib::Grid<double>           & rho_grid,
