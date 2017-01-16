@@ -39,9 +39,24 @@ public:
 
   void                      PrintSettings(void);
 
+  unsigned long             GetSeed()                                 { return seed_                           ;}
+
   size_t                    GetTracesInMemory(void)                   { return traces_in_memory_               ;}
   size_t                    GetMaxThreads(void)                       { return max_threads_                    ;}
 
+  std::string               GetTwtFileName()                    const { return twt_file_name_                  ;}
+  bool                      GetPSSeismic()                            { return ps_seismic_                     ;}
+  bool                      GetResamplParamToSegyInterpol()           { return resampl_param_to_segy_with_interpol_ ;}
+  double                    GetZExtrapolFactor()                      { return z_extrapol_factor_              ;}
+  double                    GetZeroThicknessLimit()                   { return zero_thickness_limit_           ;}
+  bool                      GetRemoveNegativeDeltaZ()                 { return remove_negative_delta_z_        ;}
+  bool                      GetUseCornerpointInterpol()               { return use_cornerpoint_interpol_       ;}
+
+  int                       GetIL0In()                                { return il0_in_                         ;}
+  int                       GetXL0In()                                { return xl0_in_                         ;}
+  int                       GetUtmxIn()                               { return utmx_in_                        ;}
+  int                       GetUtmyIn()                               { return utmy_in_                        ;}
+  short                     GetUtmPrecision()                         { return utm_precision_                  ;}
 
   int                       GetSegyInlineStart()                      { return inline_start_                   ;}
   int                       GetSegyXlineStart()                       { return xline_start_                    ;}
@@ -51,7 +66,6 @@ public:
 
   bool                      GetWhiteNoise()                           { return white_noise_                    ;}
   double                    GetStandardDeviation()                    { return standard_deviation_             ;}
-  unsigned long             GetSeed()                                 { return seed_                           ;}
 
   std::string               GetEclipseFileName()                      { return eclipse_file_name_              ;}
 
@@ -59,9 +73,15 @@ public:
   std::vector<double>       GetConstVp()                              { return constvp_                        ;}
   std::vector<double>       GetConstVs()                              { return constvs_                        ;}
   std::vector<double>       GetConstRho()                             { return constrho_                       ;}
+  bool                      GetDefaultUnderburden(void)               { return default_underburden_            ;}
 
   std::vector<std::string>  GetExtraParameterNames()                  { return extra_parameter_names_          ;}
   std::vector<double>       GetExtraParameterDefaultValues()          { return extra_parameter_default_values_ ;}
+
+  bool                      GetNMOCorr()                              { return nmo_corr_                       ;}
+  bool                      GetOffsetWithoutStretch()                 { return offset_without_stretch_         ;}
+  double                    GetVw()                                   { return v_w_                            ;}
+  double                    GetZw()                                   { return z_w_                            ;}
 
   std::vector<double>     & GetThetaVec()                             { return theta_vec_                      ;}
   std::vector<double>     & GetOffsetVec()                            { return offset_vec_                     ;}
@@ -70,10 +90,6 @@ public:
   double                    GetDTheta()                               { return dtheta_                         ;}
   double                    GetThetaMax()                             { return theta_max_                      ;}
 
-  bool                      GetNMOCorr()                              { return nmo_corr_                       ;}
-  double                    GetVw()                                   { return v_w_                            ;}
-  double                    GetZw()                                   { return z_w_                            ;}
-
   bool                      GetRicker()                               { return ricker_                         ;}
   double                    GetPeakFrequency()                        { return peak_f_                         ;}
   std::string               GetWaveletFileFormat()                    { return wavelet_file_format_            ;}
@@ -81,22 +97,6 @@ public:
   double                    GetWaveletScale()                         { return wavelet_scale_                  ;}
   double                    GetZWaveletTop()                          { return z_wavelet_top_                  ;}
   double                    GetZWaveletBot()                          { return z_wavelet_bot_                  ;}
-
-  double                    GetZExtrapolFactor()                      { return z_extrapol_factor_              ;}
-  bool                      GetOffsetWithoutStretch()                 { return offset_without_stretch_         ;}
-  double                    GetZeroThicknessLimit()                   { return zero_thickness_limit_           ;}
-  bool                      GetUseCornerpointInterpol()               { return use_cornerpoint_interpol_       ;}
-  bool                      GetRemoveNegativeDeltaZ()                 { return remove_negative_delta_z_        ;}
-  int                       GetIL0In()                                { return il0_in_                         ;}
-  int                       GetXL0In()                                { return xl0_in_                         ;}
-  int                       GetUtmxIn()                               { return utmx_in_                        ;}
-  int                       GetUtmyIn()                               { return utmy_in_                        ;}
-  short                     GetUtmPrecision()                         { return utm_precision_                  ;}
-  std::string               GetTwtFileName()                    const { return twt_file_name_                  ;}
-  bool                      GetPSSeismic()                            { return ps_seismic_                     ;}
-  bool                      GetDefaultUnderburden(void)               { return default_underburden_            ;}
-  bool                      GetResamplParamToSegyInterpol()           { return resampl_param_to_segy_with_interpol_ ;}
-
 
   //
   // Output parameters

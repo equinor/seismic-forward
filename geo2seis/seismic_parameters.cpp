@@ -253,6 +253,9 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   topeclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
   boteclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
 
+  //
+  // Layers for which at least one cell is active and non-collapsed
+  //
   top_k      = eclipse_geometry.FindTopLayer();
   bot_k      = eclipse_geometry.FindBottomLayer();
 
