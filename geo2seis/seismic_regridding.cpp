@@ -1,7 +1,7 @@
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
-#include "nrlib/iotools/fileio.hpp"
+//#include "nrlib/iotools/fileio.hpp"
 
 #include "physics/wavelet.hpp"
 
@@ -9,15 +9,15 @@
 
 #include "seismic_regridding.hpp"
 
-#include <fstream>
+//#include <fstream>
 
 #ifdef WITH_OMP
 #include <omp.h>
 #endif
 
-#include "nrlib/surface/regularsurfacerotated.hpp"
-#include "nrlib/surface/regularsurface.hpp"
-#include "nrlib/surface/surfaceio.hpp"
+//#include "nrlib/surface/regularsurfacerotated.hpp"
+//#include "nrlib/surface/regularsurface.hpp"
+//#include "nrlib/surface/surfaceio.hpp"
 
 //-----------------------------------------------------------------------------------
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parameters,
@@ -379,8 +379,7 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
       vsgrid (i, j, 0) = static_cast<float>(constvs[0]);
       rhogrid(i, j, 0) = static_cast<float>(constrho[0]);
       for (size_t ii = 0; ii < n_extra_params; ++ii) {
-        NRLib::StormContGrid &param_grid = *(extra_parameter_grid[ii]);
-        param_grid(i, j, 0) = 0.0;
+        (*extra_parameter_grid[ii])(i, j, 0) = 0.0;
       }
     }
   }
@@ -724,6 +723,28 @@ void SeismicRegridding::FillInGridValues(const std::string            & text,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%-15s %7d %7d %7d %7d\n",text.c_str(), ndeftop, ndefins, ndef, nzlimit);
 }
 
+//-----------------------------------------------------------------------
+bool SeismicRegridding::Is124Triangulate(std::vector<NRLib::Point> pt_vp)
+//-----------------------------------------------------------------------
+{
+  bool triangulate_124 = true;
+  NRLib::Point vec1, vec2;
+  vec1   = pt_vp[0] - pt_vp[1];
+  vec1.z = 0;
+  vec2   = pt_vp[3] - pt_vp[1];
+  vec2.z = 0;
+  double delaunay_angle = vec1.GetAngle(vec2);
+  vec1   = pt_vp[0] - pt_vp[2];
+  vec1.z = 0;
+  vec2   = pt_vp[3] - pt_vp[2];
+  vec2.z = 0;
+  delaunay_angle += vec1.GetAngle(vec2);
+  if (delaunay_angle > NRLib::Pi) {
+    triangulate_124 = false;
+  }
+  return triangulate_124;
+}
+
 //-------------------------------------------------------------------------------------------
 void SeismicRegridding::FindEdges(SeismicParameters                   & seismic_parameters,
                                   const NRLib::EclipseGeometry        & eclipse_geometry,
@@ -941,6 +962,54 @@ void SeismicRegridding::FindEdges(SeismicParameters                   & seismic_
       }
     }
   }
+}
+
+//---------------------------------------------------------------------
+void SeismicRegridding::GetCornerPointDir(std::vector<size_t> & a,
+                                          std::vector<size_t> & b,
+                                          std::vector<size_t> & c,
+                                          bool                  left,
+                                          bool                  right,
+                                          bool                  bot,
+                                          bool                  top)
+//---------------------------------------------------------------------
+{
+  if (top || bot || left) {
+    a[0] = 0;
+    a[1] = 0;
+  }
+  else {
+    a[0] = 1;
+    a[1] = 1;
+  }
+  if (bot || left || right) {
+    b[0] = 0;
+    b[1] = 0;
+  }
+  else {
+    b[0] = 1;
+    b[1] = 1;
+  }
+  if (top || bot || right) {
+    a[2] = 1;
+    a[3] = 1;
+  }
+  else {
+    a[2] = 0;
+    a[3] = 0;
+  }
+  if (top || left || right) {
+    b[2] = 1;
+    b[3] = 1;
+  }
+  else {
+    b[2] = 0;
+    b[3] = 0;
+  }
+  c[0] = 0;
+  c[1] = 1;
+  c[2] = 0;
+  c[3] = 1;
 }
 
 //-----------------------------------------------------------------------------------
@@ -1316,16 +1385,13 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam *params,
     else {
       for (size_t k = 0; k < output_vec[0].GetNI(); k++) {
         //find cell index in time or depth grid
-        NRLib::StormContGrid &time_or_depth_grid_ref = *(params->time_or_depth_grid);
         double location = params->time_or_depth_vec_reg[k];
-        size_t location_index = FindCellIndex(i, j, location, time_or_depth_grid_ref);
-        NRLib::StormContGrid &input_grid_ref = *(input_grid[0]);
-        if (location_index == 999999) {          //if location is above all values in pillar of time_or_depth_grid,
-          location_index = input_grid_ref.GetNK() - 1;    //output_grid is given the value of the bottom cell of input_gridndex) << " " << input_grid[0](i, j, location_index - 1) << "\n";
+        size_t location_index = FindCellIndex(i, j, location, *(params->time_or_depth_grid));
+        if (location_index == 999999) {                 // if location is above all values in pillar of time_or_depth_grid,
+          location_index = input_grid[0]->GetNK() - 1;  // output_grid is given the value of the bottom cell of input_gridndex) << " " << input_grid[0](i, j, location_index - 1) << "\n";
         }
         for (size_t l = 0; l < output_vec.size(); ++l) {
-          NRLib::StormContGrid &input_grid_ref = *(input_grid[l]);
-          output_vec[l](k, 0) = input_grid_ref(i, j, location_index);
+          output_vec[l](k, 0) = (*input_grid[l])(i, j, location_index);
         }
       }
     }
@@ -1340,8 +1406,24 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam *params,
   params->result_queue.push(resampl_trace);
 }
 
-void SeismicRegridding::WriteResampledParameter(GenResamplParam *params,
-                                                ResamplOutput   *resampl_output)
+size_t SeismicRegridding::FindCellIndex(size_t                 i,
+                                        size_t                 j,
+                                        double                 target_k,
+                                        NRLib::StormContGrid & grid)
+{
+  size_t found_k = 999999;
+  size_t nz = grid.GetNK();
+  for (size_t k = 0; k < nz; k++) {
+    if (grid(i, j, k) > target_k) {
+      found_k = k;
+      break;
+    }
+  }
+  return found_k;
+}
+
+void SeismicRegridding::WriteResampledParameter(GenResamplParam * params,
+                                                ResamplOutput   * resampl_output)
 {
   float monitor_size, next_monitor;
   params->seismic_parameters.MonitorInitialize(params->n_traces, monitor_size, next_monitor);
@@ -1365,26 +1447,9 @@ void SeismicRegridding::WriteResampledParameter(GenResamplParam *params,
   }
 }
 
-size_t SeismicRegridding::FindCellIndex(size_t                i,
-                                        size_t                j,
-                                        double                target_k,
-                                        NRLib::StormContGrid &grid)
-{
-  size_t found_k = 999999;
-  size_t nz = grid.GetNK();
-  for (size_t k = 0; k < nz; k++) {
-    if (grid(i, j, k) > target_k) {
-      found_k = k;
-      break;
-    }
-  }
-  return found_k;
-}
-
-
-void SeismicRegridding::FindVrms(SeismicParameters          &seismic_parameters,
-                                 const NRLib::StormContGrid &vgrid,
-                                 const NRLib::StormContGrid &twtgrid)
+void SeismicRegridding::FindVrms(SeismicParameters          & seismic_parameters,
+                                 const NRLib::StormContGrid & vgrid,
+                                 const NRLib::StormContGrid & twtgrid)
 {
   double v_w = seismic_parameters.GetModelSettings()->GetVw();
   double z_w = seismic_parameters.GetModelSettings()->GetZw();
@@ -1396,9 +1461,9 @@ void SeismicRegridding::FindVrms(SeismicParameters          &seismic_parameters,
   double tmp, tmp0;
   for (size_t i = 0; i < vrmsgrid.GetNI(); ++i) {
     for (size_t j = 0; j < vrmsgrid.GetNJ(); ++j) {
-      if (twtgrid(i,j,0) == -999.0) {
+      if (twtgrid(i,j,0) == -999.0f) {
         for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
-          vrmsgrid(i,j,k) = -999.0;
+          vrmsgrid(i,j,k) = -999.0f;
         }
       }
       else {
@@ -1417,10 +1482,10 @@ void SeismicRegridding::FindVrms(SeismicParameters          &seismic_parameters,
   }
 }
 
-void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
-                                NRLib::RegularSurface<double> &toptime,
-                                NRLib::RegularSurface<double> &bottime,
-                                size_t n_threads)
+void SeismicRegridding::FindTWT(SeismicParameters             & seismic_parameters,
+                                NRLib::RegularSurface<double> & toptime,
+                                NRLib::RegularSurface<double> & bottime,
+                                size_t                          n_threads)
 {
   NRLib::StormContGrid &vpgrid    = seismic_parameters.GetVpGrid();
   NRLib::StormContGrid &vsgrid    = seismic_parameters.GetVsGrid();
@@ -1433,52 +1498,54 @@ void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
   double v_w                      = seismic_parameters.GetModelSettings()->GetVw();
   double z_w                      = seismic_parameters.GetModelSettings()->GetZw();
 
-  size_t nk = twtgrid.GetNK();
+  size_t nk  = twtgrid.GetNK();
   double dx1 = vpgrid.GetDX();
   double dy1 = vpgrid.GetDY();
   double dx2 = bottime.GetDX();
   double dy2 = bottime.GetDY();
-  int  chunk_size;
-  chunk_size = 1;
+
 #ifdef WITH_OMP
+  int  chunk_size = 1;
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
-  for (int i = 0; i < vpgrid.GetNI(); i++) {
+  for (size_t i = 0; i < vpgrid.GetNI(); i++) {
     for (size_t j = 0; j < vpgrid.GetNJ(); j++) {
       double x, y, z;
       vpgrid.FindCenterOfCell(i, j, 0, x, y, z);
       twtgrid(i, j, 0) = static_cast<float>(toptime.GetZ(x, y));
       if (ps_seismic && nmo_seismic) {
-        double a = 2.0;
-        twtppgrid(i, j, 0) = 2 / (a + 1) * (twtgrid(i, j, 0) + 1000 * (a - 1) * z_w / v_w);
-        twtssgrid(i, j, 0) = 2 * twtgrid(i, j, 0) - twtppgrid(i, j, 0);
+        float a = 2.0;
+        twtppgrid(i, j, 0) = 2.0f/(a + 1.0f)*(twtgrid(i, j, 0) + 1000.0f*(a - 1.0f)*static_cast<float>(z_w/v_w));
+        twtssgrid(i, j, 0) = 2.0f*twtgrid(i, j, 0) - twtppgrid(i, j, 0);
       }
-      if (toptime.IsMissing(twtgrid(i, j, 0)) == false) {
-        for (size_t k = 1; k < nk; k++) {
+      if (!toptime.IsMissing(twtgrid(i, j, 0))) {
+        for (size_t k = 1 ; k < nk ; k++) {
+          float dz   = zgrid(i, j, k) - zgrid(i, j, k - 1);
+          float tfac = 1000.0f;
           if(ps_seismic) {
-            twtgrid(i, j, k) = twtgrid(i, j, k - 1) + static_cast<float>(1000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vpgrid(i, j, k + 1)) + static_cast<float>(1000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vsgrid(i, j, k + 1));
+            twtgrid(i, j, k) = twtgrid(i, j, k - 1) + dz*tfac/vpgrid(i, j, k + 1) + dz*tfac/vsgrid(i, j, k + 1);
           }
           else {
-            twtgrid(i, j, k) = twtgrid(i, j, k - 1) + static_cast<float>(2000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vpgrid(i, j, k + 1));
+            tfac *= 2.0f;
+            twtgrid(i, j, k) = twtgrid(i, j, k - 1) + dz*tfac/vpgrid(i, j, k + 1);
           }
           if (ps_seismic && nmo_seismic){
-            twtppgrid(i, j, k) = twtppgrid(i, j, k - 1) + static_cast<float>(2000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vpgrid(i, j, k + 1));
-            twtssgrid(i, j, k) = twtssgrid(i, j, k - 1) + static_cast<float>(2000.0 * (zgrid(i, j, k) - zgrid(i, j, k - 1)) / vsgrid(i, j, k + 1));
+            tfac *= 2.0f;
+            twtppgrid(i, j, k) = twtppgrid(i, j, k - 1) + dz*tfac/vpgrid(i, j, k + 1);
+            twtssgrid(i, j, k) = twtssgrid(i, j, k - 1) + dz*tfac/vsgrid(i, j, k + 1);
           }
         }
 
-        size_t ii, jj;
-        double xstart, xend;
-        double ystart, yend;
-        xstart = x - dx1;
-        ystart = y - dy1;
-        xend = x + dx1;
-        yend = y + dy1;
+        double xstart = x - dx1;
+        double ystart = y - dy1;
+        double xend   = x + dx1;
+        double yend   = y + dy1;
         x = xstart;
         y = ystart;
         while (x < xend) {
           y = ystart;
           while (y < yend) {
+            size_t ii, jj;
             bottime.FindIndex(x, y, ii, jj);
             bottime(ii, jj) = twtgrid(i, j, nk - 1);
             y = y + dy2;
@@ -1488,12 +1555,12 @@ void SeismicRegridding::FindTWT(SeismicParameters &seismic_parameters,
       }
       else {
         for (size_t k = 0; k < nk; k++) {
-          twtgrid(i, j, k) = -999.0;
+          twtgrid(i, j, k) = -999.0f;
         }
         if (ps_seismic && nmo_seismic) {
           for (size_t k = 0; k < nk; k++) {
-            twtppgrid(i, j, k) = -999.0;
-            twtssgrid(i, j, k) = -999.0;
+            twtppgrid(i, j, k) = -999.0f;
+            twtssgrid(i, j, k) = -999.0f;
           }
         }
       }
@@ -1535,80 +1602,17 @@ void SeismicRegridding::SetElasticTriangles(std::vector<NRLib::Point>           
   }
 }
 
-bool SeismicRegridding::Is124Triangulate(std::vector<NRLib::Point> pt_vp)
-{
-  bool triangulate_124 = true;
-  NRLib::Point vec1, vec2;
-  vec1   = pt_vp[0] - pt_vp[1];
-  vec1.z = 0;
-  vec2   = pt_vp[3] - pt_vp[1];
-  vec2.z = 0;
-  double delaunay_angle = vec1.GetAngle(vec2);
-  vec1   = pt_vp[0] - pt_vp[2];
-  vec1.z = 0;
-  vec2   = pt_vp[3] - pt_vp[2];
-  vec2.z = 0;
-  delaunay_angle += vec1.GetAngle(vec2);
-  if (delaunay_angle > NRLib::Pi) {
-    triangulate_124 = false;
-  }
-  return triangulate_124;
-}
-
-void SeismicRegridding::GetCornerPointDir(std::vector<size_t> &a,
-                                          std::vector<size_t> &b,
-                                          std::vector<size_t> &c,
-                                          bool                 left,
-                                          bool                 right,
-                                          bool                 bot,
-                                          bool                 top)
-{
-  if (top || bot || left) {
-    a[0] = 0;
-    a[1] = 0;
-  }
-  else {
-    a[0] = 1;
-    a[1] = 1;
-  }
-  if (bot || left || right) {
-    b[0] = 0;
-    b[1] = 0;
-  }
-  else {
-    b[0] = 1;
-    b[1] = 1;
-  }
-  if (top || bot || right) {
-    a[2] = 1;
-    a[3] = 1;
-  }
-  else {
-    a[2] = 0;
-    a[3] = 0;
-  }
-  if (top || left || right) {
-    b[2] = 1;
-    b[3] = 1;
-  }
-  else {
-    b[2] = 0;
-    b[3] = 0;
-  }
-  c[0] = 0;
-  c[1] = 1;
-  c[2] = 0;
-  c[3] = 1;
-}
-
 bool SeismicRegridding::FindTopCell(const NRLib::EclipseGeometry &geometry,
-                                    size_t  i,
-                                    size_t &jj)
+                                    size_t   i,
+                                    size_t & jj)
 {
   int j = static_cast<int>(jj);
-  while (j >= 0 && !(geometry.IsPillarActive(i, j) && geometry.IsPillarActive(i + 1, j)
-    && geometry.IsPillarActive(i, j + 1) && geometry.IsPillarActive(i + 1, j + 1)
-    && geometry.IsPillarActive(i + 2, j) && geometry.IsPillarActive(i + 2, j + 1))) {
+  while (j >= 0 && !(geometry.IsPillarActive(i    ,     j) &&
+                     geometry.IsPillarActive(i + 1,     j) &&
+                     geometry.IsPillarActive(i    , j + 1) &&
+                     geometry.IsPillarActive(i + 1, j + 1) &&
+                     geometry.IsPillarActive(i + 2,     j) &&
+                     geometry.IsPillarActive(i + 2, j + 1))) {
       j--;
   }
   if (j >= 0){
@@ -1619,14 +1623,17 @@ bool SeismicRegridding::FindTopCell(const NRLib::EclipseGeometry &geometry,
     return false;
 }
 
-bool SeismicRegridding::FindBotCell(const NRLib::EclipseGeometry &geometry,
-                                    size_t  nj,
-                                    size_t  i,
-                                    size_t &j)
+bool SeismicRegridding::FindBotCell(const NRLib::EclipseGeometry & geometry,
+                                    size_t                         nj,
+                                    size_t                         i,
+                                    size_t                       & j)
 {
-  while (j < nj && !(geometry.IsPillarActive(i, j) && geometry.IsPillarActive(i + 1, j)
-    && geometry.IsPillarActive(i, j + 1) && geometry.IsPillarActive(i + 1, j + 1)
-    && geometry.IsPillarActive(i + 2, j) && geometry.IsPillarActive(i + 2, j + 1))) {
+  while (j < nj && !(geometry.IsPillarActive(i    ,     j) &&
+                     geometry.IsPillarActive(i + 1,     j) &&
+                     geometry.IsPillarActive(i    , j + 1) &&
+                     geometry.IsPillarActive(i + 1, j + 1) &&
+                     geometry.IsPillarActive(i + 2,     j) &&
+                     geometry.IsPillarActive(i + 2, j + 1))) {
       j++;
   }
   if (j < nj)
@@ -1635,14 +1642,17 @@ bool SeismicRegridding::FindBotCell(const NRLib::EclipseGeometry &geometry,
     return false;
 }
 
-bool SeismicRegridding::FindLeftCell(const NRLib::EclipseGeometry &geometry,
-                                     size_t  ni,
-                                     size_t &i,
-                                     size_t  j)
+bool SeismicRegridding::FindLeftCell(const NRLib::EclipseGeometry & geometry,
+                                     size_t                         ni,
+                                     size_t                       & i,
+                                     size_t                         j)
 {
-  while (i < ni && !(geometry.IsPillarActive(i, j) && geometry.IsPillarActive(i, j + 1)
-    && geometry.IsPillarActive(i + 1, j) && geometry.IsPillarActive(i + 1, j + 1)
-    && geometry.IsPillarActive(i, j + 2) && geometry.IsPillarActive(i + 1, j + 2))) {
+  while (i < ni && !(geometry.IsPillarActive(i    ,     j) &&
+                     geometry.IsPillarActive(i    , j + 1) &&
+                     geometry.IsPillarActive(i + 1,     j) &&
+                     geometry.IsPillarActive(i + 1, j + 1) &&
+                     geometry.IsPillarActive(i    , j + 2) &&
+                     geometry.IsPillarActive(i + 1, j + 2))) {
       i++;
   }
   if (i < ni)
@@ -1656,9 +1666,12 @@ bool SeismicRegridding::FindRightCell(const NRLib::EclipseGeometry &geometry,
                                       size_t  j)
 {
   int i = static_cast<int>(ii);
-  while (i >= 0 && !(geometry.IsPillarActive(i, j) && geometry.IsPillarActive(i, j + 1)
-    && geometry.IsPillarActive(i + 1, j) && geometry.IsPillarActive(i + 1, j + 1)
-    && geometry.IsPillarActive(i, j + 2) && geometry.IsPillarActive(i + 1, j + 2))) {
+  while (i >= 0 && !(geometry.IsPillarActive(i    ,     j) &&
+                     geometry.IsPillarActive(i    , j + 1) &&
+                     geometry.IsPillarActive(i + 1,     j) &&
+                     geometry.IsPillarActive(i + 1, j + 1) &&
+                     geometry.IsPillarActive(i    , j + 2) &&
+                     geometry.IsPillarActive(i + 1, j + 2))) {
       i--;
   }
   if (i >= 0){
@@ -1671,9 +1684,9 @@ bool SeismicRegridding::FindRightCell(const NRLib::EclipseGeometry &geometry,
 
 void SeismicRegridding::VpPostProcess(SeismicParameters &seismic_parameters)
 {
-  NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
-  NRLib::StormContGrid &vsgrid  = seismic_parameters.GetVsGrid();
-  NRLib::StormContGrid &rhogrid = seismic_parameters.GetRhoGrid();
+  NRLib::StormContGrid & vpgrid  = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid & vsgrid  = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid & rhogrid = seismic_parameters.GetRhoGrid();
 
   std::vector<double> constvp   = seismic_parameters.GetModelSettings()->GetConstVp();
   std::vector<double> constvs   = seismic_parameters.GetModelSettings()->GetConstVs();

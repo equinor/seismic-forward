@@ -44,6 +44,8 @@ private:
                                size_t                         topk,
                                size_t                         botk);
 
+  static bool Is124Triangulate(std::vector<NRLib::Point> pt_vp);
+
   static void FindEdges(SeismicParameters                   & seismic_parameters,
                         const NRLib::EclipseGeometry        & geometry,
                         const NRLib::Grid<double>           & vp_grid,
@@ -75,6 +77,8 @@ private:
                           size_t                                j,
                           size_t                                k,
                           std::vector<NRLib::Point>           & pt_vp);
+
+
 
 
 
@@ -137,8 +141,6 @@ private:
                                   bool                                      triangulate_124,
                                   std::vector<NRLib::Triangle>            & triangles_elastic,
                                   std::vector<NRLib::Triangle>            & triangles_extra_param);
-
-  static bool Is124Triangulate(std::vector<NRLib::Point> pt_vp);
 
   static void GetCornerPointDir(std::vector<size_t> & a,
                                 std::vector<size_t> & b,
