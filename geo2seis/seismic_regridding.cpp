@@ -26,7 +26,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
 //-----------------------------------------------------------------------------------
 {
   //time_t t1 = time(0);   // get time now
-  NRLib::LogKit::WriteHeader("Finding depth values");
+  NRLib::LogKit::WriteHeader("Find depth values");
   FindZValues(seismic_parameters,
               model_settings,
               n_threads);
@@ -43,15 +43,16 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   //seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
 
   seismic_parameters.DeleteEclipseGrid();
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nDeleting Eclipse grid to free memory.\n");
+  NRLib::LogKit::WriteHeader("Make TWT grid");
 
   NRLib::RegularSurface<double> & toptime = seismic_parameters.GetTopTime();
   NRLib::RegularSurface<double> & bottime = seismic_parameters.GetBottomTime();
   Wavelet                       * wavelet = seismic_parameters.GetWavelet();
 
-  //------------------------Make TWT grid-----------------------------------
-  //t1 = time(0);
   FindTWT(seismic_parameters, toptime, bottime, n_threads);
-  //seismic_parameters.PrintElapsedTime(t1, "finding twt");
+
+  NRLib::LogKit::WriteHeader("Export grids");
 
   //---generate, write and delete vrms grid if writing is requested---------
   if (model_settings->GetNMOCorr() && model_settings->GetOutputVrms()){
@@ -60,15 +61,21 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
       NRLib::StormContGrid & twtppgrid = seismic_parameters.GetTwtPPGrid();
       NRLib::StormContGrid & vpgrid    = seismic_parameters.GetVpGrid();
       NRLib::StormContGrid & vsgrid    = seismic_parameters.GetVsGrid();
+
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFind Vrms using Vp.");
       FindVrms(seismic_parameters, vpgrid, twtppgrid);
       seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters, "PP");
+
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFind Vrms using Vs.");
       FindVrms(seismic_parameters, vsgrid, twtssgrid);
       seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters, "SS");
       seismic_parameters.DeleteVrmsGrid();
     }
     else {
-      NRLib::StormContGrid &twtgrid = seismic_parameters.GetTwtGrid();
-      NRLib::StormContGrid &vpgrid  = seismic_parameters.GetVpGrid();
+      NRLib::StormContGrid & twtgrid = seismic_parameters.GetTwtGrid();
+      NRLib::StormContGrid & vpgrid  = seismic_parameters.GetVpGrid();
+
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFind Vrms using Vp.");
       FindVrms(seismic_parameters, vpgrid, twtgrid);
       seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters);
       seismic_parameters.DeleteVrmsGrid();
@@ -355,12 +362,12 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   }
 
   size_t nijk = egrid.GetNI()*egrid.GetNJ()*egrid.GetNK();
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive cells in Eclipse grid\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive cells in Eclipse grid above and in reservoir.\n");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nTotal number of grid cells: %d x %d x %d = %d\n",egrid.GetNI(),egrid.GetNJ(),egrid.GetNK(), nijk);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOB1 = Using default value for overburden above first layer");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOB2 = Using default value for overburden in and below first layer");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nRES = Using default value for reservoir in reservoir");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nZRO = Using cell value from cell above for zero thickness cells\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOB1 = Using default value for overburden above first layer.");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOB2 = Using default value for overburden in and below first layer.");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nRES = Using default value for reservoir in reservoir.");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nZRO = Using cell value from cell above for zero thickness cells.\n");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGridName            OB1     OB2     RES     ZRO");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------------\n");
 
@@ -405,6 +412,8 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   double sinA      = sin(angle);
   double x_min_rot = vpgrid.GetXMin()*cosA + vpgrid.GetYMin()*sinA;
   double y_min_rot = vpgrid.GetYMin()*cosA - vpgrid.GetXMin()*sinA;
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nResampling Eclipse grids into regular grids.\n");
 
 #ifdef WITH_OMP
   int  chunk_size = 1;
@@ -1310,54 +1319,42 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
 
   bool                   found_bot           = false;
 
-
-
   if (default_underburden)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling grids below reservoir with default underburden values\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling regular grids under reservoir using default underburden.\n");
   else
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling grids below reservoir with ...\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling regular grids under reservoir.\n");
+
+  int count1 = 0;
+  int count2 = 0;
+  int count3 = 0;
 
   for (size_t i = 0 ; i < ni ; ++i) {
     for (size_t j = 0 ; j < nj ; ++j) {
-      if (default_underburden) {
-        found_bot = false;
-        for (size_t k = nk - 1 ; k > 0 ; --k) {
-          if (found_bot && vpgrid(i, j, k) == missing) {
-            vpgrid (i, j, k) = static_cast<float>(constvp [1]);
-            vsgrid (i, j, k) = static_cast<float>(constvs [1]);
-            rhogrid(i, j, k) = static_cast<float>(constrho[1]);
-          }
-          else if (!found_bot && vpgrid(i, j, k) != missing) {
-            found_bot = true;
-            for (size_t kk = nk - 1 ; kk > k ; --kk) {
+
+      found_bot = false;
+      for (size_t k = nk - 1 ; k > 0 ; --k) {
+        if (found_bot && vpgrid(i, j, k) == missing) {
+          vpgrid (i, j, k) = static_cast<float>(constvp [1]);
+          vsgrid (i, j, k) = static_cast<float>(constvs [1]);
+          rhogrid(i, j, k) = static_cast<float>(constrho[1]);
+          count1++;
+        }
+        else if (!found_bot && vpgrid(i, j, k) != missing) {
+          found_bot = true;
+          if (default_underburden) {
+            for (size_t kk = nk - 1; kk > k; --kk) {
               vpgrid (i, j, kk) = static_cast<float>(constvp [2]);
               vsgrid (i, j, kk) = static_cast<float>(constvs [2]);
               rhogrid(i, j, kk) = static_cast<float>(constrho[2]);
+              count2++;
             }
           }
-        }
-        if (!found_bot) {
-          for (size_t k = 0 ; k < nk ; ++k) {
-            vpgrid (i, j, k) = static_cast<float>(constvp [1]);
-            vsgrid (i, j, k) = static_cast<float>(constvs [1]);
-            rhogrid(i, j, k) = static_cast<float>(constrho[1]);
-          }
-        }
-      }
-      else {
-        found_bot = false;
-        for (size_t k = nk - 1 ; k > 0 ; --k) {
-          if (found_bot && vpgrid(i, j, k) == missing) {
-            vpgrid (i, j, k) = static_cast<float>(constvp [1]);
-            vsgrid (i, j, k) = static_cast<float>(constvs [1]);
-            rhogrid(i, j, k) = static_cast<float>(constrho[1]);
-          }
-          else if (!found_bot && vpgrid(i, j, k) != missing) {
-            found_bot = true;
-            for (size_t kk = nk - 1 ; kk > k ; --kk) {
+          else {
+            for (size_t kk = nk - 1; kk > k; --kk) {
               vpgrid (i, j, kk) = vpgrid (i, j, k);
               vsgrid (i, j, kk) = vsgrid (i, j, k);
               rhogrid(i, j, kk) = rhogrid(i, j, k);
+              count2++;
             }
           }
         }
@@ -1366,11 +1363,18 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
             vpgrid (i, j, k) = static_cast<float>(constvp [1]);
             vsgrid (i, j, k) = static_cast<float>(constvs [1]);
             rhogrid(i, j, k) = static_cast<float>(constrho[1]);
+            count3++;
           }
         }
       }
     }
   }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting all cells in trace equal to default reservoir value    : %7d", count3);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in bottom layer equal to default reservoir value : %7d", count1);
+  if (default_underburden)
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to default underburden            : %7d\n\n", count2);
+  else
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to layer below                    : %7d\n\n", count2);
 }
 
 
@@ -1398,8 +1402,8 @@ void SeismicRegridding::WriteElasticParametersSegy(SeismicParameters &seismic_pa
     WriteParametersTimeSegy(seismic_parameters, n_threads, input_grid, filenames);
   }
   else {
-    filenames.push_back( "vp_depth");
-    filenames.push_back( "vs_depth");
+    filenames.push_back("vp_depth");
+    filenames.push_back("vs_depth");
     filenames.push_back("rho_depth");
 
     WriteParametersDepthSegy(seismic_parameters, n_threads, input_grid, filenames);

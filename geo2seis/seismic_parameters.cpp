@@ -403,9 +403,9 @@ void SeismicParameters::CreateGrids(SeismicGeometry * seismic_geometry,
   vsgrid_  = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
   rhogrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl + 1, missing_);
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nMaking grids:");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  z, TWT               %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx * ny * nzrefl);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Vp, Vs, Rho          %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx * ny * (nzrefl + 1));
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nMaking regular grids:");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  z, TWT               %4d x %4d x %4d : %10d", nx, ny, nzrefl    , nx * ny * nzrefl);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Vp, Vs, Rho          %4d x %4d x %4d : %10d", nx, ny, nzrefl + 1, nx * ny * (nzrefl + 1));
 
   if (nmo_corr && ps_seismic) {
     twtssgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
