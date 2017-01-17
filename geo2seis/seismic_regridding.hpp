@@ -46,6 +46,32 @@ private:
 
   static bool Is124Triangulate(std::vector<NRLib::Point> pt_vp);
 
+  static void SetElasticTriangles(std::vector<NRLib::Point>               & pt_vp,
+                                  std::vector<NRLib::Point>               & pt_vs,
+                                  std::vector<NRLib::Point>               & pt_rho,
+                                  std::vector<std::vector<NRLib::Point> > & pt_extra_param,
+                                  bool                                      triangulate_124,
+                                  std::vector<NRLib::Triangle>            & triangles_elastic,
+                                  std::vector<NRLib::Triangle>            & triangles_extra_param);
+
+  static bool FindTopCell(const NRLib::EclipseGeometry & geometry,
+                          size_t                         i,
+                          size_t                       & j);
+
+  static bool FindBotCell(const NRLib::EclipseGeometry & geometry,
+                          size_t                         nj,
+                          size_t                         i,
+                          size_t                       & j);
+
+  static bool FindLeftCell(const NRLib::EclipseGeometry & geometry,
+                           size_t                         ni,
+                           size_t                       & i,
+                           size_t                         j);
+
+  static bool FindRightCell(const NRLib::EclipseGeometry & geometry,
+                            size_t                       & i,
+                            size_t                         j);
+
   static void FindEdges(SeismicParameters                   & seismic_parameters,
                         const NRLib::EclipseGeometry        & geometry,
                         const NRLib::Grid<double>           & vp_grid,
@@ -59,6 +85,14 @@ private:
                         bool                                  bot,
                         bool                                  right,
                         bool                                  left);
+
+  static void GetCornerPointDir(std::vector<size_t> & a,
+                                std::vector<size_t> & b,
+                                std::vector<size_t> & c,
+                                bool                  left,
+                                bool                  right,
+                                bool                  bot,
+                                bool                  top);
 
   static void FindCornerCellPoints(const NRLib::EclipseGeometry & geometry,
                                    std::vector<NRLib::Point>    & vp_point,
@@ -78,8 +112,12 @@ private:
                           size_t                                k,
                           std::vector<NRLib::Point>           & pt_vp);
 
+  static void PostProcess(SeismicParameters & seismic_parameters,
+                          ModelSettings     *  model_settings);
 
 
+
+// ========================== Methods below have not been studied ==========================
 
 
   static void WriteElasticParametersSegy(SeismicParameters & seismic_parameters,
@@ -123,8 +161,6 @@ private:
                               double                 target_k,
                               NRLib::StormContGrid & grid);
 
-  static void VpPostProcess(SeismicParameters & seismic_parameters);
-
   static void FindVrms(SeismicParameters          & seismic_parameters,
                        const NRLib::StormContGrid & vgrid,
                        const NRLib::StormContGrid & twtgrid);
@@ -133,40 +169,6 @@ private:
                       NRLib::RegularSurface<double> & toptime,
                       NRLib::RegularSurface<double> & bottime,
                       size_t                          n_threads);
-
-  static void SetElasticTriangles(std::vector<NRLib::Point>               & pt_vp,
-                                  std::vector<NRLib::Point>               & pt_vs,
-                                  std::vector<NRLib::Point>               & pt_rho,
-                                  std::vector<std::vector<NRLib::Point> > & pt_extra_param,
-                                  bool                                      triangulate_124,
-                                  std::vector<NRLib::Triangle>            & triangles_elastic,
-                                  std::vector<NRLib::Triangle>            & triangles_extra_param);
-
-  static void GetCornerPointDir(std::vector<size_t> & a,
-                                std::vector<size_t> & b,
-                                std::vector<size_t> & c,
-                                bool                  left,
-                                bool                  right,
-                                bool                  bot,
-                                bool                  top);
-
-  static bool FindTopCell(const NRLib::EclipseGeometry & geometry,
-                          size_t                         i,
-                          size_t                       & j);
-
-  static bool FindBotCell(const NRLib::EclipseGeometry & geometry,
-                          size_t                         nj,
-                          size_t                         i,
-                          size_t                       & j);
-
-  static bool FindLeftCell(const NRLib::EclipseGeometry & geometry,
-                           size_t                         ni,
-                           size_t                       & i,
-                           size_t                         j);
-
-  static bool FindRightCell(const NRLib::EclipseGeometry & geometry,
-                            size_t                        & i,
-                            size_t                          j);
 
 };
 
