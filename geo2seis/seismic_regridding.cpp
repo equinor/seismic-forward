@@ -50,7 +50,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   NRLib::RegularSurface<double> & bottime = seismic_parameters.GetBottomTime();
   Wavelet                       * wavelet = seismic_parameters.GetWavelet();
 
-  FindTWT(seismic_parameters, toptime, bottime, n_threads);
+  FindTWT(seismic_parameters, model_settings, toptime, bottime, n_threads);
 
   NRLib::LogKit::WriteHeader("Export grids");
 
@@ -63,11 +63,17 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
       NRLib::StormContGrid & vsgrid    = seismic_parameters.GetVsGrid();
 
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFind Vrms using Vp.");
-      FindVrms(seismic_parameters, vpgrid, twtppgrid);
+      FindVrms(seismic_parameters,
+               model_settings,
+               vpgrid,
+               twtppgrid);
       seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters, "PP");
 
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFind Vrms using Vs.");
-      FindVrms(seismic_parameters, vsgrid, twtssgrid);
+      FindVrms(seismic_parameters,
+               model_settings,
+               vsgrid,
+               twtssgrid);
       seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters, "SS");
       seismic_parameters.DeleteVrmsGrid();
     }
@@ -76,7 +82,10 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
       NRLib::StormContGrid & vpgrid  = seismic_parameters.GetVpGrid();
 
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFind Vrms using Vp.");
-      FindVrms(seismic_parameters, vpgrid, twtgrid);
+      FindVrms(seismic_parameters,
+               model_settings,
+               vpgrid,
+               twtgrid);
       seismic_parameters.GetSeismicOutput()->WriteVrms(seismic_parameters);
       seismic_parameters.DeleteVrmsGrid();
     }
@@ -1317,12 +1326,7 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
   size_t                 nj                  = vpgrid.GetNJ();
   size_t                 nk                  = vpgrid.GetNK();
 
-  bool                   found_bot           = false;
-
-  if (default_underburden)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling regular grids under reservoir using default underburden.\n");
-  else
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling regular grids under reservoir.\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling remaining cells in regular grids.\n");
 
   int count1 = 0;
   int count2 = 0;
@@ -1331,7 +1335,7 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
   for (size_t i = 0 ; i < ni ; ++i) {
     for (size_t j = 0 ; j < nj ; ++j) {
 
-      found_bot = false;
+      bool found_bot = false;
       for (size_t k = nk - 1 ; k > 0 ; --k) {
         if (found_bot && vpgrid(i, j, k) == missing) {
           vpgrid (i, j, k) = static_cast<float>(constvp [1]);
@@ -1372,17 +1376,149 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting all cells in trace equal to default reservoir value    : %7d", count3);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in bottom layer equal to default reservoir value : %7d", count1);
   if (default_underburden)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to default underburden            : %7d\n\n", count2);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to default underburden            : %7d\n", count2);
   else
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to layer below                    : %7d\n\n", count2);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to layer below                    : %7d\n", count2);
 }
 
+//---------------------------------------------------------------------------------
+void SeismicRegridding::FindTWT(SeismicParameters             & seismic_parameters,
+                                ModelSettings                 * model_settings,
+                                NRLib::RegularSurface<double> & toptime,
+                                NRLib::RegularSurface<double> & bottime,
+                                size_t                          n_threads)
+//---------------------------------------------------------------------------------
+{
+  NRLib::StormContGrid & vpgrid      = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid & vsgrid      = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid & twtgrid     = seismic_parameters.GetTwtGrid();
+  NRLib::StormContGrid & twtssgrid   = seismic_parameters.GetTwtSSGrid();
+  NRLib::StormContGrid & twtppgrid   = seismic_parameters.GetTwtPPGrid();
+  NRLib::StormContGrid & zgrid       = seismic_parameters.GetZGrid();
+
+  bool                   ps_seismic  = model_settings->GetPSSeismic();
+  bool                   nmo_seismic = model_settings->GetNMOCorr();
+  double                 v_w         = model_settings->GetVw();
+  double                 z_w         = model_settings->GetZw();
+
+  size_t                 ni          = vpgrid.GetNI();
+  size_t                 nj          = vpgrid.GetNJ();
+  size_t                 nk          = twtgrid.GetNK();
+  double                 dx1         = vpgrid.GetDX();
+  double                 dy1         = vpgrid.GetDY();
+  double                 dx2         = bottime.GetDX();
+  double                 dy2         = bottime.GetDY();
+
+#ifdef WITH_OMP
+  int  chunk_size = 1;
+#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
+#endif
+  for (size_t i = 0; i < ni ; i++) {
+    for (size_t j = 0; j < nj ; j++) {
+      double x, y, z;
+      vpgrid.FindCenterOfCell(i, j, 0, x, y, z);
+      twtgrid(i, j, 0) = static_cast<float>(toptime.GetZ(x, y));
+      if (ps_seismic && nmo_seismic) {
+        float a = 2.0;
+        twtppgrid(i, j, 0) = 2.0f/(a + 1.0f)*(twtgrid(i, j, 0) + 1000.0f*(a - 1.0f)*static_cast<float>(z_w/v_w));
+        twtssgrid(i, j, 0) = 2.0f*twtgrid(i, j, 0) - twtppgrid(i, j, 0);
+      }
+      if (!toptime.IsMissing(twtgrid(i, j, 0))) {
+        for (size_t k = 1 ; k < nk ; k++) {
+          float dz   = zgrid(i, j, k) - zgrid(i, j, k - 1);
+          float tfac = 1000.0f;
+          if(ps_seismic) {
+            twtgrid(i, j, k) = twtgrid(i, j, k - 1) + dz*tfac/vpgrid(i, j, k + 1) + dz*tfac/vsgrid(i, j, k + 1);
+          }
+          else {
+            tfac *= 2.0f;
+            twtgrid(i, j, k) = twtgrid(i, j, k - 1) + dz*tfac/vpgrid(i, j, k + 1);
+          }
+          if (ps_seismic && nmo_seismic){
+            tfac *= 2.0f;
+            twtppgrid(i, j, k) = twtppgrid(i, j, k - 1) + dz*tfac/vpgrid(i, j, k + 1);
+            twtssgrid(i, j, k) = twtssgrid(i, j, k - 1) + dz*tfac/vsgrid(i, j, k + 1);
+          }
+        }
+
+        double xstart = x - dx1;
+        double ystart = y - dy1;
+        double xend   = x + dx1;
+        double yend   = y + dy1;
+        x = xstart;
+        y = ystart;
+        while (x < xend) {
+          y = ystart;
+          while (y < yend) {
+            size_t ii, jj;
+            bottime.FindIndex(x, y, ii, jj);
+            bottime(ii, jj) = twtgrid(i, j, nk - 1);
+            y = y + dy2;
+          }
+          x = x + dx2;
+        }
+      }
+      else {
+        for (size_t k = 0; k < nk; k++) {
+          twtgrid(i, j, k) = -999.0f;
+        }
+        if (ps_seismic && nmo_seismic) {
+          for (size_t k = 0; k < nk; k++) {
+            twtppgrid(i, j, k) = -999.0f;
+            twtssgrid(i, j, k) = -999.0f;
+          }
+        }
+      }
+    }
+  }
+}
+
+//-------------------------------------------------------------------------------
+void SeismicRegridding::FindVrms(SeismicParameters          & seismic_parameters,
+                                 ModelSettings              * model_settings,
+                                 const NRLib::StormContGrid & vgrid,
+                                 const NRLib::StormContGrid & twtgrid)
+//-------------------------------------------------------------------------------
+{
+  NRLib::StormContGrid & zgrid    = seismic_parameters.GetZGrid();
+  NRLib::StormContGrid & vrmsgrid = seismic_parameters.GetVrmsGrid();
+
+  double                 v_w      = seismic_parameters.GetModelSettings()->GetVw();
+  double                 z_w      = seismic_parameters.GetModelSettings()->GetZw();
+  double                 twt_w    = 2000*z_w/v_w;
+
+  double                 v_over;
+  double                 tmp;
+  double                 tmp0;
+
+  for (size_t i = 0; i < vrmsgrid.GetNI(); ++i) {
+    for (size_t j = 0; j < vrmsgrid.GetNJ(); ++j) {
+      if (twtgrid(i,j,0) == -999.0f) {
+        for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
+          vrmsgrid(i,j,k) = -999.0f;
+        }
+      }
+      else {
+        v_over = 2000*(zgrid(i,j,0) - z_w)/(twtgrid(i,j,0) - 2000*z_w/v_w);
+        tmp0 = v_w*v_w*twt_w + v_over*v_over*(twtgrid(i,j,0) - twt_w);
+        for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
+          tmp = tmp0;
+          for (size_t l = 1; l <= k; ++l) {
+            tmp += vgrid(i,j,l)* vgrid(i,j,l)*(twtgrid(i,j,l) - twtgrid(i,j,l-1));
+          }
+          tmp = tmp / twtgrid(i,j,k);
+          vrmsgrid(i,j,k) = static_cast<float>(std::sqrt(tmp));
+        }
+      }
+    }
+  }
+}
 
 //============================ Not looked through =====================================
 
-void SeismicRegridding::WriteElasticParametersSegy(SeismicParameters &seismic_parameters,
-                                                   size_t             n_threads,
-                                                   bool               time)
+void SeismicRegridding::WriteElasticParametersSegy(SeismicParameters & seismic_parameters,
+                                                   size_t              n_threads,
+                                                   bool                time)
 {
   std::vector<NRLib::StormContGrid*> input_grid(0);
   std::vector<std::string>           filenames(0);
@@ -1657,125 +1793,6 @@ void SeismicRegridding::WriteResampledParameter(GenResamplParam * params,
   }
 }
 
-void SeismicRegridding::FindVrms(SeismicParameters          & seismic_parameters,
-                                 const NRLib::StormContGrid & vgrid,
-                                 const NRLib::StormContGrid & twtgrid)
-{
-  double v_w = seismic_parameters.GetModelSettings()->GetVw();
-  double z_w = seismic_parameters.GetModelSettings()->GetZw();
-  NRLib::StormContGrid &zgrid    = seismic_parameters.GetZGrid();
-  NRLib::StormContGrid &vrmsgrid = seismic_parameters.GetVrmsGrid();
 
-  double v_over;
-  double twt_w = 2000*z_w/v_w;
-  double tmp, tmp0;
-  for (size_t i = 0; i < vrmsgrid.GetNI(); ++i) {
-    for (size_t j = 0; j < vrmsgrid.GetNJ(); ++j) {
-      if (twtgrid(i,j,0) == -999.0f) {
-        for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
-          vrmsgrid(i,j,k) = -999.0f;
-        }
-      }
-      else {
-        v_over = 2000*(zgrid(i,j,0) - z_w)/(twtgrid(i,j,0) - 2000*z_w/v_w);
-        tmp0 = v_w*v_w*twt_w + v_over*v_over*(twtgrid(i,j,0) - twt_w);
-        for (size_t k = 0; k < vrmsgrid.GetNK(); ++k) {
-          tmp = tmp0;
-          for (size_t l = 1; l <= k; ++l) {
-            tmp += vgrid(i,j,l)* vgrid(i,j,l)*(twtgrid(i,j,l) - twtgrid(i,j,l-1));
-          }
-          tmp = tmp / twtgrid(i,j,k);
-          vrmsgrid(i,j,k) = float(std::sqrt(tmp));
-        }
-      }
-    }
-  }
-}
-
-void SeismicRegridding::FindTWT(SeismicParameters             & seismic_parameters,
-                                NRLib::RegularSurface<double> & toptime,
-                                NRLib::RegularSurface<double> & bottime,
-                                size_t                          n_threads)
-{
-  NRLib::StormContGrid &vpgrid    = seismic_parameters.GetVpGrid();
-  NRLib::StormContGrid &vsgrid    = seismic_parameters.GetVsGrid();
-  NRLib::StormContGrid &twtgrid   = seismic_parameters.GetTwtGrid();
-  NRLib::StormContGrid &twtssgrid = seismic_parameters.GetTwtSSGrid();
-  NRLib::StormContGrid &twtppgrid = seismic_parameters.GetTwtPPGrid();
-  NRLib::StormContGrid &zgrid     = seismic_parameters.GetZGrid();
-  bool ps_seismic                 = seismic_parameters.GetModelSettings()->GetPSSeismic();
-  bool nmo_seismic                = seismic_parameters.GetModelSettings()->GetNMOCorr();
-  double v_w                      = seismic_parameters.GetModelSettings()->GetVw();
-  double z_w                      = seismic_parameters.GetModelSettings()->GetZw();
-
-  size_t nk  = twtgrid.GetNK();
-  double dx1 = vpgrid.GetDX();
-  double dy1 = vpgrid.GetDY();
-  double dx2 = bottime.GetDX();
-  double dy2 = bottime.GetDY();
-
-#ifdef WITH_OMP
-  int  chunk_size = 1;
-#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
-#endif
-  for (size_t i = 0; i < vpgrid.GetNI(); i++) {
-    for (size_t j = 0; j < vpgrid.GetNJ(); j++) {
-      double x, y, z;
-      vpgrid.FindCenterOfCell(i, j, 0, x, y, z);
-      twtgrid(i, j, 0) = static_cast<float>(toptime.GetZ(x, y));
-      if (ps_seismic && nmo_seismic) {
-        float a = 2.0;
-        twtppgrid(i, j, 0) = 2.0f/(a + 1.0f)*(twtgrid(i, j, 0) + 1000.0f*(a - 1.0f)*static_cast<float>(z_w/v_w));
-        twtssgrid(i, j, 0) = 2.0f*twtgrid(i, j, 0) - twtppgrid(i, j, 0);
-      }
-      if (!toptime.IsMissing(twtgrid(i, j, 0))) {
-        for (size_t k = 1 ; k < nk ; k++) {
-          float dz   = zgrid(i, j, k) - zgrid(i, j, k - 1);
-          float tfac = 1000.0f;
-          if(ps_seismic) {
-            twtgrid(i, j, k) = twtgrid(i, j, k - 1) + dz*tfac/vpgrid(i, j, k + 1) + dz*tfac/vsgrid(i, j, k + 1);
-          }
-          else {
-            tfac *= 2.0f;
-            twtgrid(i, j, k) = twtgrid(i, j, k - 1) + dz*tfac/vpgrid(i, j, k + 1);
-          }
-          if (ps_seismic && nmo_seismic){
-            tfac *= 2.0f;
-            twtppgrid(i, j, k) = twtppgrid(i, j, k - 1) + dz*tfac/vpgrid(i, j, k + 1);
-            twtssgrid(i, j, k) = twtssgrid(i, j, k - 1) + dz*tfac/vsgrid(i, j, k + 1);
-          }
-        }
-
-        double xstart = x - dx1;
-        double ystart = y - dy1;
-        double xend   = x + dx1;
-        double yend   = y + dy1;
-        x = xstart;
-        y = ystart;
-        while (x < xend) {
-          y = ystart;
-          while (y < yend) {
-            size_t ii, jj;
-            bottime.FindIndex(x, y, ii, jj);
-            bottime(ii, jj) = twtgrid(i, j, nk - 1);
-            y = y + dy2;
-          }
-          x = x + dx2;
-        }
-      }
-      else {
-        for (size_t k = 0; k < nk; k++) {
-          twtgrid(i, j, k) = -999.0f;
-        }
-        if (ps_seismic && nmo_seismic) {
-          for (size_t k = 0; k < nk; k++) {
-            twtppgrid(i, j, k) = -999.0f;
-            twtssgrid(i, j, k) = -999.0f;
-          }
-        }
-      }
-    }
-  }
-}
 
 

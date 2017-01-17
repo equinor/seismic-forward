@@ -115,6 +115,16 @@ private:
   static void PostProcess(SeismicParameters & seismic_parameters,
                           ModelSettings     *  model_settings);
 
+  static void FindTWT(SeismicParameters             & seismic_parameters,
+                      ModelSettings                 * model_settings,
+                      NRLib::RegularSurface<double> & toptime,
+                      NRLib::RegularSurface<double> & bottime,
+                      size_t                          n_threads);
+
+  static void FindVrms(SeismicParameters          & seismic_parameters,
+                       ModelSettings              * model_settings,
+                       const NRLib::StormContGrid & vgrid,
+                       const NRLib::StormContGrid & twtgrid);
 
 
 // ========================== Methods below have not been studied ==========================
@@ -160,15 +170,6 @@ private:
                               size_t                 j,
                               double                 target_k,
                               NRLib::StormContGrid & grid);
-
-  static void FindVrms(SeismicParameters          & seismic_parameters,
-                       const NRLib::StormContGrid & vgrid,
-                       const NRLib::StormContGrid & twtgrid);
-
-  static void FindTWT(SeismicParameters             & seismic_parameters,
-                      NRLib::RegularSurface<double> & toptime,
-                      NRLib::RegularSurface<double> & bottime,
-                      size_t                          n_threads);
 
 };
 
