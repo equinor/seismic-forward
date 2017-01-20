@@ -15,9 +15,9 @@
 #include <omp.h>
 #endif
 
-//#include "nrlib/surface/regularsurfacerotated.hpp"
-//#include "nrlib/surface/regularsurface.hpp"
-//#include "nrlib/surface/surfaceio.hpp"
+#include "nrlib/surface/regularsurfacerotated.hpp"
+#include "nrlib/surface/regularsurface.hpp"
+#include "nrlib/surface/surfaceio.hpp"
 
 //-----------------------------------------------------------------------------------
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parameters,
@@ -110,6 +110,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
 
   bool interpolate = model_settings->GetResamplParamToSegyInterpol();
   time_t t1 = time(0);   // get time now
+
   //---resample and write ELASTIC parameters in segy------------
   if (model_settings->GetOutputElasticParametersTimeSegy() || model_settings->GetOutputElasticParametersDepthSegy()) {
     if (interpolate)
@@ -123,6 +124,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   if (model_settings->GetOutputElasticParametersDepthSegy()) {
     WriteElasticParametersSegy(seismic_parameters, n_threads, false);
   }
+
   //---resample, write and delete EXTRA parameter grids---------
   if (model_settings->GetOutputExtraParametersTimeSegy() || model_settings->GetOutputExtraParametersDepthSegy()) {
     if (interpolate)
@@ -138,8 +140,10 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   }
   seismic_parameters.DeleteExtraParameterGrids();
 
-  if (model_settings->GetOutputElasticParametersTimeSegy() || model_settings->GetOutputElasticParametersDepthSegy()
-    || model_settings->GetOutputExtraParametersTimeSegy() || model_settings->GetOutputExtraParametersDepthSegy()) {
+  if (model_settings->GetOutputElasticParametersTimeSegy()  ||
+      model_settings->GetOutputElasticParametersDepthSegy() ||
+      model_settings->GetOutputExtraParametersTimeSegy()    ||
+      model_settings->GetOutputExtraParametersDepthSegy()) {
     seismic_parameters.PrintElapsedTime(t1, "resampling parameters and write to SegY.");
   }
 
@@ -188,12 +192,14 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   }
 
   if (use_corner_point) {
-    geometry.FindLayerSurfaceCornerpoint(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, 0);
+    geometry.FindLayerSurfaceCornerpoint(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
   }
   else {
-    geometry.FindLayerSurface(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, 0);
+    geometry.FindLayerSurface(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
   }
   SetGridLayerFromSurface(zgrid, values[nk - 1], static_cast<size_t>(nk - 1));
+
+  //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nk = %d\n", nk - 2);
 
 
 #ifdef WITH_OMP
@@ -201,11 +207,14 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
   for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
+
+    //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nk = %d\n", k);
+
     if (use_corner_point) {
-      geometry.FindLayerSurfaceCornerpoint(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      geometry.FindLayerSurfaceCornerpoint(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, false);
     }
     else {
-      geometry.FindLayerSurface(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, 0);
+      geometry.FindLayerSurface(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, false);
     }
     SetGridLayerFromSurface(zgrid, values[k], static_cast<size_t>(k));
   }
@@ -229,6 +238,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
           }
           double x, y, z;
           zgrid.FindCenterOfCell(i, j, kk, x, y, z);
+          // Logging negative values
           std::vector<double> neg(5);
           neg[0] = static_cast<double>(k);
           neg[1] = x;
@@ -277,39 +287,32 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
     std::fstream fout;
     NRLib::OpenWrite(fout, "negative_dz_points.rmsinternal");
     fout << "Float Negative dz" << std::endl;
-    for (size_t i = 0 ; i < negative_dz_pts.size() ; i++) {
+    for (size_t i = 0; i < negative_dz_pts.size(); i++) {
       fout << std::fixed
            << std::setprecision(2)
            << std::setw(12) << negative_dz_pts[i][1]
            << std::setw(12) << negative_dz_pts[i][2]
-           << std::setw(8)  << negative_dz_pts[i][3]
-           << std::setw(8)  << negative_dz_pts[i][4]
+           << std::setw(8) << negative_dz_pts[i][3]
+           << std::setw(8) << negative_dz_pts[i][4]
            << std::endl;
     }
     fout.close();
 
     /*
-    NRLib::Grid2D<double> vals1(ni, nj, 0);
-    NRLib::Grid2D<double> vals2(ni, nj, 0);
-    if (use_corner_point) {
-      geometry.FindLayerSurfaceCornerpoint(vals1, max_k     + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      geometry.FindLayerSurfaceCornerpoint(vals2, max_k + 1 + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-    }
-    else {
-      geometry.FindLayerSurface(vals1, max_k     + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-      geometry.FindLayerSurface(vals2, max_k + 1 + top_k, 0, dx, dy, xmin, ymin, angle, 0);
-    }
     NRLib::RegularSurfaceRotated<double> s1(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), ni, nj, zgrid.GetAngle(), 0.00);
     NRLib::RegularSurfaceRotated<double> s2(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), ni, nj, zgrid.GetAngle(), 0.00);
-    for (size_t i = 0 ; i < ni ; i++)
-      for (size_t j = 0 ; j < nj ; j++) {
-        s1(i, j) = vals1(i, j);
-        s2(i, j) = vals2(i, j) - vals1(i, j);
+    NRLib::RegularSurfaceRotated<double> s3(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), ni, nj, zgrid.GetAngle(), 0.00);
+    for (size_t i = 0; i < ni; i++) {
+      for (size_t j = 0; j < nj; j++) {
+        s1(i, j) = values[max_k    ](i, j);
+        s2(i, j) = values[max_k + 1](i, j);
+        s3(i, j) = s2(i, j) - s1(i, j);
       }
-    s1.WriteToFile("largest_negative_dz_layer.irap" , NRLib::SURF_IRAP_CLASSIC_ASCII);
-    s2.WriteToFile("largest_negative_dz_values.irap", NRLib::SURF_IRAP_CLASSIC_ASCII);
+    }
+    s1.WriteToFile("largest_negative_dz_layer_top.irap", NRLib::SURF_IRAP_CLASSIC_ASCII);
+    s2.WriteToFile("largest_negative_dz_layer_bot.irap", NRLib::SURF_IRAP_CLASSIC_ASCII);
+    s3.WriteToFile("largest_negative_dz_values.irap"   , NRLib::SURF_IRAP_CLASSIC_ASCII);
      */
-
   }
 }
 
@@ -321,6 +324,7 @@ void SeismicRegridding::SetGridLayerFromSurface(NRLib::StormContGrid        & zg
 {
   for (size_t i = 0; i < zgrid.GetNI() ; i++) {
     for (size_t j = 0; j < zgrid.GetNJ() ; j++) {
+      std::cout << "ij " << i << "  " << j << std::endl;
       zgrid(i, j, k) = static_cast<float>(values(i, j));
     }
   }
@@ -422,7 +426,7 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   double x_min_rot = vpgrid.GetXMin()*cosA + vpgrid.GetYMin()*sinA;
   double y_min_rot = vpgrid.GetYMin()*cosA - vpgrid.GetXMin()*sinA;
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nResampling Eclipse grids into regular grids.\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nResampling parameters in Eclipse grid into regular grids.\n");
 
 #ifdef WITH_OMP
   int  chunk_size = 1;
@@ -775,10 +779,10 @@ void SeismicRegridding::SetElasticTriangles(std::vector<NRLib::Point>           
 //----------------------------------------------------------------------------------------------------------
 {
   if (triangulate_124) {
-    triangles_elastic[0].SetCornerPoints(pt_vp[0] , pt_vp[1],  pt_vp[3]);
-    triangles_elastic[1].SetCornerPoints(pt_vp[0] , pt_vp[2],  pt_vp[3]);
-    triangles_elastic[2].SetCornerPoints(pt_vs[0] , pt_vs[1],  pt_vs[3]);
-    triangles_elastic[3].SetCornerPoints(pt_vs[0] , pt_vs[2],  pt_vs[3]);
+    triangles_elastic[0].SetCornerPoints(pt_vp [0], pt_vp [1], pt_vp [3]);
+    triangles_elastic[1].SetCornerPoints(pt_vp [0], pt_vp [2], pt_vp [3]);
+    triangles_elastic[2].SetCornerPoints(pt_vs [0], pt_vs [1], pt_vs [3]);
+    triangles_elastic[3].SetCornerPoints(pt_vs [0], pt_vs [2], pt_vs [3]);
     triangles_elastic[4].SetCornerPoints(pt_rho[0], pt_rho[1], pt_rho[3]);
     triangles_elastic[5].SetCornerPoints(pt_rho[0], pt_rho[2], pt_rho[3]);
     for (size_t ii = 0; ii < triangles_extra_param.size()/2; ++ii){
@@ -787,10 +791,10 @@ void SeismicRegridding::SetElasticTriangles(std::vector<NRLib::Point>           
     }
   }
   else {
-    triangles_elastic[0].SetCornerPoints(pt_vp[0] , pt_vp[1],  pt_vp[2]);
-    triangles_elastic[1].SetCornerPoints(pt_vp[1] , pt_vp[2],  pt_vp[3]);
-    triangles_elastic[2].SetCornerPoints(pt_vs[0] , pt_vs[1],  pt_vs[2]);
-    triangles_elastic[3].SetCornerPoints(pt_vs[1] , pt_vs[2],  pt_vs[3]);
+    triangles_elastic[0].SetCornerPoints(pt_vp [0], pt_vp [1], pt_vp [2]);
+    triangles_elastic[1].SetCornerPoints(pt_vp [1], pt_vp [2], pt_vp [3]);
+    triangles_elastic[2].SetCornerPoints(pt_vs [0], pt_vs [1], pt_vs [2]);
+    triangles_elastic[3].SetCornerPoints(pt_vs [1], pt_vs [2], pt_vs [3]);
     triangles_elastic[4].SetCornerPoints(pt_rho[0], pt_rho[1], pt_rho[2]);
     triangles_elastic[5].SetCornerPoints(pt_rho[1], pt_rho[2], pt_rho[3]);
     for (size_t ii = 0; ii < triangles_extra_param.size()/2; ++ii){
@@ -1373,12 +1377,12 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
       }
     }
   }
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting all cells in trace equal to default reservoir value    : %7d", count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in bottom layer equal to default reservoir value : %7d", count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in trace equal to default reservoir value    : %7d", count3);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in bottom layer equal to default reservoir value       : %7d", count1);
   if (default_underburden)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to default underburden            : %7d\n", count2);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to default underburden                  : %7d\n", count2);
   else
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to layer below                    : %7d\n", count2);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to layer below                          : %7d\n", count2);
 }
 
 //---------------------------------------------------------------------------------
@@ -1408,6 +1412,13 @@ void SeismicRegridding::FindTWT(SeismicParameters             & seismic_paramete
   double                 dy1         = vpgrid.GetDY();
   double                 dx2         = bottime.GetDX();
   double                 dy2         = bottime.GetDY();
+
+  if (ps_seismic) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nAssuming PS seismic.\n");
+  }
+  if (nmo_seismic) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nAssuming NMO.\n");
+  }
 
 #ifdef WITH_OMP
   int  chunk_size = 1;
@@ -1513,6 +1524,7 @@ void SeismicRegridding::FindVrms(SeismicParameters          & seismic_parameters
     }
   }
 }
+
 
 //============================ Not looked through =====================================
 

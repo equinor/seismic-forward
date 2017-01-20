@@ -26,6 +26,7 @@
 #include "../geometry/polygon.hpp"
 #include "../geometry/triangle.hpp"
 #include "../geometry/bilinearsurface.hpp"
+#include "../iotools/logkit.hpp"
 #include "../iotools/fileio.hpp"
 #include "../iotools/stringtools.hpp"
 #include "../math/constants.hpp"
@@ -1161,50 +1162,67 @@ void EclipseGeometry::BilinearFillInZValuesInArea(NRLib::Grid2D<double> &z_surfa
   }
 }
 
-void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double> &z_surface,
-                                                    NRLib::Grid2D<int> &is_set,
-                                                    double x0,
-                                                    double y0,
-                                                    const std::vector<NRLib::Point>& corners_in,
-                                                    double dx,
-                                                    double dy) const
+//------------------------------------------------------------------------------------------------
+void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>           & z_surface,
+                                                    NRLib::Grid2D<int>              & is_set,
+                                                    double                            x0,
+                                                    double                            y0,
+                                                    const std::vector<NRLib::Point> & corners_in,
+                                                    double                            dx,
+                                                    double                            dy) const
+//------------------------------------------------------------------------------------------------
 {
   std::vector<NRLib::Point> corners = corners_in;
-  size_t m=z_surface.GetNJ();
-  size_t n=z_surface.GetNI();
-  double min_x,max_x,min_y,max_y,vec1_vec2_angle;
-  NRLib::Triangle triangle1, triangle2;
-  NRLib::Point point_xy(0.0,0.0,0.0);
-  NRLib::Point vec1(0.0,0.0,0.0);
-  NRLib::Point vec2(0.0,0.0,0.0);
-  NRLib::Point z_dir(0.0,0.0,1.0);
-  NRLib::Point intersec;
-  size_t n2,m1,m2;
-  bool two_triangles=true;
+  size_t                    m       = z_surface.GetNJ();
+  size_t                    n       = z_surface.GetNI();
+
+  double                    min_x;
+  double                    max_x;
+  double                    min_y;
+  double                    max_y;
+  double                    vec1_vec2_angle;
+
+  NRLib::Triangle           triangle1;
+  NRLib::Triangle           triangle2;
+
+  NRLib::Point              point_xy(0.0, 0.0, 0.0);
+  NRLib::Point              vec1(0.0, 0.0, 0.0);
+  NRLib::Point              vec2(0.0, 0.0, 0.0);
+  NRLib::Point              z_dir(0.0, 0.0, 1.0);
+  NRLib::Point              intersec;
+
+  size_t                    n2;
+  size_t                    m1;
+  size_t                    m2;
+
+  bool                      two_triangles = true;
+
   //Check if two of the points are the same
-  size_t n1=3;
-  for (m1=0;m1<4;m1++) {
-    if (corners[m1]==corners[n1]) { //NOTE: Could do better check on whether two points are equal !!!!!!!
-      two_triangles=false;
-      corners[n1]=corners[3];
+  size_t n1 = 3;
+  for (m1 = 0 ; m1 < 4 ; m1++) {
+    if (corners[m1] == corners[n1]) { //NOTE: Could do better check on whether two points are equal !!!!!!!
+      two_triangles = false;
+      corners[n1]   = corners[3];
       triangle1.SetCornerPoints(corners[0], corners[1], corners[2]);
     }
-    n1=m1;
+    n1 = m1;
   }
   if (two_triangles) {
     // Calculate the sum of two opposite angles
-    vec1.x=corners[1].x-corners[0].x;
-    vec1.y=corners[1].y-corners[0].y;
-    vec2.x=corners[3].x-corners[0].x;
-    vec2.y=corners[3].y-corners[0].y;
-    vec1_vec2_angle=vec1.GetAngle(vec2);
-    vec1.x=corners[1].x-corners[2].x;
-    vec1.y=corners[1].y-corners[2].y;
-    vec2.x=corners[3].x-corners[2].x;
-    vec2.y=corners[3].y-corners[2].y;
-    vec1_vec2_angle+=vec1.GetAngle(vec2);
+    vec1.x = corners[1].x - corners[0].x;
+    vec1.y = corners[1].y - corners[0].y;
+    vec2.x = corners[3].x - corners[0].x;
+    vec2.y = corners[3].y - corners[0].y;
+    vec1_vec2_angle = vec1.GetAngle(vec2);
+
+    vec1.x = corners[1].x - corners[2].x;
+    vec1.y = corners[1].y - corners[2].y;
+    vec2.x = corners[3].x - corners[2].x;
+    vec2.y = corners[3].y - corners[2].y;
+    vec1_vec2_angle += vec1.GetAngle(vec2);
+
     // Make delunay triangles (according to the sum of the angles)
-    if (vec1_vec2_angle<=NRLib::Pi) {
+    if (vec1_vec2_angle <= NRLib::Pi) {
       triangle1.SetCornerPoints(corners[3], corners[0], corners[1]);
       triangle2.SetCornerPoints(corners[1], corners[2], corners[3]);
     }
@@ -1213,60 +1231,77 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double> &z_sur
       triangle2.SetCornerPoints(corners[2], corners[3], corners[0]);
     }
   }
+
   //Calculate the min and max in x- and y-direction (rotated, i.e. same direction as z_surface)
-  min_x=corners[0].x;
-  max_x=min_x;
-  min_y=corners[0].y;
-  max_y=min_y;
-  for (size_t four=1; four<4; four++) {
-    if (corners[four].x<min_x)
-      min_x=corners[four].x;
-    else if (corners[four].x>max_x)
-      max_x=corners[four].x;
-    if (corners[four].y<min_y)
-      min_y=corners[four].y;
-    else if (corners[four].y>max_y)
-      max_y=corners[four].y;
+  min_x = corners[0].x;
+  max_x = min_x;
+  min_y = corners[0].y;
+  max_y = min_y;
+  for (size_t i = 1 ; i < 4 ; i++) {
+    if (corners[i].x < min_x)
+      min_x = corners[i].x;
+    else if (corners[i].x > max_x)
+      max_x = corners[i].x;
+    if (corners[i].y < min_y)
+      min_y = corners[i].y;
+    else if (corners[i].y > max_y)
+      max_y = corners[i].y;
   }
+
   //For loop over all points in z_surface inside the rectangle given by the mins and max' calulated above
-  n1=static_cast<size_t>(max( ((min_x-x0)/dx-0.5),0.0)); //min_x=(x0+dx/2)+n1*dx, if n1 not integer, let it be the smallest integer greater than solution. Zero if negative number
-  n2=static_cast<size_t>(max( ((max_x-x0)/dx+1.0),0.0)); //max_x=(x0+dx/2)+(n2-1)*dx, if n2 not integer, let it be the greatest integer smaller than solution. Zero if negative number
-  if (n2>n)
-    n2=n; //Should stop before grid ends
-  m1=static_cast<size_t>(max( ((min_y-y0)/dy-0.5),0.0));
-  m2=static_cast<size_t>(max( ((max_y-y0)/dy+1.0),0.0));
-  if (m2>m)
-    m2=m;
-  for (size_t it1=n1; it1<n2; it1++) {
-    for (size_t it2=m1; it2<m2; it2++) {
-      point_xy.x=x0+dx/2+it1*dx;
-      point_xy.y=y0+dy/2+it2*dy;
+  n1 = static_cast<size_t>(max(((min_x - x0)/dx - 0.5), 0.0)); //min_x=(x0+dx/2)+n1*dx, if n1 not integer, let it be the smallest integer greater than solution. Zero if negative number
+  n2 = static_cast<size_t>(max(((max_x - x0)/dx + 1.0), 0.0)); //max_x=(x0+dx/2)+(n2-1)*dx, if n2 not integer, let it be the greatest integer smaller than solution. Zero if negative number
+  m1 = static_cast<size_t>(max(((min_y - y0)/dy - 0.5), 0.0));
+  m2 = static_cast<size_t>(max(((max_y - y0)/dy + 1.0), 0.0));
+
+  if (n2 > n)
+    n2 = n; //Should stop before grid ends
+  if (m2 > m)
+    m2 = m;
+
+ // NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "    n1, n2, m1, m2 = %d %d %d %d\n",n1,n2,m1,m2);
+
+  for (size_t it1 = n1; it1 < n2 ; it1++) {
+    for (size_t it2 = m1; it2 < m2 ; it2++) {
+      point_xy.x = x0 + dx/2 + it1*dx;
+      point_xy.y = y0 + dy/2 + it2*dy;
       NRLib::Line line_xy(point_xy,(point_xy+z_dir),false,false);
+
       if (triangle1.FindIntersection(line_xy,intersec,true)) {
-        if (is_set(it1,it2)>0 ) {
-          z_surface(it1,it2)*=static_cast<double>(1.0*is_set(it1,it2)/(1.0*is_set(it1,it2)+1.0));
-          z_surface(it1,it2)+=intersec.z/static_cast<double>(is_set(it1,it2)+1.0);
+        if (is_set(it1,it2) > 0 ) {
+          z_surface(it1, it2) *= static_cast<double>(1.0*is_set(it1,it2)/(1.0*is_set(it1,it2) + 1.0));
+          z_surface(it1, it2) += intersec.z/static_cast<double>(is_set(it1,it2) + 1.0);
+
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  A: z = %10.2f\n",z_surface(it1, it2));
+
           is_set(it1,it2)++;
           //z_surface(it1,it2)=z_surface(it1,it2)/2;
         }
-       // else if(!is_set(it1,it2)){
         else {
-          z_surface(it1,it2)=intersec.z;
-          is_set(it1,it2) = 1;
+          z_surface(it1,it2) = intersec.z;
+
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  B: z = %10.2f\n",z_surface(it1, it2));
+
+          is_set(it1,it2)    = 1;
         }
       }
       else if (two_triangles) {
         if (triangle2.FindIntersection(line_xy,intersec,true)) {
           if (is_set(it1,it2)>0 ) {
-            z_surface(it1,it2)*=static_cast<double>(1.0*is_set(it1,it2)/(1.0*is_set(it1,it2)+1.0));
-          z_surface(it1,it2)+=intersec.z/static_cast<double>(is_set(it1,it2)+1.0);
-          is_set(it1,it2)++;
+            z_surface(it1,it2) *= static_cast<double>(1.0*is_set(it1,it2)/(1.0*is_set(it1,it2)+1.0));
+            z_surface(it1,it2) += intersec.z/static_cast<double>(is_set(it1,it2)+1.0);
+
+            //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  C: z = %10.2f\n",z_surface(it1, it2));
+
+            is_set(it1,it2)++;
             //z_surface(it1,it2)+=intersec.z;
             //z_surface(it1,it2)=z_surface(it1,it2)/2;
           }
-          //else if(!is_set(it1,it2)){
           else{
-            z_surface(it1,it2)=intersec.z;
+            z_surface(it1,it2) = intersec.z;
+
+            //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  D: z = %10.2f\n",z_surface(it1, it2));
+
             is_set(it1,it2) =1;
           }
         }
@@ -1423,62 +1458,74 @@ void EclipseGeometry::FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> & z_surf
 
 
 // center point interpolation
-void EclipseGeometry::FindLayerSurface(NRLib::Grid2D<double> &z_surface,
-                                       size_t k,
-                                       int lower_or_upper,
-                                       double dx,
-                                       double dy,
-                                       double x0,
-                                       double y0,
-                                       double angle,
-                                       bool bilinear_else_triangles) const
+void EclipseGeometry::FindLayerSurface(NRLib::Grid2D<double> & z_surface,
+                                       size_t                  k,
+                                       int                     lower_or_upper,
+                                       double                  dx,
+                                       double                  dy,
+                                       double                  x0,
+                                       double                  y0,
+                                       double                  angle,
+                                       bool                    bilinear_else_triangles) const
 {
-  size_t m=z_surface.GetNJ();
-  size_t n=z_surface.GetNI();
-  double rot_x0=cos(angle)*x0+sin(angle)*y0;
-  double rot_y0=cos(angle)*y0-sin(angle)*x0;
+  size_t                    m      = z_surface.GetNJ();
+  size_t                    n      = z_surface.GetNI();
 
-  NRLib::Point nonrotated_corner;
-  NRLib::Point prev_upper_corner,prev_lower_corner, cell_under_right_corner, cell_under_left_corner;
+  double                    cosA   = cos(angle);
+  double                    sinA   = sin(angle);
+
+  double                    rot_x0 = cosA*x0 + sinA*y0;
+  double                    rot_y0 = cosA*y0 - sinA*x0;
+
+  NRLib::Point              C;                 // Nonrotated corner
+  NRLib::Grid2D<int>        is_set(n, m, 0);
   std::vector<NRLib::Point> corners(4);
-  NRLib::Grid2D<int> is_set(n,m,0);
 
-  for(size_t j = 0; j < nj_-1; j++) { //Loops over each cell in the given layer
-    for(size_t i = 0; i < ni_-1; i++){
-      if(IsPillarActive(i,j) && IsPillarActive(i+1,j) && IsPillarActive(i, j+1) && IsPillarActive(i+1, j+1) &&
-        IsPillarActive(i+2,j) && IsPillarActive(i+2, j+1) && IsPillarActive(i, j+2) && IsPillarActive(i+1, j+2) &&
-        IsPillarActive(i+2, j+2)){
-          nonrotated_corner=FindPointCellSurface(i, j, k,lower_or_upper,0.5, 0.5);
-          corners[0].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-          corners[0].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-          corners[0].z=nonrotated_corner.z;
-          nonrotated_corner=FindPointCellSurface(i+1, j, k,lower_or_upper,0.5, 0.5);
-          corners[1].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-          corners[1].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-          corners[1].z=nonrotated_corner.z;
-          // Find rotated coordinates for the corners of the cell
-          nonrotated_corner=FindPointCellSurface(i+1, j+1, k,lower_or_upper,0.5, 0.5);
-          corners[2].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-          corners[2].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-          corners[2].z=nonrotated_corner.z;
-          nonrotated_corner=FindPointCellSurface(i, j+1, k,lower_or_upper,0.5, 0.5);
-          corners[3].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-          corners[3].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-          corners[3].z=nonrotated_corner.z;
+  for (size_t j = 0 ; j < nj_- 1 ; j++) {  // Loops over each cell in the given layer
+    for (size_t i = 0 ; i < ni_- 1 ; i++) {
 
-          if (FindTopCell(i,j)!=nk_) {
-            if (bilinear_else_triangles)
-              BilinearFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,corners,dx,dy);
-            else
-              TriangularFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,corners,dx,dy);
-          }
+      if (IsPillarActive(i  , j  ) &&
+          IsPillarActive(i+1, j  ) &&
+          IsPillarActive(i  , j+1) &&
+          IsPillarActive(i+1, j+1) &&
+          IsPillarActive(i+2, j  ) &&
+          IsPillarActive(i+2, j+1) &&
+          IsPillarActive(i  , j+2) &&
+          IsPillarActive(i+1, j+2) &&
+          IsPillarActive(i+2, j+2)) {
+
+        C = FindPointCellSurface(i, j, k, lower_or_upper, 0.5, 0.5);
+        corners[0].x = cosA*C.x + sinA*C.y;
+        corners[0].y = cosA*C.y - sinA*C.x;
+        corners[0].z = C.z;
+
+        C = FindPointCellSurface(i+1, j, k, lower_or_upper, 0.5, 0.5);
+        corners[1].x = cosA*C.x + sinA*C.y;
+        corners[1].y = cosA*C.y - sinA*C.x;
+        corners[1].z = C.z;
+
+        // Find rotated coordinates for the corners of the cell
+        C = FindPointCellSurface(i+1, j+1, k, lower_or_upper, 0.5, 0.5);
+        corners[2].x = cosA*C.x + sinA*C.y;
+        corners[2].y = cosA*C.y - sinA*C.x;
+        corners[2].z = C.z;
+
+        C = FindPointCellSurface(i, j+1, k, lower_or_upper, 0.5, 0.5);
+        corners[3].x = cosA*C.x + sinA*C.y;
+        corners[3].y = cosA*C.y - sinA*C.x;
+        corners[3].z = C.z;
+
+        if (FindTopCell(i,j) != nk_) {
+          if (bilinear_else_triangles)
+            BilinearFillInZValuesInArea(z_surface, is_set, rot_x0, rot_y0, corners, dx, dy);
+          else
+            TriangularFillInZValuesInArea(z_surface, is_set, rot_x0, rot_y0, corners, dx, dy);
+        }
       }
     }
   }
-  FillInZValuesByAveraging(z_surface,is_set);
+  FillInZValuesByAveraging(z_surface, is_set);
 }
-
-
 
 
 

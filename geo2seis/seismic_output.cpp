@@ -383,12 +383,15 @@ void SeismicOutput::WriteVpVsRho(SeismicParameters &seismic_parameters)
   NRLib::StormContGrid &vsgrid  = seismic_parameters.GetVsGrid();
   NRLib::StormContGrid &rhogrid = seismic_parameters.GetRhoGrid();
 
-  printf("Write elastic parameters on Storm format.\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nWrite elastic parameters using STORM format.");
   std::string filename = prefix_ + "vp" + suffix_ + ".storm";
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Vp : %s",filename.c_str());
   vpgrid.WriteToFile(filename);
   filename = prefix_ + "vs" + suffix_ + ".storm";
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Vs : %s",filename.c_str());
   vsgrid.WriteToFile(filename);
   filename = prefix_ + "rho" + suffix_ + ".storm";
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Rho: %s",filename.c_str());
   rhogrid.WriteToFile(filename);
 }
 
@@ -397,7 +400,7 @@ void SeismicOutput::WriteZValues(SeismicParameters &seismic_parameters)
   NRLib::StormContGrid &zgrid = seismic_parameters.GetZGrid();
   std::string filename = prefix_ + "zgrid" + suffix_ + ".storm";
 
-  printf("Write zvalues on Storm format.\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nWrite z-values on STORM format to file : %s",filename.c_str());
   zgrid.WriteToFile(filename);
 }
 
