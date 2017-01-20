@@ -1484,38 +1484,38 @@ void EclipseGeometry::FindLayerSurface(NRLib::Grid2D<double> & z_surface,
   for (size_t j = 0 ; j < nj_- 1 ; j++) {  // Loops over each cell in the given layer
     for (size_t i = 0 ; i < ni_- 1 ; i++) {
 
-      if (IsPillarActive(i  , j  ) &&
-          IsPillarActive(i+1, j  ) &&
-          IsPillarActive(i  , j+1) &&
-          IsPillarActive(i+1, j+1) &&
-          IsPillarActive(i+2, j  ) &&
-          IsPillarActive(i+2, j+1) &&
-          IsPillarActive(i  , j+2) &&
-          IsPillarActive(i+1, j+2) &&
-          IsPillarActive(i+2, j+2)) {
+      if (FindTopCell(i,j) != nk_) {
+        if (IsPillarActive(i  , j  ) &&
+            IsPillarActive(i+1, j  ) &&
+            IsPillarActive(i  , j+1) &&
+            IsPillarActive(i+1, j+1) &&
+            IsPillarActive(i+2, j  ) &&
+            IsPillarActive(i+2, j+1) &&
+            IsPillarActive(i  , j+2) &&
+            IsPillarActive(i+1, j+2) &&
+            IsPillarActive(i+2, j+2)) {
 
-        C = FindPointCellSurface(i, j, k, lower_or_upper, 0.5, 0.5);
-        corners[0].x = cosA*C.x + sinA*C.y;
-        corners[0].y = cosA*C.y - sinA*C.x;
-        corners[0].z = C.z;
+          C = FindPointCellSurface(i, j, k, lower_or_upper, 0.5, 0.5);
+          corners[0].x = cosA*C.x + sinA*C.y;
+          corners[0].y = cosA*C.y - sinA*C.x;
+          corners[0].z = C.z;
 
-        C = FindPointCellSurface(i+1, j, k, lower_or_upper, 0.5, 0.5);
-        corners[1].x = cosA*C.x + sinA*C.y;
-        corners[1].y = cosA*C.y - sinA*C.x;
-        corners[1].z = C.z;
+          C = FindPointCellSurface(i+1, j, k, lower_or_upper, 0.5, 0.5);
+          corners[1].x = cosA*C.x + sinA*C.y;
+          corners[1].y = cosA*C.y - sinA*C.x;
+          corners[1].z = C.z;
 
-        // Find rotated coordinates for the corners of the cell
-        C = FindPointCellSurface(i+1, j+1, k, lower_or_upper, 0.5, 0.5);
-        corners[2].x = cosA*C.x + sinA*C.y;
-        corners[2].y = cosA*C.y - sinA*C.x;
-        corners[2].z = C.z;
+          // Find rotated coordinates for the corners of the cell
+          C = FindPointCellSurface(i+1, j+1, k, lower_or_upper, 0.5, 0.5);
+          corners[2].x = cosA*C.x + sinA*C.y;
+          corners[2].y = cosA*C.y - sinA*C.x;
+          corners[2].z = C.z;
 
-        C = FindPointCellSurface(i, j+1, k, lower_or_upper, 0.5, 0.5);
-        corners[3].x = cosA*C.x + sinA*C.y;
-        corners[3].y = cosA*C.y - sinA*C.x;
-        corners[3].z = C.z;
+          C = FindPointCellSurface(i, j+1, k, lower_or_upper, 0.5, 0.5);
+          corners[3].x = cosA*C.x + sinA*C.y;
+          corners[3].y = cosA*C.y - sinA*C.x;
+          corners[3].z = C.z;
 
-        if (FindTopCell(i,j) != nk_) {
           if (bilinear_else_triangles)
             BilinearFillInZValuesInArea(z_surface, is_set, rot_x0, rot_y0, corners, dx, dy);
           else
