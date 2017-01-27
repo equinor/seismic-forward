@@ -199,17 +199,12 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   }
   SetGridLayerFromSurface(zgrid, values[nk - 1], static_cast<size_t>(nk - 1));
 
-  //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nk = %d\n", nk - 2);
-
-
 #ifdef WITH_OMP
   int chunk_size = 1;
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
+
   for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
-
-    //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nk = %d\n", k);
-
     if (use_corner_point) {
       geometry.FindLayerSurfaceCornerpoint(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, false);
     }
@@ -312,7 +307,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
     s1.WriteToFile("largest_negative_dz_layer_top.irap", NRLib::SURF_IRAP_CLASSIC_ASCII);
     s2.WriteToFile("largest_negative_dz_layer_bot.irap", NRLib::SURF_IRAP_CLASSIC_ASCII);
     s3.WriteToFile("largest_negative_dz_values.irap"   , NRLib::SURF_IRAP_CLASSIC_ASCII);
-     */
+    */
   }
 }
 
@@ -324,7 +319,6 @@ void SeismicRegridding::SetGridLayerFromSurface(NRLib::StormContGrid        & zg
 {
   for (size_t i = 0; i < zgrid.GetNI() ; i++) {
     for (size_t j = 0; j < zgrid.GetNJ() ; j++) {
-      std::cout << "ij " << i << "  " << j << std::endl;
       zgrid(i, j, k) = static_cast<float>(values(i, j));
     }
   }

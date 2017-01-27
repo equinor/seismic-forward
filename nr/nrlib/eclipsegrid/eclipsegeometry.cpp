@@ -1199,10 +1199,10 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
 
   //Check if two of the points are the same
   size_t n1 = 3;
-  for (m1 = 0 ; m1 < 4 ; m1++) {
+  for (m1 = 0; m1 < 4; m1++) {
     if (corners[m1] == corners[n1]) { //NOTE: Could do better check on whether two points are equal !!!!!!!
       two_triangles = false;
-      corners[n1]   = corners[3];
+      corners[n1] = corners[3];
       triangle1.SetCornerPoints(corners[0], corners[1], corners[2]);
     }
     n1 = m1;
@@ -1237,7 +1237,7 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
   max_x = min_x;
   min_y = corners[0].y;
   max_y = min_y;
-  for (size_t i = 1 ; i < 4 ; i++) {
+  for (size_t i = 1; i < 4; i++) {
     if (corners[i].x < min_x)
       min_x = corners[i].x;
     else if (corners[i].x > max_x)
@@ -1259,8 +1259,6 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
   if (m2 > m)
     m2 = m;
 
- // NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "    n1, n2, m1, m2 = %d %d %d %d\n",n1,n2,m1,m2);
-
   for (size_t it1 = n1; it1 < n2 ; it1++) {
     for (size_t it2 = m1; it2 < m2 ; it2++) {
       point_xy.x = x0 + dx/2 + it1*dx;
@@ -1271,17 +1269,11 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
         if (is_set(it1,it2) > 0 ) {
           z_surface(it1, it2) *= static_cast<double>(1.0*is_set(it1,it2)/(1.0*is_set(it1,it2) + 1.0));
           z_surface(it1, it2) += intersec.z/static_cast<double>(is_set(it1,it2) + 1.0);
-
-          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  A: z = %10.2f\n",z_surface(it1, it2));
-
           is_set(it1,it2)++;
           //z_surface(it1,it2)=z_surface(it1,it2)/2;
         }
         else {
           z_surface(it1,it2) = intersec.z;
-
-          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  B: z = %10.2f\n",z_surface(it1, it2));
-
           is_set(it1,it2)    = 1;
         }
       }
@@ -1290,18 +1282,12 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
           if (is_set(it1,it2)>0 ) {
             z_surface(it1,it2) *= static_cast<double>(1.0*is_set(it1,it2)/(1.0*is_set(it1,it2)+1.0));
             z_surface(it1,it2) += intersec.z/static_cast<double>(is_set(it1,it2)+1.0);
-
-            //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  C: z = %10.2f\n",z_surface(it1, it2));
-
             is_set(it1,it2)++;
             //z_surface(it1,it2)+=intersec.z;
             //z_surface(it1,it2)=z_surface(it1,it2)/2;
           }
           else{
             z_surface(it1,it2) = intersec.z;
-
-            //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  D: z = %10.2f\n",z_surface(it1, it2));
-
             is_set(it1,it2) =1;
           }
         }
@@ -1458,7 +1444,7 @@ void EclipseGeometry::FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> & z_surf
 
 
 // center point interpolation
-void EclipseGeometry::FindLayerSurface(NRLib::Grid2D<double> & z_surface,
+void EclipseGeometry::FindLayerSurface(NRLib::Grid2D<double> & z_values,
                                        size_t                  k,
                                        int                     lower_or_upper,
                                        double                  dx,
@@ -1468,8 +1454,8 @@ void EclipseGeometry::FindLayerSurface(NRLib::Grid2D<double> & z_surface,
                                        double                  angle,
                                        bool                    bilinear_else_triangles) const
 {
-  size_t                    m      = z_surface.GetNJ();
-  size_t                    n      = z_surface.GetNI();
+  size_t                    m      = z_values.GetNJ();
+  size_t                    n      = z_values.GetNI();
 
   double                    cosA   = cos(angle);
   double                    sinA   = sin(angle);
@@ -1517,20 +1503,21 @@ void EclipseGeometry::FindLayerSurface(NRLib::Grid2D<double> & z_surface,
           corners[3].z = C.z;
 
           if (bilinear_else_triangles)
-            BilinearFillInZValuesInArea(z_surface, is_set, rot_x0, rot_y0, corners, dx, dy);
+            BilinearFillInZValuesInArea(z_values, is_set, rot_x0, rot_y0, corners, dx, dy);
           else
-            TriangularFillInZValuesInArea(z_surface, is_set, rot_x0, rot_y0, corners, dx, dy);
+            TriangularFillInZValuesInArea(z_values, is_set, rot_x0, rot_y0, corners, dx, dy);
         }
       }
     }
   }
-  FillInZValuesByAveraging(z_surface, is_set);
+  FillInZValuesByAveraging(z_values, is_set);
 }
 
 
 
-void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> &z_surface,
-                                             NRLib::Grid2D<int> &is_set) const {
+void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_surface,
+                                               NRLib::Grid2D<int>    & is_set) const
+{
   size_t m=z_surface.GetNJ();
   size_t n=z_surface.GetNI();
   size_t average_i=0;

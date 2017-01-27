@@ -186,7 +186,7 @@ void SeismicParameters::FindGeometry(SeismicGeometry              *& seismic_geo
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n                                     x            y           lx         ly     angle");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n-------------------------------------------------------------------------------------");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nArea from %-15s %12.2f %12.2f   %10.2f %10.2f    %6.2f\n",
-                              text.c_str(), x0, y0, lx, ly, angle);
+                              text.c_str(), x0, y0, lx, ly, (180.0/NRLib::Pi)*angle);
 }
 
 //----------------------------------------------------------------------------------------------
