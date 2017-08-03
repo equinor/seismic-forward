@@ -207,10 +207,10 @@ NRLib::Volume SeismicGeometry::createTimeVolume() {
 }
 
 void SeismicGeometry::printValues() {
-  printf("x0: %f lx: %f nx: %u dx: %f\n", x0(), xlength(), nx(), dx());
-  printf("y0: %f ly: %f ny: %u dy: %f\n", y0(), ylength(), ny(), dy());
-  printf("z0: %f lz: %f nz: %u dz: %f\n", z0(), zlength(), nz(), dz());
-  printf("t0: %f lt: %f nt: %u dt: %f\n", t0(), tlength(), nt(), dt());
-  printf("zrefl: %u lx_surf: %f ly_surf: %f angle: %f\n", zreflectorcount(), xsurfacelength(), ysurfacelength(), angle());
-  printf("nxse: %u nyse: %u\n", nxsurfaceeclipse(), nysurfaceeclipse());
+  printf("x0: %f lx: %f nx: %lu dx: %f\n", x0(), xlength(), nx(), dx());
+  printf("y0: %f ly: %f ny: %lu dy: %f\n", y0(), ylength(), ny(), dy());
+  printf("z0: %f lz: %f nz: %lu dz: %f\n", z0(), zlength(), nz(), dz());
+  printf("t0: %f lt: %f nt: %lu dt: %f\n", t0(), tlength(), nt(), dt());
+  printf("zrefl: %lu lx_surf: %f ly_surf: %f angle: %f\n", zreflectorcount(), xsurfacelength(), ysurfacelength(), angle());
+  printf("nxse: %lu nyse: %lu\n", nxsurfaceeclipse(), nysurfaceeclipse());
 }
