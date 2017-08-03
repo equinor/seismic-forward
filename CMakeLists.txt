@@ -22,7 +22,7 @@ include(cmake/AddSource.cmake)
 option( USE_MKL "Use MKL for FFT, BLAS and LAPACK." ON )
 find_package(MKL)
 if(NOT MKL_FOUND)
-    set(USE_MKL OFF CACHE)
+    set(USE_MKL OFF)
 endif(NOT MKL_FOUND)
 
 if(USE_MKL)
@@ -68,7 +68,7 @@ endforeach()
 
 add_library(geo2seis_lib STATIC ${SOURCE_FILES})
 
-foreach(FILE ${SOURCE_FILES}) 
+foreach(FILE ${SOURCE_FILES})
   get_filename_component(PARENT_DIR "${FILE}" PATH)
 
   # skip src or include and changes /'s to \\'s
@@ -98,4 +98,3 @@ endif(BUILD_MATLAB_MEX)
 if(BUILD_UNIT_TESTS)
 add_subdirectory(tests)
 endif(BUILD_UNIT_TESTS)
-
