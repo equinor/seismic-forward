@@ -8,48 +8,47 @@
 #include <omp.h>
 #endif
 
-SeismicOutput::SeismicOutput(ModelSettings *model_settings) {
-  top_time_window_  = model_settings->GetTopTimeWindow();
-  bot_time_window_  = model_settings->GetBotTimeWindow();
-  time_window_      = model_settings->GetTimeWindowSpecified();
-  depth_window_     = model_settings->GetDepthWindowSpecified();
-  top_depth_window_ = model_settings->GetTopDepthWindow();
-  bot_depth_window_ = model_settings->GetBotDepthWindow();
-
-  prefix_ = "";
-  if (model_settings->GetPrefix() != "") {
-    prefix_ = model_settings->GetPrefix() + "_";
-  }
-
-  suffix_ = "";
-  if (model_settings->GetSuffix() != "") {
-    suffix_ = "_" + model_settings->GetSuffix();
-  }
+//---------------------------------------------------------
+SeismicOutput::SeismicOutput(ModelSettings *model_settings)
+//---------------------------------------------------------
+{
+  top_time_window_       = model_settings->GetTopTimeWindow();
+  bot_time_window_       = model_settings->GetBotTimeWindow();
+  time_window_           = model_settings->GetTimeWindowSpecified();
+  depth_window_          = model_settings->GetDepthWindowSpecified();
+  top_depth_window_      = model_settings->GetTopDepthWindow();
+  bot_depth_window_      = model_settings->GetBotDepthWindow();
 
   extra_parameter_names_ = model_settings->GetExtraParameterNames();
 
-  //-----------------Get segy indexes for print----------------------------
-  inline_start_     = model_settings->GetSegyInlineStart();
-  xline_start_      = model_settings->GetSegyXlineStart();
-  inline_direction_ = model_settings->GetSegyInlineDirection();
+  inline_start_          = model_settings->GetSegyInlineStart();        // segy indexes for print
+  xline_start_           = model_settings->GetSegyXlineStart();         // segy indexes for print
+  inline_direction_      = model_settings->GetSegyInlineDirection();    // segy indexes for print
+  scalco_                = model_settings->GetUtmPrecision();           // UTM precision in segy header
 
-  //-----------------UTM precision in segy header--------------------------
-  scalco_ = model_settings->GetUtmPrecision();
+  inline_step_           = model_settings->GetSegyInlineStep();
+  xline_step_            = model_settings->GetSegyXlineStep();
+  xline_x_axis_          = true;
 
-  xline_x_axis_ = true;
-  if (NRLib::Uppercase(inline_direction_) == "X") {
+  prefix_                = "";
+  suffix_                = "";
+
+  if (NRLib::Uppercase(inline_direction_) == "X")
     xline_x_axis_ = false;
-  } else if (NRLib::Uppercase(inline_direction_) == "Y") {
-    xline_x_axis_ = true;
-  }
-  inline_step_ = model_settings->GetSegyInlineStep();
-  xline_step_  = model_settings->GetSegyXlineStep();
+
+  if (model_settings->GetPrefix() != "" )
+    prefix_ = model_settings->GetPrefix() + "_";
+
+  if (model_settings->GetSuffix() != "" )
+    suffix_ = "_" + model_settings->GetSuffix();
 }
 
-void SeismicOutput::SetSegyGeometry(SeismicParameters   &seismic_parameters,
-                                    const NRLib::Volume &vol,
-                                    size_t               nx,
-                                    size_t               ny)
+//-----------------------------------------------------------------------------
+void SeismicOutput::SetSegyGeometry(SeismicParameters   & seismic_parameters,
+                                    const NRLib::Volume & vol,
+                                    size_t                nx,
+                                    size_t                ny)
+//-----------------------------------------------------------------------------
 {
 
   double xlstepx, xlstepy, ilstepx, ilstepy;
