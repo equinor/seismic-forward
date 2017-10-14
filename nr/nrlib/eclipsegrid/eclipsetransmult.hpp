@@ -1,4 +1,4 @@
-// $Id: eclipsetransmult.hpp 882 2011-09-23 13:10:16Z perroe $
+// $Id: eclipsetransmult.hpp 1465 2017-04-07 13:28:48Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -24,26 +24,25 @@
 
 #include "eclipsetools.hpp"
 
-#include <vector>
-#include <string>
+#include <fstream>
+#include <list>
 
 namespace NRLib {
 
 class EclipseTransMult{
 public:
-  CellFace GetCellFace()   const;
-  int      GetNeighbour()  const;
-  double   GetMultiplier() const;
+  EclipseTransMult(int ix1, int ix2, int jy1, int jy2, int kz1, int  kz2,
+                   double value, NRLib::Face & face);
+  ~EclipseTransMult() {};
 
-  void SetCellFace(CellFace cellface);
-  void SetNeighbour(int neighbour);
-  void SetMultiplier(double multiplier);
+  static void WriteMultiply(std::ofstream                     & out_file,
+                            const std::list<EclipseTransMult> & trans_mult);
 
 private:
-  CellFace cellface_;
-  int neighbour_k_;
+  int ix1_, ix2_, jy1_, jy2_, kz1_, kz2_;
   double multiplier_;
-  std::string fault_name_;
+
+  NRLib::Face face_type_;
 };
 
 }

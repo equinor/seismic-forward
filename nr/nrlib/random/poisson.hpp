@@ -1,4 +1,4 @@
-// $Id: poisson.hpp 1238 2014-02-07 07:02:45Z anner $
+// $Id: poisson.hpp 1468 2017-04-21 13:09:33Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -33,7 +33,7 @@ namespace NRLib {
 class Poisson : public Distribution<int>
 {
 public:
-  Poisson(double lambda);
+  explicit Poisson(double lambda);
   ~Poisson();
 
   Distribution<int>* Clone() const;

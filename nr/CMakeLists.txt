@@ -25,12 +25,14 @@ set(SOURCE_FILES
     nrlib/geometry/polygon.cpp
     nrlib/geometry/transformation.cpp
     nrlib/geometry/triangle.cpp
-	nrlib/geometry/interpolation.cpp
+    nrlib/geometry/interpolation.cpp
 
     nrlib/iotools/fileio.cpp
     nrlib/iotools/logkit.cpp
+    nrlib/iotools/logstream.cpp
     nrlib/iotools/stringtools.cpp
     nrlib/iotools/tabularfile.cpp
+    nrlib/iotools/bigfile.cpp
 
     nrlib/math/constants.cpp
 

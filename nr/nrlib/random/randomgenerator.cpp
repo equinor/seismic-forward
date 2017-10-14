@@ -1,4 +1,4 @@
-// $Id: randomgenerator.cpp 1175 2013-05-27 07:41:03Z perroe $
+// $Id: randomgenerator.cpp 1466 2017-04-21 11:31:25Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -35,6 +35,15 @@ RandomGenerator::RandomGenerator()
   start_seed_     = 0;
 }
 
+
+RandomGenerator::RandomGenerator(unsigned long start_seed)
+  : start_seed_(start_seed),
+    is_initialized_(true)
+{
+  InitializeMT(start_seed_);
+}
+
+
 RandomGenerator::~RandomGenerator()
 {
 }
@@ -51,7 +60,7 @@ RandomGenerator::Initialize()
 }
 
 void
-RandomGenerator::Initialize(unsigned long int seed)
+RandomGenerator::Initialize(unsigned long seed)
 {
   start_seed_ = seed;
   is_initialized_ = true;

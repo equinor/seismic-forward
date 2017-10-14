@@ -21,6 +21,13 @@ endif()
 
 include(cmake/AddSource.cmake)
 
+#
+# Boost things added by PAAL
+#
+find_package(Boost REQUIRED COMPONENTS system filesystem)
+#include_directories(${Boost_INCLUDE_DIRS})
+#link_directories(${Boost_LIBRARY_DIRS})
+
 option( USE_INTEL_STUDIO "Use libraries from Intel Studio" ON )
 find_package(IntelStudio)
 if(NOT INTEL_STUDIO_FOUND)
@@ -44,7 +51,7 @@ if(USE_INTEL_STUDIO)
     set(FFT_LIBRARIES ${MKL_LIBRARIES})
     set(MATH_LIBRARIES ${MKL_LIBRARIES} ${TBB_LIBRARIES})
     set(FFT_MATLAB_LIBRARIES -L${MKL_LIB_PATH} -lmkl_rt)
-    add_definitions(-DMKL)	
+    add_definitions(-DMKL)
 else()
     # Out-of-the-box on Unix Statoil systems this will not work and a path is required.
     # For example /prog/sdpsoft/gsl/lib/libgslcblas.a
@@ -113,7 +120,7 @@ endforeach()
 
 add_executable(seismic_forward geo2seis/main.cpp)
 
-target_link_libraries(seismic_forward geo2seis_lib ${MATH_LIBRARIES})
+target_link_libraries(seismic_forward geo2seis_lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
 
 if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)
@@ -122,4 +129,3 @@ endif(BUILD_MATLAB_MEX)
 if(BUILD_UNIT_TESTS)
 add_subdirectory(tests)
 endif(BUILD_UNIT_TESTS)
-

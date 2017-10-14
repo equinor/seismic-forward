@@ -1,4 +1,4 @@
-// $Id: eclipsefault.hpp 1068 2012-09-18 11:21:53Z perroe $
+// $Id: eclipsefault.hpp 1445 2017-02-20 15:13:06Z veralh $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -33,13 +33,13 @@ class EclipseFault {
 public:
 
   struct Segment{
-    int i_from;
-    int i_to;
-    int j_from;
-    int j_to;
-    int k_from;
-    int k_to;
-    Face face;
+  int i_from;
+  int i_to;
+  int j_from;
+  int j_to;
+  int k_from;
+  int k_to;
+  Face face;
   };
 
   typedef std::vector<Segment>::iterator       SegmentIterator;
@@ -60,6 +60,8 @@ public:
 
   void ReadSegments(const std::vector<std::string>& line_segment);
   void WriteFault(std::ofstream& out_file, const std::string& fault_name) const;
+
+  const std::vector<Segment>& GetSegments() const { return segments_; }
 
   // =============== Segment handeling methods ===================
   static void GetSegmentLowerCoord(const Segment& segment, int& i, int& j);

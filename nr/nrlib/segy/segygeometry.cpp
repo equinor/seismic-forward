@@ -1,4 +1,4 @@
-// $Id: segygeometry.cpp 1289 2014-12-10 14:10:09Z perroe $
+// $Id: segygeometry.cpp 1678 2017-08-30 12:06:06Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -26,6 +26,7 @@
 #include <ctime>
 #include <iostream>
 
+#include "segygeometry.hpp"
 #include "segy.hpp"
 #include "commonheaders.hpp"
 #include "traceheader.hpp"
@@ -33,6 +34,7 @@
 #include "../exception/exception.hpp"
 #include "../iotools/fileio.hpp"
 #include "../iotools/logkit.hpp"
+#include "../math/mathutility.hpp"
 #include "../math/constants.hpp"
 #include "../surface/surface.hpp"
 
@@ -43,7 +45,8 @@ const int IMISSING = -99999;
 using namespace NRLib;
 
 
-SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
+SegyGeometry::SegyGeometry(std::vector<SegYTrace *> & traces,
+                           bool                       regularize_if_needed)
 {
   if(traces.size() > 1) {//More than one trace allows computation of geometry.
     IL0_         = IMISSING;
@@ -139,8 +142,8 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
     xl2 = traces[ind2]->GetCrossline();
 
     double dxIL, dyIL, dxXL, dyXL;
-    double x0 = traces[ii]->GetCoord1();
-    double y0 = traces[ii]->GetCoord2();
+    double x0 = traces[ii]->GetCoord1();   // First defined trace
+    double y0 = traces[ii]->GetCoord2();   // First defined trace
     double x1 = traces[ind1]->GetCoord1();
     double y1 = traces[ind1]->GetCoord2();
     double x2 = traces[ind2]->GetCoord1();
@@ -150,6 +153,7 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
     double dXL1 = static_cast<double>(xl1-xl0);
     double dIL2 = static_cast<double>(il2-il0);
     double dXL2 = static_cast<double>(xl2-xl0);
+
     if(dist2 > sqrt(dist1sq)+0.005) { //Standard case, not a simple straight line along XL, IL or diagonally..
       double denominator;
       if(dXL2 > 0) { //Rarely fails, but may happen with diagonal line.
@@ -166,10 +170,40 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
         dyIL = (y2 - y0 - dXL2/dXL1*(y1-y0))/denominator;
         dyXL = (y1 - y0 - dyIL*dIL1        )/dXL1;
       }
-      //Regularize
-      if(fabs(dxIL*dxXL+dyIL*dyXL) > 0.01)
-        //Do not regularize if orthogonal already.
-        Regularize(x0, y0, x1, y1, dIL1, dXL1, dxIL, dyIL, dxXL, dyXL);
+
+      LogKit::LogFormatted(LogKit::High,"\n                      x            y         IL       XL");
+      LogKit::LogFormatted(LogKit::High,"\n--------------------------------------------------------\n");
+      LogKit::LogFormatted(LogKit::High,"Origin     %12.2f %12.2f   %8d %8d\n", x0, y0, il0, xl0);
+      LogKit::LogFormatted(LogKit::High,"Corner 1   %12.2f %12.2f   %8d %8d\n", x1, y1, il1, xl1);
+      LogKit::LogFormatted(LogKit::High,"Corner 2   %12.2f %12.2f   %8d %8d\n", x2, y2, il2, xl2);
+
+      double dIL   = std::sqrt(dxIL*dxIL + dyIL*dyIL);
+      double dXL   = std::sqrt(dxXL*dxXL + dyXL*dyXL);
+      double lenIL = (ilMax - ilMin + 1)*dIL;
+      double lenXL = (xlMax - xlMin + 1)*dXL;
+      double rotIL =               atan(std::abs(dyIL/dxIL));
+      double rotXL = NRLib::Pi/2 - atan(std::abs(dyXL/dxXL));
+
+      LogKit::LogFormatted(LogKit::High,"\n               dx           dy    increment       length        angle");
+      LogKit::LogFormatted(LogKit::High,"\n---------------------------------------------------------------------");
+      LogKit::LogFormatted(LogKit::High,"\nIL   %12.4f %12.4f %12.4f %12.4f %12.4f"  , dxIL, dyIL, dIL, lenIL, NRLib::RadToDeg(rotIL));
+      LogKit::LogFormatted(LogKit::High,"\nXL   %12.4f %12.4f %12.4f %12.4f %12.4f\n", dxXL, dyXL, dXL, lenXL, NRLib::RadToDeg(rotXL));
+
+      if (regularize_if_needed) {
+        bool regularized = Regularize(dxIL, dyIL, dxXL, dyXL,
+                                      dIL1, dIL2, dXL1, dXL2);
+
+        if (regularized) {
+          rotIL =               atan(std::abs(dyIL/dxIL));
+          rotXL = NRLib::Pi/2 - atan(std::abs(dyXL/dxXL));
+
+          LogKit::LogFormatted(LogKit::High,"\nAfter regularization:");
+          LogKit::LogFormatted(LogKit::High,"\n               dx           dy    increment       length        angle");
+          LogKit::LogFormatted(LogKit::High,"\n---------------------------------------------------------------------");
+          LogKit::LogFormatted(LogKit::High,"\nIL   %12.4f %12.4f %12.4f %12.4f %12.4f"  , dxIL, dyIL, dIL, lenIL, NRLib::RadToDeg(rotIL));
+          LogKit::LogFormatted(LogKit::High,"\nXL   %12.4f %12.4f %12.4f %12.4f %12.4f\n", dxXL, dyXL, dXL, lenXL, NRLib::RadToDeg(rotXL));
+        }
+      }
     }
     else {
       if(dXL1 == 0 && dXL2 == 0) { //Single crossline or single trace.
@@ -200,9 +234,13 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
       }
     }
 
+    // See pptx in doc folder of nrlib repository for explanation of (some of) the geometry variables
     SetupGeometry(traces[ii]->GetCoord1(), traces[ii]->GetCoord2(), traces[ii]->GetInline(), traces[ii]->GetCrossline(),
-                  ilMin, ilMax, xlMin, xlMax, static_cast<float>(dxIL), static_cast<float>(dyIL),
-                  static_cast<float>(dxXL), static_cast<float>(dyXL), deltaIL, deltaXL);
+                  ilMin, ilMax, xlMin, xlMax, dxIL, dyIL,
+                  dxXL, dyXL, deltaIL, deltaXL);
+
+    // If (min,max,step)(IL,XL) is directly available in this constructor, we can use this instead.
+    FindILXLGeometry(ilMin, ilMax, deltaIL, xlMin, xlMax, deltaXL);
 
     size_t nTraces = nx_ * ny_;
     std::vector<SegYTrace *> tracestmp;
@@ -211,13 +249,15 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
     for (size_t k = 0; k < nTraces; k++)
       tracestmp[k] = 0;
 
-    float distIL = static_cast<float>(dxIL*dxIL+dyIL*dyIL);
-    float distXL = static_cast<float>(dxXL*dxXL+dyXL*dyXL);
-    float error_dist = distIL;
+    double distIL = dxIL*dxIL+dyIL*dyIL;
+    double distXL = dxXL*dxXL+dyXL*dyXL;
+    double error_dist = distIL;
     if(error_dist == 0 || (error_dist > distXL && distXL > 0))
       error_dist = distXL;
     error_dist = 0.25f*error_dist; //Compare square distances, use half distance as limit.
 
+    int    mxd_IL   = 0;
+    int    mxd_XL   = 0;
     double max_dist = 0;
     for (size_t k = 0; k < ntraces; k++)
     {
@@ -237,8 +277,11 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
           double dtx  = x - cx;
           double dty  = y - cy;
           double dist = dtx*dtx + dty*dty;
-          if(dist> max_dist)
+          if(dist> max_dist) {
+            mxd_IL   = til;
+            mxd_XL   = txl;
             max_dist = dist;
+          }
 
           if(dist > error_dist) {
             WriteGeometry();
@@ -278,7 +321,14 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
         }
       }
     }
-    LogKit::LogFormatted(LogKit::High,"\nLargest distance between trace location and centre of assigned grid node: %.2fm\n",max_dist);
+    //
+    // Note that the trace with the largest mismatch may be in the middle
+    // of the grid. The grid we setup is based on two of the SEGY corners,
+    // and if there are internal irregularities, we may end up with
+    // mismatches like this.
+    //
+    LogKit::LogFormatted(LogKit::High,"\nLargest distance between trace location and centre of assigned grid node: %.2fm",max_dist);
+    LogKit::LogFormatted(LogKit::High,"\nThis distance is observed for IL=%d and XL=%d\n",mxd_XL,mxd_IL);
 
     traces.resize(nTraces);
     for (size_t k = 0 ; k < nTraces ; k++) {
@@ -286,8 +336,6 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
       if (traces[k] != NULL)
         traces[k]->SetTableIndex(k);
     }
-    // If (min,max,step)(IL,XL) is directly available in this constructor, we can use this instead.
-    FindILXLGeometry();
   }
   else if (traces.size() == 1) {
     SetupGeometrySingleTrace(traces[0]);
@@ -298,428 +346,374 @@ SegyGeometry::SegyGeometry(std::vector<SegYTrace *> &traces)
   }
 }
 
+bool
+SegyGeometry::Regularize(double & dxIL, double & dyIL,
+                         double & dxXL, double & dyXL,
+                         double   dIL1, double   dIL2,
+                         double   dXL1, double   dXL2)
+{
+  bool regularized = false;
+
+  // Assume angle is correct for inline direction. With the same
+  // angle enforced for the XL-direction, how does this affect the
+  // positions of corners 1 and 2
+
+  double a = std::sqrt(dxIL*dxIL + dyIL*dyIL);
+  double b = std::sqrt(dxXL*dxXL + dyXL*dyXL);
+  double R = acos((dxIL*dxXL + dyIL*dyXL)/(a*b));
+
+  LogKit::LogFormatted(LogKit::High,"\nAngle between IL and XL axes : %.4f\n",RadToDeg(R));
+
+  double dxILn = 0.0;
+  double dyILn = 0.0;
+  double dxXLn = 0.0;
+  double dyXLn = 0.0;
+
+  Orthogonalize(dxIL , dyIL,  dxXL , dyXL,  // Original values
+                dxILn, dyILn, dxXLn, dyXLn, // New values
+                dyIL/dxIL);                 // IL axis is not rotated in this case as original ratio is used.
+
+  LogKit::LogFormatted(LogKit::DebugLow,"\nChanging angle of XL axis so that it becomes orthogonal to IL axis.\n");
+  LogKit::LogFormatted(LogKit::DebugLow,"\n               dx           dy");
+  LogKit::LogFormatted(LogKit::DebugLow,"\n------------------------------");
+  LogKit::LogFormatted(LogKit::DebugLow,"\nIL   %12.4f %12.4f"  , dxILn, dyILn);
+  LogKit::LogFormatted(LogKit::DebugLow,"\nXL   %12.4f %12.4f\n", dxXLn, dyXLn);
+
+
+  double dx1  = (dxILn - dxIL)*dIL1 + (dxXLn - dxXL)*dXL1;  // Corner corrections
+  double dy1  = (dyILn - dyIL)*dIL1 + (dyXLn - dyXL)*dXL1;
+  double dx2  = (dxILn - dxIL)*dIL2 + (dxXLn - dxXL)*dXL2;
+  double dy2  = (dyILn - dyIL)*dIL2 + (dyXLn - dyXL)*dXL2;
+
+  double dxy1 = std::sqrt(dx1*dx1 + dy1*dy1);
+  double dxy2 = std::sqrt(dx2*dx2 + dy2*dy2);
+
+  LogKit::LogFormatted(LogKit::DebugLow,"\nFinding maximum mismatch between corner trace locations in SEGY volume and in grid.\n");
+  LogKit::LogFormatted(LogKit::DebugLow,"\n              Delta_x    Delta_y   Delta_xy");
+  LogKit::LogFormatted(LogKit::DebugLow,"\n-------------------------------------------");
+  LogKit::LogFormatted(LogKit::DebugLow,"\nCorner 1   %10.2f %10.2f %10.2f"  , dx1, dy1, dxy1);
+  LogKit::LogFormatted(LogKit::DebugLow,"\nCorner 2   %10.2f %10.2f %10.2f\n", dx2, dy2, dxy2);
+
+  double max_dx = std::max(std::abs(dx1), std::abs(dx2));
+  double max_dy = std::max(std::abs(dy1), std::abs(dy2));
+
+  // Allow a mismatch of 1/3 of the distance between traces.
+  double tol    = 1.0/3.0;
+  double tol_x  = tol*std::min(std::abs(dxIL), std::abs(dxXL));
+  double tol_y  = tol*std::min(std::abs(dyIL), std::abs(dyXL));
+
+  LogKit::LogFormatted(LogKit::DebugLow,"\nAllowing a mismatch of %.2f of IL and XL increments.\n",tol);
+  LogKit::LogFormatted(LogKit::DebugLow,"\n                           x          y");
+  LogKit::LogFormatted(LogKit::DebugLow,"\n---------------------------------------");
+  LogKit::LogFormatted(LogKit::DebugLow,"\nAllowed mismatch     %7.2f %10.2f\n", tol_x, tol_y);
+
+  if (max_dx > tol_x || max_dy > tol_y) {
+    regularized = true;
+
+    LogKit::LogFormatted(LogKit::High,"\nMismatch too large. Regularization activated.\n");
+
+    double fracIL = std::abs(dyIL/dxIL);
+    double fracXL = std::abs(dxXL/dyXL);
+    double minf   = std::min(fracIL, fracXL);
+    double maxf   = std::max(fracIL, fracXL);
+    double step   = (maxf - minf)/10;
+
+    double dmin   = std::numeric_limits<double>::infinity();
+    double fmin   = 0.0;
+
+    LogKit::LogFormatted(LogKit::DebugLow,"\n                Angle    Delta_x    Delta_y   Delta_xy");
+    LogKit::LogFormatted(LogKit::DebugLow,"\n------------------------------------------------------");
+
+    for (int i = 0 ; i < 11 ; i++) {
+      double frac = minf + step*static_cast<double>(i);
+
+      Orthogonalize(dxIL , dyIL,  dxXL , dyXL,  // Original values
+                    dxILn, dyILn, dxXLn, dyXLn, // New values
+                    frac);                      //
+
+      dx1  = (dxILn - dxIL)*dIL1 + (dxXLn - dxXL)*dXL1;  // Corner corrections
+      dy1  = (dyILn - dyIL)*dIL1 + (dyXLn - dyXL)*dXL1;
+      dx2  = (dxILn - dxIL)*dIL2 + (dxXLn - dxXL)*dXL2;
+      dy2  = (dyILn - dyIL)*dIL2 + (dyXLn - dyXL)*dXL2;
+
+      dxy1 = std::sqrt(dx1*dx1 + dy1*dy1);
+      dxy2 = std::sqrt(dx2*dx2 + dy2*dy2);
+
+      if (std::max(dxy1, dxy2) < dmin) {
+        dmin = std::max(dxy1, dxy2);
+        fmin = frac;
+      }
+
+      double angle = NRLib::RadToDeg(atan(frac));
+
+      LogKit::LogFormatted(LogKit::DebugLow,"\nCorner 1   %10.4f %10.2f %10.2f %10.2f", angle, dx1, dy1, dxy1);
+      LogKit::LogFormatted(LogKit::DebugLow,"\nCorner 2   %10.4f %10.2f %10.2f %10.2f", angle, dx2, dy2, dxy2);
+    }
+
+    LogKit::LogFormatted(LogKit::High,"\n\nOptimal angle     :  %8.4f", NRLib::RadToDeg(atan(fmin)));
+    LogKit::LogFormatted(LogKit::High,"\nSmallest mismatch :  %8.2f\n", dmin);
+
+    // Use fraction that minimizes error to find new dxIL, dyIL, ....
+    Orthogonalize(dxIL , dyIL,  dxXL , dyXL,
+                  dxILn, dyILn, dxXLn, dyXLn,
+                  fmin);
+
+    dxIL  = dxILn;
+    dyIL  = dyILn;
+    dxXL  = dxXLn;
+    dyXL  = dyXLn;
+
+    a = std::sqrt(dxIL*dxIL + dyIL*dyIL);
+    b = std::sqrt(dxXL*dxXL + dyXL*dyXL);
+    R = acos((dxIL*dxXL + dyIL*dyXL)/(a*b));
+
+    LogKit::LogFormatted(LogKit::High,"\nAngle between IL and XL axes : %.4f\n",RadToDeg(R));
+  }
+  else {
+    LogKit::LogFormatted(LogKit::High,"\nRegularization not needed.\n");
+  }
+  return regularized;
+}
 
 void
-SegyGeometry::Regularize(double   x0,   double   y0,
-                         double   x1,   double   y1,
-                         double   dIL1, double   dXL1,
-                         double & dxIL, double & dyIL,
-                         double & dxXL, double & dyXL)
+SegyGeometry::Orthogonalize(double   dxIL , double   dyIL,
+                            double   dxXL , double   dyXL,
+                            double & dxILn, double & dyILn,
+                            double & dxXLn, double & dyXLn,
+                            double   frac)
 {
-  //Set the lengths, and orthogonalize.
-  double lengthXL = sqrt(dxXL*dxXL+dyXL*dyXL);
-  double factorXL = lengthXL/6.25;
-  double scaleXL  = floor(factorXL+0.5)/factorXL;
-  double lengthIL = sqrt(dxIL*dxIL+dyIL*dyIL);
-  double factorIL = lengthIL/6.25;
-  double scaleIL  = floor(factorIL+0.5)/factorIL;
-  double factorILfromXL = floor(factorIL+0.5)/floor(factorXL+0.5);
-  double factorXLfromIL = 1.0/factorILfromXL;
-  double sign1, sign2, length;
-  if(fabs(1-scaleXL) < 0.1 || fabs(1-scaleIL) < 0.1) { //Only regularize if the scale is reasonable
-    if(fabs(1-scaleXL) < fabs(1-scaleIL)) { //Choose the least scaling.
-      dxXL  *= scaleXL;
-      dyXL  *= scaleXL;
-      length = floor(factorXL+0.5)*6.25;
-      if(dyXL > 0) {
-        sign1 = dxIL*dyXL/fabs(dxIL*dyXL);
-        sign2 = -sign1;
-      }
-      else {
-        sign2 = dyIL*dxXL/fabs(dyIL*dxXL);
-        sign1 = -sign2;
-      }
-      dxIL = sign1*factorILfromXL*dyXL;
-      dyIL = sign2*factorILfromXL*dxXL;
-    }
-    else {
-      dxIL  *= scaleIL;
-      dyIL  *= scaleIL;
-      length = floor(factorIL+0.5)*6.25*factorXLfromIL; //length is always measured along XL.
-      if(dxIL > 0) {
-        sign1 = dxIL*dyXL/fabs(dxIL*dyXL);
-        sign2 = -sign1;
-      }
-      else  {
-        sign2 = dyIL*dxXL/fabs(dyIL*dxXL);
-        sign1 = -sign2;
-      }
-      dxXL = sign2*factorXLfromIL*dyIL;
-      dyXL = sign1*factorXLfromIL*dxIL;
-    }
-    double r0;
-    if(dxXL != 0) {
-      r0 = atan(dyXL/dxXL);
-      if(dxXL < 0)
-        r0 = NRLib::Pi + r0;
-    }
-    else if(dyXL > 0)
-      r0 = 0.5*NRLib::Pi;
-    else
-      r0 = -0.5*NRLib::Pi;
+  double dIL, dXL, dILn, dXLn;
+  // Rotate IL axis by changing dyIL/dxIL. Then rescale to original length.
+  dxILn  = dxIL;
+  dyILn  = dxIL*frac;
+  dIL    = std::sqrt(dxIL*dxIL   + dyIL*dyIL);
+  dILn   = std::sqrt(dxILn*dxILn + dyILn*dyILn);
+  dxILn  = dxILn*(dIL/dILn);
+  dyILn  = dyILn*(dIL/dILn);
 
-    double dx = x1 - (x0 + dIL1*dxIL + dXL1*dxXL);
-    double dy = y1 - (y0 + dIL1*dyIL + dXL1*dyXL);
-    double dist0 = dx*dx+dy*dy;
-
-    double small_delta = 0.00001;
-    double r1 = r0+small_delta;
-    dxXL = length*cos(r1);
-    dyXL = length*sin(r1);
-    dxIL = sign1*factorILfromXL*dyXL;
-    dyIL = sign2*factorILfromXL*dxXL;
-    dx = x1 - (x0 + dIL1*dxIL + dXL1*dxXL);
-    dy = y1 - (y0 + dIL1*dyIL + dXL1*dyXL);
-    double dist1 = dx*dx+dy*dy;
-
-    double delta_r;
-    if(dist1<dist0)
-      delta_r = 0.1;
-    else {
-      r1 = r0-small_delta;
-      dxXL = length*cos(r1);
-      dyXL = length*sin(r1);
-      dxIL = sign1*factorILfromXL*dyXL;
-      dyIL = sign2*factorILfromXL*dxXL;
-      dx = x1 - (x0 + dIL1*dxIL + dXL1*dxXL);
-      dy = y1 - (y0 + dIL1*dyIL + dXL1*dyXL);
-      dist1 = dx*dx+dy*dy;
-      if(dist1>dist0) //No improvement this way either, give up.
-        return;
-      else
-        delta_r = -0.1;
-    }
-    double dist2 = dist1;
-    double r2    = r1;
-
-
-    while(dist2 <= dist1) {
-      dist1 = dist2;
-      r1    = r2;
-
-      r2 = r1 + delta_r;
-      dxXL = length*cos(r2);
-      dyXL = length*sin(r2);
-      dxIL = sign1*factorILfromXL*dyXL;
-      dyIL = sign2*factorILfromXL*dxXL;
-      dx = x1 - (x0 + dIL1*dxIL + dXL1*dxXL);
-      dy = y1 - (y0 + dIL1*dyIL + dXL1*dyXL);
-      dist2 = dx*dx+dy*dy;
-    }
-    dist1 = dist0;
-    if(dist2<dist1)
-      dist1 = dist2;
-
-    while(dist1 > 1 && r2-r0 > 1e-7) {
-      double r3 = 0.75*r0+0.25*r2;
-      dxXL = length*cos(r3);
-      dyXL = length*sin(r3);
-      dxIL = sign1*factorILfromXL*dyXL;
-      dyIL = sign2*factorILfromXL*dxXL;
-      dx = x1 - (x0 + dIL1*dxIL + dXL1*dxXL);
-      dy = y1 - (y0 + dIL1*dyIL + dXL1*dyXL);
-      double dist3 = sqrt(dx*dx+dy*dy);
-
-      r1 = 0.25*r0+0.75*r2;
-      dxXL = length*cos(r1);
-      dyXL = length*sin(r1);
-      dxIL = sign1*factorILfromXL*dyXL;
-      dyIL = sign2*factorILfromXL*dxXL;
-      dx = x1 - (x0 + dIL1*dxIL + dXL1*dxXL);
-      dy = y1 - (y0 + dIL1*dyIL + dXL1*dyXL);
-      dist1 = sqrt(dx*dx+dy*dy);
-      if(dist1 < dist3)
-        r0 = 0.5*(r0+r2);
-      else {
-        dist1 = dist3;
-        r1 = r3;
-        r2 = 0.5*(r0+r2);
-      }
-    }
-    dxXL = length*cos(r1);
-    dyXL = length*sin(r1);
-    dxIL = sign1*factorILfromXL*dyXL;
-    dyIL = sign2*factorILfromXL*dxXL;
-  }
+  // Rotate XL axis by changing dyIL/dxIL. Then rescale to original length.
+  dxXLn  =  dxXL;
+  dyXLn  = -dxXL*(1.0/frac);
+  dXL    = std::sqrt(dxXL*dxXL   + dyXL*dyXL);
+  dXLn   = std::sqrt(dxXLn*dxXLn + dyXLn*dyXLn);
+  dxXLn  = dxXLn*(dXL/dXLn);
+  dyXLn  = dyXLn*(dXL/dXLn);
 }
 
 void
 SegyGeometry::SetupGeometry(double xRef, double yRef, int ilRef, int xlRef,
                             int minIL, int maxIL, int minXL, int maxXL,
-                            float dxIL, float dyIL, float dxXL, float dyXL,
+                            double dxIL, double dyIL, double dxXL, double dyXL,
                             int deltaIL, int deltaXL)
 {
-  double lx0 = xRef-xlRef*dxXL-ilRef*dxIL;
-  double ly0 = yRef-xlRef*dyXL-ilRef*dyIL;
+  if (minXL == maxXL) {
+    // Line going in XL direction. (Only IL coordinates)
+    dxXL = dyIL;
+    dyXL = -dxIL;
+    deltaXL = deltaIL;
+  }
+  else if (minIL == maxIL) {
+    // Line going in IL direction. (Only XL coordinates)
+    dxIL = -dyXL;
+    dyIL = dxXL;
+    deltaIL = deltaXL;
+  }
+
+  double lx0 = xRef - xlRef*dxXL - ilRef*dxIL;
+  double ly0 = yRef - xlRef*dyXL - ilRef*dyIL;
 
   std::vector<double> cornerx(4);
   std::vector<double> cornery(4);
   std::vector<double> cornerxl(4);
   std::vector<double> corneril(4);
 
-  cornerx[0] = lx0+(minXL-0.5*deltaXL)*dxXL+(minIL-0.5*deltaIL)*dxIL;
-  cornery[0] = ly0+(minXL-0.5*deltaXL)*dyXL+(minIL-0.5*deltaIL)*dyIL;
-  cornerx[1] = lx0+(minXL-0.5*deltaXL)*dxXL+(maxIL+0.5*deltaIL)*dxIL;
-  cornery[1] = ly0+(minXL-0.5*deltaXL)*dyXL+(maxIL+0.5*deltaIL)*dyIL;
-  cornerx[2] = lx0+(maxXL+0.5*deltaXL)*dxXL+(minIL-0.5*deltaIL)*dxIL;
-  cornery[2] = ly0+(maxXL+0.5*deltaXL)*dyXL+(minIL-0.5*deltaIL)*dyIL;
-  cornerx[3] = lx0+(maxXL+0.5*deltaXL)*dxXL+(maxIL+0.5*deltaIL)*dxIL;
-  cornery[3] = ly0+(maxXL+0.5*deltaXL)*dyXL+(maxIL+0.5*deltaIL)*dyIL;
+  cornerx[0] = lx0 + (minXL - 0.5*deltaXL)*dxXL + (minIL - 0.5*deltaIL)*dxIL;
+  cornery[0] = ly0 + (minXL - 0.5*deltaXL)*dyXL + (minIL - 0.5*deltaIL)*dyIL;
+  cornerx[1] = lx0 + (minXL - 0.5*deltaXL)*dxXL + (maxIL + 0.5*deltaIL)*dxIL;
+  cornery[1] = ly0 + (minXL - 0.5*deltaXL)*dyXL + (maxIL + 0.5*deltaIL)*dyIL;
+  cornerx[2] = lx0 + (maxXL + 0.5*deltaXL)*dxXL + (minIL - 0.5*deltaIL)*dxIL;
+  cornery[2] = ly0 + (maxXL + 0.5*deltaXL)*dyXL + (minIL - 0.5*deltaIL)*dyIL;
+  cornerx[3] = lx0 + (maxXL + 0.5*deltaXL)*dxXL + (maxIL + 0.5*deltaIL)*dxIL;
+  cornery[3] = ly0 + (maxXL + 0.5*deltaXL)*dyXL + (maxIL + 0.5*deltaIL)*dyIL;
 
-  cornerxl[0] = minXL-0.5*deltaXL;
-  corneril[0] = minIL-0.5*deltaIL;
-  cornerxl[1] = minXL-0.5*deltaXL;
-  corneril[1] = maxIL+0.5*deltaIL;
-  cornerxl[2] = maxXL+0.5*deltaXL;
-  corneril[2] = minIL-0.5*deltaIL;
-  cornerxl[3] = maxXL+0.5*deltaXL;
-  corneril[3] = maxIL+0.5*deltaIL;
+  cornerxl[0] = minXL - 0.5*deltaXL;
+  corneril[0] = minIL - 0.5*deltaIL;
+  cornerxl[1] = minXL - 0.5*deltaXL;
+  corneril[1] = maxIL + 0.5*deltaIL;
+  cornerxl[2] = maxXL + 0.5*deltaXL;
+  corneril[2] = minIL - 0.5*deltaIL;
+  cornerxl[3] = maxXL + 0.5*deltaXL;
+  corneril[3] = maxIL + 0.5*deltaIL;
   double miny, maxx, minx, maxy;
   miny = cornery[0];
   maxx = cornerx[0];
   minx = cornerx[0];
   maxy = cornery[0];
-  size_t index = 0;
-  size_t index2 = 0;
-  size_t index3 = 0;
-  size_t index4 = 0;
+  size_t index_min_y = 0;
+  size_t index_max_x = 0;
+  size_t index_min_x = 0;
+  size_t index_max_y = 0;
   size_t i;
   for (i = 1; i < 4; i++)
   {
     if (cornery[i] < miny)
     {
       miny = cornery[i];
-      index = i;
+      index_min_y = i;
     }
     if (cornerx[i] > maxx)
     {
       maxx = cornerx[i];
-      index2 = i;
+      index_max_x = i;
     }
     if (cornerx[i] < minx)
     {
       minx = cornerx[i];
-      index3 = i;
+      index_min_x = i;
     }
     if (cornery[i] > maxy)
     {
       maxy = cornery[i];
-      index4 = i;
+      index_max_y = i;
     }
   }
 
   //If the grid is oriented along UTMX/UTMY, we may have a problem now,
   //since we have non-unique max and min. Check and fix.
-  if(index2 == index || index3 == index || index2 == index4 || index3 == index4) {
-    //Is this a single line?
-    if((dxXL+dyXL) == 0.0 || (dxIL+dyIL) == 0.0) {
-      if(maxx == minx) {
-        //For line: If equal x, index and and index2 are lowermost, rest uppermost.
-        index2 = index;
-        index3 = index4;
+  if (index_max_x == index_min_y || index_min_x == index_min_y || index_max_x == index_max_y || index_min_x == index_max_y) {
+    //Square oriented with UTMX/UTMY.
+    //index_min_y  = lower left
+    //index_max_x = lower right
+    //index_min_x = upper left
+    //index_max_y = upper right
+    double dXL = sqrt(dxXL*dxXL + dyXL*dyXL);
+    double dl = sqrt(dxIL*dxIL + dyIL*dyIL);
+    if (dl == 0 || (dXL > 0 && dXL < dl))
+      dl = dXL;
+
+    //Utlilize fact that sum of index in diagonally opposite corners is 3.
+    if (fabs(cornerx[0] - cornerx[1]) < 0.2*dl) {
+      //0 and 1 are along same constant x.
+      if (cornerx[2] < cornerx[0]) { //2 and 3 are leftmost edge.
+        if (cornery[2] < cornery[3])
+          index_min_y = 2;
+        else
+          index_min_y = 3;
+        index_max_x = index_min_y - 2;
       }
       else {
-        //For line: If equal y, index and index3 are leftmost, rest rightmost.
-        index  = index3;
-        index4 = index2;
+        if (cornery[0] < cornery[1])
+          index_min_y = 0;
+        else
+          index_min_y = 1;
+        index_max_x = index_min_y + 2;
       }
-      assert(index != index4); //Can not compute geometry for a single trace, should be handled earlier.
     }
     else {
-      //Square oriented with UTMX/UTMY.
-      //index  = lower left
-      //index2 = lower right
-      //index3 = upper left
-      //index4 = upper right
-      float dXL = sqrt(dxXL*dxXL+dyXL*dyXL);
-      float dl  = sqrt(dxIL*dxIL+dyIL*dyIL);
-      if(dl == 0 || (dXL > 0 && dXL < dl))
-        dl = dXL;
-
-      //Utlilize fact that sum of index in diagonally opposite corners is 3.
-      if(fabs(cornerx[0]-cornerx[1]) < 0.2*dl) {
-        //0 and 1 are along same constant x.
-        if(cornerx[2] < cornerx[0]) { //2 and 3 are leftmost edge.
-          if(cornery[2] < cornery[3])
-            index = 2;
-          else
-            index = 3;
-          index2 = index-2;
-        }
-        else {
-          if(cornery[0] < cornery[1])
-            index = 0;
-          else
-            index = 1;
-          index2 = index+2;
-        }
+      //0 and 1 are along same constant y.
+      if (cornery[2] < cornery[0]) { //2 and 3 are bottom edge.
+        if (cornerx[2] < cornerx[3])
+          index_min_y = 2;
+        else
+          index_min_y = 3;
+        index_max_x = 5 - index_min_y;
       }
       else {
-        //0 and 1 are along same constant y.
-        if(cornery[2] < cornery[0]) { //2 and 3 are bottom edge.
-          if(cornerx[2] < cornerx[3])
-            index = 2;
-          else
-            index = 3;
-          index2 = 5-index;
-        }
-        else {
-          if(cornerx[0] < cornerx[1])
-            index = 0;
-          else
-            index = 1;
-          index2 = 1-index;
-        }
+        if (cornerx[0] < cornerx[1])
+          index_min_y = 0;
+        else
+          index_min_y = 1;
+        index_max_x = 1 - index_min_y;
       }
-      index3 = 3-index2;
-      index4 = 3-index;
     }
+    index_min_x = 3 - index_max_x;
+    index_max_y = 3 - index_min_y;
   }
 
-  LogKit::LogMessage(LogKit::DebugLow,"Corner 0:  ("+NRLib::ToString(cornerx[index]) +" , "+NRLib::ToString(cornery[index]) +").\n");
-  LogKit::LogMessage(LogKit::DebugLow,"Corner 1:  ("+NRLib::ToString(cornerx[index2])+" , "+NRLib::ToString(cornery[index2])+").\n");
-  LogKit::LogMessage(LogKit::DebugLow,"Corner 2:  ("+NRLib::ToString(cornerx[index3])+" , "+NRLib::ToString(cornery[index3])+").\n");
-  LogKit::LogMessage(LogKit::DebugLow,"Corner 3:  ("+NRLib::ToString(cornerx[index4])+" , "+NRLib::ToString(cornery[index4])+").\n");
+  LogKit::LogMessage(LogKit::DebugLow, "Corner 0:  (" + NRLib::ToString(cornerx[index_min_y]) + " , " + NRLib::ToString(cornery[index_min_y]) + ").\n");
+  LogKit::LogMessage(LogKit::DebugLow, "Corner 1:  (" + NRLib::ToString(cornerx[index_max_x]) + " , " + NRLib::ToString(cornery[index_max_x]) + ").\n");
+  LogKit::LogMessage(LogKit::DebugLow, "Corner 2:  (" + NRLib::ToString(cornerx[index_min_x]) + " , " + NRLib::ToString(cornery[index_min_x]) + ").\n");
+  LogKit::LogMessage(LogKit::DebugLow, "Corner 3:  (" + NRLib::ToString(cornerx[index_max_y]) + " , " + NRLib::ToString(cornery[index_max_y]) + ").\n");
 
-  double deltax = cornerx[index]-cornerx[index2];
-  double deltay = cornery[index]-cornery[index2];
-  if(deltax == 0)
+  double deltax = cornerx[index_min_y] - cornerx[index_max_x];
+  double deltay = cornery[index_min_y] - cornery[index_max_x];
+  if (deltax == 0.0) {
+    assert(deltay != 0.0);
     rot_ = 0.0;
+  }
   else
-    rot_ = atan(deltay /deltax);
+    rot_ = atan(deltay / deltax);
 
-  double lx,ly;
-  if (std::abs(rot_)<=0.25*NRLib::Pi)
+  double lx, ly;
+  if (std::abs(rot_) <= 0.25*NRLib::Pi)
   {
-    x0_ = cornerx[index];
-    y0_= cornery[index];
-    lx = sqrt(deltay*deltay+deltax*deltax);
-    //lx = sqrt((cornery[index]-cornery[index2])*(cornery[index]-cornery[index2])+(cornerx[index]-cornerx[index2])*(cornerx[index]-cornerx[index2]));
-    if(deltaXL!=0)
-      nx_ = static_cast<size_t>(std::abs(cornerxl[index]-cornerxl[index2])/deltaXL);
-    if (nx_==0 || deltaXL ==0)
-      nx_ = static_cast<size_t>(std::abs(corneril[index]-corneril[index2])/deltaIL);
-    if (lx==0)
-      nx_ = 1;
-    dx_ = static_cast<double>(lx/nx_);
+    x0_ = cornerx[index_min_y];
+    y0_ = cornery[index_min_y];
+    lx = sqrt(deltay*deltay + deltax*deltax);
+    nx_ = static_cast<size_t>(std::abs(cornerxl[index_min_y] - cornerxl[index_max_x]) / deltaXL);
+    if (nx_ == 0)
+      nx_ = static_cast<size_t>(std::abs(corneril[index_min_y] - corneril[index_max_x]) / deltaIL);
 
-    deltax = cornerx[index]-cornerx[index3];
-    deltay = cornery[index]-cornery[index3];
-    ly = sqrt(deltay*deltay+deltax*deltax);
-    //ly = sqrt((cornery[index]-cornery[index3])*(cornery[index]-cornery[index3])+(cornerx[index]-cornerx[index3])*(cornerx[index]-cornerx[index3]));
-    if(deltaXL!=0)
-      ny_ = static_cast<size_t>(std::abs(cornerxl[index]-cornerxl[index3])/deltaXL);
-    if (ny_==0 || deltaXL==0)
-      ny_ = static_cast<size_t>(std::abs(corneril[index]-corneril[index3])/deltaIL);
-    if (ly==0)
-    {
-      ny_ = 1;
-      ly = dx_;
-    }
-    dy_ = static_cast<double>(ly/ny_);
-    if (index==2 || index==3)
-      deltaXL = -deltaXL;
-    if (index==1 || index==3)
-      deltaIL = -deltaIL;
+    deltax = cornerx[index_min_y] - cornerx[index_min_x];
+    deltay = cornery[index_min_y] - cornery[index_min_x];
+    ly = sqrt(deltay*deltay + deltax*deltax);
+    ny_ = static_cast<size_t>(std::abs(cornerxl[index_min_y] - cornerxl[index_min_x]) / deltaXL);
+    if (ny_ == 0)
+      ny_ = static_cast<size_t>(std::abs(corneril[index_min_y] - corneril[index_min_x]) / deltaIL);
   }
   else
   {
-    x0_ = cornerx[index3];
-    y0_= cornery[index3];
-    if (index3 == index)
-      index = index2;
-    deltax = cornerx[index]-cornerx[index3];
-    deltay = cornery[index]-cornery[index3];
-   // rot_ = atan((cornery[index]-cornery[index3])/(cornerx[index]-cornerx[index3]));
-    rot_ = atan(deltay/deltax);
-    //lx = sqrt((cornery[index]-cornery[index3])*(cornery[index]-cornery[index3])+(cornerx[index]-cornerx[index3])*(cornerx[index]-cornerx[index3]));
-    lx = sqrt(deltay*deltay+deltax*deltax);
-    nx_ = static_cast<size_t>(std::abs(cornerxl[index]-cornerxl[index3])/deltaXL);
-    if (nx_ == 0 || deltaXL == 0)
-      nx_ = static_cast<size_t>(std::abs(corneril[index]-corneril[index3])/deltaIL);
-    if (lx == 0)
-      nx_ = 1;
-    dx_ = static_cast<double>(lx / nx_);
-    if (index3 == index4)
-      index3 = index;
-    deltax = cornerx[index4]-cornerx[index3];
-    deltay = cornery[index4]-cornery[index3];
-    ly = sqrt(deltay*deltay+deltax*deltax);
-    //ly = sqrt((cornery[index4]-cornery[index3])*(cornery[index4]-cornery[index3])+(cornerx[index4]-cornerx[index3])*(cornerx[index4]-cornerx[index3]));
-    ny_ = static_cast<size_t>(std::abs(cornerxl[index4]-cornerxl[index3])/deltaXL);
-    if (ny_ == 0 || deltaXL == 0)
-      ny_ = static_cast<size_t>(std::abs(corneril[index4]-corneril[index3])/deltaIL);
-    if (ly == 0)
-    {
-      ny_ = 1;
-      ly = dx_; // avoid 0
+    x0_ = cornerx[index_min_x];
+    y0_ = cornery[index_min_x];
+    deltax = cornerx[index_min_y] - cornerx[index_min_x];
+    deltay = cornery[index_min_y] - cornery[index_min_x];
+
+    if (deltax > 0)
+      rot_ = atan(deltay / deltax);
+    else {
+      rot_ -= 0.5*NRLib::Pi;
     }
-    dy_ = static_cast<double>(ly / ny_);
-    if (index3 == 2 || index3 == 3)
-      deltaXL = -deltaXL;
-    if (index3 == 1 || index3 == 3)
-      deltaIL = -deltaIL;
+
+    lx = sqrt(deltay*deltay + deltax*deltax);
+    nx_ = static_cast<size_t>(std::abs(cornerxl[index_min_y] - cornerxl[index_min_x]) / deltaXL);
+    if (nx_ == 0)
+      nx_ = static_cast<size_t>(std::abs(corneril[index_min_y] - corneril[index_min_x]) / deltaIL);
+
+    deltax = cornerx[index_max_y] - cornerx[index_min_x];
+    deltay = cornery[index_max_y] - cornery[index_min_x];
+    ly = sqrt(deltay*deltay + deltax*deltax);
+    ny_ = static_cast<size_t>(std::abs(cornerxl[index_max_y] - cornerxl[index_min_x]) / deltaXL);
+    if (ny_ == 0)
+      ny_ = static_cast<size_t>(std::abs(corneril[index_max_y] - corneril[index_min_x]) / deltaIL);
   }
+
+  assert(lx != 0.0 && ly != 0.0);
+
+  dx_ = static_cast<double>(lx / nx_);
+  dy_ = static_cast<double>(ly / ny_);
   sin_rot_ = sin(rot_);
   cos_rot_ = cos(rot_);
-  if ((nx_==1 || ny_==1) && std::abs(rot_)<=0.25*NRLib::Pi)
-  {
-    //Single line, either inline or crossline.
-    if (deltaXL == 0) { //Inline
-      xl_stepX_ = 0;
-      xl_stepY_ = 0;
-      //Straight line, underdetermined, set only one coefficient.
-      if (dxIL > dyIL) {
-        il_stepX_ = 1/dxIL;
-        il_stepY_ = 0;
-      }
-      else {
-        il_stepY_ = 1/dyIL;
-        il_stepX_ = 0;
-      }
-      in_line0_    = ilRef-il_stepX_*(xRef-x0_)-il_stepY_*(yRef-y0_);
-      cross_line0_ = xlRef; //Constant, so use one seen.
-    }
-    else { //Crossline
-      il_stepX_ = 0;
-      il_stepY_ = 0;
-      //Straight line, underdetermined, set only one coefficient.
-      if (dxXL > dyXL) {
-        xl_stepX_ = 1/dxXL;
-        xl_stepY_ = 0;
-      }
-      else {
-        xl_stepY_ = 1/dyXL;
-        xl_stepX_ = 0;
-      }
-      in_line0_    = ilRef; //Constant, so use one seen.
-      cross_line0_ = xlRef-xl_stepX_*(xRef-x0_)-xl_stepY_*(yRef-y0_);
-    }
+
+  if (dyIL != 0) {
+    xl_stepX_ = 1 / (dxXL - dxIL*dyXL / dyIL);
+    il_stepX_ = -xl_stepX_*dyXL / dyIL;
   }
-  else
-  {
-    if (dyIL != 0) {
-      xl_stepX_ = 1/(dxXL-dxIL*dyXL/dyIL);
-      il_stepX_ = -xl_stepX_*dyXL/dyIL;
-    }
-    else{  //implies that dxXL = 0, dxIL > 0)
-      xl_stepX_ = 0;
-      il_stepX_ = 1/dxIL;
-    }
-    if (dxIL != 0) {
-      xl_stepY_ = 1/(dyXL-dyIL*dxXL/dxIL);
-      il_stepY_ = -xl_stepY_*dxXL/dxIL;
-    }
-    else {
-      xl_stepY_ = 0;
-      il_stepY_ = 1/dyIL;
-    }
-    //IL(x,y) = inLine0_ + (x-x0_)*ilStepX_ + (y-y0)*ilStepY_
-    //IL(lx0,ly0) = 0;
-    in_line0_    = ilRef-il_stepX_*(xRef-x0_)-il_stepY_*(yRef-y0_);
-    cross_line0_ = xlRef-xl_stepX_*(xRef-x0_)-xl_stepY_*(yRef-y0_);
+  else {  //implies that dxXL = 0, dxIL > 0)
+    xl_stepX_ = 0;
+    il_stepX_ = 1 / dxIL;
   }
+  if (dxIL != 0) {
+    xl_stepY_ = 1 / (dyXL - dyIL*dxXL / dxIL);
+    il_stepY_ = -xl_stepY_*dxXL / dxIL;
+  }
+  else {
+    xl_stepY_ = 0;
+    il_stepY_ = 1 / dyIL;
+  }
+  in_line0_ = ilRef - il_stepX_*(xRef - x0_) - il_stepY_*(yRef - y0_);
+  cross_line0_ = xlRef - xl_stepX_*(xRef - x0_) - xl_stepY_*(yRef - y0_);
 }
+
 
 void
 SegyGeometry::SetupGeometrySingleTrace(const SegYTrace * trace)
@@ -750,6 +744,9 @@ SegyGeometry::SetupGeometrySingleTrace(const SegYTrace * trace)
   firstAxisIL_ = false;
 }
 
+SegyGeometry::SegyGeometry()
+{}
+
 SegyGeometry::SegyGeometry(double x0, double y0, double dx, double dy, size_t nx, size_t ny,
                            double rot)
 {
@@ -768,19 +765,19 @@ SegyGeometry::SegyGeometry(double x0, double y0, double dx, double dy, size_t nx
   xl_stepY_    = sin_rot_/dx_;
   il_stepX_    = -sin_rot_/dy_;
   il_stepY_    = cos_rot_/dy_;
-  IL0_         = IMISSING;
-  XL0_         = IMISSING;
-  minIL_       = IMISSING;
-  maxIL_       = IMISSING;
-  ILStep_      = IMISSING;
-  minXL_       = IMISSING;
-  maxXL_       = IMISSING;
-  XLStep_      = IMISSING;
-  firstAxisIL_ = false;
+  IL0_         = 0;
+  XL0_         = 0;
+  minIL_       = 0;
+  maxIL_       = static_cast<int>(nx - 1);
+  ILStep_      = 1;
+  minXL_       = 0;
+  maxXL_       = static_cast<int>(ny - 1);
+  XLStep_      = 1;
+  firstAxisIL_ = true;
 }
 
 SegyGeometry::SegyGeometry(double x0, double y0, double dx, double dy, size_t nx, size_t ny,
-                           double IL0, double XL0, double ilStepX, double ilStepY,
+                           double ILStart, double XLStart, double ilStepX, double ilStepY,
                            double xlStepX, double xlStepY, double rot)
 {
   x0_          = x0;
@@ -789,8 +786,8 @@ SegyGeometry::SegyGeometry(double x0, double y0, double dx, double dy, size_t nx
   dy_          = dy;
   nx_          = nx;
   ny_          = ny;
-  in_line0_    = IL0;
-  cross_line0_ = XL0;
+  in_line0_    = ILStart;
+  cross_line0_ = XLStart;
   il_stepX_    = ilStepX;
   il_stepY_    = ilStepY;
   xl_stepX_    = xlStepX;
@@ -798,18 +795,11 @@ SegyGeometry::SegyGeometry(double x0, double y0, double dx, double dy, size_t nx
   cos_rot_     = cos(rot);
   sin_rot_     = sin(rot);
   rot_         = rot;
-  IL0_         = IMISSING;
-  XL0_         = IMISSING;
-  minIL_       = IMISSING;
-  maxIL_       = IMISSING;
-  ILStep_      = IMISSING;
-  minXL_       = IMISSING;
-  maxXL_       = IMISSING;
-  XLStep_      = IMISSING;
-  firstAxisIL_ = false;
+
+  FindILXLGeometry();
 }
 
-SegyGeometry::SegyGeometry(const RegularSurface<double> surf)
+SegyGeometry::SegyGeometry(const RegularSurface<double> & surf)
 {
   x0_          = surf.GetXMin();
   y0_          = surf.GetYMin();
@@ -826,18 +816,18 @@ SegyGeometry::SegyGeometry(const RegularSurface<double> surf)
   xl_stepY_    = sin_rot_/dx_;
   il_stepX_    = -sin_rot_/dy_;
   il_stepY_    = cos_rot_/dy_;
-  IL0_         = IMISSING;
-  XL0_         = IMISSING;
-  minIL_       = IMISSING;
-  maxIL_       = IMISSING;
-  ILStep_      = IMISSING;
-  minXL_       = IMISSING;
-  maxXL_       = IMISSING;
-  XLStep_      = IMISSING;
-  firstAxisIL_ = false;
+  IL0_         = 0;
+  XL0_         = 0;
+  minIL_       = 0;
+  maxIL_       = static_cast<int>(nx_ - 1);
+  ILStep_      = 1;
+  minXL_       = 0;
+  maxXL_       = static_cast<int>(ny_ - 1);
+  XLStep_      = 1;
+  firstAxisIL_ = true;
 }
 
-SegyGeometry::SegyGeometry(const RegularSurfaceRotated<double> surf)
+SegyGeometry::SegyGeometry(const RegularSurfaceRotated<double> & surf)
 {
   x0_          = surf.GetXRef();  // Use rotation origin and not minimum x-value
   y0_          = surf.GetYRef();  // Use rotation origin and not minimum y-value
@@ -854,15 +844,15 @@ SegyGeometry::SegyGeometry(const RegularSurfaceRotated<double> surf)
   xl_stepY_    = sin_rot_/dx_;
   il_stepX_    = -sin_rot_/dy_;
   il_stepY_    = cos_rot_/dy_;
-  IL0_         = IMISSING;
-  XL0_         = IMISSING;
-  minIL_       = IMISSING;
-  maxIL_       = IMISSING;
-  ILStep_      = IMISSING;
-  minXL_       = IMISSING;
-  maxXL_       = IMISSING;
-  XLStep_      = IMISSING;
-  firstAxisIL_ = false;
+  IL0_         = 0;
+  XL0_         = 0;
+  minIL_       = 0;
+  maxIL_       = static_cast<int>(nx_ - 1);
+  ILStep_      = 1;
+  minXL_       = 0;
+  maxXL_       = static_cast<int>(ny_ - 1);
+  XLStep_      = 1;
+  firstAxisIL_ = true;
 }
 
 SegyGeometry::SegyGeometry(const SegyGeometry *geometry)
@@ -900,7 +890,7 @@ SegyGeometry::~SegyGeometry()
 bool
 SegyGeometry::IsInside(double x, double y) const
 {
-  float xind, yind;
+  double xind, yind;
   return(FindContIndex(x,y,xind,yind));
 }
 
@@ -915,50 +905,99 @@ SegyGeometry::FindIndex(double x, double y) const
 void
 SegyGeometry::FindIndex(double x, double y, size_t &i, size_t &j) const
 {
-  double teller1 = (x-x0_)*cos_rot_+(y-y0_)*sin_rot_;
-  if (dx_ == 0)
-    i = 0;
-  else
-    i = static_cast<int>(teller1/dx_);
-  double teller2 = -(x-x0_)*sin_rot_+(y-y0_)*cos_rot_;
-  if (dy_==0)
-    j = 0;
-  else
-    j = static_cast<int>(teller2/dy_);
-  if(i>=nx_ || j >= ny_ || i<0 || j<0) {
-    throw Exception("Invalid index\n");
-  }
+  double ci, cj;
+  bool is_inside = FindContIndex(x, y, ci, cj);
+  i = static_cast<int>(ci);
+  j = static_cast<int>(cj);
+
+  if (!is_inside)
+    throw Exception("Coordinates (UTM-X, UTM-Y) = (" + NRLib::ToString(x) + ", " +
+                    NRLib::ToString(y) + ") is outside the SEGY cube.");
 }
 
 void
 SegyGeometry::FindIndex(int IL, int XL, size_t &i, size_t &j) const
 {
-  double x,y;
-  FindXYFromILXL(IL, XL, x, y);
-  FindIndex(x,y,i,j);
+  int ii, jj;
+
+  if (IL0_ == minIL_) {
+    ii = (IL - IL0_) / ILStep_;
+  }
+  else {
+    ii = (IL0_ - IL) / ILStep_;
+  }
+
+  if (XL0_ == minXL_) {
+    jj = (XL - XL0_) / XLStep_;
+  }
+  else {
+    jj = (XL0_ - XL) / XLStep_;
+  }
+
+  if (!firstAxisIL_) {
+    std::swap(ii, jj);
+  }
+
+  if (ii < 0 || jj < 0 || ii > static_cast<int>(nx_) || jj > static_cast<int>(ny_))
+    throw Exception("Indexes (i, j) = (" + NRLib::ToString(ii) + ", " + NRLib::ToString(jj) + ") outside grid "
+                    "found for (IL, XL) = (" + NRLib::ToString(IL) + ", " + NRLib::ToString(XL) + ")");
+
+  i = static_cast<size_t>(ii);
+  j = static_cast<size_t>(jj);
 }
 
 bool
-SegyGeometry::FindContIndex(double x, double y, float &xind, float  &yind) const
+SegyGeometry::FindContIndex(double x, double y, double &xind, double &yind) const
 {
-  xind = static_cast<float>(( (x-x0_)*cos_rot_+(y-y0_)*sin_rot_)/dx_);
-  if (dx_==0)
-    xind = 0.0;
-  yind = static_cast<float>((-(x-x0_)*sin_rot_+(y-y0_)*cos_rot_)/dy_);
-  if (dy_==0)
-    yind = 0.0;
-  if (xind>=0.0f && xind<nx_ && yind>=0.0f && yind<ny_)
+  double IL, XL;
+  FindContILXL(x, y, IL, XL);
+  FindContIndexFromContILXL(IL, XL, xind, yind);
+
+  if (xind>=0.0 && xind<static_cast<double>(nx_) && yind>=0.0 && yind<static_cast<double>(ny_))
     return true;
   else
     return false;
 }
 
+
 void
-SegyGeometry::FindILXL(float x, float y, int &IL, int &XL) const
+SegyGeometry::FindContIndexFromContILXL(double il, double xl, double &xind, double &yind) const
 {
-  IL = static_cast<int>(0.5+in_line0_+(x-x0_)*il_stepX_+(y-y0_)*il_stepY_);
-  XL = static_cast<int>(0.5+cross_line0_+(x-x0_)*xl_stepX_+(y-y0_)*xl_stepY_);
+  double xStrides, yStrides;
+  int xStep, yStep;
+
+  if (firstAxisIL_)
+  {
+    xStep = ILStep_;
+    yStep = XLStep_;
+    if (IL0_ == minIL_)
+      xStrides = il - minIL_;
+    else
+      xStrides = maxIL_ - il;
+
+    if (XL0_ == minXL_)
+      yStrides = xl - minXL_;
+    else
+      yStrides = maxXL_ - xl;
+  }
+  else
+  {
+    xStep = XLStep_;
+    yStep = ILStep_;
+    if (IL0_ == minIL_)
+      yStrides = il - minIL_;
+    else
+      yStrides = maxIL_ - il;
+
+    if (XL0_ == minXL_)
+      xStrides = xl - minXL_;
+    else
+      xStrides = maxXL_ - xl;
+  }
+  xind = 0.5 + xStrides / xStep;
+  yind = 0.5 + yStrides / yStep;
 }
+
 
 void
 SegyGeometry::FindILXL(double x, double y, int &IL, int &XL) const
@@ -967,12 +1006,28 @@ SegyGeometry::FindILXL(double x, double y, int &IL, int &XL) const
   XL = static_cast<int>(0.5+cross_line0_+(x-x0_)*xl_stepX_+(y-y0_)*xl_stepY_);
 }
 
+
 void
 SegyGeometry::FindILXL(size_t i, size_t j, int &IL, int &XL) const
 {
-  double x,y;
-  FindXYFromIJ(i, j, x, y);
-  FindILXL(x,y,IL,XL);
+  int ii = static_cast<int>(i);
+  int jj = static_cast<int>(j);
+  if (!firstAxisIL_)
+    std::swap(ii, jj);
+
+  if (IL0_ == minIL_) {
+    IL = IL0_  + ii * ILStep_;
+  }
+  else {
+    IL = IL0_ - ii * ILStep_;
+  }
+
+  if (XL0_ == minXL_) {
+    XL = XL0_ + jj * XLStep_;
+  }
+  else {
+    XL = XL0_ - jj * XLStep_;
+  }
 }
 
 void
@@ -985,43 +1040,42 @@ SegyGeometry::FindContILXL(double x, double y, double &IL, double &XL) const
 void
 SegyGeometry::FindXYFromIJ(size_t i, size_t j, double &x, double &y) const
 {
-  double xind = 0.5+static_cast<double>(i);
-  double yind = 0.5+static_cast<double>(j);
-  x = x0_+xind*dx_*cos_rot_-yind*dy_*sin_rot_;
-  y = y0_+xind*dx_*sin_rot_+yind*dy_*cos_rot_;
+  int IL, XL;
+  FindILXL(i, j, IL, XL);
+  FindXYFromILXL(IL, XL, x, y);
 }
 
 void
 SegyGeometry::FindXYFromILXL(int IL, int XL, double &x, double &y) const
 {
-  FindXYFromContILXL(static_cast<float>(IL), static_cast<float>(XL), x, y);
+  FindXYFromContILXL(static_cast<double>(IL), static_cast<double>(XL), x, y);
 }
 
 void
-SegyGeometry::FindXYFromContILXL(float IL, float XL, double &x, double &y) const
+SegyGeometry::FindXYFromContILXL(double IL, double XL, double &x, double &y) const
 {
   double xd, yd;
   if (xl_stepX_ == 0.0 && xl_stepY_ == 0.0) {//inline only
-    if (il_stepX_ > 0.0) {
+    if (sin_rot_ > 0.0) {
       xd = x0_+(IL-in_line0_)/il_stepX_;
       yd = y0_+(xd-x0_)*sin_rot_/cos_rot_; //If cos_rot_ is 0, il_stepX_ should be 0 here.
     }
     else {
       yd = y0_+(IL-in_line0_)/il_stepY_;
-      xd = x0_+(yd-y0_)*sin_rot_/cos_rot_;
+      xd = x0_-(yd-y0_)*sin_rot_/cos_rot_;
     }
   }
   else if (il_stepX_ == 0.0 && il_stepY_ == 0.0) {// crossline only
-    if (xl_stepX_ > 0.0) {
+    if (sin_rot_ > 0.0) {
       xd = x0_+(XL-cross_line0_)/xl_stepX_;
       yd = y0_+(xd-x0_)*sin_rot_/cos_rot_; //If cos_rot_ is 0, xl_stepX_ should be 0 here.
     }
     else {
       yd = y0_+(XL-cross_line0_)/xl_stepY_;
-      xd = x0_+(yd-y0_)*sin_rot_/cos_rot_;
+      xd = x0_-(yd-y0_)*sin_rot_/cos_rot_;
     }
   }
-  else if (il_stepX_ == 0.0) { //Implies xl_stepY_ == 0)
+  else if (il_stepX_ == 0.0 || xl_stepY_ == 0.0) {
     xd = x0_+(XL-cross_line0_)/xl_stepX_;
     yd = y0_+(IL-in_line0_)/il_stepY_;
   }
@@ -1043,8 +1097,8 @@ void SegyGeometry::WriteGeometry() const
 
   LogKit::LogFormatted(LogKit::Low,"\n             ReferencePoint      Length Increment\n");
   LogKit::LogFormatted(LogKit::Low,"-------------------------------------------------\n");
-  LogKit::LogFormatted(LogKit::Low,"X-coordinate   %12.2f %11.2f %9.2f\n", x0_, nx_*dx_, dx_);
-  LogKit::LogFormatted(LogKit::Low,"Y-coordinate   %12.2f %11.2f %9.2f\n", y0_, ny_*dy_, dy_);
+  LogKit::LogFormatted(LogKit::Low,"X-coordinate   %12.2f %11.2f %9.5f\n", x0_, nx_*dx_, dx_);
+  LogKit::LogFormatted(LogKit::Low,"Y-coordinate   %12.2f %11.2f %9.5f\n", y0_, ny_*dy_, dy_);
   LogKit::LogFormatted(LogKit::Low,"Azimuth             %7.3f\n",geoangle);
 }
 
@@ -1066,67 +1120,123 @@ void SegyGeometry::WriteILXL(bool errorMode) const
 
 
 void
-SegyGeometry::FindILXLGeometry(void)
+SegyGeometry::FindILXLGeometry(int minIL, int maxIL, int ILStep, int minXL, int maxXL, int XLStep)
+// Assign values to geometry variables and identify if IL is along the firstAxis or not by moving
+// a small step from the reference position (IL0_,XL0_)
+// See pptx in doc folder of nrlib repository
 {
-  int IL0, XL0, IL1, XL1, IL2, XL2;
+  double x = x0_ + 0.5*dx_*cos_rot_ - 0.5*dy_*sin_rot_;
+  double y = y0_ + 0.5*dx_*sin_rot_ + 0.5*dy_*cos_rot_;
+  FindILXL(x, y, IL0_, XL0_);
 
-  size_t nix = 0; //Just to let the complier know what function to use on next line.
+  minIL_  = minIL;
+  maxIL_  = maxIL;
+  ILStep_ = ILStep;
+  minXL_  = minXL;
+  maxXL_  = maxXL;
+  XLStep_ = XLStep;
 
-  FindILXL(nix  ,   nix, IL0, XL0);
-  FindILXL(nx_-1,     0, IL1, XL1);
-  FindILXL(0    , ny_-1, IL2, XL2);
+  if (ILStep_ == 0)
+    ILStep_ = 1;
+  if (XLStep_ == 0)
+    XLStep_ = 1;
 
-  IL0_ = IL0;
-  XL0_ = XL0;
+  // This could maybe be set in SetupGeometry?
+  // Find position of (x,y) for (i, j) = (1, 0)
+  int IL1, XL1;
 
-  if (XL1 - XL0 != 0) {
-    firstAxisIL_ = false;
-    if (nx_ > 1) {  // In case we have read a single trace or a line
-      XLStep_ = abs(XL1 - XL0)/(static_cast<int>(nx_) - 1);
-    }
-    if(XL1 < XL0) {
-      minXL_ = XL1;
-      maxXL_ = XL0;
+  bool second_axis = false;
+  if (nx_ > 1) {
+    x = x0_ + 1.5*dx_*cos_rot_ - 0.5*dy_*sin_rot_;
+    y = y0_ + 1.5*dx_*sin_rot_ + 0.5*dy_*cos_rot_;
+    FindILXL(x, y, IL1, XL1); // Moved along i (x), so change in XL now means that firstAxisIL_ should be false.
+  }
+  else {
+    x = x0_ + 0.5*dx_*cos_rot_ - 1.5*dy_*sin_rot_;
+    y = y0_ + 0.5*dx_*sin_rot_ + 1.5*dy_*cos_rot_;
+    FindILXL(x, y, IL1, XL1);
+    second_axis = true; //Moved along j (y), so change in XL now means that firstAxisIL_ should be true.
+  }
+
+  if (XL1 - XL0_ != 0) {
+    firstAxisIL_ = second_axis;
+  }
+  else {
+    firstAxisIL_ = !second_axis;
+  }
+}
+
+
+void
+SegyGeometry::FindILXLGeometry()
+{
+  int nx = static_cast<int>(nx_);
+  int ny = static_cast<int>(ny_);
+
+  double x = x0_ + 0.5*dx_*cos_rot_ - 0.5*dy_*sin_rot_;
+  double y = y0_ + 0.5*dx_*sin_rot_ + 0.5*dy_*cos_rot_;
+  FindILXL(x, y, IL0_, XL0_);
+
+  int IL1, XL1;
+  x = x0_ + 1.5*dx_*cos_rot_ - 0.5*dy_*sin_rot_;
+  y = y0_ + 1.5*dx_*sin_rot_ + 0.5*dy_*cos_rot_;
+  FindILXL(x, y, IL1, XL1);
+
+  int IL2, XL2;
+  x = x0_ + 0.5*dx_*cos_rot_ - 1.5*dy_*sin_rot_;
+  y = y0_ + 0.5*dx_*sin_rot_ + 1.5*dy_*cos_rot_;
+  FindILXL(x, y, IL2, XL2);
+
+  if (IL1 != IL0_) {
+    assert(XL1 == XL0_);
+    assert(XL2 != XL0_);
+
+    firstAxisIL_ = true;
+
+    ILStep_ = std::abs(IL1 - IL0_);
+    XLStep_ = std::abs(XL2 - XL0_);
+
+    if (IL1 > IL0_) {
+      minIL_ = IL0_;
+      maxIL_ = IL0_ + (nx - 1) * ILStep_;
     }
     else {
-      minXL_ = XL0;
-      maxXL_ = XL1;
+      maxIL_ = IL0_;
+      minIL_ = IL0_ - (nx - 1) * ILStep_;
     }
-    if (ny_ > 1) {  // In case we have read a single trace or a line
-      ILStep_ = abs(IL2 - IL0)/(static_cast<int>(ny_) - 1);
-    }
-    if(IL2 < IL0) {
-      minIL_ = IL2;
-      maxIL_ = IL0;
+    if (XL2 > XL0_) {
+      minXL_ = XL0_;
+      maxXL_ = XL0_ + (ny - 1) * XLStep_;
     }
     else {
-      minIL_ = IL0;
-      maxIL_ = IL2;
+      maxXL_ = XL0_;
+      minXL_ = XL0_ - (ny - 1) * XLStep_;
     }
   }
   else {
-    firstAxisIL_ = true;
-    if (ny_ > 1) {  // In case we have read a single trace or a line
-      XLStep_ = abs(XL2 - XL0)/(static_cast<int>(ny_) - 1);
-    }
-    if(XL2 < XL0) {
-      minXL_ = XL2;
-      maxXL_ = XL0;
-    }
-    else {
-      minXL_ = XL0;
-      maxXL_ = XL2;
-    }
-    if (nx_ > 1) {  // In case we have read a single trace or a line
-      ILStep_ = abs(IL1 - IL0)/(static_cast<int>(nx_) - 1);
-    }
-    if(IL1 < IL0) {
-      minIL_ = IL1;
-      maxIL_ = IL0;
+    assert(XL1 != XL0_);
+    assert(IL2 != IL0_);
+
+    firstAxisIL_ = false;
+
+    ILStep_ = std::abs(IL2 - IL0_);
+    XLStep_ = std::abs(XL1 - XL0_);
+
+    if (IL2 > IL0_) {
+      minIL_ = IL0_;
+      maxIL_ = IL0_ + (ny - 1) * ILStep_;
     }
     else {
-      minIL_ = IL0;
-      maxIL_ = IL1;
+      maxIL_ = IL0_;
+      minIL_ = IL0_ - (ny - 1) * ILStep_;
+    }
+    if (XL1 > XL0_) {
+      minXL_ = XL0_;
+      maxXL_ = XL0_ + (nx - 1) * XLStep_;
+    }
+    else {
+      maxXL_ = XL0_;
+      minXL_ = XL0_ - (nx - 1) * XLStep_;
     }
   }
 }
@@ -1177,11 +1287,13 @@ SegyGeometry::GetILXLSubGeometry(const std::vector<int> & ilxl,
     subILStep = ILStep;
   else {
     if(subILStep < ILStep) {
-      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Requested IL-step ("+ToString(subILStep)+") is smaller than IL-step in seismic data ("+ToString(ILStep)+"). Data vill be interpolated.\n");
+      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Requested IL-step (%d) is smaller than IL-step in seismic data (%d). Data vill be interpolated.\n",
+                           subILStep, ILStep);
       interpolation = true;
     }
     else if((subILStep % ILStep) > 0) {
-      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Requested IL-step ("+ToString(subILStep)+") is not a multiple of IL-step in seismic data ("+ToString(ILStep)+"). Data vill be interpolated.\n");
+      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Requested IL-step (%d) is not a multiple of IL-step in seismic data (%d). Data vill be interpolated.\n",
+                           subILStep, ILStep);
       interpolation = true;
     }
   }
@@ -1190,11 +1302,13 @@ SegyGeometry::GetILXLSubGeometry(const std::vector<int> & ilxl,
     subXLStep = XLStep;
   else {
     if(subXLStep < XLStep) {
-      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Requested XL-step ("+ToString(subXLStep)+") is smaller than XL-step in seismic data ("+ToString(XLStep)+"). Data vill be interpolated.\n");
+      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Requested XL-step (%d) is smaller than XL-step in seismic data (%d). Data vill be interpolated.\n",
+                           subXLStep, XLStep);
       interpolation = true;
     }
     else if((subXLStep % XLStep) > 0) {
-      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Requested XL-step ("+ToString(subXLStep)+") is not a multiple of XL-step in seismic data ("+ToString(XLStep)+"). Data vill be interpolated.\n");
+      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Requested XL-step (%d) is not a multiple of XL-step in seismic data (%d). Data vill be interpolated.\n",
+                           subXLStep, XLStep);
       interpolation = true;
     }
   }
@@ -1213,8 +1327,7 @@ SegyGeometry::GetILXLSubGeometry(const std::vector<int> & ilxl,
       else
         minSubIL -= residual; //Note that this will never be smaller than minIL, due to computation of residual.
 
-      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Initial minimum IL ("+ToString(oldIL)+
-        ") does not match a sampled trace in the input data. Moved to "+ToString(minSubIL)+".\n");
+      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Initial minimum IL (%d) does not match a sampled trace in the input data. Moved to %d.\n", oldIL, minSubIL);
     }
     residual = ((minSubXL-minXL) % XLStep);
     if(residual != 0) { //Match minimum XL to existing line
@@ -1225,8 +1338,7 @@ SegyGeometry::GetILXLSubGeometry(const std::vector<int> & ilxl,
         minSubXL += XLStep-residual;
       else
         minSubXL -= residual; //Note that this will never be smaller than minIL, due to computation of residual.
-      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Initial minimum XL ("+ToString(oldXL)+
-        ") does not match a sampled trace in the input data. Moved to "+ToString(minSubXL)+".\n");
+      LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Initial minimum XL (%d) does not match a sampled trace in the input data. Moved to %d.\n", oldXL, minSubXL);
     }
   }
 
@@ -1239,8 +1351,8 @@ SegyGeometry::GetILXLSubGeometry(const std::vector<int> & ilxl,
     maxSubIL += subILStep-residual; //Try increasing
     if(maxSubIL > maxIL)
       maxSubIL -= subILStep;        //Have to decrease.
-    LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Initial maximum IL ("+ToString(oldIL)+
-      ") is not an integer number of steps away from minimum IL ("+ToString(minSubIL)+"). Moved to "+ToString(maxSubIL)+".\n");
+    LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Initial maximum IL (%d) is not an integer number of steps away from minimum IL (%d)."
+                         " Moved to %d.\n", oldIL, minSubIL, maxSubIL);
   }
   residual = ((maxSubXL-minSubXL) % subXLStep);
   if(residual != 0) { //Move max to fit.
@@ -1250,8 +1362,8 @@ SegyGeometry::GetILXLSubGeometry(const std::vector<int> & ilxl,
     maxSubXL += subXLStep-residual; //Try increasing
     if(maxSubXL > maxXL)
       maxSubXL -= subXLStep;        //Have to decrease.
-    LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Initial maximum IL ("+ToString(oldXL)+
-      ") is not an integer number of steps away from minimum IL ("+ToString(minSubXL)+"). Moved to "+ToString(maxSubXL)+".\n");
+    LogKit::LogFormatted(LogKit::Warning, "\nWARNING: Initial maximum IL (%d) is not an integer number of steps away from minimum IL (%d)."
+                         " Moved to %d.\n", oldXL, minSubXL, maxSubXL);
   }
 
   int subNx, subNy;
@@ -1269,19 +1381,19 @@ SegyGeometry::GetILXLSubGeometry(const std::vector<int> & ilxl,
     subDy = dy_*static_cast<double>(subILStep)/static_cast<double>(ILStep);
   }
 
-  float subIL0, subXL0;
+  double subIL0, subXL0;
   //Determine reference corner, move from center and out to corner.
   if(IL0 == minIL) { //Reference corner is minimum inline.
-    subIL0 = minSubIL-0.5f*subILStep;
+    subIL0 = minSubIL-0.5*subILStep;
   }
   else {             //Reference corner is maximum inline.
-    subIL0 = maxSubIL+0.5f*subILStep;
+    subIL0 = maxSubIL+0.5*subILStep;
   }
   if(XL0 == minXL) { //Reference corner is minimum crossline.
-    subXL0 = minSubXL-0.5f*subXLStep;
+    subXL0 = minSubXL-0.5*subXLStep;
   }
   else {             //Reference corner is maximum crossline.
-    subXL0 = maxSubXL+0.5f*subXLStep;
+    subXL0 = maxSubXL+0.5*subXLStep;
   }
 
   double subX0, subY0;

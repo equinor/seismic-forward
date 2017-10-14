@@ -1,4 +1,4 @@
-// $Id: surfaceio.cpp 882 2011-09-23 13:10:16Z perroe $
+// $Id: surfaceio.cpp 1499 2017-05-29 19:01:53Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -59,6 +59,7 @@ SurfaceFileFormat FindSurfaceFileType(const std::string& filename)
     // Empty file.
     return SURF_UNKNOWN;
   }
+  int dummy;
 
   if (first_token == "-996")
     return SURF_IRAP_CLASSIC_ASCII;
@@ -73,40 +74,11 @@ SurfaceFileFormat FindSurfaceFileType(const std::string& filename)
     if(token == "v1.0" ||token == "v2.0" )
       return SURF_SGRI;
   }
-  else if (IsType<double>(first_token)) {
-    file.seekg(0, std::ios_base::beg);
-    std::string line;
-    std::getline(file, line);
-    std::vector<std::string> tokens = GetTokens(line);
-    if (tokens.size() == 3) {
-      // Check last line of file.
-      file.seekg(0, std::ios_base::end);
-      std::streampos file_len = file.tellg();
-      std::streampos offset = std::min(static_cast<std::streampos>(50), file_len);
-      file.seekg(-offset, std::ios_base::end);
-
-      tokens.clear();
-
-      while (std::getline(file, line)) {
-        if (GetTokens(line).size() > 0) {
-          tokens = GetTokens(line);
-        }
-      }
-
-      if (tokens.size() == 3) {
-        try {
-          if (ParseType<double>(tokens[0]) == 999.0 &&
-              ParseType<double>(tokens[1]) == 999.0 &&
-              ParseType<double>(tokens[2]) == 999.0)   {
-            return SURF_RMS_POINTS_ASCII;
-          }
-        }
-        catch (Exception& ) {
-          // Do nothing - failed to parse tokens as doubles.
-        }
-      }
-    }
-    return SURF_UNKNOWN;
+  else if (FindXYZAsciiLine(filename, dummy) == true) {
+    return SURF_XYZ_ASCII;
+  }
+  else if (FindMulticolumnAsciiLine(filename, dummy) == true) {
+    return SURF_MULT_ASCII;
   }
 
   return SURF_UNKNOWN;
@@ -126,6 +98,8 @@ std::string GetSurfFormatString(NRLib::SurfaceFileFormat format)
       return "NORSAR SGRI";
     case SURF_RMS_POINTS_ASCII:
       return "RMS XYZ point set surface";
+    case SURF_MULT_ASCII:
+      return "Multicolumn ASCII";
     default:
       throw Exception("Missing format description for format: " + ToString(format));
   }
@@ -233,7 +207,7 @@ ReadMultipleSgriSurf(const std::string& filename, const std::vector<std::string>
     getline(header_file, tmp_str);
     if (!tmp_str.empty()) {
       std::locale loc;
-      int i = 0;
+      i = 0;
       char c = tmp_str[i];
       while (!std::isspace(c,loc)) {
         i++;
@@ -269,6 +243,81 @@ ReadMultipleSgriSurf(const std::string& filename, const std::vector<std::string>
     throw FileFormatError("Error parsing \"" + filename + "\" as a "
       "Sgri surface file " + e.what() + "\n");
   }
+}
+
+bool FindMulticolumnAsciiLine(const std::string& filename, int & header_start_line)
+{
+  //Contains five columns: X, Y, IL, XL, Attribute
+  //File starts with several information lines
+  std::ifstream file;
+  NRLib::OpenRead(file, filename);
+  int line = 0;
+
+  //Find first line with five numbers
+  bool found_mult_ascii_line = false;
+  while (found_mult_ascii_line == false && NRLib::CheckEndOfFile(file)==false && line < 200) { //Only search the first lines
+
+    //Read line
+    std::string line_string;
+    std::getline(file, line_string);
+    std::vector<std::string> tokens = NRLib::GetTokens(line_string);
+
+    //Check if the line has five number elements
+    if (tokens.size() == 5) {
+      for (int i = 0; i < 5; i++) {
+        if (!NRLib::IsNumber(tokens[i])) {
+          found_mult_ascii_line = false;
+          break;
+        }
+        else
+          found_mult_ascii_line = true;
+      }
+    }
+
+    line++;
+  }
+  file.close();
+
+  header_start_line = line -2;
+
+  return found_mult_ascii_line;
+}
+
+bool FindXYZAsciiLine(const std::string& filename, int & header_start_line)
+{
+  //Contains three columns: X, Y, Z
+  std::ifstream file;
+  NRLib::OpenRead(file, filename);
+  int line = 0;
+
+  //Find first line with three numbers
+  bool found_xyz_ascii_line = false;
+  while (found_xyz_ascii_line == false && NRLib::CheckEndOfFile(file)==false && line < 200) { //Only search the first lines
+
+    //Read line
+    std::string line_string;
+    std::getline(file, line_string);
+    std::vector<std::string> tokens = NRLib::GetTokens(line_string);
+
+    //Check if the line has five number elements
+    if (tokens.size() == 3) {
+      for (int i = 0; i < 3; i++) {
+        if (!NRLib::IsNumber(tokens[i])) {
+          found_xyz_ascii_line = false;
+          break;
+        }
+        else
+          found_xyz_ascii_line = true;
+      }
+    }
+
+    line++;
+  }
+  file.close();
+
+  header_start_line = line -2;
+
+  return found_xyz_ascii_line;
 }
 
 

@@ -19,25 +19,28 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "nrlib/iotools/stringtools.hpp"
+#include "nrlib/iotools/fileio.hpp"
+#include "nrlib/iotools/logkit.hpp"
+
+#include "nrlib/exception/exception.hpp"
+
+#include "nrlib/segy/traceheader.hpp"
+
+#include "modelsettings.hpp"
+#include "xmlmodelfile.hpp"
+#include "tasklist.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 
-#include "nrlib/exception/exception.hpp"
-
-#include "nrlib/iotools/stringtools.hpp"
-#include "nrlib/iotools/fileio.hpp"
-#include "nrlib/iotools/logkit.hpp"
-
-#include "modelsettings.hpp"
-#include "xmlmodelfile.hpp"
-
 XmlModelFile::XmlModelFile(const std::string  & fileName)
 {
   modelSettings_ = new ModelSettings();
-  failed_ = false;
+  failed_        = false;
 
   std::ifstream file;
   try {
@@ -103,14 +106,16 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   std::vector<std::string> legalCommands;
   legalCommands.push_back("angle");
   legalCommands.push_back("default-underburden");
+  legalCommands.push_back("elastic-parameters");   // PAALADDED
   legalCommands.push_back("elastic-param");
-  legalCommands.push_back("max-threads");
+  legalCommands.push_back("max-threads");          // Deprecated
   legalCommands.push_back("nmo-stretch");
   legalCommands.push_back("output-grid");
   legalCommands.push_back("output-parameters");
+  legalCommands.push_back("project-settings");     // PAALADDED
   legalCommands.push_back("ps-seismic");
   legalCommands.push_back("timeshift-twt");
-  legalCommands.push_back("traces-in-memory");
+  legalCommands.push_back("traces-in-memory");     // Deprecated
   legalCommands.push_back("wavelet");
   legalCommands.push_back("white-noise");
 
@@ -136,15 +141,6 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
     modelSettings_->SetPSSeismic(bolval);
   }
 
-  double number;
-  if (ParseValue(root, "traces-in-memory", number, errTxt)) {
-    modelSettings_->SetTracesInMemory(static_cast<size_t>(number));
-  }
-  double n_threads;
-  if (ParseValue(root, "max-threads", n_threads, errTxt)) {
-    modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
-  }
-
   bool bolval2;
   if (ParseBool(root, "default-underburden", bolval2, errTxt)) {
     modelSettings_->SetDefaultUnderburden(bolval2);
@@ -152,27 +148,103 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
 
   ParseOutputParameters(root, errTxt);
 
+  //  ------ START Moved to new section project setting ----------------
+
+  double number;
+  if (ParseValue(root, "traces-in-memory", number, errTxt)) {
+    modelSettings_->SetTracesInMemory(static_cast<size_t>(number));
+    TaskList::AddTask("Keyword <traces-in-memory> has been made a sub-element of section <project-settings>. Current\n    placement is deprecated.");
+  }
+
+  double n_threads;
+  if (ParseValue(root, "max-threads", n_threads, errTxt)) {
+    modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
+    TaskList::AddTask("Keyword <max-threads> has been made a sub-element of section <project-settings>. Current\n    placement is deprecated.");
+  }
+
+  //  ------ END Moved to new section project setting ----------------
+
+
   CheckForJunk(root, errTxt, legalCommands);
   return (true);
 }
 
-bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
-                                     std::string & errTxt)
+//------------------------------------------------------------
+bool XmlModelFile::ParseProjectSettings(TiXmlNode   * node,
+                                        std::string & errTxt)
+//------------------------------------------------------------
 {
-  TiXmlNode *root = node->FirstChildElement("elastic-param");
+  TiXmlNode *root = node->FirstChildElement("project-settings");
   if (root == 0) {
     return (false);
   }
 
   std::vector<std::string> legalCommands;
-  legalCommands.push_back("eclipse-file");
-  legalCommands.push_back("default-values");
-  legalCommands.push_back("parameter-names");
-  legalCommands.push_back("zero-thickness-limit");
+  legalCommands.push_back("max-threads");
+  legalCommands.push_back("traces-in-memory");
+
+
+  double number;
+  if (ParseValue(root, "traces-in-memory", number, errTxt)) {
+    modelSettings_->SetTracesInMemory(static_cast<size_t>(number));
+  }
+
+  double n_threads;
+  if (ParseValue(root, "max-threads", n_threads, errTxt)) {
+    modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
+    TaskList::AddTask("Keyword <max-threads> has been made a sub-element of section <project-settings>. Current placement is deprecated.");
+  }
+
+  std::string level;
+  if(ParseValue(root, "log-level", level, errTxt) == true) {
+    int log_level = NRLib::LogKit::Error;
+    if(level=="error")
+      log_level = NRLib::LogKit::L_Error;
+    else if(level=="warning")
+      log_level = NRLib::LogKit::L_Warning;
+    else if(level=="low")
+      log_level = NRLib::LogKit::L_Low;
+    else if(level=="medium")
+      log_level = NRLib::LogKit::L_Medium;
+    else if(level=="high")
+      log_level = NRLib::LogKit::L_High;
+    else if(level=="debuglow")
+      log_level = NRLib::LogKit::L_DebugLow;
+    else if(level=="debughigh")
+      log_level = NRLib::LogKit::L_DebugHigh;
+    else {
+      errTxt += "Unknown log level " + level + " in command <log-level>. ";
+      errTxt += "Choose from: error, warning, low, medium, and high\n";
+      CheckForJunk(root, errTxt, legalCommands);
+      return(false);
+    }
+    modelSettings_->SetLogLevel(log_level);
+  }
+
+  CheckForJunk(root, errTxt, legalCommands);
+  return true;
+}
+
+//--------------------------------------------------------
+bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
+                                     std::string & errTxt)
+//--------------------------------------------------------
+{
+  TiXmlNode *root  = node->FirstChildElement("elastic-param");
+  TiXmlNode *root2 = node->FirstChildElement("elastic-paramameters");
+  if (root == 0 || root2) {
+    return (false);
+  }
+
+  std::vector<std::string> legalCommands;
   legalCommands.push_back("cornerpt-interpolation-in-depth");
+  legalCommands.push_back("default-values");
+  legalCommands.push_back("eclipse-file");
+  legalCommands.push_back("extra-parameters");
+  legalCommands.push_back("parameter-names");
   legalCommands.push_back("remove-negative-delta-z");
   legalCommands.push_back("resampl-param-to-segy-with-interpol");
-  legalCommands.push_back("extra-parameters");
+  legalCommands.push_back("zero-thickness-limit");
 
   std::string value;
   if (ParseValue(root, "eclipse-file", value, errTxt)) {
@@ -350,8 +422,10 @@ bool XmlModelFile::ParseExtraParameters(TiXmlNode   * node,
   return true;
 }
 
+//------------------------------------------------------
 bool XmlModelFile::ParseNMOStretch(TiXmlNode   * node,
                                    std::string & errTxt)
+//------------------------------------------------------
 {
   TiXmlNode *root = node->FirstChildElement("nmo-stretch");
   if (root == 0) {
@@ -359,11 +433,11 @@ bool XmlModelFile::ParseNMOStretch(TiXmlNode   * node,
   }
 
   std::vector<std::string> legalCommands;
-  legalCommands.push_back("seafloor-depth");
-  legalCommands.push_back("velocity-water");
   legalCommands.push_back("extrapol-constant");
   legalCommands.push_back("offset");
   legalCommands.push_back("offset-without-stretch");
+  legalCommands.push_back("seafloor-depth");
+  legalCommands.push_back("velocity-water");
 
   double value;
   if (ParseValue(root, "seafloor-depth", value, errTxt)) {
@@ -390,8 +464,10 @@ bool XmlModelFile::ParseNMOStretch(TiXmlNode   * node,
   return true;
 }
 
+//--------------------------------------------------
 bool XmlModelFile::ParseOffset(TiXmlNode   * node,
                                std::string & errTxt)
+//--------------------------------------------------
 {
   TiXmlNode *root = node->FirstChildElement("offset");
   if (root == 0) {
@@ -423,8 +499,10 @@ bool XmlModelFile::ParseOffset(TiXmlNode   * node,
   return true;
 }
 
+//-------------------------------------------------
 bool XmlModelFile::ParseAngle(TiXmlNode   * node,
                               std::string & errTxt)
+//-------------------------------------------------
 {
   TiXmlNode *root = node->FirstChildElement("angle");
   if (root == 0) {
@@ -432,8 +510,8 @@ bool XmlModelFile::ParseAngle(TiXmlNode   * node,
   }
 
   std::vector<std::string> legalCommands;
-  legalCommands.push_back("theta-0");
   legalCommands.push_back("dtheta");
+  legalCommands.push_back("theta-0");
   legalCommands.push_back("theta-max");
 
   double value;
@@ -459,8 +537,10 @@ bool XmlModelFile::ParseAngle(TiXmlNode   * node,
   return true;
 }
 
+//---------------------------------------------------
 bool XmlModelFile::ParseWavelet(TiXmlNode   * node,
                                 std::string & errTxt)
+//---------------------------------------------------
 {
   TiXmlNode *root = node->FirstChildElement("wavelet");
   if (root == 0) {
@@ -468,9 +548,9 @@ bool XmlModelFile::ParseWavelet(TiXmlNode   * node,
   }
 
   std::vector<std::string> legalCommands;
+  legalCommands.push_back("from-file");
   legalCommands.push_back("ricker");
   legalCommands.push_back("scale");
-  legalCommands.push_back("from-file");
 
   if (ParseRicker(root, errTxt)) {
     modelSettings_->SetRicker(true);
@@ -490,8 +570,10 @@ bool XmlModelFile::ParseWavelet(TiXmlNode   * node,
   return true;
 }
 
+//--------------------------------------------------
 bool XmlModelFile::ParseRicker(TiXmlNode   * node,
                                std::string & errTxt)
+//--------------------------------------------------
 {
   TiXmlNode *root = node->FirstChildElement("ricker");
   if (root == 0) {
@@ -500,6 +582,7 @@ bool XmlModelFile::ParseRicker(TiXmlNode   * node,
 
   std::vector<std::string> legalCommands;
   legalCommands.push_back("peak-frequency");
+
   double value;
   if (ParseValue(root, "peak-frequency", value, errTxt)) {
     modelSettings_->SetPeakF(value);
@@ -511,8 +594,10 @@ bool XmlModelFile::ParseRicker(TiXmlNode   * node,
   return true;
 }
 
+//-----------------------------------------------------------
 bool XmlModelFile::ParseWaveletFromFile(TiXmlNode   * node,
                                         std::string & errTxt)
+//-----------------------------------------------------------
 {
   TiXmlNode *root = node->FirstChildElement("from-file");
   if (root == 0) {
@@ -520,8 +605,8 @@ bool XmlModelFile::ParseWaveletFromFile(TiXmlNode   * node,
   }
 
   std::vector<std::string> legalCommands;
-  legalCommands.push_back("format");
   legalCommands.push_back("file-name");
+  legalCommands.push_back("format");
 
   std::string format, file_name;
   if (ParseValue(root, "format", format, errTxt) && ParseValue(root, "file-name", file_name, errTxt)) {
@@ -535,25 +620,27 @@ bool XmlModelFile::ParseWaveletFromFile(TiXmlNode   * node,
   return true;
 }
 
+//------------------------------------------------------
 bool XmlModelFile::ParseOutputGrid(TiXmlNode   * node,
                                    std::string & errTxt)
+//------------------------------------------------------
 {
   TiXmlNode *root = node->FirstChildElement("output-grid");
   if (root == 0) {
     return (false);
   }
   std::vector<std::string> legalCommands;
-  legalCommands.push_back("depth-window");
   legalCommands.push_back("area");
-  legalCommands.push_back("depth");
-  legalCommands.push_back("top-time");
-  legalCommands.push_back("cell-size");
-  legalCommands.push_back("area-from-surface");
   legalCommands.push_back("area-from-segy");
+  legalCommands.push_back("area-from-surface");
+  legalCommands.push_back("cell-size");
+  legalCommands.push_back("depth");
+  legalCommands.push_back("depth-window");
   legalCommands.push_back("segy-indexes");
-  legalCommands.push_back("utm-precision");
+  legalCommands.push_back("segy-file-format");
   legalCommands.push_back("time-window");
-
+  legalCommands.push_back("top-time");
+  legalCommands.push_back("utm-precision");
 
   if (ParseArea(root, errTxt)) {
     modelSettings_->SetAreaGiven(true);
@@ -608,6 +695,17 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode   * node,
       errTxt += "Value given in <utm-precision> is not valid. Optional values are 0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000 or 10000.\n";
     }
   }
+  std::string format;
+  if (ParseValue(root, "segy-file-format", format, errTxt)) {
+    if (format == "seisworks")
+      modelSettings_->SetOutputSegyFileFormat(NRLib::TraceHeaderFormat::SEISWORKS);
+    else if (format == "charisma")
+      modelSettings_->SetOutputSegyFileFormat(NRLib::TraceHeaderFormat::CHARISMA);
+    else if (format == "sip")
+      modelSettings_->SetOutputSegyFileFormat(NRLib::TraceHeaderFormat::SIP);
+    else
+      errTxt += "Segy file format "+format+" is unknown. Please choose between 'seisworks', 'charisma' and 'sip'\n";
+  }
 
   ParseTimeWindow(root, errTxt);
   ParseDepthWindow(root, errTxt);
@@ -629,20 +727,53 @@ bool XmlModelFile::ParseAreaFromSegy(TiXmlNode   * node,
   legalCommands.push_back("xl0");
   legalCommands.push_back("utmxLoc");
   legalCommands.push_back("utmyLoc");
+
   legalCommands.push_back("filename");
+  legalCommands.push_back("il0-loc");
+  legalCommands.push_back("xl0-loc");
+  legalCommands.push_back("utmx-loc");
+  legalCommands.push_back("utmy-loc");
+  legalCommands.push_back("scalco-loc");
+  legalCommands.push_back("start-time-loc");
 
   int value;
+
+  // START - deprecated
   if (ParseValue(root, "il0", value, errTxt)) {
-    modelSettings_->SetIL0In(value);
+    modelSettings_->SetIL0Loc(value);
+    TaskList::AddTask("Keyword <il0> has been made deprecated. Please use <il0-loc>");
   }
   if (ParseValue(root, "xl0", value, errTxt)) {
-    modelSettings_->SetXL0In(value);
+    modelSettings_->SetXL0Loc(value);
+    TaskList::AddTask("Keyword <xl0> has been made deprecated. Please use <xl0-loc>");
   }
   if (ParseValue(root, "utmxLoc", value, errTxt)) {
-    modelSettings_->SetUtmxIn(value);
+    modelSettings_->SetUtmxLoc(value);
+    TaskList::AddTask("Keyword <utmxLoc> has been made deprecated. Please use <utmx-loc>");
   }
   if (ParseValue(root, "utmyLoc", value, errTxt)) {
-    modelSettings_->SetUtmyIn(value);
+    modelSettings_->SetUtmyLoc(value);
+    TaskList::AddTask("Keyword <utmyLoc> has been made deprecated. Please use <utmy-loc>");
+  }
+  // END - deprecated
+
+  if (ParseValue(root, "il0-loc", value, errTxt)) {
+    modelSettings_->SetIL0Loc(value);
+  }
+  if (ParseValue(root, "xl0-loc", value, errTxt)) {
+    modelSettings_->SetXL0Loc(value);
+  }
+  if (ParseValue(root, "utmx-loc", value, errTxt)) {
+    modelSettings_->SetUtmxLoc(value);
+  }
+  if (ParseValue(root, "utmy-loc", value, errTxt)) {
+    modelSettings_->SetUtmyLoc(value);
+  }
+  if (ParseValue(root, "scalco-loc", value, errTxt)) {
+    modelSettings_->SetScalcoLoc(value);
+  }
+  if (ParseValue(root, "start-time-loc", value, errTxt)) {
+    modelSettings_->SetStartTimeLoc(value);
   }
 
   std::string filename;

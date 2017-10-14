@@ -22,77 +22,68 @@
 #ifndef XMLMODELFILE_HPP
 #define XMLMODELFILE_HPP
 
-#include <stdio.h>
-
-#include <nrlib/tinyxml/tinyxml.h>
 #include <nrlib/iotools/stringtools.hpp>
+#include <nrlib/tinyxml/tinyxml.h>
+
+#include <stdio.h>
 
 class ModelSettings;
 
-class XmlModelFile {
-  public:
-    XmlModelFile(const std::string &fileName);
+class XmlModelFile
+{
+public:
+
+  XmlModelFile(const std::string & fileName);
 
     ~XmlModelFile(void);
 
-    ModelSettings *getModelSettings(void) const {
-        return modelSettings_;
-    }
+    ModelSettings * getModelSettings(void) const { return modelSettings_ ;}
+    bool            getParsingFailed(void) const { return failed_        ;}
 
-    bool getParsingFailed(void) const {
-        return failed_;
-    }
+private:
 
-  private:
   bool ParseSeismicForward(TiXmlNode   * node,
                            std::string & errTxt);
-
-  bool ParseTopTime(TiXmlNode   * node,
-                    std::string & errTxt,
-                    std::string   cname);
-
-  bool ParseDummyTopTime(TiXmlNode   * node,
-                         std::string & errTxt);
-
-  bool ParseCellSize(TiXmlNode   * node,
-                     std::string & errTxt,
-                     bool        & area_from_segy);
 
   bool ParseAngle(TiXmlNode   * node,
                   std::string & errTxt);
 
+  bool ParseProjectSettings(TiXmlNode   * node,
+                            std::string & errTxt);
+
   bool ParseNMOStretch(TiXmlNode *node,
                        std::string &errTxt);
-
-  bool ParseOffset(TiXmlNode   * node,
-                   std::string & errTxt);
+  bool    ParseOffset(TiXmlNode   * node,
+                      std::string & errTxt);
 
   bool ParseElasticParam(TiXmlNode   * node,
                          std::string & errTxt);
+  bool    ParseDefaultValues(TiXmlNode   * node,
+                             std::string & errTxt);
 
   bool ParseOutputGrid(TiXmlNode   * node,
                        std::string & errTxt);
-
-  bool ParseArea(TiXmlNode   * node,
-                 std::string & errTxt);
-
-  bool ParseAreaFromSegy(TiXmlNode   * node,
-                         std::string & errTxt);
-
-  bool ParseTimeWindow(TiXmlNode   * node,
-                       std::string & errTxt);
-
-  bool ParseDepthWindow(TiXmlNode   * node,
-                        std::string & errTxt);
+  bool    ParseArea(TiXmlNode   * node,
+                    std::string & errTxt);
+  bool    ParseAreaFromSegy(TiXmlNode   * node,
+                            std::string & errTxt);
+  bool    ParseTopTime(TiXmlNode   * node,
+                      std::string & errTxt,
+                     std::string   cname);
+  bool    ParseTimeWindow(TiXmlNode   * node,
+                          std::string & errTxt);
+  bool    ParseDepthWindow(TiXmlNode   * node,
+                           std::string & errTxt);
+  bool    ParseCellSize(TiXmlNode   * node,
+                        std::string & errTxt,
+                        bool        & area_from_segy);
 
   bool ParseWavelet(TiXmlNode   * node,
                     std::string & errTxt);
-
-  bool ParseRicker(TiXmlNode   * node,
-                   std::string & errTxt);
-
-  bool ParseWaveletFromFile(TiXmlNode   * node,
-                            std::string & errTxt);
+  bool    ParseRicker(TiXmlNode   * node,
+                      std::string & errTxt);
+  bool    ParseWaveletFromFile(TiXmlNode   * node,
+                               std::string & errTxt);
 
   bool ParseOutputParameters(TiXmlNode   * node,
                              std::string & errTxt);
@@ -107,21 +98,21 @@ class XmlModelFile {
   bool ParseSeismicStack(TiXmlNode   * node,
                          std::string & errTxt);
 
-    template<typename T>
-    bool ParseValue(TiXmlNode         * node,
-                    const std::string & keyword,
-                    T                 & value,
-                    std::string       & errTxt,
-                    bool                allowDuplicates = false);
+  bool ParseDummyTopTime(TiXmlNode   * node,
+                         std::string & errTxt);
+
+  template<typename T>
+  bool ParseValue(TiXmlNode         * node,
+                  const std::string & keyword,
+                  T                 & value,
+                  std::string       & errTxt,
+                  bool                allowDuplicates = false);
 
   bool ParseBool(TiXmlNode         * node,
                  const std::string & keyword,
                  bool              & value,
                  std::string       & errTxt,
                  bool                allowDuplicates = false);
-
-  bool ParseDefaultValues(TiXmlNode   * node,
-                          std::string & errTxt);
 
   bool ParseParameterNames(TiXmlNode   * node,
                            std::string & errTxt);
@@ -139,8 +130,8 @@ class XmlModelFile {
   void SetMissing(double & value)      { value = -99999.0  ;}
   void SetMissing(std::string & value) { value = ""        ;}
 
-  bool failed_;
   ModelSettings * modelSettings_;
+  bool            failed_;
 };
 
 template<typename T>

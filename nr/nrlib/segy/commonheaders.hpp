@@ -1,4 +1,4 @@
-// $Id: commonheaders.hpp 883 2011-09-26 09:17:05Z perroe $
+// $Id: commonheaders.hpp 1616 2017-07-10 18:32:54Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -50,7 +50,7 @@ public:
 
   /// Write header to file.
   /// \param[in] file  Output file.
-  void Write(std::ostream& file) const;
+  void Write(NRLib::BigFile& file) const;
 
 private:
   /// output buffer in EBCDIC encoding.
@@ -63,12 +63,12 @@ class BinaryHeader
 {
 public:
   /// Constructor
-  BinaryHeader(std::istream& file);
+  BinaryHeader(NRLib::BigFile& file);
   // constructor for writing
   BinaryHeader();
   /// Update variables
-  void Update(std::istream& file);
-  void Write(std::ostream& file, double dz, size_t nz, short n_sam_per_ens) const;
+  void Update(NRLib::BigFile& file);
+  void Write(NRLib::BigFile& file, double dz, size_t nz, short n_sam_per_ens) const;
   short GetFormat() {return(format_);}
   int GetLino() {return(lino_);}
   short GetHns() {return(hns_);}

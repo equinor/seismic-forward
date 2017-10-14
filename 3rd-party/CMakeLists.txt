@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 2.6)
 
 set(C_FILES
-    boost/filesystem/operations.cpp
-    boost/filesystem/path.cpp
-    boost/filesystem/portability.cpp
-    boost/system/error_code.cpp
+#    boost/filesystem/operations.cpp
+#    boost/filesystem/path.cpp
+#    boost/filesystem/portability.cpp
+#    boost/system/error_code.cpp
 
     flens/aux_complex.cc
     flens/aux_malloc.cc
@@ -89,4 +89,3 @@ set(H_FILES
 append_source_files_to_property(${CMAKE_CURRENT_SOURCE_DIR} "${C_FILES}")
 append_source_files_to_property(${CMAKE_CURRENT_SOURCE_DIR} "${H_FILES}")
 add_include_root(${CMAKE_CURRENT_SOURCE_DIR})
-

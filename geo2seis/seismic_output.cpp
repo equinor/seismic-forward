@@ -30,6 +30,8 @@ SeismicOutput::SeismicOutput(ModelSettings *model_settings)
   xline_step_            = model_settings->GetSegyXlineStep();
   xline_x_axis_          = true;
 
+  thf_                   = model_settings->GetOutputSegyFileFormat();
+
   prefix_                = "";
   suffix_                = "";
 
@@ -50,20 +52,19 @@ void SeismicOutput::SetSegyGeometry(SeismicParameters   & seismic_parameters,
                                     size_t                ny)
 //-----------------------------------------------------------------------------
 {
+  double rot     = vol.GetAngle();
+  double dx      = vol.GetLX()/nx; //nb check
+  double dy      = vol.GetLY()/ny; //nb check
+  double xlstepx = cos(rot)/dx;
+  double xlstepy = sin(rot)/dx;
+  double ilstepx = -sin(rot)/dy;
+  double ilstepy = cos(rot)/dy;
 
-  double xlstepx, xlstepy, ilstepx, ilstepy;
-  double rot = vol.GetAngle();
-  double dx = vol.GetLX()/nx; //nb check
-  double dy = vol.GetLY()/ny; //nb check
-  xlstepx = cos(rot) / dx;
-  xlstepy = sin(rot) / dx;
-  ilstepx = -sin(rot) / dy;
-  ilstepy = cos(rot) / dy;
   if (xline_x_axis_ == false) {
     double temp = xlstepx;
     xlstepx = ilstepx;
     ilstepx = temp;
-    temp = xlstepy;
+    temp    = xlstepy;
     xlstepy = ilstepy;
     ilstepy = temp;
   }
@@ -72,22 +73,29 @@ void SeismicOutput::SetSegyGeometry(SeismicParameters   & seismic_parameters,
   xlstepx *= xline_step_;
   xlstepy *= xline_step_;
 
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
   if (seismic_parameters.GetSegyGeometry() == NULL){
-    const NRLib::SegyGeometry *geometry =
-      new NRLib::SegyGeometry(vol.GetXMin(), vol.GetYMin(), dx, dy,
-                              nx, ny, inline_start_ - 0.5, xline_start_ - 0.5,
-                              ilstepx, ilstepy, xlstepx, xlstepy, rot);
+    const NRLib::SegyGeometry * geometry = new NRLib::SegyGeometry(vol.GetXMin(), vol.GetYMin(), dx, dy,
+                                                                   nx, ny, inline_start_ - 0.5, xline_start_ - 0.5,
+                                                                   ilstepx, ilstepy, xlstepx, xlstepy, rot);
     seismic_parameters.SetSegyGeometry(geometry);
+    geometry->WriteGeometry();
+    geometry->WriteILXL();
     delete geometry;
+  }
+  else {
+    seismic_parameters.GetSegyGeometry()->WriteGeometry();
+    seismic_parameters.GetSegyGeometry()->WriteILXL();
   }
 }
 
-bool SeismicOutput::CheckUTMPrecision(SeismicParameters   &seismic_parameters,
-                                      const NRLib::Volume &vol,
-                                      size_t               nx,
-                                      size_t               ny)
+//-----------------------------------------------------------------------------
+bool SeismicOutput::CheckUTMPrecision(SeismicParameters   & seismic_parameters,
+                                      const NRLib::Volume & vol,
+                                      size_t                nx,
+                                      size_t                ny)
+//-----------------------------------------------------------------------------
 {
-  ///---Check that the precision asked for is not too high.---
   NRLib::SegyGeometry *geometry   = seismic_parameters.GetSegyGeometry();
   double dx          = vol.GetLX()/nx; //nb check
   double dy          = vol.GetLY()/ny; //nb check
@@ -97,13 +105,15 @@ bool SeismicOutput::CheckUTMPrecision(SeismicParameters   &seismic_parameters,
   double sin_rot     = geometry->GetSinRot();
   double x0_coord    = geometry->GetX0();
   double y0_coord    = geometry->GetY0();
-  double xt_coord, yt_coord, x_coord, y_coord;
-  for (size_t i = 0; i < nx; i = i + (nx - 1)) {
-    for (size_t j = 0; j < ny; j = j + (ny - 1)) {
-      xt_coord = double((i + 0.5) * dx);
-      yt_coord = double((j + 0.5) * dy);
-      x_coord  = double(x0_coord + xt_coord * cos_rot - yt_coord * sin_rot);
-      y_coord  = double(y0_coord + yt_coord * cos_rot + xt_coord * sin_rot);
+  int    xstep       = std::max(1, static_cast<int>(nx) - 1);
+  int    ystep       = std::max(1, static_cast<int>(ny) - 1);
+
+  for (size_t i = 0; i < nx ; i = i + xstep) {
+    for (size_t j = 0; j < ny ; j = j + ystep) {
+      double xt_coord = (static_cast<double>(i) + 0.5) * dx;
+      double yt_coord = (static_cast<double>(j) + 0.5) * dy;
+      double x_coord  = x0_coord + xt_coord * cos_rot - yt_coord * sin_rot;
+      double y_coord  = y0_coord + yt_coord * cos_rot + xt_coord * sin_rot;
       if (x_coord > x_max_coord) {
         x_max_coord = x_coord;
       }
@@ -116,27 +126,33 @@ bool SeismicOutput::CheckUTMPrecision(SeismicParameters   &seismic_parameters,
   if (scalco_ < 0) {
     utmx_test = x_max_coord * scalco_ * -1;
     utmy_test = y_max_coord * scalco_ * -1;
-  } else {
+  }
+  else {
     utmx_test = x_max_coord / scalco_;
     utmy_test = y_max_coord / scalco_;
   }
   double max_int_value = 2147483647;
   if (utmx_test > max_int_value || utmy_test > max_int_value) {
-    printf("Required precision of UTM coordinates not possible. No Segy file written. Try a lower precision.\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nRequired precision of UTM coordinates not possible. No Segy file written. Try a lower precision.\n");
     return false;
+  }
+  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nRequired precision of UTM coordinates is verified.\n");
   }
   return true;
 }
 
-bool SeismicOutput::PrepareSegy(NRLib::SegY               &segyout,
-                                const std::vector<double> &twt_0,
-                                size_t                     n_samples,
-                                std::string                fileName,
-                                SeismicParameters         &seismic_parameters,
-                                const std::vector<double> &offset_vec,
-                                size_t                     n_traces_per_ensamble,
-                                bool                       time,
-                                bool                       nmo)
+//-----------------------------------------------------------------------------
+bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
+                                const std::vector<double> & twt_0,
+                                size_t                      n_samples,
+                                std::string                 fileName,
+                                SeismicParameters         & seismic_parameters,
+                                const std::vector<double> & offset_vec,
+                                size_t                      n_traces_per_ensamble,
+                                bool                        time,
+                                bool                        nmo)
+//-----------------------------------------------------------------------------
 {
   double z_min = twt_0[0];
   double z_max = twt_0[n_samples-1];
@@ -146,11 +162,11 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               &segyout,
   if ((time == true && time_window_) || (time == false && depth_window_)) {
     if (time == true ) {
       if (top_time_window_ > z_max) {
-        printf("Top window is below grid. No Segy file written.\n");
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nTop window is below grid. No Segy file written.\n");
         return false;
       }
       if (bot_time_window_ < z_min) {
-        printf("Bottom window is above grid. No Segy file written.\n");
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nBottom window is above grid. No Segy file written.\n");
         return false;
       }
       if (top_time_window_ != -9999) {
@@ -163,11 +179,11 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               &segyout,
     }
     else {
       if (top_depth_window_ > z_max) {
-        printf("Top window is below grid. No Segy file written.\n");
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nTop window is below grid. No Segy file written.\n");
         return false;
       }
       if (bot_depth_window_ < z_min) {
-        printf("Bottom window is above grid. No Segy file written.\n");
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nBottom window is above grid. No Segy file written.\n");
         return false;
       }
       if (top_depth_window_ != -9999) {
@@ -180,31 +196,31 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               &segyout,
     }
   }
   else if (nz < 0) {
-    printf("Maximum depth is negative. No Segy file written.\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nMaximum depth is negative. No Segy file written.\n");
     return false;
   }
 
-  NRLib::SegyGeometry *geometry     = seismic_parameters.GetSegyGeometry();
+  NRLib::SegyGeometry * geometry = seismic_parameters.GetSegyGeometry();
   geometry->FindILXLGeometry();
   std::string filename_out = prefix_ + fileName + suffix_ + ".segy";
-  NRLib::TraceHeaderFormat thf(2);
-  //Textual header:
-  NRLib::TextualHeader header = NRLib::TextualHeader();
-  header.SetLine(0, "SEGY OUTPUT FROM Seismic Forward Modeling / Geo2Seis, ver 4.0  2015");
+
+  //Textual ebcdic_header:
+  NRLib::TextualHeader ebcdic_header = NRLib::TextualHeader();
+  ebcdic_header.SetLine(0, "SEGY OUTPUT FROM Seismic Forward Modeling / Geo2Seis, ver 4.0  2015");
   std::string line = "Name: " + filename_out, line2;
-  header.SetLine(1, line);
+  ebcdic_header.SetLine(1, line);
   line = "  First inline: " + NRLib::ToString(geometry->GetMinIL()) + "      Last inline: " + NRLib::ToString(geometry->GetMaxIL());
-  header.SetLine(2, "CDP:");
-  header.SetLine(3, line);
+  ebcdic_header.SetLine(2, "CDP:");
+  ebcdic_header.SetLine(3, line);
   line = "  First xline:  " + NRLib::ToString(geometry->GetMinXL()) + "      Last xline: " + NRLib::ToString(geometry->GetMaxXL());
-  header.SetLine(4, line);
+  ebcdic_header.SetLine(4, line);
   if (nmo) {
     line = "Offset (m)    min: " + NRLib::ToString(offset_vec[0]) + "    max: " + NRLib::ToString(offset_vec[offset_vec.size() - 1]);
   }
   else {
     line = "Angle  (m)    min: " + NRLib::ToString(offset_vec[0] / NRLib::Degree) + "    max: " + NRLib::ToString(offset_vec[offset_vec.size() - 1] / NRLib::Degree);
   }
-  header.SetLine(5, line);
+  ebcdic_header.SetLine(5, line);
   if (time) {
     line = "Time (ms)     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);
     line2 = "Time increment (ms): " + NRLib::ToString(dz);
@@ -213,26 +229,35 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               &segyout,
     line = "Depth (m)     min: " + NRLib::ToString(z0) + "     max: " + NRLib::ToString(z_max);
     line2 = "Depth increment (m): " + NRLib::ToString(dz);
   }
-  header.SetLine(6, line);
-  header.SetLine(7, line2);
+  ebcdic_header.SetLine(6, line);
+  ebcdic_header.SetLine(7, line2);
 
-  segyout.Initialize(filename_out, float(z0), static_cast<size_t>(nz), float(dz), header, thf, short(n_traces_per_ensamble));
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nInitializing Segy file \'%s\' using format SEISWORKS\n",filename_out.c_str());
+
+  NRLib::TraceHeaderFormat thf(NRLib::TraceHeaderFormat::SEISWORKS);
+  segyout.Initialize(filename_out,
+                     static_cast<float>(z0),
+                     static_cast<size_t>(nz),
+                     static_cast<float>(dz),
+                     ebcdic_header,
+                     thf,
+                     short(n_traces_per_ensamble));
   segyout.SetGeometry(geometry);
-  segyout.SetDelayRecTime(short(z0));
+  //NBNB-PAL: Denne finnes ikke i nye NRLIB. Tror Håvard fjernet den
+  //segyout.SetDelayRecTime(short(z0));
   return true;
 }
 
-void SeismicOutput::WriteSegyGather(NRLib::Grid2D<double>     &data_gather,
-                                    NRLib::SegY               &segyout,
-                                    const std::vector<double>  twt_0,
-                                    const std::vector<double>  offset_vec,
-                                    bool                       time,
-                                    double                     x,
-                                    double                     y,
-                                    bool                       nmo)
+void SeismicOutput::WriteSegyGather(NRLib::Grid2D<double>     & data_gather,
+                                    NRLib::SegY               & segyout,
+                                    const std::vector<double>   twt_0,
+                                    const std::vector<double>   offset_vec,
+                                    bool                        time,
+                                    double                      x,
+                                    double                      y,
+                                    bool                        nmo)
 {
-  float z0  = segyout.GetZ0();
-  float dz  = segyout.GetDz();
+  float  dz = segyout.GetDz();
   size_t nz = segyout.GetNz();
 
   std::vector<float> datavec(nz);

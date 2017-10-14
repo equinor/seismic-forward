@@ -1,4 +1,4 @@
-// $Id: fft.hpp 1006 2012-03-22 15:07:24Z hauge $
+// $Id: fft.hpp 1381 2016-11-01 14:38:26Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -36,6 +36,7 @@ namespace NRLib {
   /// If minPadSize == 0: No padding is added.
   /// *begin and *end are of type double
   /// container could be a std::vector or std::list of doubles
+  /// \param scale_forward Scale both in forward and backward transform.
   template<class FI>
   void ComputeFFT1D(FI begin, FI end, std::vector<std::complex<double> >& vOut, bool scale_forward, int minPadSize = -1);
   template<class container>

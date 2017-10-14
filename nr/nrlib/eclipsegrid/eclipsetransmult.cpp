@@ -1,4 +1,4 @@
-// $Id: eclipsetransmult.cpp 882 2011-09-23 13:10:16Z perroe $
+// $Id: eclipsetransmult.cpp 1472 2017-04-27 11:41:04Z eyaker $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -23,40 +23,68 @@
 
 #include "../iotools/stringtools.hpp"
 
-#include <vector>
-#include <string>
-
 namespace NRLib{
 
-CellFace EclipseTransMult::GetCellFace() const
+  EclipseTransMult::EclipseTransMult(int ix1, int ix2, int jy1, int jy2, int kz1, int kz2,
+                                     double value, NRLib::Face & face)
+    :ix1_(ix1),
+    ix2_(ix2),
+    jy1_(jy1),
+    jy2_(jy2),
+    kz1_(kz1),
+    kz2_(kz2),
+    multiplier_(value),
+    face_type_(face)
+  {}
+
+void EclipseTransMult::WriteMultiply(std::ofstream                     & out_file,
+                                     const std::list<EclipseTransMult> & trans_mult)
 {
-  return cellface_;
+  if (trans_mult.empty()) {
+    return;
+  }
+
+  out_file << "MULTIPLY\n";
+  out_file << std::setprecision(10);
+
+  std::list<EclipseTransMult>::const_iterator it;
+  for (it = trans_mult.begin(); it != trans_mult.end(); ++it){
+    int ix = it->ix1_;   // same as ix2_
+    int jy = it->jy1_;   // same as jy2_
+    int kz = it->kz1_;   // same as kz2_
+
+    if (it->face_type_ == PosX){
+      out_file << "'TRANX'" << std::setw(15);
+    }
+    else if (it->face_type_ == NegX){
+      out_file << "'TRANX'" << std::setw(15);
+      ix = ix - 1;
+    }
+    if (it->face_type_ == PosY){
+      out_file << "'TRANY'" << std::setw(15);
+    }
+    else if (it->face_type_ == NegY){
+      out_file << "'TRANY'" << std::setw(15);
+      jy = jy - 1;
+    }
+    if (it->face_type_ == PosZ){
+      out_file << "'TRANZ'" << std::setw(15);
+    }
+    else if(it->face_type_ == NegZ){
+      out_file << "'TRANZ'" << std::setw(15);
+      kz = kz - 1;
+    }
+    out_file << it->multiplier_ << std::setw(7);
+    out_file << ix << std::setw(7) << ix << std::setw(7)
+             << jy << std::setw(7) << jy << std::setw(7)
+             << kz << std::setw(7) << kz << std::setw(5);
+
+    out_file << "/\n";
+  }
+  out_file << "/\n\n";
 }
 
-int EclipseTransMult::GetNeighbour() const
-{
-  return neighbour_k_;
-}
 
-double EclipseTransMult::GetMultiplier() const
-{
-  return multiplier_;
-}
-
-void EclipseTransMult::SetCellFace(CellFace cellface)
-{
-  cellface_ = cellface;
-}
-
-void EclipseTransMult::SetNeighbour(int neighbour)
-{
-  neighbour_k_ = neighbour;
-}
-
-void EclipseTransMult::SetMultiplier(double multiplier)
-{
-  multiplier_ = multiplier;
-}
 
 } // namespace NRLib
 

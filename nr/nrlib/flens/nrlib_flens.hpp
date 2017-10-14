@@ -1,4 +1,4 @@
-// $Id: nrlib_flens.hpp 1282 2014-09-01 12:27:47Z enesvold $
+// $Id: nrlib_flens.hpp 1665 2017-08-09 08:00:48Z eyaker $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -43,6 +43,8 @@ namespace NRLib {
   typedef flens::SyMatrix<flens::FullStorage<double, flens::ColMajor> > SymmetricMatrix;
   typedef flens::SyMatrix<flens::FullStorage<float,  flens::ColMajor> > SymmetricFloatMatrix;
 
+  typedef flens::TrMatrix<flens::FullStorage<double, flens::ColMajor> > TriangularMatrix;
+
   // Use Invert instead!!!
   template <typename FS> void invert(flens::GeMatrix<FS> &A) { return Invert(A); }
   template <typename FS> void Invert(flens::GeMatrix<FS> &A);
@@ -78,6 +80,17 @@ namespace NRLib {
   void            Sort3x3(Vector & Eval,
                           Matrix & Evec);
 
+  /// \brief Solve the equation system Ax = b, where A is triangular
+  ///        matrix using LU factorization
+  /// \throw Exception if A is singular
+  void TriangularSolve(const TriangularMatrix & A,
+                       const Vector           & b,
+                       Vector                 & x);
+
+  void TriangularSolve(const SymmetricMatrix  & A,
+                       const Vector           & b,
+                       Vector                 & x);
+
   /// \brief Solves the equation system Ax = b, where A is symmetric
   ///        and positive definite using Cholesky factorization.
   /// \throw Exception if A is not positive definite.
@@ -96,6 +109,7 @@ namespace NRLib {
 
   void CholeskyFactorize(SymmetricMatrix & A);
 
+  void CholeskyDeFactorize(SymmetricMatrix & A);
 
   void ComputeEigenVectors(Matrix & A,
                            Vector & eigen_values,

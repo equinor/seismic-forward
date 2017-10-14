@@ -1,4 +1,4 @@
-// $Id: point.hpp 1037 2012-06-28 12:55:48Z anner $
+// $Id: point.hpp 1693 2017-09-15 10:33:19Z vegard $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -25,6 +25,8 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <vector>
+
 
 namespace NRLib {
 
@@ -81,8 +83,19 @@ public:
   /// Return the normalized point.
   Point GetNormalized() const;
 
-  // Calc angle between input point/vector (p_in) and def.point. Return 0.0 if p_in or def.pt equal 0
+  /// Calc angle between input point/vector (p_in) and def.point. \return 0.0 if p_in or def.pt equal 0
   double GetAngle(const Point& p_in) const;  // return radians
+
+  /// Position of  def.point with respect to a line going through points P0 and P1 in 2D
+  /// (from P0 to P1, LeftFromLineXY(P0, P1) = -LeftFromLineXY(P1, P0))
+  /// \return: &gt; 0 for def.point left of the line through P0 and P1
+  ///          = 0 for def.point on the line
+  ///          &lt; 0 for def.point right of the line
+  double LeftFromLineXY(const Point & P0, const Point & P1) const;
+
+  bool IsInList(const std::vector<Point> & point_list) const;
+
+  static double CalculatePointVectorLength(const std::vector<NRLib::Point> & points);
 };  // end of Class Point
 
 

@@ -22,14 +22,19 @@
 #ifndef MODELSETTINGS_HPP
 #define MODELSETTINGS_HPP
 
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <ctime>
+#include "nrlib/segy/traceheader.hpp"
+
 #include "nrlib/iotools/logkit.hpp"
+
 #include "nrlib/math/constants.hpp"
 
-class ModelSettings {
+#include <string.h>
+#include <stdio.h>
+#include <time.h>
+#include <ctime>
+
+class ModelSettings
+{
 public:
   ModelSettings(void);
 
@@ -52,10 +57,12 @@ public:
   bool                      GetRemoveNegativeDeltaZ()                 { return remove_negative_delta_z_        ;}
   bool                      GetUseCornerpointInterpol()               { return use_cornerpoint_interpol_       ;}
 
-  int                       GetIL0In()                                { return il0_in_                         ;}
-  int                       GetXL0In()                                { return xl0_in_                         ;}
-  int                       GetUtmxIn()                               { return utmx_in_                        ;}
-  int                       GetUtmyIn()                               { return utmy_in_                        ;}
+  int                       GetIL0Loc()                               { return il0_loc_                        ;}
+  int                       GetXL0Loc()                               { return xl0_loc_                        ;}
+  int                       GetUtmxLoc()                              { return utmx_loc_                       ;}
+  int                       GetUtmyLoc()                              { return utmy_loc_                       ;}
+  int                       GetScalcoLoc()                            { return scalco_loc_                     ;}
+  int                       GetStartTimeLoc()                         { return start_time_loc_                 ;}
   short                     GetUtmPrecision()                         { return utm_precision_                  ;}
 
   int                       GetSegyInlineStart()                      { return inline_start_                   ;}
@@ -156,36 +163,38 @@ public:
   bool                      GetOutputSeismicStackTimeSegy()           { return seismic_stack_time_segy_        ;}
   bool                      GetOutputSeismicStackTimeShiftSegy()      { return seismic_stack_time_shift_segy_  ;}
   bool                      GetOutputSeismicStackDepthSegy()          { return seismic_stack_depth_segy_       ;}
+  NRLib::TraceHeaderFormat  GetOutputSegyFileFormat()                 { return output_segy_file_format_        ;}
 
+  void SetLogLevel(int level)                          { log_level_                           = level    ;}
 
-  void SetEclipseGrid(std::string filename)            { eclipse_file_name_        = filename ;}
-  void SetTwtFileName(std::string name)                { twt_file_name_            = name  ;}
+  void SetEclipseGrid(std::string filename)            { eclipse_file_name_                   = filename ;}
+  void SetTwtFileName(std::string name)                { twt_file_name_                       = name     ;}
 
-  void SetPrefix(std::string val)                      { prefix_                   = val   ;}
-  void SetSuffix(std::string val)                      { suffix_                   = val   ;}
-  void SetTracesInMemory(size_t value)                 { traces_in_memory_         = value ;}
-  void SetMaxThreads(size_t value)                     { max_threads_              = value ;}
+  void SetPrefix(std::string val)                      { prefix_                              = val      ;}
+  void SetSuffix(std::string val)                      { suffix_                              = val      ;}
+  void SetTracesInMemory(size_t value)                 { traces_in_memory_                    = value    ;}
+  void SetMaxThreads(size_t value)                     { max_threads_                         = value    ;}
 
-  void SetSeed(double value)                           { seed_ = static_cast<unsigned long>(value);}
-  void SetZeroThicknessLimit(double val)               { zero_thickness_limit_     = val   ;}
-  void SetStandardDeviation(double value)              { standard_deviation_       = value ;}
+  void SetSeed(double value)                           { seed_                                = static_cast<unsigned long>(value);}
+  void SetZeroThicknessLimit(double val)               { zero_thickness_limit_                = val     ;}
+  void SetStandardDeviation(double value)              { standard_deviation_                  = value   ;}
 
-  void SetVw(double value)                             { v_w_                      = value ;}
-  void SetZw(double value)                             { z_w_                      = value ;}
-  void SetZExtrapolFactor(double fact)                 { z_extrapol_factor_        = fact  ;}
+  void SetVw(double value)                             { v_w_                                 = value   ;}
+  void SetZw(double value)                             { z_w_                                 = value   ;}
+  void SetZExtrapolFactor(double fact)                 { z_extrapol_factor_                   = fact    ;}
 
-  void SetOffset0(double value)                        { offset_0_                 = value ;}
-  void SetDOffset(double value)                        { doffset_                  = value ;}
-  void SetOffsetMax(double value)                      { offset_max_               = value ;}
-  void SetOffsetWithoutStretch(bool value)             { offset_without_stretch_   = value ;}
+  void SetOffset0(double value)                        { offset_0_                            = value   ;}
+  void SetDOffset(double value)                        { doffset_                             = value   ;}
+  void SetOffsetMax(double value)                      { offset_max_                          = value   ;}
+  void SetOffsetWithoutStretch(bool value)             { offset_without_stretch_              = value   ;}
 
-  void SetWhiteNoise(void)                             { white_noise_                         = true  ;}
-  void SetUseCornerpointInterpol(bool value)           { use_cornerpoint_interpol_            = value ;}
-  void SetRemoveNegativeDeltaZ(bool value)             { remove_negative_delta_z_             = value ;}
-  void SetPSSeismic(bool ps)                           { ps_seismic_                          = ps    ;}
-  void SetDefaultUnderburden(bool value)               { default_underburden_                 = value ;}
-  void SetResamplParamToSegyInterpol(bool value)       { resampl_param_to_segy_with_interpol_ = value ;}
-  void SetNMOCorr(bool nmo)                            { nmo_corr_                            = nmo   ;}
+  void SetWhiteNoise(void)                             { white_noise_                         = true    ;}
+  void SetUseCornerpointInterpol(bool value)           { use_cornerpoint_interpol_            = value   ;}
+  void SetRemoveNegativeDeltaZ(bool value)             { remove_negative_delta_z_             = value   ;}
+  void SetPSSeismic(bool ps)                           { ps_seismic_                          = ps      ;}
+  void SetDefaultUnderburden(bool value)               { default_underburden_                 = value   ;}
+  void SetResamplParamToSegyInterpol(bool value)       { resampl_param_to_segy_with_interpol_ = value   ;}
+  void SetNMOCorr(bool nmo)                            { nmo_corr_                            = nmo     ;}
 
   void SetVpTop(double vptop)                          { constvp_[0]  = vptop  ;}
   void SetVpMid(double vpmid)                          { constvp_[1]  = vpmid  ;}
@@ -231,10 +240,12 @@ public:
   void SetDz(double dz)                                { dz_ = dz ;}
   void SetDt(double dt)                                { dt_ = dt ;}
 
-  void SetIL0In(int value)                             { il0_in_  = value ;}
-  void SetXL0In(int value)                             { xl0_in_  = value ;}
-  void SetUtmxIn(int value)                            { utmx_in_ = value ;}
-  void SetUtmyIn(int value)                            { utmy_in_ = value ;}
+  void SetIL0Loc(int value)                            { il0_loc_          = value ;}
+  void SetXL0Loc(int value)                            { xl0_loc_          = value ;}
+  void SetUtmxLoc(int value)                           { utmx_loc_         = value ;}
+  void SetUtmyLoc(int value)                           { utmy_loc_         = value ;}
+  void SetScalcoLoc(int value)                         { scalco_loc_       = value ;}
+  void SetStartTimeLoc(int value)                      { start_time_loc_   = value ;}
 
   void SetSegyInlineStart(int value)                   { inline_start_     = value ;}
   void SetSegyXlineStart(int value)                    { xline_start_      = value ;}
@@ -273,6 +284,7 @@ public:
   void SetOutputSeismicStackTimeSegy(bool value)       { seismic_stack_time_segy_        = value ;}
   void SetOutputSeismicStackTimeShiftSegy(bool value)  { seismic_stack_time_shift_segy_  = value ;}
   void SetOutputSeismicStackDepthSegy(bool value)      { seismic_stack_depth_segy_       = value ;}
+  void SetOutputSegyFileFormat(NRLib::TraceHeaderFormat thf) {output_segy_file_format_ = thf ;}
 
   void SetOutputElasticParametersTimeSegy(bool value)  { elastic_parameters_time_segy_   = value ;}
   void SetOutputElasticParametersDepthSegy(bool value) { elastic_parameters_depth_segy_  = value ;}
@@ -281,7 +293,6 @@ public:
 
   void AddExtraParameterName(std::string name)         { extra_parameter_names_.push_back(name);}
   void AddExtraParameterDefaultValue(double value)     { extra_parameter_default_values_.push_back(value);}
-
 
 private:
 
@@ -335,10 +346,12 @@ private:
   double                    dz_;
   double                    dt_; // cell size
 
-  int                       il0_in_;
-  int                       xl0_in_;
-  int                       utmx_in_;
-  int                       utmy_in_;
+  int                       il0_loc_;
+  int                       xl0_loc_;
+  int                       utmx_loc_;
+  int                       utmy_loc_;
+  int                       scalco_loc_;
+  int                       start_time_loc_;
 
   std::string               wavelet_file_format_;
   std::string               wavelet_file_name_;
@@ -357,10 +370,23 @@ private:
   std::string               top_time_surface_;
   double                    top_time_constant_;
 
+  NRLib::TraceHeaderFormat  output_segy_file_format_;
   bool                      output_time_segy_;
   bool                      output_depth_segy_;
   bool                      output_timeshift_segy_;
   bool                      output_prenmo_time_segy_;
+  bool                      output_vp_;
+  bool                      output_reflections_;
+  bool                      output_zvalues_;
+  bool                      output_seismic_time_;
+  bool                      output_seismic_depth_;
+  bool                      output_seismic_timeshift_;
+  bool                      output_time_surfaces_;
+  bool                      output_depth_surfaces_;
+  bool                      output_twt_;
+  bool                      output_vrms_;
+  bool                      output_twt_offset_;
+
   bool                      use_cornerpoint_interpol_;
   bool                      remove_negative_delta_z_;
 
@@ -389,18 +415,6 @@ private:
 
   bool                      time_window_specified_;
   bool                      depth_window_specified_;
-
-  bool                      output_vp_;
-  bool                      output_reflections_;
-  bool                      output_zvalues_;
-  bool                      output_seismic_time_;
-  bool                      output_seismic_depth_;
-  bool                      output_seismic_timeshift_;
-  bool                      output_time_surfaces_;
-  bool                      output_depth_surfaces_;
-  bool                      output_twt_;
-  bool                      output_vrms_;
-  bool                      output_twt_offset_;
 };
 
 #endif

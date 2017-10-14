@@ -1,4 +1,4 @@
-// $Id: eclipsegeometry.hpp 1187 2013-06-14 13:34:45Z perroe $
+// $Id: eclipsegeometry.hpp 1460 2017-04-03 14:28:35Z eyaker $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -91,6 +91,9 @@ public:
 
   /// Finds the point on the pillar with given z-valu. If that point is outside the grid, the closest pillar point in the grid is chosen
   Point FindPointAtPillarInsideGrid(size_t i, size_t j, double z, bool & found) const;
+
+  /// Finds the mean pillar to pillar distance of the grid at a given depth z
+  double FindMeanPillarDistance(double z) const;
 
   /// Finds the point in the cell (i, j, k) with local coordinates (u, v, w).
   /// u, v and w must be between 0 and 1.
@@ -290,7 +293,7 @@ void EclipseGeometry::GetIJK(size_t index, size_t& i, size_t& j, size_t& k) cons
 
 size_t EclipseGeometry::GetIndex(size_t i, size_t j, size_t k) const
 {
-  assert(i < GetNI() && j < GetNI() && k < GetNK());
+  assert(i < GetNI() && j < GetNJ() && k < GetNK());
 
   return i + j*GetNI() + k*GetNI()*GetNJ();
 }

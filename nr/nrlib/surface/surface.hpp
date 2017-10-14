@@ -1,4 +1,4 @@
-// $Id: surface.hpp 882 2011-09-23 13:10:16Z perroe $
+// $Id: surface.hpp 1535 2017-06-23 07:16:54Z larsf $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -31,7 +31,7 @@ namespace NRLib {
     virtual ~Surface();
 
     /// \brief Generate a copy of the underlying object.
-    virtual Surface * Clone() const = 0;
+    virtual Surface<A> * Clone() const = 0;
 
     virtual A         GetZ(double x, double y) const = 0;
 
@@ -43,6 +43,8 @@ namespace NRLib {
     virtual bool      IsInsideSurface(double /*x*/, double /*y*/) const = 0;
 
     virtual void      Add(A c) = 0;
+
+    virtual void      Multiply(A c) = 0;
 
     virtual A         Min() const = 0;
     virtual A         Max() const = 0;
@@ -76,6 +78,10 @@ namespace NRLib {
 
     void Add(A c) {
       z_ += c;
+    }
+
+    void Multiply(A c) {
+      z_ *= c;
     }
 
     A Min() const {return(z_);}

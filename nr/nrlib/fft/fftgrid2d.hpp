@@ -1,4 +1,4 @@
-// $Id: fftgrid2d.hpp 994 2012-02-29 15:15:04Z perroe $
+// $Id: fftgrid2d.hpp 1673 2017-08-23 10:48:42Z ariel $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -24,6 +24,7 @@
 
 #include <cassert>
 #include <complex>
+#include <iostream>
 
 // Must set MKL's /include/fftw or fftw's include directory as additional include directory.
 #include "fftw3.h"
@@ -180,7 +181,7 @@ FFTGrid2D<T>::FFTGrid2D(size_t ni, size_t nj,  size_t padding_ni,
 
   // Allocate aligned data for efficiency.
   // Add padding for use in inplace transform.
-  real_data_ = reinterpret_cast<T*>(fftw_malloc(ni_tot_ * nj_tot_ * sizeof(T)));
+  real_data_ = reinterpret_cast<T*>(fftw_malloc((1 + ni_tot_ * nj_tot_) * sizeof(T))); //Add 1 to avoid problems with MKL
 
   size_t n_complex = GetComplexNI() * GetComplexNJ();
   size_t complex_datalen = n_complex * sizeof(std::complex<T>);
@@ -208,7 +209,7 @@ template <typename T>
 void FFTGrid2D<T>::DoFFT() {
   if (scale_forward_) {
     size_t n = ni_tot_ * nj_tot_;
-    double scale = 1.0 / sqrt(1.0*n);
+    double scale = 1.0 / std::sqrt(1.0*n);
     for (size_t i = 0; i < n; ++i) {
       real_data_[i] *= static_cast<T>(scale);
     }
@@ -222,9 +223,9 @@ void FFTGrid2D<T>::DoInverseFFT() {
   double scale;
   size_t n = ni_tot_ * nj_tot_;
   if (!scale_forward_)
-    scale=1.0 / n;
+    scale=1.0 / static_cast<double>(n);
   else
-    scale=1.0 / sqrt(1.0*n);
+    scale=1.0 / std::sqrt(1.0*n);
 
   for (size_t i = 0; i < n; ++i) {
     real_data_[i] *= static_cast<T>(scale);

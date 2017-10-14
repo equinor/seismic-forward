@@ -30,6 +30,7 @@
 #include "seismic_regridding.hpp"
 #include "seismic_forward.hpp"
 #include "xmlmodelfile.hpp"
+#include "tasklist.hpp"
 
 #ifdef WITH_OMP
 #include <omp.h>
@@ -83,6 +84,8 @@ int main(int argc, char *argv[]) {
     NRLib::LogKit::WriteHeader("Forward modelling");
     SeismicForward::DoSeismicForward(seismic_parameters);
     //seismic_parameters.PrintElapsedTime(t1, "for total program");
+
+    TaskList::ViewAllTasks();
   }
   else {
     printf("Press a key and then enter to continue.\n");

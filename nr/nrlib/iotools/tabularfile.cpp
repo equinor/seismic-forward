@@ -1,4 +1,4 @@
-// $Id: tabularfile.cpp 1078 2012-09-25 11:13:53Z veralh $
+// $Id: tabularfile.cpp 1354 2016-05-24 11:52:26Z eyaker $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -82,7 +82,7 @@ bool TabularFile::CheckFile(const std::string & filename,
   int line_number = 0;
   std::string line;
   while (GetNextNonEmptyLine(in_file, line_number, line)) {
-    std::vector<std::string> tokens = GetTokens(line);
+    tokens = GetTokens(line);
     if (IsType<double>(tokens[0])) {
       first_data_line = line_number;
       n_columns = tokens.size();
@@ -105,29 +105,39 @@ void TabularFile::ReadFromFile(const std::string & filename,
   std::ifstream in_file;
   OpenRead(in_file, filename);
   std::string line;
+  int this_line_num = 0;
 
   columns_.resize(n_columns);
   std::vector<double> data(n_columns);
 
   // First line in file is line number 1. Read and discard up to first_data_line
   for (size_t i = 1; i < first_data_line; ++i) {
+    this_line_num++;
     std::getline(in_file, line);
   }
   std::string this_line, next_line;
-  std::getline(in_file, this_line);
-  while(std::getline(in_file, next_line)) {
-    ParseAsciiArrayFast(this_line, data.begin(), n_columns);
-    for (size_t i = 0; i < n_columns; ++i) {
-      columns_[i].push_back(data[i]);
+  try {
+    NRLib::GetNextNonEmptyLine(in_file, this_line_num, this_line);
+    int next_line_num = this_line_num;
+    while (NRLib::GetNextNonEmptyLine(in_file, next_line_num, next_line)) {
+      ParseAsciiArrayFast(this_line, data.begin(), n_columns);
+      for (size_t i = 0; i < n_columns; ++i) {
+        columns_[i].push_back(data[i]);
+      }
+      this_line = next_line;
+      this_line_num = next_line_num;
     }
-    this_line = next_line;
+    // Reading last line
+    if (read_last_line) {
+      ParseAsciiArrayFast(this_line, data.begin(), n_columns);
+      for (size_t i = 0; i < n_columns; ++i) {
+        columns_[i].push_back(data[i]);
+      }
+    }
   }
-  // Reading last line
-  if(read_last_line) {
-    ParseAsciiArrayFast(this_line, data.begin(), n_columns);
-    for (size_t i = 0; i < n_columns; ++i) {
-      columns_[i].push_back(data[i]);
-    }
+  catch (std::exception& e) {
+    throw FileFormatError("Error parsing \"" + filename + "\"" +
+      "at line " + ToString(this_line_num) + ":" + e.what() + "\n");
   }
 }
 

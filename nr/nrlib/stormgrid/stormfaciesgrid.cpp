@@ -1,4 +1,4 @@
-// $Id: stormfaciesgrid.cpp 882 2011-09-23 13:10:16Z perroe $
+// $Id: stormfaciesgrid.cpp 1325 2016-03-31 11:40:09Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -21,7 +21,9 @@
 
 #include "stormfaciesgrid.hpp"
 
+#include <algorithm>
 #include <fstream>
+#include <algorithm>
 
 #include "../exception/exception.hpp"
 #include "../iotools/fileio.hpp"

@@ -1,4 +1,4 @@
-// $Id: generaldiscrete.hpp 1081 2012-09-28 09:11:07Z perroe $
+// $Id: generaldiscrete.hpp 1468 2017-04-21 13:09:33Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -31,7 +31,7 @@ namespace NRLib {
 
 class GeneralDiscrete : public Distribution<int> {
 public:
-  GeneralDiscrete(const std::vector<double> & hist);
+  explicit GeneralDiscrete(const std::vector<double> & hist = std::vector<double>(0));
   ~GeneralDiscrete();
 
   Distribution<int>* Clone() const;

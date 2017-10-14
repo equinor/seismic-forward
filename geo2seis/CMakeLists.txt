@@ -8,6 +8,7 @@ set(CPP_FILES
     seismic_parameters.cpp
     seismic_regridding.cpp
     xmlmodelfile.cpp
+    tasklist.cpp
 
     physics/wavelet.cpp
     physics/zoeppritz.cpp
@@ -32,6 +33,7 @@ set(H_FILES
     seismic_parameters.hpp
     seismic_regridding.hpp
     xmlmodelfile.hpp
+    tasklist.hpp
 
     physics/wavelet.hpp
     physics/zoeppritz.hpp

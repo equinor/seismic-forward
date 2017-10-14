@@ -1,15 +1,18 @@
 #ifndef SEISMIC_PARAMETERS_HPP
 #define SEISMIC_PARAMETERS_HPP
 
+#include "nrlib/surface/regularsurface.hpp"
+#include "nrlib/volume/volume.hpp"
+
+#include "modelsettings.hpp"
+#include "seismic_output.hpp"
+#include "utils/trace.hpp"
+
+#include <tbb/concurrent_queue.h>
+
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include <nrlib/surface/regularsurface.hpp>
-#include <nrlib/volume/volume.hpp>
-#include "modelsettings.hpp"
-#include "seismic_output.hpp"
-#include <tbb/concurrent_queue.h>
-#include <utils/trace.hpp>
 
 class Wavelet;
 class ModelSettings;
@@ -71,7 +74,7 @@ class SeismicParameters
     inline bool                                 GetTimeshiftStormOutput() const;
     inline bool                                 GetStormOutput()          const;
 
-    void SetSegyGeometry(const NRLib::SegyGeometry & geometry);
+    void SetSegyGeometry(const NRLib::SegyGeometry * geometry);
 
     void FindLoopIndeces(int  & n_xl,
                          int  & il_min,

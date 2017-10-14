@@ -1,5 +1,7 @@
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
+
 #include "nrlib/geometry/interpolation.hpp"
+
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
@@ -126,13 +128,13 @@ void SeismicParameters::FindGeometry(SeismicGeometry              *& seismic_geo
 
   if (model_settings->GetAreaFromSegy() != "") {
     text = "SegY";
-    int scalcoloc = 71;
     NRLib::TraceHeaderFormat::coordSys_t coord = NRLib::TraceHeaderFormat::UTM;
-    NRLib::TraceHeaderFormat *thf = new NRLib::TraceHeaderFormat(scalcoloc,
-                                                                 model_settings->GetUtmxIn(),
-                                                                 model_settings->GetUtmyIn(),
-                                                                 model_settings->GetIL0In(),
-                                                                 model_settings->GetXL0In(),
+    NRLib::TraceHeaderFormat *thf = new NRLib::TraceHeaderFormat(model_settings->GetScalcoLoc(),
+                                                                 model_settings->GetUtmxLoc(),
+                                                                 model_settings->GetUtmyLoc(),
+                                                                 model_settings->GetIL0Loc(),
+                                                                 model_settings->GetXL0Loc(),
+                                                                 model_settings->GetStartTimeLoc(),
                                                                  coord);
     double z0 = 0.0;
     NRLib::Volume * volume = NULL;
@@ -477,7 +479,7 @@ void SeismicParameters::CreateGrids(SeismicGeometry * seismic_geometry,
 //========================================== BELOW IS UNPROCESSED ==========================================
 
 //---------------------------------------------------------------------------
-void SeismicParameters::SetSegyGeometry(const NRLib::SegyGeometry & geometry)
+void SeismicParameters::SetSegyGeometry(const NRLib::SegyGeometry * geometry)
 //---------------------------------------------------------------------------
 {
   if (segy_geometry_ != NULL) {
@@ -486,14 +488,14 @@ void SeismicParameters::SetSegyGeometry(const NRLib::SegyGeometry & geometry)
   segy_geometry_ = new NRLib::SegyGeometry(geometry);
 }
 
-void SeismicParameters::FindLoopIndeces(int               &n_xl,
-                                        int               &il_min,
-                                        int               &il_max,
-                                        int               &il_step,
-                                        int               &xl_min,
-                                        int               &xl_max,
-                                        int               &xl_step,
-                                        bool              &segy)
+void SeismicParameters::FindLoopIndeces(int  & n_xl,
+                                        int  & il_min,
+                                        int  & il_max,
+                                        int  & il_step,
+                                        int  & xl_min,
+                                        int  & xl_max,
+                                        int  & xl_step,
+                                        bool & segy)
 {
   if (segy_geometry_ == NULL) {
     il_min  = 0;
@@ -677,11 +679,13 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
   }
 }
 
+//-----------------------------------------------------------------------------------
 void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> & twt_0,
                                           std::vector<double> & z_0,
                                           std::vector<double> & twts_0,
                                           size_t              & time_samples_stretch,
                                           bool                  ps_seis)
+//-----------------------------------------------------------------------------------
 {
   if (model_settings_->GetNMOCorr() && !model_settings_->GetOffsetWithoutStretch()){
     twt_0 = GenerateTwt0ForNMO(time_samples_stretch, ps_seis);
@@ -716,8 +720,10 @@ void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> & twt_0,
   }
 }
 
+//-----------------------------------------------------------------------------
 std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
-                                                          bool ps_seis)
+                                                          bool     ps_seis)
+//-----------------------------------------------------------------------------
 {
   //Account for stretch by making twt0 sufficiently long. Stretch upwards is also taken into account
   //through "xtra_samples_top".
@@ -741,6 +747,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
 
   //find max TWTX for highest offset in order to find the highest TWT value to sample seismic
   if (ps_seis) { //------------PS seismic------------
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate Twt0 for NMO assuming PS seismic\n");
     std::vector<double> vrms_pp_vec(nzrefl), vrms_ss_vec(nzrefl), dummy;
     std::vector<double> vp_vec(nzrefl), vs_vec(nzrefl), twt_pp_vec(nzrefl), twt_ss_vec(nzrefl);
 
@@ -762,32 +769,33 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
     double start_value = atan(tmp);
     if (start_value >= 1.0)
       start_value = 0.99;
-    double dU    = vrms_ss * twt_ss_max / 2000;
-    double dD    = vrms_pp* twt_pp_max / 2000;
-    double vr    = vrms_ss / vrms_pp;
-    size_t n_it  = 10;
-    double y_out = FindSinThetaPSWithNewtonsMethod(start_value,
-                                                   offset_max,
-                                                   dU,
-                                                   dD,
-                                                   vr,
-                                                   0.00001,
-                                                   n_it);
+    double dU        = vrms_ss * twt_ss_max / 2000;
+    double dD        = vrms_pp* twt_pp_max / 2000;
+    double vr        = vrms_ss / vrms_pp;
+    size_t n_it      = 10;
+    double y_out     = FindSinThetaPSWithNewtonsMethod(start_value,
+                                                       offset_max,
+                                                       dU,
+                                                       dD,
+                                                       vr,
+                                                       0.00001,
+                                                       n_it);
     double theta_ss  = asin(vr*y_out);
     double theta_pp  = asin(y_out);
     double offset_pp = tan(theta_pp)*dD;
     double offset_ss = tan(theta_ss)*dU;
 
-    double twtx_pp = std::sqrt(twt_pp_max * twt_pp_max / 4 + 1000 * 1000 * (offset_pp * offset_pp) / (vrms_pp * vrms_pp));
-    double twtx_ss = std::sqrt(twt_ss_max * twt_ss_max / 4 + 1000 * 1000 * (offset_ss * offset_ss) / (vrms_ss * vrms_ss));
-    twtx_max       = twtx_pp + twtx_ss;
+    double twtx_pp   = std::sqrt(twt_pp_max * twt_pp_max / 4 + 1000 * 1000 * (offset_pp * offset_pp) / (vrms_pp * vrms_pp));
+    double twtx_ss   = std::sqrt(twt_ss_max * twt_ss_max / 4 + 1000 * 1000 * (offset_ss * offset_ss) / (vrms_ss * vrms_ss));
+    twtx_max         = twtx_pp + twtx_ss;
   }
   else {  //------------PP seismic------------
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate Twt0 for NMO assuming PP seismic.\n");
     //find max vrms in index
     std::vector<double> vrms_vec(nzrefl), vp_vec(nzrefl), twt_vec(nzrefl), dummy;
     for (size_t k = 0; k < nzrefl; ++k) {
       twt_vec[k] = (*twtgrid_)(i_max, j_max, k);
-      vp_vec[k] = (*vpgrid_) (i_max, j_max, k);
+      vp_vec[k]  = (*vpgrid_) (i_max, j_max, k);
     }
     FindVrms(vrms_vec, dummy, twt_vec, dummy, vp_vec, 1.0, 1.0, i_max, j_max, false);
     double vrms_max_t = vrms_vec[vrms_vec.size() - 1];
@@ -820,9 +828,13 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
   return twt_0_;
 }
 
+//--------------------------------------------------------
 std::vector<double>  SeismicParameters::GenerateZ0ForNMO()
+//--------------------------------------------------------
 {
-  size_t nz                      = seismic_geometry_->nz();
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate Z0 for NMO.\n");
+
+ size_t nz                      = seismic_geometry_->nz();
   double zmin                    = seismic_geometry_->z0();
   double dz                      = seismic_geometry_->dz();
   double dt                      = seismic_geometry_->dt();
@@ -859,10 +871,13 @@ std::vector<double>  SeismicParameters::GenerateZ0ForNMO()
   return z_0_;
 }
 
-
-std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
-                                                          size_t n_samples)
+//-------------------------------------------------------------------------
+std::vector<double> SeismicParameters::GenerateTWT0Shift(double twt_0_min,
+                                                         size_t n_samples)
+//-------------------------------------------------------------------------
 {
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate TWT0 shift.\n");
+
   size_t i_max, j_max;
   double max_twt_value;
 
@@ -876,7 +891,7 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
   double t_0    = (*twtgrid_)(i_max, j_max, 0);
   double t_max  = (*twtgrid_)(i_max, j_max, k_max);
 
-  double dt                      = seismic_geometry_->dt();
+  double dt     = seismic_geometry_->dt();
   std::vector<double> twt_0_s;
 
   double delta_top = ts_0 - t_0;
@@ -902,20 +917,23 @@ std::vector<double>  SeismicParameters::GenerateTWT0Shift(double twt_0_min,
   return twt_0_s;
 }
 
-void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &thetagrid,
-                                                NRLib::Grid2D<double>     &offset_down_grid,
-                                                NRLib::Grid2D<double>     &offset_up_grid,
-                                                const std::vector<double> &twt_pp_vec,
-                                                const std::vector<double> &twt_ss_vec,
-                                                const std::vector<double> &vrms_pp_vec,
-                                                const std::vector<double> &vrms_ss_vec,
-                                                const std::vector<double> &offset,
-                                                bool                       save_theta)
+//-------------------------------------------------------------------------------------------
+void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     & thetagrid,
+                                                NRLib::Grid2D<double>     & offset_down_grid,
+                                                NRLib::Grid2D<double>     & offset_up_grid,
+                                                const std::vector<double> & twt_pp_vec,
+                                                const std::vector<double> & twt_ss_vec,
+                                                const std::vector<double> & vrms_pp_vec,
+                                                const std::vector<double> & vrms_ss_vec,
+                                                const std::vector<double> & offset,
+                                                bool                        save_theta)
+//-------------------------------------------------------------------------------------------
 {
-  double tol = 0.000001;
-  size_t n_it = 10;
-  size_t n_it_avg = 0;
-  double theta_up, theta_down, y_out, dU, dD, vr;
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFinding PS NMO angles and offsets\n");
+
+  double tol         = 0.000001;
+  size_t n_it        = 10;
+  size_t n_it_avg    = 0;
   double start_value = 0.1;
 
   for (size_t off = 0; off < offset.size(); off++) {
@@ -924,20 +942,20 @@ void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &theta
     if (start_value >= 1.0)
       start_value = 0.99;
     for (size_t k = 0; k < twt_pp_vec.size(); k++) {
-      dU = vrms_ss_vec[k] * twt_ss_vec[k] / 2000;
-      dD = vrms_pp_vec[k] * twt_pp_vec[k] / 2000;
-      vr = vrms_ss_vec[k] / vrms_pp_vec[k];
+      double dU = vrms_ss_vec[k] * twt_ss_vec[k] / 2000;
+      double dD = vrms_pp_vec[k] * twt_pp_vec[k] / 2000;
+      double vr = vrms_ss_vec[k] / vrms_pp_vec[k];
       n_it = 20;
-      y_out = FindSinThetaPSWithNewtonsMethod(start_value,
-                                              offset[off],
-                                              dU,
-                                              dD,
-                                              vr,
-                                              tol,
-                                              n_it);
+      double y_out = FindSinThetaPSWithNewtonsMethod(start_value,
+                                                     offset[off],
+                                                     dU,
+                                                     dD,
+                                                     vr,
+                                                     tol,
+                                                     n_it);
       n_it_avg  += n_it;
-      theta_up   = asin(vr*y_out);
-      theta_down = asin(y_out);
+      double theta_up   = asin(vr*y_out);
+      double theta_down = asin(y_out);
       if (save_theta) {
         thetagrid(k, off) = theta_down;
       }
@@ -950,30 +968,32 @@ void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     &theta
   double it_avg = static_cast<double>(n_it_avg) / static_cast<double>(n_values);
 }
 
-
-double SeismicParameters::FindSinThetaPSWithNewtonsMethod(double start_value,
-                                                          double offset,
-                                                          double dU,
-                                                          double dD,
-                                                          double vr,
-                                                          double tol,
-                                                          size_t &n_it)
+//-----------------------------------------------------------------------------
+double SeismicParameters::FindSinThetaPSWithNewtonsMethod(double   start_value,
+                                                          double   offset,
+                                                          double   dU,
+                                                          double   dD,
+                                                          double   vr,
+                                                          double   tol,
+                                                          size_t & n_it)
+//-----------------------------------------------------------------------------
 {
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFind sin(theta) PS with Newtons method.\n");
   double y_old = start_value;
   double y_new, f_y, f_der_y;
 
   for (size_t i = 0; i < n_it; ++i) {
-    f_y = -offset + dD*y_old / sqrt(1.0 - std::pow(y_old, 2)) + dU*vr*y_old / sqrt(1.0 - std::pow(vr, 2) * std::pow(y_old, 2));
+    f_y     = -offset + dD*y_old / sqrt(1.0 - std::pow(y_old, 2)) + dU*vr*y_old / sqrt(1.0 - std::pow(vr, 2) * std::pow(y_old, 2));
     f_der_y = dD / (std::pow((1.0 - y_old), (3 / 2))) + dU*vr / (std::pow((1.0 - std::pow(vr, 2) * std::pow(y_old, 2)), (3 / 2)));
 
     if (f_der_y == 0) {
-      std::cout << "Failure in newtons method: zero derivative.\n";
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nFailure in newtons method: zero derivative.\n");
       return 0;
     }
     y_new = y_old - f_y / f_der_y;
 
     if (std::abs(y_new) > 1.0) {
-      std::cout << "Failure in newtons method: Value > 1.0 : y_old = " << y_old << ", y_new = " << y_new << ". New value: y_new = 0.1 suggested.\n";
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nFailure in newtons method: Value > 1.0 : y_old = %.2f , y_new = %.2f. New value: y_new = 0.1 suggested.\n",y_old,y_new);
       y_new = 0.1;
     }
 
@@ -986,25 +1006,33 @@ double SeismicParameters::FindSinThetaPSWithNewtonsMethod(double start_value,
   return y_new;
 }
 
+//-----------------------------------------
 void SeismicParameters::DeleteEclipseGrid()
+//-----------------------------------------
 {
   delete eclipse_grid_;
 }
 
+//---------------------------------------------------
 void SeismicParameters::DeleteElasticParameterGrids()
+//---------------------------------------------------
 {
   delete vpgrid_;
   delete vsgrid_;
   delete rhogrid_;
 }
 
+//---------------------------------------------------
 void SeismicParameters::DeleteExtraParameterGrids()
+//---------------------------------------------------
 {
   for (size_t i = 0; i < extra_parameter_grid_.size(); ++i)
     delete extra_parameter_grid_[i];
 }
 
+//----------------------------------------------
 void SeismicParameters::DeleteZandRandTWTGrids()
+//----------------------------------------------
 {
   if (twtgrid_ != NULL)
     delete twtgrid_;
@@ -1018,17 +1046,23 @@ void SeismicParameters::DeleteZandRandTWTGrids()
     delete twt_timeshift_;
 }
 
+//----------------------------------------------
 void SeismicParameters::DeleteVrmsGrid()
+//----------------------------------------------
 {
   delete vrmsgrid_;
 }
 
+//----------------------------------------------
 void SeismicParameters::DeleteWavelet()
+//----------------------------------------------
 {
   delete wavelet_;
 }
 
+//----------------------------------------------
 void SeismicParameters::DeleteGeometryAndOutput()
+//----------------------------------------------
 {
   delete seismic_geometry_;
   delete segy_geometry_;
@@ -1036,10 +1070,10 @@ void SeismicParameters::DeleteGeometryAndOutput()
   delete model_settings_;
 }
 
-
-
-
-void SeismicParameters::PrintElapsedTime(time_t start_time, std::string work)
+//--------------------------------------------------------------
+void SeismicParameters::PrintElapsedTime(time_t      start_time,
+                                         std::string work)
+//--------------------------------------------------------------
 {
   time_t end_time = time(0);   // get time now
   size_t seconds = static_cast<size_t>(difftime(end_time, start_time));
@@ -1066,7 +1100,9 @@ void SeismicParameters::PrintElapsedTime(time_t start_time, std::string work)
     << "\n";
 }
 
-tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t &n_traces)
+//-------------------------------------------------------------------------------------
+tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t & n_traces)
+//-------------------------------------------------------------------------------------
 {
   tbb::concurrent_queue<Trace*> traces;
   int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
@@ -1107,9 +1143,11 @@ tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t &n_t
   return traces;
 }
 
+//-------------------------------------------------------------------------------
 void SeismicParameters::AddNoiseToReflectionsPos(unsigned long           seed,
-  double                  std_dev,
-  NRLib::Grid2D<double>  &refl)
+                                                 double                  std_dev,
+                                                 NRLib::Grid2D<double> & refl)
+//-------------------------------------------------------------------------------
 {
   NRLib::RandomGenerator rg;
   rg.Initialize(seed);
@@ -1122,10 +1160,11 @@ void SeismicParameters::AddNoiseToReflectionsPos(unsigned long           seed,
   }
 }
 
-
-void SeismicParameters::MonitorInitialize(size_t n_traces,
-  float &monitor_size,
-  float &next_monitor)
+//--------------------------------------------------------------
+void SeismicParameters::MonitorInitialize(size_t   n_traces,
+                                          float  & monitor_size,
+                                          float  & next_monitor)
+//--------------------------------------------------------------
 {
   monitor_size = static_cast<float>(n_traces) * 0.02f;
   if (monitor_size < 1.0f)
@@ -1137,9 +1176,11 @@ void SeismicParameters::MonitorInitialize(size_t n_traces,
     << "\n  ^";
 }
 
-void SeismicParameters::Monitor(size_t trace,
-  float monitor_size,
-  float &next_monitor)
+//----------------------------------------------------
+void SeismicParameters::Monitor(size_t   trace,
+                                float    monitor_size,
+                                float  & next_monitor)
+//----------------------------------------------------
 {
   if (trace + 1 >= static_cast<size_t>(next_monitor)) {
     next_monitor += monitor_size;
@@ -1151,11 +1192,12 @@ void SeismicParameters::Monitor(size_t trace,
   }
 }
 
-std::vector<double> SeismicParameters::SplineInterp1D(const std::vector<double> &x_in,
-                                                      const std::vector<double> &y_in,
-                                                      const std::vector<double> &x_out,
-                                                      double                     extrap_value)
-
+//-----------------------------------------------------------------------------------------------
+std::vector<double> SeismicParameters::SplineInterp1D(const std::vector<double> & x_in,
+                                                      const std::vector<double> & y_in,
+                                                      const std::vector<double> & x_out,
+                                                      double                      extrap_value)
+//-----------------------------------------------------------------------------------------------
 {
   std::vector<double> x_in_copy(x_in.size());
   std::vector<double> y_in_copy(y_in.size());
@@ -1178,10 +1220,11 @@ std::vector<double> SeismicParameters::SplineInterp1D(const std::vector<double> 
   return NRLib::Interpolation::Interpolate1D(x_in_copy, y_in_copy, x_out, "spline", extrap_value);
 }
 
-
-std::vector<double> SeismicParameters::LinInterp1D(const std::vector<double> &x_in,
-  const std::vector<double> &y_in,
-  const std::vector<double> &x_out)
+//------------------------------------------------------------------------------------
+std::vector<double> SeismicParameters::LinInterp1D(const std::vector<double> & x_in,
+                                                   const std::vector<double> & y_in,
+                                                   const std::vector<double> & x_out)
+//------------------------------------------------------------------------------------
 
 {
   std::vector<double> x_in_copy(x_in.size());

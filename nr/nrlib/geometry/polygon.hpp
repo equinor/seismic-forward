@@ -1,4 +1,4 @@
-// $Id: polygon.hpp 1141 2013-02-07 10:21:39Z georgsen $
+// $Id: polygon.hpp 1375 2016-10-13 10:43:25Z hannaz $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -77,6 +77,16 @@ public:
                              double &length2,
                              double &angle);
 
+  /// Finds polygon's tangents (indices) running through a point
+  void TangentPointPoly(const Point & point, size_t & rtan, size_t & ltan) const;
+
+  /// Finds distance between two points on the def.poly
+  double DistanceBetweenPointsXY(size_t index0, size_t index1) const;
+
+  /// Finds position (index) of given point on def.poly, returns index equal to length of the poly if not found
+  size_t FindPointPosition(const Point & point) const;
+
+  double GetCircumferenceXY() const ;
 
 private:
   std::vector<Point> polygon_points_;

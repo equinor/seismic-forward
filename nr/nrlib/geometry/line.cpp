@@ -1,4 +1,4 @@
-// $Id: line.cpp 1285 2014-09-22 13:29:26Z perroe $
+// $Id: line.cpp 1453 2017-03-21 12:02:02Z veralh $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -90,6 +90,20 @@ double Line::GetLength() const
 double Line::FindDistance(const Point& p_in) const
 {
   Point proj_pt = FindProjection(p_in);
+  return p_in.GetDistance(proj_pt);
+}
+
+// Calc shortest distance from p_in to def.line (or extention of finite line) at proj_pt
+double Line::FindDistanceAndSide(const Point& p_in, bool& right_side) const
+{
+  Point  proj_pt   = FindProjection(p_in);
+  Point  side_vec  = p_in - proj_pt;
+  Point  line_vec  = p2_  - proj_pt;
+  Point  cross     = side_vec.Cross(line_vec);
+  if (cross.z >= 0) //true also if it is exact on line
+    right_side = true;
+  else
+    right_side = false;
   return p_in.GetDistance(proj_pt);
 }
 
@@ -235,4 +249,38 @@ bool Line::IsOverLapping(const Line& line_in, double min_in) const
     else
       return false;    // not overlapping
   }
+}
+
+bool Line::IntersectXY(const Line & line_in, Point & intersect_pt, double min_in) const
+{
+  bool is_intersect = false;
+
+  //def. line on general form a1*x + b1*y = c1
+  const double a1 = p1_.y - p2_.y;
+  const double b1 = p2_.x - p1_.x;
+  const double c1 = p1_.y*p2_.x - p2_.y*p1_.x;
+
+  //line_in on general form a2*x + b2*y = c2
+  NRLib::Point p1_in = line_in.GetPt1();
+  NRLib::Point p2_in = line_in.GetPt2();
+  const double a2 = p1_in.y - p2_in.y;
+  const double b2 = p2_in.x - p1_in.x;
+  const double c2 = p1_in.y*p2_in.x - p2_in.y*p1_in.x;
+
+  double den = a1*b2 - b1*a2;
+  if (!IsParallel(line_in) && den != 0)
+  {
+    double x = (c1*b2 - b1*c2) / den;
+    double y = (a1*c2 - c1*a2) / den;
+    intersect_pt = Point(x, y, 0.0);
+    if (IsPointOnLine(intersect_pt, min_in) && line_in.IsPointOnLine(intersect_pt, min_in))
+      is_intersect = true;
+    else
+      intersect_pt = Point(0.0, 0.0, 0.0);
+  }
+  else
+  {
+    intersect_pt = Point(0.0, 0.0, 0.0);
+  }
+  return is_intersect;
 }

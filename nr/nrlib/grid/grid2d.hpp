@@ -1,4 +1,4 @@
-// $Id: grid2d.hpp 882 2011-09-23 13:10:16Z perroe $
+// $Id: grid2d.hpp 1648 2017-07-20 21:46:04Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -46,6 +46,9 @@ public:
     /// \param val Initial cell value.
   virtual void           Resize(size_t ni, size_t nj, const A& val = A());
 
+    /// Assign same value to all grid cells.
+  inline void            Assign(size_t ni, size_t nj, const A& val);
+
   inline reference       operator()(size_t i, size_t j);
   inline reference       operator()(size_t index);
 
@@ -61,6 +64,8 @@ public:
   size_t                 GetNI() const { return ni_; }
   size_t                 GetNJ() const { return nj_; }
   size_t                 GetN()  const { return data_.size(); }
+
+  const std::vector<A> & GetStorage() const { return data_; }
 
   inline size_t          GetIndex(size_t i, size_t j) const;
   void                   GetIJ(size_t index, size_t &i, size_t &j) const;
@@ -105,6 +110,16 @@ void Grid2D<A>::Resize(size_t ni, size_t nj, const A& val)
 
   data_.resize(0); //To avoid copying of elements
   data_.resize(ni_ * nj_, val);
+}
+
+
+template<class A>
+void Grid2D<A>::Assign(size_t ni, size_t nj, const A& val)
+{
+  ni_ = ni;
+  nj_ = nj;
+
+  data_.assign(ni_ * nj_, val);
 }
 
 

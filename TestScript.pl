@@ -374,7 +374,7 @@ my $threshold   =  1.0e-08;                                # Match if diff < thr
 #my $threshold   =  3.0e-05;                                # Match if diff < threshold
 
 my $showall     =  1;                                      # 1=yes, 0=no (write result for each file tested)
-my $debug       =  0;                                      # 1=yes, 0=no
+my $debug       =  1;                                      # 1=yes, 0=no
 
 #----------------------------------------------------------------
 #                       MAIN section
@@ -427,7 +427,7 @@ if (@cases) {     # When only a subset of the cases are wanted.
     }
     foreach my $case (@cases) {
         if ($case > 0 && $case <= @modeldir) {
-            print $modeldir[$case]." ";
+            print $modeldir[$case - 1]." ";
             $run_case[$case - 1] = 1;
         }
     }

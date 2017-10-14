@@ -67,10 +67,12 @@ ModelSettings::ModelSettings(void)
   area_from_surface_                   = "";
   area_from_segy_                      = "";
 
-  il0_in_                              = 189;
-  xl0_in_                              = 193;
-  utmx_in_                             = 181;
-  utmy_in_                             = 185;
+  il0_loc_                             =   9;
+  xl0_loc_                             =  21;
+  utmx_loc_                            =  73;
+  utmy_loc_                            =  77;
+  scalco_loc_                          =  71;
+  start_time_loc_                      = 109;
   utm_precision_                       = -10;
 
   inline_start_                        = 0;
@@ -126,6 +128,8 @@ ModelSettings::ModelSettings(void)
   output_depth_segy_                   = false;
   output_timeshift_segy_               = false;
   output_prenmo_time_segy_             = false;
+  output_segy_file_format_             = NRLib::TraceHeaderFormat(NRLib::TraceHeaderFormat::SEISWORKS);
+
 }
 
 ModelSettings::~ModelSettings(void)
