@@ -3,3 +3,7 @@ tests
 .idea
 
 *~
+
+3rd-party/boost
+
+geo2seis/cmake-build-debug

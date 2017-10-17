@@ -261,20 +261,27 @@ sub CheckSegYCubes( $$$$$$ )
                 $max_sample) = CompareGrids($executable, $file1,$file2,$debug);
 
             if ($exists1) {
-                if ($grid_defs_are_equal) {
-                    my $relative_diff = $max_diff/$max_amp;
-                    if ($relative_diff < $threshold) {
-                        push @messages, sprintf("   Grid : %43s  =>  MATCH\n",$name);
-                    }
-                    else {
-                        push @messages, sprintf("   Grid : %43s  =>  MaxAmplitude=%.6f  MaxDiff=%.6f  AvgDiff=%.6f  Bias=%.6f  Worst(Trace,Sample)=(%d,%d)\n",
-                                                $name,$max_amp,$max_diff,$avg_diff,$bias,$max_trace,$max_sample);
-                        $match = 0;
-                    }
+                if ($max_amp == -1) {
+                    push @messages, sprintf("   Grid : %43s  =>  ERROR: The Segy-comparison program failed (run from command line to see error message).\n",$name);
+                    $match = 0;
                 }
                 else {
-                    push @messages, sprintf("   Grid : %43s  =>  ERROR: Grid definitions are not equal\n",$name);
-                    $match = 0;
+
+                    if ($grid_defs_are_equal) {
+                        my $relative_diff = $max_diff/$max_amp;
+                        if ($relative_diff < $threshold) {
+                            push @messages, sprintf("   Grid : %43s  =>  MATCH\n",$name);
+                        }
+                        else {
+                            push @messages, sprintf("   Grid : %43s  =>  MaxAmplitude=%.6f  MaxDiff=%.6f  AvgDiff=%.6f  Bias=%.6f  Worst(Trace,Sample)=(%d,%d)\n",
+                                                    $name,$max_amp,$max_diff,$avg_diff,$bias,$max_trace,$max_sample);
+                            $match = 0;
+                        }
+                    }
+                    else {
+                        push @messages, sprintf("   Grid : %43s  =>  ERROR: Grid definitions are not equal\n",$name);
+                        $match = 0;
+                    }
                 }
             }
             else {
@@ -374,7 +381,7 @@ my $threshold   =  1.0e-08;                                # Match if diff < thr
 #my $threshold   =  3.0e-05;                                # Match if diff < threshold
 
 my $showall     =  1;                                      # 1=yes, 0=no (write result for each file tested)
-my $debug       =  1;                                      # 1=yes, 0=no
+my $debug       =  0;                                      # 1=yes, 0=no
 
 #----------------------------------------------------------------
 #                       MAIN section

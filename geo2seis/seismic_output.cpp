@@ -232,9 +232,9 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
   ebcdic_header.SetLine(6, line);
   ebcdic_header.SetLine(7, line2);
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nInitializing Segy file \'%s\' using format SEISWORKS\n",filename_out.c_str());
-
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nInitializing Segy file \'%s\' using format SEISWORKS (currently hard coded)\n",filename_out.c_str());
   NRLib::TraceHeaderFormat thf(NRLib::TraceHeaderFormat::SEISWORKS);
+
   segyout.Initialize(filename_out,
                      static_cast<float>(z0),
                      static_cast<size_t>(nz),

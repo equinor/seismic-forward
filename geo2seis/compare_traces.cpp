@@ -14,6 +14,65 @@
 
 #include <iostream>
 
+//-------------------------------------------------------------------
+void WriteDifferencesToFile(const std::string & filename,
+                            int                 grid_defs_are_equal,
+                            float               avg_diff,
+                            float               bias,
+                            float               max_amp,
+                            float               max_diff,
+                            int                 max_trace,
+                            int                 max_sample)
+//-------------------------------------------------------------------
+{
+  std::cout
+    << "equal_defs = " << grid_defs_are_equal << "\n"
+    << "max_amp    = " << max_amp    << "\n"
+    << "max_diff   = " << max_diff   << "\n"
+    << "avg_diff   = " << avg_diff   << "\n"
+    << "bias       = " << bias       << "\n"
+    << "max_trace  = " << max_trace  << "\n"
+    << "max_sample = " << max_sample << "\n"
+    << std::endl;
+
+  std::ofstream outfile;
+  NRLib::OpenWrite(outfile, filename);
+  outfile
+    << grid_defs_are_equal << " "
+    << max_amp             << " "
+    << max_diff            << " "
+    << avg_diff            << " "
+    << bias                << " "
+    << max_trace           << " "
+    << max_sample
+    << std::endl;
+
+  outfile.close();
+}
+
+//--------------------------
+void WriteComparisonFailed()
+//--------------------------
+{
+  std::string diff_file           = "segy_amplitude_difference.txt";
+  int         grid_defs_are_equal = -1;
+  float       avg_diff            = -1;
+  float       bias                = -1;
+  float       max_amp             = -1;
+  float       max_diff            = -1;
+  int         max_trace           = -1;
+  int         max_sample          = -1;
+
+  WriteDifferencesToFile(diff_file,
+                         grid_defs_are_equal,
+                         avg_diff,
+                         bias,
+                         max_amp,
+                         max_diff,
+                         max_trace,
+                         max_sample);
+}
+
 //--------------------------------------------------
 NRLib::SegY * ReadSegY(const std::string & filename)
 //--------------------------------------------------
@@ -22,6 +81,7 @@ NRLib::SegY * ReadSegY(const std::string & filename)
   if (!NRLib::FileExists(filename)) {
     std::cout << "Cannot find the SegY file : \'" << filename << "\'" << std::endl;
     std::cout << "Aborting ...\n" << std::endl;
+    WriteComparisonFailed();
     exit(1);
   }
 
@@ -31,17 +91,16 @@ NRLib::SegY * ReadSegY(const std::string & filename)
   try {
     // Because of a bug, a thf has to be specified when Segy is read. However,
     // all formats recognized by NRLib will be tried if SEISWORKS fails.
-
-    //NRLib::TraceHeaderFormat thf(NRLib::TraceHeaderFormat::SEISWORKS);
-
+    NRLib::TraceHeaderFormat thf(NRLib::TraceHeaderFormat::SEISWORKS);
     double z0 = 0.0; // Dummy value. We are comparing two equal volumes
-    grid = new NRLib::SegY(filename, z0);
+    grid = new NRLib::SegY(filename, z0, thf);
   }
 
   catch (NRLib::Exception & e) {
     std::cout << e.what() << std::endl;
     std::cout << "The file \'" << filename << "\' is probably not a SegY grid file" << std::endl;
     std::cout << "Aborting ...\n" << std::endl;
+    WriteComparisonFailed();
     exit(1);
   }
   return grid;
@@ -110,6 +169,7 @@ void CompareTraces(NRLib::SegY * segy_output,
   }
   catch (NRLib::Exception & e) {
     std::cout << "Could not find number of traces in answer volume!\nAborting ...\n" << std::endl;
+    WriteComparisonFailed();
     exit(1);
   }
 
@@ -120,10 +180,12 @@ void CompareTraces(NRLib::SegY * segy_output,
 
     if (trace_answer == NULL) {
       std::cout << "Answer trace number " << t << " is null!\nAborting ...\n" << std::endl;
+      WriteComparisonFailed();
       exit(1);
     }
     if (trace_output == NULL) {
       std::cout << "Output trace number " << t << " is null!\nAborting ...\n" << std::endl;
+      WriteComparisonFailed();
       exit(1);
     }
 
@@ -153,42 +215,6 @@ void CompareTraces(NRLib::SegY * segy_output,
   bias         /= n_tot;
 }
 
-//---------------------------------------------------------
-void WriteDifferencesToFile(const std::string & filename,
-                            float               avg_diff,
-                            float               bias,
-                            float               max_amp,
-                            float               max_diff,
-                            int                 max_trace,
-                            int                 max_sample)
-//---------------------------------------------------------
-{
-  std::cout
-    << "max_amp    = " << max_amp    << "\n"
-    << "max_diff   = " << max_diff   << "\n"
-    << "avg_diff   = " << avg_diff   << "\n"
-    << "bias       = " << bias       << "\n"
-    << "max_trace  = " << max_trace  << "\n"
-    << "max_sample = " << max_sample << "\n"
-    << std::endl;
-
-  int grid_defs_are_equal = 1; // Not implemented check for this yet ...
-
-  std::ofstream outfile;
-  NRLib::OpenWrite(outfile, filename);
-  outfile
-    << grid_defs_are_equal << " "
-    << max_amp             << " "
-    << max_diff            << " "
-    << avg_diff            << " "
-    << bias                << " "
-    << max_trace           << " "
-    << max_sample
-    << std::endl;
-
-  outfile.close();
-}
-
 //-----------------------------
 int main(int argc, char** argv)
 //-----------------------------
@@ -199,6 +225,7 @@ int main(int argc, char** argv)
   //
   if (argc != 3) {
     std::cout << "Usage: ./compare answer-file output-file\n" << std::endl;
+    WriteComparisonFailed();
     exit(1);
   }
   std::string file_answer = std::string(argv[1]);
@@ -228,16 +255,17 @@ int main(int argc, char** argv)
   catch (NRLib::Exception & e) {
     std::cout << e.what() << std::endl;
     std::cout << "Aborting ...\n" << std::endl;
+    WriteComparisonFailed();
     exit(1);
   }
 
   std::cout << "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY" << std::endl;
 
 
-  bool equal = CompareGridDefinitions(answer_geo, output_geo);
+  int grid_defs_are_equal = CompareGridDefinitions(answer_geo, output_geo);
 */
 
-  bool equal = true;
+  int grid_defs_are_equal = 1;
 
   //
   // Compare traces
@@ -265,6 +293,7 @@ int main(int argc, char** argv)
   //
   std::string diff_file = "segy_amplitude_difference.txt";
   WriteDifferencesToFile(diff_file,
+                         grid_defs_are_equal,
                          avg_diff,
                          bias,
                          max_amp,
