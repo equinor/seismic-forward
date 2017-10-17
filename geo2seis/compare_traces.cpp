@@ -177,6 +177,8 @@ void CompareTraces(NRLib::SegY * segy_output,
 
     NRLib::SegYTrace * trace_output = segy_output->GetNextTrace();
     NRLib::SegYTrace * trace_answer = segy_answer->GetNextTrace();
+    //NRLib::SegYTrace * trace_output = segy_output->getTrace(t);
+    //NRLib::SegYTrace * trace_answer = segy_answer->getTrace(t);
 
     if (trace_answer == NULL) {
       std::cout << "Answer trace number " << t << " is null!\nAborting ...\n" << std::endl;
@@ -240,6 +242,9 @@ int main(int argc, char** argv)
 
   std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
 
+  int grid_defs_are_equal = 1;
+
+
   //
   // Check that grids are equal
   // --------------------------
@@ -248,6 +253,7 @@ int main(int argc, char** argv)
   /*
   NRLib::SegyGeometry * answer_geo = NULL;
   NRLib::SegyGeometry * output_geo = NULL;
+
   try {
     answer_geo = segy_answer->FindGridGeometry();
     output_geo = segy_output->FindGridGeometry();
@@ -262,10 +268,8 @@ int main(int argc, char** argv)
   std::cout << "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY" << std::endl;
 
 
-  int grid_defs_are_equal = CompareGridDefinitions(answer_geo, output_geo);
+  grid_defs_are_equal = CompareGridDefinitions(answer_geo, output_geo);
 */
-
-  int grid_defs_are_equal = 1;
 
   //
   // Compare traces
@@ -278,14 +282,16 @@ int main(int argc, char** argv)
   int    max_trace  =  -1;
   int    max_sample =  -1;
 
-  CompareTraces(segy_output,
-                segy_answer,
-                avg_diff,
-                bias,
-                max_amp,
-                max_diff,
-                max_trace,
-                max_sample);
+  if (grid_defs_are_equal == 1) {
+    CompareTraces(segy_output,
+                  segy_answer,
+                  avg_diff,
+                  bias,
+                  max_amp,
+                  max_diff,
+                  max_trace,
+                  max_sample);
+  }
 
   //
   // Write info to file for Perl import
