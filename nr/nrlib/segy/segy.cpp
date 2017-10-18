@@ -744,8 +744,6 @@ SegY::ReadTrace(const Volume * volume,
 {
   TraceHeader traceHeader(trace_header_format_);
 
-  std::cout << "THF = " << trace_header_format_.GetFormatName() << std::endl;
-
   duplicateHeader = ReadHeader(traceHeader);
 
   if (writevalues == 1)

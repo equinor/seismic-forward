@@ -427,20 +427,14 @@ TraceHeader::TraceHeader(const TraceHeaderFormat& format)
 
 void TraceHeader::Read(NRLib::BigFile& in_file)
 {
-  std::cout << "READ HEADER" << std::endl;
-
   if (!(in_file.read(buffer_,240))) {
-    std::cout << "END OF FILE" << std::endl;
     // end of file
     throw EndOfFile();
   }
 
-
-
   if (buffer_[0] == 'Ã' && buffer_[1] == '@' && buffer_[2] == 'ñ'
       && buffer_[80] == 'Ã' && buffer_[160] == 'Ã')
   {
-    std::cout << "EBDIC HEADER ERRRO" << std::endl;
     // This is not a trace header, but the start of an EDBDIC-header.
     // Set file pointer at end of EDBDIC header.
     in_file.seek(2960, SEEK_CUR);
@@ -450,8 +444,6 @@ void TraceHeader::Read(NRLib::BigFile& in_file)
 
   ParseInt16BE(&buffer_[NS_LOC - 1], ns_);
   ParseInt16BE(&buffer_[DT_LOC - 1], dt_);
-
-  std::cout << "format_.GetUtmxLoc() = " << format_.GetUtmxLoc() << std::endl;
 
   if (format_.GetUtmxLoc() > 0) {
     int utmx_int;

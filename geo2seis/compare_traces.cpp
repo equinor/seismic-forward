@@ -26,6 +26,7 @@ void WriteDifferencesToFile(const std::string & filename,
 //-------------------------------------------------------------------
 {
   std::cout
+    << "\n"
     << "equal_defs = " << grid_defs_are_equal << "\n"
     << "max_amp    = " << max_amp    << "\n"
     << "max_diff   = " << max_diff   << "\n"
@@ -85,6 +86,8 @@ NRLib::SegY * ReadSegY(const std::string & filename)
     exit(1);
   }
 
+  std::cout << "IN READSEGY" << std::endl;
+
   // Read and create grid
 
   NRLib::SegY * grid = NULL;
@@ -95,7 +98,6 @@ NRLib::SegY * ReadSegY(const std::string & filename)
     double z0 = 0.0; // Dummy value. We are comparing two equal volumes
     grid = new NRLib::SegY(filename, z0, thf);
   }
-
   catch (NRLib::Exception & e) {
     std::cout << e.what() << std::endl;
     std::cout << "The file \'" << filename << "\' is probably not a SegY grid file" << std::endl;
@@ -106,43 +108,85 @@ NRLib::SegY * ReadSegY(const std::string & filename)
   return grid;
 }
 
-//--------------------------------------------------------
-bool CompareGridDefinitions(const NRLib::SegyGeometry * a,
-                            const NRLib::SegyGeometry * b)
-//--------------------------------------------------------
+
+
+//------------------------------------------------------------------
+NRLib::SegyGeometry * ReadSegyGeometry(const std::string & filename)
+//------------------------------------------------------------------
 {
-  std::cout << "MinIL()  : " << a->GetMinIL()  << "\n"
-            << "MaxIL()  : " << a->GetMaxIL()  << "\n"
-            << "MinXL()  : " << a->GetMinXL()  << "\n"
-            << "MaxXL()  : " << a->GetMaxXL()  << "\n"
-            << "ILStep() : " << a->GetILStep() << "\n"
-            << "XLStep() : " << a->GetXLStep() << "\n"
-            << "X0()     : " << a->GetX0()     << "\n"
-            << "Y0()     : " << a->GetY0()     << "\n"
-            << "Nx()     : " << a->GetNx()     << "\n"
-            << "Ny()     : " << a->GetNy()     << "\n"
-            << "Dx()     : " << a->GetDx()     << "\n"
-            << "Dy()     : " << a->GetDy()     << "\n"
-            << "lx()     : " << a->Getlx()     << "\n"
-            << "ly()     : " << a->Getly()     << "\n"
-            << "Angle()  : " << a->GetAngle()  << "\n"
+  NRLib::SegyGeometry * geometry = NULL;
+
+  try {
+    // Because of a bug, a thf has to be specified when Segy is read. However,
+    // all formats recognized by NRLib will be tried if SEISWORKS fails.
+    const NRLib::TraceHeaderFormat thf(NRLib::TraceHeaderFormat::SEISWORKS);
+    geometry = NRLib::SegY::FindGridGeometry(filename, &thf);
+  }
+  catch (NRLib::Exception & e) {
+    std::cout << e.what() << std::endl;
+    std::cout << "Aborting ...\n" << std::endl;
+    WriteComparisonFailed();
+    exit(1);
+  }
+  return geometry;
+}
+
+//-------------------------------------------------------
+bool CompareGridDefinitions(NRLib::SegyGeometry * output,
+                            NRLib::SegyGeometry * answer)
+//-------------------------------------------------------
+{
+  std::cout << "ANSWER-CUBE\n"
+            << "MinIL()  : " << answer->GetMinIL()  << "\n"
+            << "MaxIL()  : " << answer->GetMaxIL()  << "\n"
+            << "MinXL()  : " << answer->GetMinXL()  << "\n"
+            << "MaxXL()  : " << answer->GetMaxXL()  << "\n"
+            << "ILStep() : " << answer->GetILStep() << "\n"
+            << "XLStep() : " << answer->GetXLStep() << "\n"
+            << "X0()     : " << answer->GetX0()     << "\n"
+            << "Y0()     : " << answer->GetY0()     << "\n"
+            << "Nx()     : " << answer->GetNx()     << "\n"
+            << "Ny()     : " << answer->GetNy()     << "\n"
+            << "Dx()     : " << answer->GetDx()     << "\n"
+            << "Dy()     : " << answer->GetDy()     << "\n"
+            << "lx()     : " << answer->Getlx()     << "\n"
+            << "ly()     : " << answer->Getly()     << "\n"
+            << "Angle()  : " << answer->GetAngle()  << "\n"
             << std::endl;
 
-  if (a->GetMinIL()  == b->GetMinIL()  &&
-      a->GetMaxIL()  == b->GetMaxIL()  &&
-      a->GetMinXL()  == b->GetMinXL()  &&
-      a->GetMaxXL()  == b->GetMaxXL()  &&
-      a->GetILStep() == b->GetILStep() &&
-      a->GetXLStep() == b->GetXLStep() &&
-      a->GetX0()     == b->GetX0()     &&
-      a->GetY0()     == b->GetY0()     &&
-      a->GetNx()     == b->GetNx()     &&
-      a->GetNy()     == b->GetNy()     &&
-      a->GetDx()     == b->GetDx()     &&
-      a->GetDy()     == b->GetDy()     &&
-      a->Getlx()     == b->Getlx()     &&
-      a->Getly()     == b->Getly()     &&
-      a->GetAngle()  == b->GetAngle())
+  std::cout << "OUTPUT-CUBE\n"
+            << "MinIL()  : " << output->GetMinIL()  << "\n"
+            << "MaxIL()  : " << output->GetMaxIL()  << "\n"
+            << "MinXL()  : " << output->GetMinXL()  << "\n"
+            << "MaxXL()  : " << output->GetMaxXL()  << "\n"
+            << "ILStep() : " << output->GetILStep() << "\n"
+            << "XLStep() : " << output->GetXLStep() << "\n"
+            << "X0()     : " << output->GetX0()     << "\n"
+            << "Y0()     : " << output->GetY0()     << "\n"
+            << "Nx()     : " << output->GetNx()     << "\n"
+            << "Ny()     : " << output->GetNy()     << "\n"
+            << "Dx()     : " << output->GetDx()     << "\n"
+            << "Dy()     : " << output->GetDy()     << "\n"
+            << "lx()     : " << output->Getlx()     << "\n"
+            << "ly()     : " << output->Getly()     << "\n"
+            << "Angle()  : " << output->GetAngle()  << "\n"
+            << std::endl;
+
+  if (answer->GetMinIL()  == output->GetMinIL()  &&
+      answer->GetMaxIL()  == output->GetMaxIL()  &&
+      answer->GetMinXL()  == output->GetMinXL()  &&
+      answer->GetMaxXL()  == output->GetMaxXL()  &&
+      answer->GetILStep() == output->GetILStep() &&
+      answer->GetXLStep() == output->GetXLStep() &&
+      answer->GetX0()     == output->GetX0()     &&
+      answer->GetY0()     == output->GetY0()     &&
+      answer->GetNx()     == output->GetNx()     &&
+      answer->GetNy()     == output->GetNy()     &&
+      answer->GetDx()     == output->GetDx()     &&
+      answer->GetDy()     == output->GetDy()     &&
+      answer->Getlx()     == output->Getlx()     &&
+      answer->Getly()     == output->Getly()     &&
+      answer->GetAngle()  == output->GetAngle())
     return true;
   else
     return false;
@@ -165,7 +209,7 @@ void CompareTraces(NRLib::SegY * segy_output,
 
   try {
     n_traces = segy_answer->GetNTraces();
-    std::cout << "n_traces = " << n_traces << std::endl;
+    std::cout << "Number of traces = " << n_traces << std::endl;
   }
   catch (NRLib::Exception & e) {
     std::cout << "Could not find number of traces in answer volume!\nAborting ...\n" << std::endl;
@@ -177,24 +221,23 @@ void CompareTraces(NRLib::SegY * segy_output,
 
     NRLib::SegYTrace * trace_output = segy_output->GetNextTrace();
     NRLib::SegYTrace * trace_answer = segy_answer->GetNextTrace();
-    //NRLib::SegYTrace * trace_output = segy_output->getTrace(t);
-    //NRLib::SegYTrace * trace_answer = segy_answer->getTrace(t);
 
     if (trace_answer == NULL) {
-      std::cout << "Answer trace number " << t << " is null!\nAborting ...\n" << std::endl;
+      std::cout << "\nAnswer trace number " << t << " is null!\nAborting ...\n" << std::endl;
       WriteComparisonFailed();
       exit(1);
     }
     if (trace_output == NULL) {
-      std::cout << "Output trace number " << t << " is null!\nAborting ...\n" << std::endl;
+      std::cout << "\nOutput trace number " << t << " is null!\nAborting ...\n" << std::endl;
       WriteComparisonFailed();
       exit(1);
     }
 
-    std::cout << trace_answer->GetTrace().size() << std::endl;
+    if (t==0) {
+      std::cout << "Number of samples = " << trace_answer->GetTrace().size() << std::endl;
+    }
 
     for (size_t i = 0 ; i < trace_answer->GetTrace().size() ; ++i) {
-
       float amp_output = std::abs(trace_output->GetValue(i));   // Abs value to avoid seismic amplitudes to cancel
       float amp_answer = std::abs(trace_answer->GetValue(i));   // Abs value to avoid seismic amplitudes to cancel
       float abs_diff   = std::abs(amp_output - amp_answer);
@@ -240,36 +283,15 @@ int main(int argc, char** argv)
   NRLib::SegY * segy_output = ReadSegY(file_output);
   NRLib::SegY * segy_answer = ReadSegY(file_answer);
 
-  std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-
-  int grid_defs_are_equal = 1;
-
-
   //
   // Check that grids are equal
   // --------------------------
   //
+  NRLib::SegyGeometry * geometry_output = ReadSegyGeometry(file_output);
+  NRLib::SegyGeometry * geometry_answer = ReadSegyGeometry(file_answer);
 
-  /*
-  NRLib::SegyGeometry * answer_geo = NULL;
-  NRLib::SegyGeometry * output_geo = NULL;
-
-  try {
-    answer_geo = segy_answer->FindGridGeometry();
-    output_geo = segy_output->FindGridGeometry();
-  }
-  catch (NRLib::Exception & e) {
-    std::cout << e.what() << std::endl;
-    std::cout << "Aborting ...\n" << std::endl;
-    WriteComparisonFailed();
-    exit(1);
-  }
-
-  std::cout << "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY" << std::endl;
-
-
-  grid_defs_are_equal = CompareGridDefinitions(answer_geo, output_geo);
-*/
+  int grid_defs_are_equal = CompareGridDefinitions(geometry_output,
+                                                   geometry_answer);
 
   //
   // Compare traces
