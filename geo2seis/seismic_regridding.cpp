@@ -8,6 +8,7 @@
 #include "tbb/compat/thread"
 
 #include "seismic_regridding.hpp"
+#include "tasklist.hpp"
 
 //#include <fstream>
 
@@ -268,8 +269,10 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   if (n > 0) {
     if (rem_neg_delta)
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found and removed   : %5d", n);
-    else
+    else {
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found               : %5d", n);
+      TaskList::AddTask("Check section 3: Negative dz values found when building z-grid");
+    }
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value                    : %5.2f (layer %d starting from 0)\n", max_neg, max_k);
   }
   else {
@@ -280,7 +283,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   if (n > 0 && debug_neg_dz) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExporting points where there are negative dz values (z-value is the conflicting value)!\n");
     std::fstream fout;
-    NRLib::OpenWrite(fout, "negative_dz_points.rmsinternal");
+    NRLib::OpenWrite(fout, "negative_dz_points.rxat");
     fout << "Float Negative dz" << std::endl;
     for (size_t i = 0; i < negative_dz_pts.size(); i++) {
       fout << std::fixed
@@ -1798,7 +1801,3 @@ void SeismicRegridding::WriteResampledParameter(GenResamplParam * params,
     }
   }
 }
-
-
-
-

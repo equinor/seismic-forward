@@ -126,6 +126,7 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   ParseOutputGrid(root, errTxt);
   ParseElasticParam(root, errTxt);
   ParseWavelet(root, errTxt);
+  ParseProjectSettings(root, errTxt);
 
   if (ParseWhiteNoise(root, errTxt)) {
     modelSettings_->SetWhiteNoise();
@@ -192,7 +193,6 @@ bool XmlModelFile::ParseProjectSettings(TiXmlNode   * node,
   double n_threads;
   if (ParseValue(root, "max-threads", n_threads, errTxt)) {
     modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
-    TaskList::AddTask("Keyword <max-threads> has been made a sub-element of section <project-settings>. Current placement is deprecated.");
   }
 
   std::string level;
