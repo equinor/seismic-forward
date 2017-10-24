@@ -365,8 +365,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   model_settings->SetZWaveletBot(z_bot_wavelet);
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nWavelet time length is                    : %8.2f\n", twt_wavelet);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse top surface lift due to wavelet   : %8.2f", z_top_wavelet);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse base surface lift due to wavelet  : %8.2f\n", z_bot_wavelet);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse top surface lift due to wavelet   : %8.2f"  , z_top_wavelet);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse base surface drop due to wavelet  : %8.2f\n", z_bot_wavelet);
 
   topeclipse.Add(-1 * z_top_wavelet); // add one wavelet length to bot and subtract from top
   boteclipse.Add(     z_bot_wavelet);
