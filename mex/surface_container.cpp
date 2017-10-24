@@ -8,6 +8,9 @@
 #include <seismic_regridding.hpp>
 #include <seismic_forward.hpp>
 
+#ifdef WITH_OMP
+#include <omp.h>
+#endif
 
 SurfaceContainer::SurfaceContainer(std::string path) {
     _vpgrid = NULL;
@@ -26,8 +29,19 @@ SurfaceContainer::SurfaceContainer(std::string path) {
     } else {
         mexPrintf("Regridding started. This may take some time...!\n");
         _model_settings = modelFile.getModelSettings();
+
+        int n_threads       = static_cast<int>(_model_settings->GetMaxThreads());
+        int n_threads_avail = 1;
+#ifdef WITH_OMP
+        n_threads_avail = omp_get_num_procs();
+#endif
+        if (n_threads > n_threads_avail)
+          n_threads = n_threads_avail;
+
         _seismic_parameters = new SeismicParameters(_model_settings);
-        SeismicRegridding::MakeSeismicRegridding(* _seismic_parameters);
+        SeismicRegridding::MakeSeismicRegridding(* _seismic_parameters,
+                                                 _model_settings,
+                                                 n_threads);
         //SeismicForward::seismicForward(* _seismic_parameters);
         mexPrintf("Regridding successful!\n");
     }
@@ -51,7 +65,7 @@ mxArray * SurfaceContainer::createArrayFromGrid(NRLib::RegularSurface<double> & 
 
     const mwSize dims[2] = {nx, ny};
     mxArray * array  = mxCreateNumericArray((mwSize) 2, dims, mxDOUBLE_CLASS, mxREAL);
-    
+
     mexMakeArrayPersistent(array);
     return array;
 }
@@ -251,4 +265,3 @@ void mexFunction(int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[]) {
     }
 
 }
-
