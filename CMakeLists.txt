@@ -10,7 +10,7 @@ option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." ON)
 # Deactivated by PAAL 2017.10.25 because of problems to get this to work with new boost
 #
 #option( BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
-enable_testing()
+#enable_testing()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
