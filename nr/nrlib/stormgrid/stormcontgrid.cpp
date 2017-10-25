@@ -181,8 +181,8 @@ void StormContGrid::WriteToFile(const std::string& filename, const std::string& 
   std::ofstream file;
   OpenWrite(file, filename, std::ios::out | std::ios::binary);
 
-  //file.precision(14);
-  file.precision(4);
+  file.precision(14);
+  //file.precision(4);
 
   // Header
   if (predefinedHeader == "" && plainAscii==false) {

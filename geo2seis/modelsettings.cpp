@@ -19,6 +19,7 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "nrlib/math/mathutility.hpp"
 #include "nrlib/iotools/logkit.hpp"
 
 #include "modelsettings.hpp"
@@ -294,7 +295,7 @@ void ModelSettings::PrintSettings(void)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  y-start                                 : %10.1f\n", GetY0());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  x-length                                : %10.1f\n", GetLx());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  y-length                                : %10.1f\n", GetLy());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  angle                                   : %10.1f\n", GetAngle());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  angle                                   : %10.3f\n", NRLib::RadToDeg(GetAngle()));
   }
   else if (GetAreaFromSurface() != "") {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Output area is taken from surface:\n");

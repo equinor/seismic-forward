@@ -234,6 +234,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
           }
           double x, y, z;
           zgrid.FindCenterOfCell(i, j, kk, x, y, z);
+
           // Logging negative values
           std::vector<double> neg(5);
           neg[0] = static_cast<double>(k);
@@ -290,8 +291,8 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
            << std::setprecision(2)
            << std::setw(12) << negative_dz_pts[i][1]
            << std::setw(12) << negative_dz_pts[i][2]
-           << std::setw(8) << negative_dz_pts[i][3]
-           << std::setw(8) << negative_dz_pts[i][4]
+           << std::setw(8)  << negative_dz_pts[i][3]
+           << std::setw(8)  << negative_dz_pts[i][4]
            << std::endl;
     }
     fout.close();
