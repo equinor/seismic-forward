@@ -24,4 +24,4 @@ then
 fi
 
 echo "Running cmake ../Geo2Seis ${matlab} ${debug}"
-cmake ../Geo2Seis ${matlab} ${debug}
+cmake -Wno-dev ../Geo2Seis ${matlab} ${debug}
