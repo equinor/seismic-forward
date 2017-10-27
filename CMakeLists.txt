@@ -27,7 +27,9 @@ include(cmake/AddSource.cmake)
 #
 # Boost things added by PAAL
 #
+set(BOOST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/boost_1_65_1")
 find_package(Boost REQUIRED COMPONENTS system filesystem)
+# Not sure if these are needed
 #include_directories(${Boost_INCLUDE_DIRS})
 #link_directories(${Boost_LIBRARY_DIRS})
 
