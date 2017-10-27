@@ -210,7 +210,8 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
       geometry.FindLayerSurfaceCornerpoint(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, false);
     }
     else {
-      geometry.FindLayerSurface(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, false);
+   // geometry.FindLayerSurface(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
+      geometry.FindLayerSurface(values[k     ], k + top_k     , 0, dx, dy, xmin, ymin, angle, false);
     }
     SetGridLayerFromSurface(zgrid, values[k], static_cast<size_t>(k));
   }

@@ -263,6 +263,7 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nTop layer of Eclipse grid                 : %4d"  , top_k);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nBase layer of Eclipse grid                : %4d\n", bot_k);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nNumber of grid cells needed in z-grid     : %4d\n",bot_k + 2 - top_k);
 
   seismic_geometry->setZReflectorCount(static_cast<size_t>(bot_k + 2 - top_k));
 
