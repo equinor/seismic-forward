@@ -27,6 +27,7 @@ fi
 echo "Compiling compare_traces.cpp"
 g++ -c -O2 \
     -I${ROOT_DIR} \
+    -I${ROOT_DIR}/3rd-party/boost_1_65_1 \
     -I${ROOT_DIR}/nr \
     ${ROOT_DIR}/geo2seis/compare_traces.cpp -o ${OBJ_DIR}/geo2seis/compare_traces.o
 
