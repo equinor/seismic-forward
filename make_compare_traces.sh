@@ -1,12 +1,10 @@
 #!/bin/sh
 
 ROOT_DIR=../Geo2Seis
+BOOST_DIR=3rd-party/boost_1_65_1
 CUR_DIR=`basename "$PWD"`
 OBJ_DIR=CMakeFiles/geo2seis_lib.dir
-EXE=compare_traces
-
-Boost_INCLUDE_DIR=/usr/include
-Boost_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu
+EXE=comparxse_traces
 
 if [ ${CUR_DIR} = "Geo2Seis" ]; then
     echo "The test program cannot be compiled in the source directory. Please,"
@@ -27,16 +25,16 @@ fi
 echo "Compiling compare_traces.cpp"
 g++ -c -O2 \
     -I${ROOT_DIR} \
-    -I${ROOT_DIR}/3rd-party/boost_1_65_1 \
     -I${ROOT_DIR}/nr \
+    -I${ROOT_DIR}/${BOOST_DIR} \
     ${ROOT_DIR}/geo2seis/compare_traces.cpp -o ${OBJ_DIR}/geo2seis/compare_traces.o
 
 if  [ -e ${OBJ_DIR}/geo2seis/compare_traces.o ] ; then
   echo "Linking compare_traces"
   g++ ${OBJ_DIR}/geo2seis/compare_traces.o              \
-      ${OBJ_DIR}/3rd-party/boost_1_65_1/libs/filesystem/src/operations.cpp.o  \
-      ${OBJ_DIR}/3rd-party/boost_1_65_1/libs/filesystem/src/path.cpp.o        \
-      ${OBJ_DIR}/3rd-party/boost_1_65_1/libs/system/src/error_code.cpp.o      \
+      ${OBJ_DIR}/${BOOST_DIR}/libs/filesystem/src/operations.cpp.o \
+      ${OBJ_DIR}/${BOOST_DIR}/libs/filesystem/src/path.cpp.o       \
+      ${OBJ_DIR}/${BOOST_DIR}/libs/system/src/error_code.cpp.o     \
       ${OBJ_DIR}/nr/nrlib/iotools/fileio.cpp.o          \
       ${OBJ_DIR}/nr/nrlib/iotools/logstream.cpp.o       \
       ${OBJ_DIR}/nr/nrlib/iotools/bigfile.cpp.o         \
