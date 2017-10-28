@@ -9,8 +9,8 @@ option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." ON)
 #
 # Deactivated by PAAL 2017.10.25 because of problems to get this to work with new boost
 #
-#option( BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
-#enable_testing()
+option( BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
+enable_testing()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -28,7 +28,8 @@ include(cmake/AddSource.cmake)
 # Boost things added by PAAL
 #
 set(BOOST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/boost_1_65_1")
-find_package(Boost 1.65.1 REQUIRED COMPONENTS system filesystem)
+#find_package(Boost 1.65.1 REQUIRED COMPONENTS system filesystem)
+find_package(Boost 1.65.1 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 #link_directories(${Boost_LIBRARY_DIRS})
 
@@ -136,4 +137,3 @@ endif(BUILD_MATLAB_MEX)
 if(BUILD_UNIT_TESTS)
 add_subdirectory(tests)
 endif(BUILD_UNIT_TESTS)
-
