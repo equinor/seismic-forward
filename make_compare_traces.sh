@@ -33,6 +33,9 @@ g++ -c -O2 \
 if  [ -e ${OBJ_DIR}/geo2seis/compare_traces.o ] ; then
   echo "Linking compare_traces"
   g++ ${OBJ_DIR}/geo2seis/compare_traces.o              \
+      ${OBJ_DIR}/3rd-party/boost_1_65_1/libs/filesystem/src/operations.cpp.o  \
+      ${OBJ_DIR}/3rd-party/boost_1_65_1/libs/filesystem/src/path.cpp.o        \
+      ${OBJ_DIR}/3rd-party/boost_1_65_1/libs/system/src/error_code.cpp.o      \
       ${OBJ_DIR}/nr/nrlib/iotools/fileio.cpp.o          \
       ${OBJ_DIR}/nr/nrlib/iotools/logstream.cpp.o       \
       ${OBJ_DIR}/nr/nrlib/iotools/bigfile.cpp.o         \
@@ -47,7 +50,5 @@ if  [ -e ${OBJ_DIR}/geo2seis/compare_traces.o ] ; then
       ${OBJ_DIR}/nr/nrlib/volume/volume.cpp.o           \
       ${OBJ_DIR}/nr/nrlib/surface/surfaceio.cpp.o       \
       ${OBJ_DIR}/nr/nrlib/math/constants.cpp.o          \
-      -lboost_filesystem                                \
-      -lboost_system                                    \
       -o ${EXE}
 fi
