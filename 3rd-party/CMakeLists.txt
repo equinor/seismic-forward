@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 2.6)
 
 set(C_FILES
+    boost_1_65_1/libs/filesystem/src/operations.cpp
+    boost_1_65_1/libs/filesystem/src/path.cpp
+    boost_1_65_1/libs/filesystem/src/portability.cpp
+    boost_1_65_1/libs/system/src/error_code.cpp
+
     flens/aux_complex.cc
     flens/aux_malloc.cc
     flens/blas.cc

@@ -28,9 +28,8 @@ include(cmake/AddSource.cmake)
 # Boost things added by PAAL
 #
 set(BOOST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/boost_1_65_1")
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-# Not sure if these are needed
-#include_directories(${Boost_INCLUDE_DIRS})
+find_package(Boost 1.65.1 REQUIRED COMPONENTS system filesystem)
+include_directories(${Boost_INCLUDE_DIRS})
 #link_directories(${Boost_LIBRARY_DIRS})
 
 option( USE_INTEL_STUDIO "Use libraries from Intel Studio" ON )
@@ -125,7 +124,10 @@ endforeach()
 
 add_executable(seismic_forward geo2seis/main.cpp)
 
-target_link_libraries(seismic_forward geo2seis_lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
+#message(STATUS "Boost libraries to be linked with: ${Boost_LIBRARIES}")
+
+#target_link_libraries(seismic_forward geo2seis_lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(seismic_forward geo2seis_lib ${MATH_LIBRARIES})
 
 if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)
@@ -134,3 +136,4 @@ endif(BUILD_MATLAB_MEX)
 if(BUILD_UNIT_TESTS)
 add_subdirectory(tests)
 endif(BUILD_UNIT_TESTS)
+
