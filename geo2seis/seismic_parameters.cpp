@@ -281,8 +281,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
    }
   else {
-    eclipse_geometry.FindLayerSurface(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, 0);
-    eclipse_geometry.FindLayerSurface(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, 0);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
   }
 

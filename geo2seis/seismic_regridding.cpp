@@ -187,19 +187,25 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   else
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid.\n");
 
-  std::vector<NRLib::Grid2D<double> > values(nk);
+  std::vector<NRLib::Grid2D<double> > layer(nk);
   for (size_t k = 0 ; k < nk ; k++) {
-    values[k] = NRLib::Grid2D<double>(ni, nj, 0.0);
+    layer[k] = NRLib::Grid2D<double>(ni, nj, 0.0);
   }
 
+  //
+  // Fill base layer
+  //
   if (use_corner_point) {
-    geometry.FindLayerSurfaceCornerpoint(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
+    geometry.FindLayerSurfaceCornerpoint(layer[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
   }
   else {
-    geometry.FindLayerSurface(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
+    geometry.FindLayer(layer[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
   }
-  SetGridLayerFromSurface(zgrid, values[nk - 1], static_cast<size_t>(nk - 1));
+  SetGridLayer(zgrid, layer[nk - 1], static_cast<size_t>(nk - 1));
 
+  //
+  // Fill rest of the layers
+  //
 #ifdef WITH_OMP
   int chunk_size = 1;
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
@@ -207,13 +213,17 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
 
   for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
     if (use_corner_point) {
-      geometry.FindLayerSurfaceCornerpoint(values[k], k + top_k, 0, dx, dy, xmin, ymin, angle, false);
+      geometry.FindLayerSurfaceCornerpoint(layer[k], k + top_k, 0, dx, dy, xmin, ymin, angle, false);
     }
     else {
-   // geometry.FindLayerSurface(values[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
-      geometry.FindLayerSurface(values[k     ], k + top_k     , 0, dx, dy, xmin, ymin, angle, false);
+   // geometry.FindLayer(layer[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
+      geometry.FindLayer(layer[k     ], k + top_k     , 0, dx, dy, xmin, ymin, angle, false);
+
+      //XXXX stop here
+      exit(1);
+
     }
-    SetGridLayerFromSurface(zgrid, values[k], static_cast<size_t>(k));
+    SetGridLayer(zgrid, layer[k], static_cast<size_t>(k));
   }
 
   std::vector<std::vector<double> > negative_dz_pts;
@@ -241,7 +251,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
           neg[0] = static_cast<double>(k);
           neg[1] = x;
           neg[2] = y;
-          neg[3] = values[kk](i, j);
+          neg[3] = layer[kk](i, j);
           neg[4] = z2 - z1;
           neg_dz_pts.push_back(neg);
         }
@@ -304,8 +314,8 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
     NRLib::RegularSurfaceRotated<double> s3(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), ni, nj, zgrid.GetAngle(), 0.00);
     for (size_t i = 0; i < ni; i++) {
       for (size_t j = 0; j < nj; j++) {
-        s1(i, j) = values[max_k    ](i, j);
-        s2(i, j) = values[max_k + 1](i, j);
+        s1(i, j) = layer[max_k    ](i, j);
+        s2(i, j) = layer[max_k + 1](i, j);
         s3(i, j) = s2(i, j) - s1(i, j);
       }
     }
@@ -316,11 +326,11 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   }
 }
 
-//-----------------------------------------------------------------------------------
-void SeismicRegridding::SetGridLayerFromSurface(NRLib::StormContGrid        & zgrid,
-                                                const NRLib::Grid2D<double> & values,
-                                                size_t                        k)
-//-----------------------------------------------------------------------------------
+//------------------------------------------------------------------------
+void SeismicRegridding::SetGridLayer(NRLib::StormContGrid        & zgrid,
+                                     const NRLib::Grid2D<double> & values,
+                                     size_t                        k)
+//------------------------------------------------------------------------
 {
   for (size_t i = 0; i < zgrid.GetNI() ; i++) {
     for (size_t j = 0; j < zgrid.GetNJ() ; j++) {
