@@ -1208,17 +1208,20 @@ void EclipseGeometry::BilinearFillInZValuesInArea(NRLib::Grid2D<double>         
 
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%d %d num_int=%d\n", it1, it2, nu_of_intersec);
 
-      if (nu_of_intersec >= 1) {
+      if (nu_of_intersec > 0) {
 
         NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "z(%d,%d) =  %7.2f\n",it1, it2, intersec1.z);
 
+        double count = static_cast<double>(is_set(it1,it2));
+
         if (is_set(it1,it2)) {
-          z_surface(it1,it2) += intersec1.z;
-          z_surface(it1,it2)  = z_surface(it1,it2)/2;
+          z_surface(it1, it2) *= count/(count + 1.0);
+          z_surface(it1, it2) += intersec1.z/(count + 1.0);
+          is_set(it1,it2)++;
         }
         else {
           z_surface(it1,it2) = intersec1.z;
-          is_set(it1,it2)    = true;
+          is_set(it1,it2)    = 1;
         }
       }
     }
@@ -1308,50 +1311,37 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
     for (size_t it2 = m1 ; it2 < m2 ; it2++) {
 
       double count = static_cast<double>(is_set(it1,it2));
+      double w1    = count/(count + 1.0);
+      double w2    =   1.0/(count + 1.0);
 
       point_xy.x = dx/2 + it1*dx;
       point_xy.y = dy/2 + it2*dy;
 
-      NRLib::Line line_xy(point_xy,(point_xy+z_dir),false,false);
+      NRLib::Line line_xy(point_xy, point_xy + z_dir, false, false);
 
       if (triangle1.FindIntersection(line_xy, intersec, true)) {
-        if (is_set(it1,it2) > 0 ) {
-
-          z_surface(it1, it2) *= count/(count + 1.0);
-          z_surface(it1, it2) += intersec.z/(count + 1.0);
+        if (is_set(it1,it2) > 0) {
+          z_surface(it1, it2) *= w1;
+          z_surface(it1, it2) += w2*intersec.z;
           is_set(it1,it2)++;
-          //z_surface(it1,it2)=z_surface(it1,it2)/2;
-
-          NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  A: z(%d,%d) =  %7.2f\n",it1, it2, z_surface(it1, it2));
-
         }
-       // else if(!is_set(it1,it2)){
         else {
           z_surface(it1,it2) = intersec.z;
           is_set(it1,it2)    = 1;
-
-          NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  B: z(%d,%d) =  %7.2f\n",it1, it2, z_surface(it1, it2));
-
         }
       }
       else if (two_triangles) {
-        if (triangle2.FindIntersection(line_xy,intersec,true)) {
+        if (triangle2.FindIntersection(line_xy, intersec, true)) {
           if (is_set(it1,it2) > 0) {
-            z_surface(it1,it2) *= count/(count + 1.0);
-            z_surface(it1,it2) += intersec.z/(count + 1.0);
+            z_surface(it1,it2) *= w1;
+            z_surface(it1,it2) += w2*intersec.z;
             is_set(it1,it2)++;
-            //z_surface(it1,it2)+=intersec.z;
-            //z_surface(it1,it2)=z_surface(it1,it2)/2;
-
-            NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  C: z(%d,%d) =  %7.2f\n",it1, it2, z_surface(it1, it2));
-
           }
-          //else if(!is_set(it1,it2)){
           else {
             z_surface(it1,it2) = intersec.z;
             is_set(it1,it2)    = 1;
 
-            NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  D: z(%d,%d) =  %7.2f\n",it1, it2, z_surface(it1, it2));
+            NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "z(%d,%d) = %7.2f\n",it1, it2, z_surface(it1, it2));
 
           }
         }
@@ -1565,10 +1555,10 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_surface,
           NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 2:  %7.2f, %7.2f, %7.2f\n", k, Crot[2].x, Crot[2].y, Crot[2].z);
           NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 3:  %7.2f, %7.2f, %7.2f\n", k, Crot[3].x, Crot[3].y, Crot[3].z);
 
-          //if (bilinear_else_triangles)
+          // if (bilinear_else_triangles)
             BilinearFillInZValuesInArea(z_surface, is_set, Crot, dx, dy);
-          //else
-          //  TriangularFillInZValuesInArea(z_surface, is_set, Crot, dx, dy);
+            //   else
+            ///  TriangularFillInZValuesInArea(z_surface, is_set, Crot, dx, dy);
         }
       }
     }
