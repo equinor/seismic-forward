@@ -139,6 +139,13 @@ public:
                                    double angle,
                                    bool bilinear_else_triangles) const;
 
+  void TranslateAndRotate(NRLib::Point       & corners,
+                          const NRLib::Point & C,
+                          const double       & x0,
+                          const double       & y0,
+                          const double       & cosA,
+                          const double       & sinA) const;
+
   void FindTopAndBotValuesOfGrid(std::vector<NRLib::Point>& top_points,
                                  std::vector<NRLib::Point>& bot_points) const;
 
