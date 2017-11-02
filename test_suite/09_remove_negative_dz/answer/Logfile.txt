@@ -1,0 +1,245 @@
+
+****************************************************************************************************
+*****                                                                                          *****
+*****                      Seismic Forward Modeling / Geo2Seis                                 *****
+*****                                 version 4.2 beta                                         *****
+*****                  Copyright (c) 2017 by Norsk Regnesentral / Statoil                      *****
+*****                                                                                          *****
+****************************************************************************************************
+
+Threads in use                            :     8 /   8
+
+****************************************************************************************************
+*****                                      Model settings                                      *****
+****************************************************************************************************
+
+Max threads                               :        100
+Traces in memory                          :    1000000
+
+Log level                                 :          7
+
+Prefix                                    :           
+Suffix                                    :           
+
+Seed                                      : 1509644624
+
+Seismic data type                         :         PP
+NMO correction                            :        yes
+Offset without stretch                    :         no
+Remove negative thicknesses               :        yes
+Minimum thickness for Eclipse grid cells  :        0.1
+Use corner-point interpolation            :         no
+Use default underburden                   :         no
+Resample parameters to Segy with interpol.:         no
+Add white noise                           :         no
+  Standard deviation                      :        1.0
+
+NMO correction settings
+  Sea floor depth                         :      300.0
+  Vp velocity in water                    :     1500.0
+  Offsets                                 :   0.0 -> 1500.0 -> 3000.0
+
+Wavelet
+  Ricker with peak frequency              :       25.0
+  Scale                                   :        1.0
+
+Parameters names:
+  Vp                                      :    VP_DATA
+  Vs                                      :    VS_DATA
+  Rho                                     :  DENS_DATA
+
+Default values for overburden, reservoir and underburden: 
+  Vp                                      : 3200.0 -> 3200.0 -> 4000.0
+  Vs                                      : 1600.0 -> 1500.0 -> 2200.0
+  Rho                                     : 2500.0 -> 2550.0 -> 2500.0
+
+Extra parameters                          :         no
+
+Output area is specified in model file:
+  x-start                                 :   454930.4
+  y-start                                 :  6805681.8
+  x-length                                :      751.4
+  y-length                                :     2094.5
+  angle                                   :     60.300
+
+Cell size:
+  dx                                      :       25.0
+  dy                                      :       25.0
+  dt                                      :        4.0
+  dz                                      :        5.0
+
+Top time value                            :     2200.0
+Specified time window:
+  Top:                                    :     2420.0
+  Base:                                   :     3040.0
+
+Specified depth window:
+  Top:                                    :     2400.0
+  Base:                                   :     3700.0
+
+Seismic data output:
+  Time                                    :         no
+  Time shift                              :         no
+  Depth                                   :         no
+Seismic stack time/depth in SEGY format:
+  Time                                    :         no
+  Time shift                              :         no
+  Depth                                   :         no
+Seismic stack time/depth in STORM format:
+  Time                                    :         no
+  Time shift                              :         no
+  Depth                                   :         no
+Elastic parameters output:
+  Time                                    :         no
+  Depth                                   :         no
+Extra parameters output:
+  Time                                    :         no
+  Depth                                   :         no
+Other output:
+  TWT                                     :         no
+  TWT offset                              :         no
+  Vrms                                    :         no
+  Vp                                      :         no
+  Reflections                             :         no
+  Time surfaces                           :         no
+  Depth surfaces                          :         no
+  Time                                    :        yes
+  Time pre NMO                            :         no
+  Time shift                              :         no
+  Depth                                   :        yes
+
+****************************************************************************************************
+*****                                     Setting up grid                                      *****
+****************************************************************************************************
+
+Making Ricker wavelet with peak frequency 25.0 Hz
+
+Reading Eclipse grid from file '../input/dztest.grdecl'
+
+                                     x            y           lx         ly     angle
+-------------------------------------------------------------------------------------
+Area from model file         454930.35   6805681.80       751.44    2094.51     60.30
+
+Setting top and base time surfaces to     :  2200.00
+
+Top layer of Eclipse grid                 :    2
+Base layer of Eclipse grid                :  274
+
+Number of layers needed in z-grid         :  274
+
+Finding Eclipse top and base surfaces (not corner point interpolation).
+
+Eclipse grid minimum value                :  2338.10
+Eclipse grid maximum value                :  4507.89
+
+Using PP velocity                         :  3200.00
+
+Calculating Eclipse top time surface
+
+Wavelet time length is                    :    40.00
+
+Eclipse top surface lift due to wavelet   :    64.00
+Eclipse base surface drop due to wavelet  :    80.00
+
+Grid minimum value                        :  2274.10
+Grid maximum value                        :  4587.89
+
+Making regular grids:
+  z, TWT                 30 x   83 x  274 :     682260
+  Vp, Vs, Rho            30 x   83 x  275 :     684750
+
+
+****************************************************************************************************
+*****                                    Find depth values                                     *****
+****************************************************************************************************
+
+Extracting z-values from Eclipse grid.
+
+Number of negative dz found and removed   : 22651
+Largest negative value                    : -439.50
+
+Largest negative value location (x,y,z)   : (453190.21, 6806832.95, 4107.77)
+
+Largest negative value location (i,j,k)   : (5, 82, 217)
+
+Exporting points where there are negative dz values (z-value is the conflicting value)!
+
+****************************************************************************************************
+*****                                   Fill parameter grids                                   *****
+****************************************************************************************************
+
+Filling inactive cells in Eclipse grid above and in reservoir.
+
+Total number of grid cells: 110 x 6 x 275 = 181500
+
+OB1 = Using default value for overburden above first layer.
+OB2 = Using default value for overburden in and below first layer.
+RES = Using default value for reservoir in reservoir.
+ZRO = Using cell value from cell above for zero thickness cells.
+
+GridName            OB1     OB2     RES     ZRO
+-----------------------------------------------
+Vp                  659       0       0   28551
+Vs                  659       0       0   28551
+Rho                 659       0       0   28551
+
+Resampling parameters in Eclipse grid into regular grids.
+
+Filling remaining cells in regular grids.
+
+Setting undefined cells in trace equal to default reservoir value    :  166100
+Setting cells in bottom layer equal to default reservoir value       :   50213
+Setting cells in trace equal to layer below                          :     604
+
+Deleting Eclipse grid to free memory.
+
+****************************************************************************************************
+*****                                      Make TWT grid                                       *****
+****************************************************************************************************
+
+Assuming NMO.
+
+****************************************************************************************************
+*****                                       Export grids                                       *****
+****************************************************************************************************
+
+****************************************************************************************************
+*****                                    Forward modelling                                     *****
+****************************************************************************************************
+
+Generate Twt0 for NMO assuming PP seismic.
+
+Generate Z0 for NMO.
+
+Segy geometry:
+
+             ReferencePoint      Length Increment
+-------------------------------------------------
+X-coordinate      454930.35      751.44  25.04800
+Y-coordinate     6805681.80     2094.51  25.23506
+Azimuth             299.700
+
+                 Start      End    Step
+---------------------------------------
+In-line              1       30       1
+Cross-line           1       83       1
+
+Required precision of UTM coordinates is verified.
+
+Initializing Segy file 'seismic_time.segy' using format SEISWORKS (currently hard coded)
+
+Initializing Segy file 'seismic_depth.segy' using format SEISWORKS (currently hard coded)
+
+2490 traces to be generated.
+
+8 of 8 available threads are used, and queue capacity is 1000000 traces.
+
+Generating synthetic NMO PP-seismic for offsets: 0.0 1500.0 3000.0 
+
+****************************************************************************************************
+*****                                     Suggested tasks                                      *****
+****************************************************************************************************
+
+ 1. Keyword <traces-in-memory> has been made a sub-element of section <project-settings>. Current
+    placement is deprecated.
+

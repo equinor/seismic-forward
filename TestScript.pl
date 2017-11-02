@@ -376,8 +376,8 @@ my @modeldir    =  (
                     "07_ps",
                     "08_ps_noise",
                     "09_remove_negative_dz",
-                    "10_keep_negative_dz",
-                    "11_corner_point"
+                    "10_keep_negative_dz"
+#                    "11_corner_point"
                     );
 
 my @parameters  =  ("seismic_depth",
