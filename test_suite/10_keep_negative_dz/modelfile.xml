@@ -82,6 +82,7 @@
 </output-grid>
 
 <output-parameters>
+  <zvalues>            yes </zvalues>
   <seismic-depth-segy> yes </seismic-depth-segy>
   <seismic-time-segy>  yes </seismic-time-segy>
 </output-parameters>

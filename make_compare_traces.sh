@@ -4,7 +4,7 @@ ROOT_DIR=../Geo2Seis
 BOOST_DIR=3rd-party/boost_1_65_1
 CUR_DIR=`basename "$PWD"`
 OBJ_DIR=CMakeFiles/geo2seis_lib.dir
-EXE=comparxse_traces
+EXE=compare_traces
 
 if [ ${CUR_DIR} = "Geo2Seis" ]; then
     echo "The test program cannot be compiled in the source directory. Please,"

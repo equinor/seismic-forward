@@ -26,9 +26,9 @@ private:
                           ModelSettings     * model_settings,
                           size_t              n_threads);
 
-  static void SetGridLayerFromSurface(NRLib::StormContGrid        & zgrid,
-                                      const NRLib::Grid2D<double> & values,
-                                      size_t                        k);
+  static void SetGridLayer(NRLib::StormContGrid        & zgrid,
+                           const NRLib::Grid2D<double> & values,
+                           size_t                        k);
 
 
   static void FindParameters(SeismicParameters & seismic_parameters,

@@ -119,15 +119,15 @@ public:
   ///Stores z-values in layer k for a rectangle with a corner in x0,y0 and step lengths dx and dy, angle indicates rotated angle in the xy-plane
   ///\\param lower_or_upper 0 for upper, 1 for lower
   ///\\param bilinear_else_triangles true for calulating z-coordinates inside corners by bilinear interpolation, false for calculating by intersection of plane through triangles
-  void FindLayerSurface(NRLib::Grid2D<double> &z_surface,
-                        size_t k,
-                        int lower_or_upper,
-                        double dx,
-                        double dy,
-                        double x0,
-                        double y0,
-                        double angle,
-                        bool bilinear_else_triangles) const;
+  void FindLayer(NRLib::Grid2D<double> & z_surface,
+                 size_t                  k,
+                 int                     lower_or_upper,
+                 double                  dx,
+                 double                  dy,
+                 double                  x0,
+                 double                  y0,
+                 double                  angle,
+                 bool                    bilinear_else_triangles) const;
 
   void FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> &z_surface,
                                    size_t k,
@@ -138,6 +138,13 @@ public:
                                    double y0,
                                    double angle,
                                    bool bilinear_else_triangles) const;
+
+  void TranslateAndRotate(NRLib::Point       & corners,
+                          const NRLib::Point & C,
+                          const double         x0,
+                          const double         y0,
+                          const double         cosA,
+                          const double         sinA) const;
 
   void FindTopAndBotValuesOfGrid(std::vector<NRLib::Point>& top_points,
                                  std::vector<NRLib::Point>& bot_points) const;
@@ -229,22 +236,18 @@ private:
   void InitializeActivePillars();
 
   ///Function used by FindLayerSurface to fill in values to z_surface in the area inside the (NB) four corners (listed clockwise)
-  void TriangularFillInZValuesInArea(NRLib::Grid2D<double> &z_surface,
-                                     NRLib::Grid2D<int> &is_set,
-                                     double x0,
-                                     double y0,
-                                     const std::vector<NRLib::Point>& corners,
-                                     double dx,
-                                     double dy) const;
+  void TriangularFillInZValuesInArea(NRLib::Grid2D<double>           & z_surface,
+                                     NRLib::Grid2D<int>              & is_set,
+                                     const std::vector<NRLib::Point> & corners,
+                                     const double                      dx,
+                                     const double                      dy) const;
 
   ///Function used by FindLayerSurface to fill in values to z_surface in the area inside the (NB) four corners (listed clockwise)
-  void BilinearFillInZValuesInArea(NRLib::Grid2D<double> &z_surface,
-                                   NRLib::Grid2D<int> &is_set,
-                                   double x0,
-                                   double y0,
-                                   const std::vector<NRLib::Point>& corners,
-                                   double dx,
-                                   double dy) const;
+  void BilinearFillInZValuesInArea(NRLib::Grid2D<double>           & z_surface,
+                                   NRLib::Grid2D<int>              & is_set,
+                                   const std::vector<NRLib::Point> & corners,
+                                   const double                      dx,
+                                   const double                      dy) const;
 
   ///Function used by FindLayerSurface to fill in (average values of neighbour elements) to z_surface where is_set==false
   void FillInZValuesByAveraging(NRLib::Grid2D<double> &z_surface,

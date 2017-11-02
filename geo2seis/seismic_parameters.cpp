@@ -263,7 +263,7 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nTop layer of Eclipse grid                 : %4d"  , top_k);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nBase layer of Eclipse grid                : %4d\n", bot_k);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nNumber of grid cells needed in z-grid     : %4d\n",bot_k + 2 - top_k);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nNumber of layers needed in z-grid         : %4d\n",bot_k + 2 - top_k);
 
   seismic_geometry->setZReflectorCount(static_cast<size_t>(bot_k + 2 - top_k));
 
@@ -281,8 +281,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
    }
   else {
-    eclipse_geometry.FindLayerSurface(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, 0);
-    eclipse_geometry.FindLayerSurface(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, 0);
+    eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, 0);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
   }
 

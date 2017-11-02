@@ -21,8 +21,12 @@
 
 #include "triangle.hpp"
 
+
 #include "line.hpp"
 #include "point.hpp"
+
+#include "nrlib/iotools/fileio.hpp"
+#include <fstream>
 
 namespace NRLib {
 
@@ -138,6 +142,55 @@ double Triangle::FindNearestPoint(const Line& line, Point& nearest_pt) const
 
   return min_dist;
 }
+
+void Triangle::WriteToFile(const std::string & filename) const
+{
+
+  NRLib::Point p1 = TranslateAndRotate(p1_);
+  NRLib::Point p2 = TranslateAndRotate(p2_);
+  NRLib::Point p3 = TranslateAndRotate(p3_);
+
+  std::fstream fout;
+  NRLib::OpenWrite(fout, filename);
+  fout << std::fixed
+       << std::setprecision(6)
+       << std::setw(12) << p1.x << " "
+       << std::setw(12) << p1.y << " "
+       << std::setw(12) << p1.z << "\n"
+       << std::setw(12) << p2.x << " "
+       << std::setw(12) << p2.y << " "
+       << std::setw(12) << p2.z << "\n"
+       << std::setw(12) << p3.x << " "
+       << std::setw(12) << p3.y << " "
+       << std::setw(12) << p3.z << "\n"
+       << std::setw(12) << p1.x << " "
+       << std::setw(12) << p1.y << " "
+       << std::setw(12) << p1.z << "\n"
+       << "999.000000 999.000000 999.000000"
+       <<std::endl;
+    fout.close();
+}
+
+NRLib::Point Triangle::TranslateAndRotate(const NRLib::Point & p) const
+{
+  // Hack to test GEOS-29 bug.
+  NRLib::Point origin(461554.03, 5933992.78, 0.0);
+  double angle = (29.37/180.0)*3.1415927;
+
+  NRLib::Point pp(p);
+  double cosA = cos(angle);
+  double sinA = sin(angle);
+
+  // Translate and rotate eclipse grid nodes to surface grid
+  pp.x = cosA*p.x - sinA*p.y;
+  pp.y = cosA*p.y + sinA*p.x;
+
+  pp += origin;
+
+  return pp;
+}
+
+
 
 
 } // namespace NRLib

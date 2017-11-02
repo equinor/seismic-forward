@@ -263,6 +263,13 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
 
   bool bolval;
   if (ParseBool(root, "cornerpt-interpolation-in-depth", bolval, errTxt)) {
+    //
+    // WARNING about center point interpolation (ref. GEOS-29)
+    //
+    printf("\nWARNING:: Corner point interpolation currently have defects. Please consider using center point");
+    printf("\n          interpolation instead, or at least, make a comparison with center point interpolation\n");
+    TaskList::AddTask("Center point interpolation has been requested. Please see warning above.");
+
     modelSettings_->SetUseCornerpointInterpol(bolval);
   }
 

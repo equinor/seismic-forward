@@ -4,9 +4,9 @@
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// •  Redistributions of source code must retain the above copyright notice, this
+// o  Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
-// •  Redistributions in binary form must reproduce the above copyright notice, this list of
+// o  Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials
 //    provided with the distribution.
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
@@ -26,6 +26,7 @@
 #include "../geometry/polygon.hpp"
 #include "../geometry/triangle.hpp"
 #include "../geometry/bilinearsurface.hpp"
+#include "../iotools/logkit.hpp"
 #include "../iotools/fileio.hpp"
 #include "../iotools/stringtools.hpp"
 #include "../math/constants.hpp"
@@ -1155,178 +1156,206 @@ size_t EclipseGeometry::FindBottomLayer() const
   return bot;
 }
 
-void EclipseGeometry::BilinearFillInZValuesInArea(NRLib::Grid2D<double> &z_surface,
-                                                  NRLib::Grid2D<int> &is_set,
-                                                  double x0,
-                                                  double y0,
-                                                  const std::vector<NRLib::Point>& corners,
-                                                  double dx,
-                                                  double dy) const
+void EclipseGeometry::BilinearFillInZValuesInArea(NRLib::Grid2D<double>           & z_surface,
+                                                  NRLib::Grid2D<int>              & is_set,
+                                                  const std::vector<NRLib::Point> & corners,
+                                                  const double                      dx,
+                                                  const double                      dy) const
 {
-  size_t m=z_surface.GetNJ();
-  size_t n=z_surface.GetNI();
-  NRLib::BilinearSurface bilinear_corners(corners[0], corners[1], corners[2], corners[3]);
-  double min_x,max_x,min_y,max_y;
-  NRLib::Point point_xy(0.0,0.0,0.0);
-  NRLib::Point z_dir(0.0,0.0,1.0);
-  NRLib::Point intersec1, intersec2;
-  size_t n1,n2,m1,m2;
-  int nu_of_intersec;
-  //Calculate the min and max in x- and y-direction (rotated, i.e. same direction as z_surface)
-  min_x=corners[0].x;
-  max_x=min_x;
-  min_y=corners[0].y;
-  max_y=min_y;
-  for (size_t four=1; four<4; four++) {
-    if (corners[four].x<min_x) {
-      min_x=corners[four].x;
-    }
-    else if (corners[four].x>max_x) {
-      max_x=corners[four].x;
-    }
-    if (corners[four].y<min_y) {
-      min_y=corners[four].y;
-    }
-    else if (corners[four].y>max_y) {
-      max_y=corners[four].y;
-    }
+  // Calculate the min and max in x- and y-direction (rotated, i.e. same direction as z_surface)
+  double min_x = corners[0].x;
+  double min_y = corners[0].y;
+  double max_x = min_x;
+  double max_y = min_y;
+
+  for (size_t four = 1 ; four < 4 ; four++) {
+    if      (corners[four].x < min_x) { min_x = corners[four].x ;}
+    else if (corners[four].x > max_x) { max_x = corners[four].x ;}
+    if      (corners[four].y < min_y) { min_y = corners[four].y ;}
+    else if (corners[four].y > max_y) { max_y = corners[four].y ;}
   }
-  //For loop over all points in z_surface inside the rectangle given by the mins and max' calulated above
-  n1=static_cast<size_t>(max((min_x-x0)/dx-0.5,0.0)); //min_x=(x0+dx/2)+n1*dx, if n1 not integer, let it be the smallest integer greater than solution. Zero if negative number
-  n2=static_cast<size_t>(max((max_x-x0)/dx+1.0,0.0)); //max_x=(x0+dx/2)+(n2-1)*dx, if n2 not integer, let it be the greatest integer smaller than solution. Zero if negative number
-  if (n2>n)
-    n2=n; //Should stop before grid ends
-  m1=static_cast<size_t>(max((min_y-y0)/dy-0.5,0.0));
-  m2=static_cast<size_t>(max((max_y-y0)/dy+1.0,0.0));
-  if (m2>m)
-    m2=m;
-  for (size_t it1=n1; it1<n2; it1++) {
-    for (size_t it2=m1; it2<m2; it2++) {
-      point_xy.x=x0+dx/2+it1*dx;
-      point_xy.y=y0+dy/2+it2*dy;
-      NRLib::Line line_xy(point_xy,point_xy+z_dir,false,false);
-      nu_of_intersec=bilinear_corners.FindIntersections(line_xy,intersec1,intersec2);
-      if (nu_of_intersec>=1) {
+
+  // For loop over all points in z_surface inside the rectangle given by the mins and max' calulated above
+  // min_x = dx/2 + dx*n1, if n1 not integer, let it be the smallest integer greater than solution. Zero if negative number
+  // max_x = dx/2 + dx*(n2-1), if n2 not integer, let it be the greatest integer smaller than solution. Zero if negative number
+
+  size_t n1 = static_cast<size_t>(max(min_x/dx - 0.5, 0.0));
+  size_t n2 = static_cast<size_t>(max(max_x/dx + 1.0, 0.0));
+  size_t m1 = static_cast<size_t>(max(min_y/dy - 0.5, 0.0));
+  size_t m2 = static_cast<size_t>(max(max_y/dy + 1.0, 0.0));
+  size_t m  = z_surface.GetNJ();
+  size_t n  = z_surface.GetNI();
+
+  if (n2 > n) n2 = n; //Should stop before grid ends
+  if (m2 > m) m2 = m;
+
+  NRLib::BilinearSurface bilinear_corners(corners[0], corners[1], corners[2], corners[3]);
+  NRLib::Point point_xy(0.0, 0.0, 0.0);
+  NRLib::Point z_dir(0.0, 0.0, 1.0);
+  NRLib::Point intersec1, intersec2;
+
+  for (size_t it1 = n1; it1 < n2 ; it1++) {
+    for (size_t it2 = m1; it2 < m2 ; it2++) {
+
+      point_xy.x = dx/2 + it1*dx;
+      point_xy.y = dy/2 + it2*dy;
+
+      NRLib::Line line_xy(point_xy, point_xy + z_dir, false, false);
+
+      int nu_of_intersec = bilinear_corners.FindIntersections(line_xy,
+                                                              intersec1,
+                                                              intersec2);
+
+      //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%d %d num_int=%d\n", it1, it2, nu_of_intersec);
+
+      if (nu_of_intersec > 0) {
+
+        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "z(%d,%d) =  %7.2f\n",it1, it2, intersec1.z);
+
+        double count = static_cast<double>(is_set(it1,it2));
+
         if (is_set(it1,it2)) {
-          z_surface(it1,it2)+=intersec1.z;
-          z_surface(it1,it2)=z_surface(it1,it2)/2;
+          z_surface(it1, it2) *= count/(count + 1.0);
+          z_surface(it1, it2) += intersec1.z/(count + 1.0);
+          is_set(it1,it2)++;
         }
         else {
-          z_surface(it1,it2)=intersec1.z;
-          is_set(it1,it2)=true;
+          z_surface(it1,it2) = intersec1.z;
+          is_set(it1,it2)    = 1;
         }
       }
     }
   }
 }
 
-void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double> &z_surface,
-                                                    NRLib::Grid2D<int> &is_set,
-                                                    double x0,
-                                                    double y0,
-                                                    const std::vector<NRLib::Point>& corners_in,
-                                                    double dx,
-                                                    double dy) const
+void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>           & z_surface,
+                                                    NRLib::Grid2D<int>              & is_set,
+                                                    const std::vector<NRLib::Point> & corners_in,
+                                                    const double                      dx,
+                                                    const double                      dy) const
 {
-  std::vector<NRLib::Point> corners = corners_in;
-  size_t m=z_surface.GetNJ();
-  size_t n=z_surface.GetNI();
-  double min_x,max_x,min_y,max_y,vec1_vec2_angle;
-  NRLib::Triangle triangle1, triangle2;
-  NRLib::Point point_xy(0.0,0.0,0.0);
-  NRLib::Point vec1(0.0,0.0,0.0);
-  NRLib::Point vec2(0.0,0.0,0.0);
-  NRLib::Point z_dir(0.0,0.0,1.0);
-  NRLib::Point intersec;
-  size_t n2,m1,m2;
-  bool two_triangles=true;
+  std::vector<NRLib::Point> corners       = corners_in;
+  bool                      two_triangles = true;
+  NRLib::Triangle           triangle1, triangle2;
+  NRLib::Point              vec1(0.0, 0.0, 0.0);
+  NRLib::Point              vec2(0.0, 0.0, 0.0);
+
   //Check if two of the points are the same
-  size_t n1=3;
-  for (m1=0;m1<4;m1++) {
-    if (corners[m1]==corners[n1]) { //NOTE: Could do better check on whether two points are equal !!!!!!!
-      two_triangles=false;
-      corners[n1]=corners[3];
+  size_t nn = 3;
+  for (size_t mm = 0 ; mm < 4 ; mm++) {
+    if (corners[mm] == corners[nn]) { //NOTE: Could do better check on whether two points are equal !!!!!!!
+      two_triangles = false;
+      corners[nn ]  = corners[3];
       triangle1.SetCornerPoints(corners[0], corners[1], corners[2]);
     }
-    n1=m1;
+    nn = mm;
   }
   if (two_triangles) {
     // Calculate the sum of two opposite angles
-    vec1.x=corners[1].x-corners[0].x;
-    vec1.y=corners[1].y-corners[0].y;
-    vec2.x=corners[3].x-corners[0].x;
-    vec2.y=corners[3].y-corners[0].y;
-    vec1_vec2_angle=vec1.GetAngle(vec2);
-    vec1.x=corners[1].x-corners[2].x;
-    vec1.y=corners[1].y-corners[2].y;
-    vec2.x=corners[3].x-corners[2].x;
-    vec2.y=corners[3].y-corners[2].y;
-    vec1_vec2_angle+=vec1.GetAngle(vec2);
+    vec1.x = corners[1].x - corners[0].x;
+    vec1.y = corners[1].y - corners[0].y;
+    vec2.x = corners[3].x - corners[0].x;
+    vec2.y = corners[3].y - corners[0].y;
+
+    double vec1_vec2_angle = vec1.GetAngle(vec2);
+
+    vec1.x = corners[1].x - corners[2].x;
+    vec1.y = corners[1].y - corners[2].y;
+    vec2.x = corners[3].x - corners[2].x;
+    vec2.y = corners[3].y - corners[2].y;
+
+    vec1_vec2_angle += vec1.GetAngle(vec2);
+
     // Make delunay triangles (according to the sum of the angles)
-    if (vec1_vec2_angle<=NRLib::Pi) {
-      triangle1.SetCornerPoints(corners[3], corners[0], corners[1]);
-      triangle2.SetCornerPoints(corners[1], corners[2], corners[3]);
-    }
-    else {
-      triangle1.SetCornerPoints(corners[0], corners[1], corners[2]);
-      triangle2.SetCornerPoints(corners[2], corners[3], corners[0]);
-    }
+    //
+    // NBNB! To avoid GEOS-29 bug we choose to always use the same triangulation. This is
+    // crucial within a given column, and as we do the modelling layer by layer, this is
+    // the only wy to ensure consistency.
+    //
+    //if (vec1_vec2_angle <= NRLib::Pi) {
+    triangle1.SetCornerPoints(corners[3], corners[0], corners[1]);
+    triangle2.SetCornerPoints(corners[1], corners[2], corners[3]);
+    //}
+    //else {
+    //  triangle1.SetCornerPoints(corners[0], corners[1], corners[2]);
+    //  triangle2.SetCornerPoints(corners[2], corners[3], corners[0]);
+    //}
   }
+
   //Calculate the min and max in x- and y-direction (rotated, i.e. same direction as z_surface)
-  min_x=corners[0].x;
-  max_x=min_x;
-  min_y=corners[0].y;
-  max_y=min_y;
-  for (size_t four=1; four<4; four++) {
-    if (corners[four].x<min_x)
-      min_x=corners[four].x;
-    else if (corners[four].x>max_x)
-      max_x=corners[four].x;
-    if (corners[four].y<min_y)
-      min_y=corners[four].y;
-    else if (corners[four].y>max_y)
-      max_y=corners[four].y;
+  double min_x = corners[0].x;
+  double min_y = corners[0].y;
+  double max_x = min_x;
+  double max_y = min_y;
+
+  for (size_t four = 1 ; four < 4 ; four++) {
+    if      (corners[four].x < min_x)  { min_x = corners[four].x ;}
+    else if (corners[four].x > max_x)  { max_x = corners[four].x ;}
+    if      (corners[four].y < min_y)  { min_y = corners[four].y ;}
+    else if (corners[four].y > max_y)  { max_y = corners[four].y ;}
   }
-  //For loop over all points in z_surface inside the rectangle given by the mins and max' calulated above
-  n1=static_cast<size_t>(max( ((min_x-x0)/dx-0.5),0.0)); //min_x=(x0+dx/2)+n1*dx, if n1 not integer, let it be the smallest integer greater than solution. Zero if negative number
-  n2=static_cast<size_t>(max( ((max_x-x0)/dx+1.0),0.0)); //max_x=(x0+dx/2)+(n2-1)*dx, if n2 not integer, let it be the greatest integer smaller than solution. Zero if negative number
-  if (n2>n)
-    n2=n; //Should stop before grid ends
-  m1=static_cast<size_t>(max( ((min_y-y0)/dy-0.5),0.0));
-  m2=static_cast<size_t>(max( ((max_y-y0)/dy+1.0),0.0));
-  if (m2>m)
-    m2=m;
-  for (size_t it1=n1; it1<n2; it1++) {
-    for (size_t it2=m1; it2<m2; it2++) {
-      point_xy.x=x0+dx/2+it1*dx;
-      point_xy.y=y0+dy/2+it2*dy;
-      NRLib::Line line_xy(point_xy,(point_xy+z_dir),false,false);
-      if (triangle1.FindIntersection(line_xy,intersec,true)) {
-        if (is_set(it1,it2)>0 ) {
-          z_surface(it1,it2)*=static_cast<double>(1.0*is_set(it1,it2)/(1.0*is_set(it1,it2)+1.0));
-          z_surface(it1,it2)+=intersec.z/static_cast<double>(is_set(it1,it2)+1.0);
+
+  // For loop over all points in z_surface inside the rectangle given by the mins and max' calulated above
+  // min_x = dx/2 + dx*n1, if n1 not integer, let it be the smallest integer greater than solution. Zero if negative number
+  // max_x = dx/2 + dx*(n2-1), if n2 not integer, let it be the greatest integer smaller than solution. Zero if negative number
+
+  size_t n1 = static_cast<size_t>(max((min_x/dx - 0.5), 0.0));
+  size_t n2 = static_cast<size_t>(max((max_x/dx + 1.0), 0.0));
+  size_t m1 = static_cast<size_t>(max((min_y/dy - 0.5), 0.0));
+  size_t m2 = static_cast<size_t>(max((max_y/dy + 1.0), 0.0));
+  size_t m  = z_surface.GetNJ();
+  size_t n  = z_surface.GetNI();
+  if (n2 > n) n2 = n; //Should stop before grid ends
+  if (m2 > m) m2 = m;
+
+  NRLib::Point point_xy(0.0, 0.0, 0.0);
+  NRLib::Point z_dir(0.0, 0.0, 1.0);
+  NRLib::Point intersec;
+
+  for (size_t it1 = n1 ; it1 < n2 ; it1++) {
+    for (size_t it2 = m1 ; it2 < m2 ; it2++) {
+
+      double count = static_cast<double>(is_set(it1,it2));
+      double w1    = count/(count + 1.0);
+      double w2    =   1.0/(count + 1.0);
+
+      point_xy.x = dx/2 + it1*dx;
+      point_xy.y = dy/2 + it2*dy;
+
+      NRLib::Line line_xy(point_xy, point_xy + z_dir, false, false);
+
+      //triangle1.WriteToFile("triangle1.irap");
+      //triangle2.WriteToFile("triangle2.irap");
+
+      if (triangle1.FindIntersection(line_xy, intersec, true)) {
+        if (is_set(it1,it2) > 0) {
+          z_surface(it1, it2) *= w1;
+          z_surface(it1, it2) += w2*intersec.z;
           is_set(it1,it2)++;
-          //z_surface(it1,it2)=z_surface(it1,it2)/2;
         }
-       // else if(!is_set(it1,it2)){
         else {
-          z_surface(it1,it2)=intersec.z;
-          is_set(it1,it2) = 1;
+          z_surface(it1,it2) = intersec.z;
+          is_set(it1,it2)    = 1;
+
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "A: intersect(x,y,z) = (%7.2f,%7.2f,%7.2f)\n",intersec.x, intersec.y, intersec.z);
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "A: z(%d,%d) = %7.2f\n",it1, it2, z_surface(it1, it2));
         }
       }
       else if (two_triangles) {
-        if (triangle2.FindIntersection(line_xy,intersec,true)) {
-          if (is_set(it1,it2)>0 ) {
-            z_surface(it1,it2)*=static_cast<double>(1.0*is_set(it1,it2)/(1.0*is_set(it1,it2)+1.0));
-          z_surface(it1,it2)+=intersec.z/static_cast<double>(is_set(it1,it2)+1.0);
-          is_set(it1,it2)++;
-            //z_surface(it1,it2)+=intersec.z;
-            //z_surface(it1,it2)=z_surface(it1,it2)/2;
+        if (triangle2.FindIntersection(line_xy, intersec, true)) {
+          if (is_set(it1,it2) > 0) {
+            z_surface(it1,it2) *= w1;
+            z_surface(it1,it2) += w2*intersec.z;
+            is_set(it1,it2)++;
           }
-          //else if(!is_set(it1,it2)){
-          else{
-            z_surface(it1,it2)=intersec.z;
-            is_set(it1,it2) =1;
+          else {
+            z_surface(it1,it2) = intersec.z;
+            is_set(it1,it2)    = 1;
+
+            //if (it1 == 1 && it2 == 1) {
+            //  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "B: intersect(x,y,z) = (%7.2f,%7.2f,%7.2f)\n",intersec.x, intersec.y, intersec.z);
+            //  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "B: z(%d,%d) = %7.2f\n",it1, it2, z_surface(it1, it2));
+            //}
           }
         }
       }
@@ -1377,10 +1406,10 @@ void EclipseGeometry::FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> &z_surfa
       corners[3].z=nonrotated_corner.z;
       if (FindTopCell(i,j)!=nk_) {
         if (bilinear_else_triangles) {
-          BilinearFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,corners,dx,dy);
+          BilinearFillInZValuesInArea(z_surface,is_set,corners,dx,dy);
         }
         else {
-          TriangularFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,corners,dx,dy);
+          TriangularFillInZValuesInArea(z_surface,is_set,corners,dx,dy);
         }
       }
       if (j>0) {
@@ -1427,9 +1456,9 @@ void EclipseGeometry::FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> &z_surfa
           }
 
           if (bilinear_else_triangles)
-            BilinearFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,fault_corners,dx,dy);
+            BilinearFillInZValuesInArea(z_surface,is_set,fault_corners,dx,dy);
           else
-            TriangularFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,fault_corners,dx,dy);
+            TriangularFillInZValuesInArea(z_surface,is_set,fault_corners,dx,dy);
         }
       }
       if (i>0) {
@@ -1467,9 +1496,9 @@ void EclipseGeometry::FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> &z_surfa
 
           }
           if (bilinear_else_triangles)
-            BilinearFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,fault_corners,dx,dy);
+            BilinearFillInZValuesInArea(z_surface,is_set,fault_corners,dx,dy);
           else
-            TriangularFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,fault_corners,dx,dy);
+            TriangularFillInZValuesInArea(z_surface,is_set,fault_corners,dx,dy);
         }
       }
       prev_upper_corner=corners[2];
@@ -1481,285 +1510,212 @@ void EclipseGeometry::FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> &z_surfa
 
 
 // center point interpolation
-void EclipseGeometry::FindLayerSurface(NRLib::Grid2D<double> &z_surface,
-                                       size_t k,
-                                       int lower_or_upper,
-                                       double dx,
-                                       double dy,
-                                       double x0,
-                                       double y0,
-                                       double angle,
-                                       bool bilinear_else_triangles) const
+void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_surface,
+                                size_t                  k,
+                                int                     lower_or_upper,
+                                double                  dx,
+                                double                  dy,
+                                double                  x0,
+                                double                  y0,
+                                double                  angle,
+                                bool                    bilinear_else_triangles) const
 {
-  size_t m=z_surface.GetNJ();
-  size_t n=z_surface.GetNI();
-  double rot_x0=cos(angle)*x0+sin(angle)*y0;
-  double rot_y0=cos(angle)*y0-sin(angle)*x0;
+  double                    cosA = cos(angle);
+  double                    sinA = sin(angle);
+  size_t                    m    = z_surface.GetNJ();
+  size_t                    n    = z_surface.GetNI();
+  NRLib::Grid2D<int>        is_set(n, m, 0);
+  NRLib::Point              C0, C1, C2, C3;
+  std::vector<NRLib::Point> Crot(4);
 
-  NRLib::Point nonrotated_corner;
-  NRLib::Point prev_upper_corner,prev_lower_corner, cell_under_right_corner, cell_under_left_corner;
-  std::vector<NRLib::Point> corners(4);
-  NRLib::Grid2D<int> is_set(n,m,0);
+  for (size_t j = 0 ; j < nj_ - 1 ; j++) { //Loops over each cell in the given layer
+    for (size_t i = 0 ; i < ni_ - 1 ; i++) {
+      if (IsPillarActive(i  , j  ) &&
+          IsPillarActive(i+1, j  ) &&
+          IsPillarActive(i  , j+1) &&
+          IsPillarActive(i+1, j+1) &&
+          IsPillarActive(i+2,   j) &&
+          IsPillarActive(i+2, j+1) &&
+          IsPillarActive(i  , j+2) &&
+          IsPillarActive(i+1, j+2) &&
+          IsPillarActive(i+2, j+2)) {
 
-  for(size_t j = 0; j < nj_-1; j++) { //Loops over each cell in the given layer
-    for(size_t i = 0; i < ni_-1; i++){
-      if(IsPillarActive(i,j) && IsPillarActive(i+1,j) && IsPillarActive(i, j+1) && IsPillarActive(i+1, j+1) &&
-        IsPillarActive(i+2,j) && IsPillarActive(i+2, j+1) && IsPillarActive(i, j+2) && IsPillarActive(i+1, j+2) &&
-        IsPillarActive(i+2, j+2)){
-          nonrotated_corner=FindPointCellSurface(i, j, k,lower_or_upper,0.5, 0.5);
-          corners[0].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-          corners[0].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-          corners[0].z=nonrotated_corner.z;
-          nonrotated_corner=FindPointCellSurface(i+1, j, k,lower_or_upper,0.5, 0.5);
-          corners[1].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-          corners[1].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-          corners[1].z=nonrotated_corner.z;
-          // Find rotated coordinates for the corners of the cell
-          nonrotated_corner=FindPointCellSurface(i+1, j+1, k,lower_or_upper,0.5, 0.5);
-          corners[2].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-          corners[2].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-          corners[2].z=nonrotated_corner.z;
-          nonrotated_corner=FindPointCellSurface(i, j+1, k,lower_or_upper,0.5, 0.5);
-          corners[3].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-          corners[3].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-          corners[3].z=nonrotated_corner.z;
+        C0 = FindPointCellSurface(i  , j  , k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell
+        C1 = FindPointCellSurface(i+1, j  , k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell
+        C2 = FindPointCellSurface(i+1, j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell
+        C3 = FindPointCellSurface(i  , j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell
 
-          if (FindTopCell(i,j)!=nk_) {
-            if (bilinear_else_triangles)
-              BilinearFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,corners,dx,dy);
-            else
-              TriangularFillInZValuesInArea(z_surface,is_set,rot_x0,rot_y0,corners,dx,dy);
-          }
+        TranslateAndRotate(Crot[0], C0, x0, y0, cosA, sinA);
+        TranslateAndRotate(Crot[1], C1, x0, y0, cosA, sinA);
+        TranslateAndRotate(Crot[2], C2, x0, y0, cosA, sinA);
+        TranslateAndRotate(Crot[3], C3, x0, y0, cosA, sinA);
+
+        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "i,j,k =  %d, %d, %d\n",i,j,k);
+        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "UnrotC 1:  %7.2f,  %7.2f, %7.2f\n",k,C0.x,C0.y,C0.z);
+        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "UnrotC 2:  %7.2f,  %7.2f, %7.2f\n",k,C1.x,C1.y,C1.z);
+        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "UnrotC 3:  %7.2f,  %7.2f, %7.2f\n",k,C2.x,C2.y,C2.z);
+        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "UnrotC 4:  %7.2f,  %7.2f, %7.2f\n",k,C3.x,C3.y,C3.z);
+
+        if (FindTopCell(i,j) != nk_) {
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 0:  %7.2f, %7.2f, %7.2f\n", k, Crot[0].x, Crot[0].y, Crot[0].z);
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 1:  %7.2f, %7.2f, %7.2f\n", k, Crot[1].x, Crot[1].y, Crot[1].z);
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 2:  %7.2f, %7.2f, %7.2f\n", k, Crot[2].x, Crot[2].y, Crot[2].z);
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 3:  %7.2f, %7.2f, %7.2f\n", k, Crot[3].x, Crot[3].y, Crot[3].z);
+
+          if (bilinear_else_triangles)
+            BilinearFillInZValuesInArea(z_surface, is_set, Crot, dx, dy);
+          else
+            TriangularFillInZValuesInArea(z_surface, is_set, Crot, dx, dy);
+        }
       }
     }
   }
-  FillInZValuesByAveraging(z_surface,is_set);
+  FillInZValuesByAveraging(z_surface, is_set);
+}
+
+void EclipseGeometry::TranslateAndRotate(NRLib::Point       & Crot,
+                                         const NRLib::Point & C,
+                                         const double         x0,
+                                         const double         y0,
+                                         const double         cosA,
+                                         const double         sinA) const
+{
+  // Translate and rotate eclipse grid nodes to surface grid
+  Crot.x = cosA*(C.x - x0) + sinA*(C.y - y0);
+  Crot.y = cosA*(C.y - y0) - sinA*(C.x - x0);
+  Crot.z = C.z;
 }
 
 
-
-
-
-void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> &z_surface,
-                                             NRLib::Grid2D<int> &is_set) const {
-  size_t m=z_surface.GetNJ();
-  size_t n=z_surface.GetNI();
-  size_t average_i=0;
-  size_t average_j=0;
-  size_t count=0;
-  size_t distance, iter_i, iter_j;
-  for (size_t j=0; j<m;j++) {
-    for (size_t i=0; i<n; i++) {
-      if (is_set(i,j)) {
-        average_i+=i;
-        average_j+=j;
-        count++;
+void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_surface,
+                                               NRLib::Grid2D<int>    & is_set) const
+{
+  size_t m         = z_surface.GetNJ();
+  size_t n         = z_surface.GetNI();
+  size_t average_i = 0;
+  size_t average_j = 0;
+  size_t count1    = 0;
+  for (size_t j = 0; j < m ; j++) {
+    for (size_t i = 0; i < n ; i++) {
+      if (is_set(i, j)) {
+        average_i += i;
+        average_j += j;
+        count1++;
       }
     }
   }
-  if (count>0 && count<m*n) {
-    average_i=average_i/count;
-    average_j=average_j/count;
-    distance=min(min(average_i,average_j),min(n-1-average_i,m-1-average_j));
-    iter_i=average_i;
-    iter_j=average_j-1;
-    for (size_t it_dist=1; it_dist<=distance; it_dist++) {
-      for (size_t r=1; r<=8*it_dist;r++) {
-        if (!is_set(iter_i,iter_j)) {
-          z_surface(iter_i,iter_j)=0.0;
-          count=0;
-          if (iter_i>0) {
-            if (is_set(iter_i-1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i-1,iter_j);
-              count++;
-            }
-          }
-          if ((iter_i+1)<n) {
-            if (is_set(iter_i+1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i+1,iter_j);
-              count++;
-            }
-          }
-          if (iter_j>0) {
-            if (is_set(iter_i,iter_j-1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j-1);
-              count++;
-            }
-          }
-          if ((iter_j+1)<m) {
-            if (is_set(iter_i,iter_j+1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j+1);
-              count++;
-            }
-          }
-          z_surface(iter_i,iter_j)=z_surface(iter_i,iter_j)/count;
-          is_set(iter_i,iter_j)=true;
+
+  if (count1 > 0 && count1 < m*n) {
+    average_i = average_i/count1;
+    average_j = average_j/count1;
+
+    size_t distance = min(min(average_i, average_j), min(n - 1 - average_i, m - 1 - average_j));
+    size_t i   = average_i;
+    size_t j   = average_j - 1;
+
+    double zimj     = z_surface(i - 1, j    );
+    double zipj     = z_surface(i + 1, j    );
+    double zijm     = z_surface(i    , j - 1);
+    double zijp     = z_surface(i    , j + 1);
+
+    for (size_t it_dist = 1 ; it_dist <= distance ; it_dist++) {
+      for (size_t r = 1 ; r <= 8*it_dist ; r++) {
+
+        if (!is_set(i, j)) {
+          double zij   = 0.0;
+          size_t count = 0;
+          if (i     > 0 && is_set(i - 1, j    )) { zij += zimj; count++; }
+          if (i + 1 < n && is_set(i + 1, j    )) { zij += zipj; count++; }
+          if (j     > 0 && is_set(i    , j - 1)) { zij += zijm; count++; }
+          if (j + 1 < m && is_set(i    , j + 1)) { zij += zijp; count++; }
+          z_surface(i, j) = zij/count;
+          is_set(i, j)    = true;
         }
-        if (r<2*it_dist) {
-          iter_i++;
-        }
-        else if (r<4*it_dist) {
-          iter_j++;
-        }
-        else if (r<6*it_dist) {
-          iter_i--;
-        }
-        else {
-          iter_j--;
-        }
+        if      (r < 2*it_dist) { i++ ;}
+        else if (r < 4*it_dist) { j++ ;}
+        else if (r < 6*it_dist) { i-- ;}
+        else                    { j-- ;}
       }
     }
-    iter_j=average_j-distance;
-    while (iter_j>0) {
-      iter_j--;
-      iter_i=average_i-distance;
-      while (iter_i<=average_i+distance) {
-        if (!is_set(iter_i,iter_j)) {
-          z_surface(iter_i,iter_j)=0.0;
-          count=0;
-          if (iter_i>0) {
-            if (is_set(iter_i-1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i-1,iter_j);
-              count++;
-            }
-          }
-          if ((iter_i+1)<n) {
-            if (is_set(iter_i+1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i+1,iter_j);
-              count++;
-            }
-          }
-          if (iter_j>0) {
-            if (is_set(iter_i,iter_j-1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j-1);
-              count++;
-            }
-          }
-          if ((iter_j+1)<m) {
-            if (is_set(iter_i,iter_j+1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j+1);
-              count++;
-            }
-          }
-          z_surface(iter_i,iter_j)=z_surface(iter_i,iter_j)/count;
-          is_set(iter_i,iter_j)=true;
+
+    j = average_j - distance;
+
+    while (j > 0) {
+      i = average_i - distance;
+      j--;
+      while (i <= average_i + distance) {
+        if (!is_set(i, j)) {
+          double zij   = 0.0;
+          size_t count = 0;
+          if (i     > 0 && is_set(i - 1, j    )) { zij += zimj; count++; }
+          if (i + 1 < n && is_set(i + 1, j    )) { zij += zipj; count++; }
+          if (j     > 0 && is_set(i    , j - 1)) { zij += zijm; count++; }
+          if (j + 1 < m && is_set(i    , j + 1)) { zij += zijp; count++; }
+          z_surface(i, j) = zij/count;
+          is_set(i, j)    = true;
         }
-        iter_i++;
+        i++;
       }
     }
-    iter_j=average_j+distance+1;
-    while (iter_j<m) {
-      iter_i=average_i-distance;
-      while (iter_i<=average_i+distance) {
-        if (!is_set(iter_i,iter_j)) {
-          z_surface(iter_i,iter_j)=0.0;
-          count=0;
-          if (iter_i>0) {
-            if (is_set(iter_i-1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i-1,iter_j);
-              count++;
-            }
-          }
-          if ((iter_i+1)<n) {
-            if (is_set(iter_i+1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i+1,iter_j);
-              count++;
-            }
-          }
-          if (iter_j>0) {
-            if (is_set(iter_i,iter_j-1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j-1);
-              count++;
-            }
-          }
-          if ((iter_j+1)<m) {
-            if (is_set(iter_i,iter_j+1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j+1);
-              count++;
-            }
-          }
-          z_surface(iter_i,iter_j)=z_surface(iter_i,iter_j)/count;
-          is_set(iter_i,iter_j)=true;
+
+    j = average_j + distance + 1;
+
+    while (j < m) {
+      i = average_i - distance;
+      while (i <= average_i + distance) {
+        if (!is_set(i, j)) {
+          double zij   = 0.0;
+          size_t count = 0;
+          if (i     > 0 && is_set(i - 1,j    )) { zij += zimj; count++; }
+          if (i + 1 < n && is_set(i + 1,j    )) { zij += zipj; count++; }
+          if (j     > 0 && is_set(i    ,j - 1)) { zij += zijm; count++; }
+          if (j + 1 < m && is_set(i    ,j + 1)) { zij += zijp; count++; }
+          z_surface(i,j) = zij/count;
+          is_set(i,j)    = true;
         }
-        iter_i++;
+        i++;
       }
-      iter_j++;
+      j++;
     }
-    iter_i=average_i-distance;
-    while (iter_i>0) {
-      iter_i--;
-      iter_j=0;
-      while (iter_j<m) {
-        if (!is_set(iter_i,iter_j)) {
-          z_surface(iter_i,iter_j)=0.0;
-          count=0;
-          if (iter_i>0) {
-            if (is_set(iter_i-1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i-1,iter_j);
-              count++;
-            }
-          }
-          if ((iter_i+1)<n) {
-            if (is_set(iter_i+1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i+1,iter_j);
-              count++;
-            }
-          }
-          if (iter_j>0) {
-            if (is_set(iter_i,iter_j-1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j-1);
-              count++;
-            }
-          }
-          if ((iter_j+1)<m) {
-            if (is_set(iter_i,iter_j+1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j+1);
-              count++;
-            }
-          }
-          z_surface(iter_i,iter_j)=z_surface(iter_i,iter_j)/count;
-          is_set(iter_i,iter_j)=true;
+
+    i = average_i - distance;
+
+    while (i > 0) {
+      i--;
+      j = 0;
+      while (j < m) {
+        if (!is_set(i,j)) {
+          double zij   = 0.0;
+          size_t count = 0;
+          if (i     > 0 && is_set(i - 1, j    )) { zij += zimj; count++; }
+          if (i + 1 < n && is_set(i + 1, j    )) { zij += zipj; count++; }
+          if (j     > 0 && is_set(i    , j - 1)) { zij += zijm; count++; }
+          if (j + 1 < m && is_set(i    , j + 1)) { zij += zijp; count++; }
+          z_surface(i, j) = zij/count;
+          is_set(i,j)     = true;
         }
-        iter_j++;
+        j++;
       }
     }
-    iter_i=average_i+distance+1;
-    while (iter_i<n) {
-      iter_j=0;
-      while (iter_j<m) {
-        if (!is_set(iter_i,iter_j)) {
-          z_surface(iter_i,iter_j)=0.0;
-          count=0;
-          if (iter_i>0) {
-            if (is_set(iter_i-1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i-1,iter_j);
-              count++;
-            }
-          }
-          if ((iter_i+1)<n) {
-            if (is_set(iter_i+1,iter_j)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i+1,iter_j);
-              count++;
-            }
-          }
-          if (iter_j>0) {
-            if (is_set(iter_i,iter_j-1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j-1);
-              count++;
-            }
-          }
-          if ((iter_j+1)<m) {
-            if (is_set(iter_i,iter_j+1)) {
-              z_surface(iter_i,iter_j)+=z_surface(iter_i,iter_j+1);
-              count++;
-            }
-          }
-          z_surface(iter_i,iter_j)=z_surface(iter_i,iter_j)/count;
-          is_set(iter_i,iter_j)=true;
+
+    i = average_i + distance + 1;
+
+    while (i < n) {
+      j = 0;
+      while (j < m) {
+        if (!is_set(i, j)) {
+          double zij   = 0.0;
+          size_t count = 0;
+          if (i     > 0 && is_set(i - 1, j    )) { zij += zimj; count++; }
+          if (i + 1 < n && is_set(i + 1, j    )) { zij += zipj; count++; }
+          if (j     > 0 && is_set(i    , j - 1)) { zij += zijm; count++; }
+          if (j +1  < m && is_set(i    , j + 1)) { zij += zijp; count++; }
+          z_surface(i, j) = zij/count;
+          is_set(i, j)    = true;
         }
-        iter_j++;
+        j++;
       }
-      iter_i++;
+      i++;
     }
   }
 }
