@@ -8,14 +8,21 @@ set(CPP_FILES
     seismic_parameters.cpp
     seismic_regridding.cpp
     xmlmodelfile.cpp
+    tasklist.cpp
 
     physics/wavelet.cpp
     physics/zoeppritz.cpp
     physics/zoeppritz_pp.cpp
     physics/zoeppritz_ps.cpp
 
-    utils/segy_writer.cpp
     utils/storm_writer.cpp
+	utils/output.cpp
+	utils/result_trace.cpp
+	utils/trace.cpp
+	utils/gen_seis_trace_params.cpp
+	utils/gen_resampl_param.cpp
+	utils/resampl_trace.cpp
+	utils/resampl_output.cpp
 )
 
 set(H_FILES
@@ -26,14 +33,21 @@ set(H_FILES
     seismic_parameters.hpp
     seismic_regridding.hpp
     xmlmodelfile.hpp
+    tasklist.hpp
 
     physics/wavelet.hpp
     physics/zoeppritz.hpp
     physics/zoeppritz_pp.hpp
     physics/zoeppritz_ps.hpp
 
-    utils/segy_writer.hpp
     utils/storm_writer.hpp
+	utils/output.hpp
+	utils/result_trace.hpp
+	utils/trace.hpp
+	utils/gen_seis_trace_params.hpp
+	utils/gen_resampl_param.hpp
+	utils/resampl_trace.hpp
+	utils/resampl_output.hpp
 )
 
 

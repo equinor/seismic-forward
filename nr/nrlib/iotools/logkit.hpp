@@ -1,4 +1,4 @@
-// $Id: logkit.hpp 1072 2012-09-18 13:53:37Z perroe $
+// $Id: logkit.hpp 1429 2017-02-15 11:50:06Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -22,7 +22,6 @@
 #ifndef NRLIB_LOGKIT_H
 #define NRLIB_LOGKIT_H
 
-#include<ostream>
 #include<vector>
 #include<string>
 
@@ -32,20 +31,21 @@ class LogStream;
 struct BufferMessage;
 
 /// Kit for logging of messages from program.
+///
+/// Philosophy:
+/// A message has a level, determining the type of message, and a phase,
+/// determining the stage in the program. Each stream has a level (which may
+/// be a combination of basic levels) for each phase. If phase and flag
+/// matches, the message is sent to the stream. A message without phase is
+/// default sent to all streams that would send it in at least one phase. If
+/// the ignore_general flag is set to true when generating a stream, that
+/// stream will ignore messages without phase.
+///
+/// The system can be used without bothering with phases. All NRLib logging
+/// is phase 0 - LOW.
+///
 class LogKit {
 public:
-  ///Philosophy:
-  ///A message has a level, determining the type of message, and a phase,
-  ///determining the stage in the program. Each stream has a level (which may
-  ///be a combination of basic levels) for each phase. If phase and flag
-  ///matches, the message is sent to the stream. A message without phase is
-  ///default sent to all streams that would send it in at least one phase. If
-  ///the ignore_general flag is set to true when generating a stream, that
-  ///stream will ignore messages without phase.
-  ///
-  ///The system can be used without bothering with phases. All NRLib logging
-  ///is phase 0 LOW.
-  ///
 
   ///Symbols for use when sending message level and parsing exact levels.
   enum MessageLevels {Error = 1, Warning = 2, Low = 4, Medium = 8, High = 16, DebugLow = 32, DebugHigh = 64};
@@ -76,6 +76,11 @@ public:
   ///Set a full phase dependent screen log
   static void SetScreenLog(const std::vector<int> & levels, bool ignore_general = false);
 
+  /// Add a custom log stream to the log kit
+  static void AddLogStream(LogStream* stream);
+
+  /// Remove a log stream
+  static void RemoveLogStream(LogStream* stream);
 
   ///Send message independent of phase
   static void LogMessage(int level, const std::string & message);
@@ -85,11 +90,14 @@ public:
 
   ///Send message as c-style format string and arguments.
   // Sending format as reference fails.
-  static void LogFormatted(int level, std::string format, ...);
+  static void LogFormatted(int level, const char* format, ...);
 
   ///Send message as c-style format string and arguments.
-  static void LogFormatted(int level, int phase, std::string format, ...);
+  static void LogFormatted(int level, int phase, const char* format, ...);
 
+  /// Updates progress on screen.
+  /// \param progress Progress, between 0 and 1.
+  static void UpdateProgress(double progress, const std::string& message);
 
   ///Close streams
   static void EndLog();
@@ -116,23 +124,6 @@ private:
   static void DumpBuffer(LogStream * logstream);
 };
 
-///Class LogStream is for internal use in LogKit only.
-class LogStream {
-public:
-  ///Convention: logstream = NULL means cout.
-  LogStream(std::ostream * logstream, int level);
-  LogStream(std::ostream * logstream, const std::vector<int> & levels, bool ignore_general = false);
-  ~LogStream();
-
-  void LogMessage(int level, const std::string & message);
-  void LogMessage(int level, int phase, const std::string & message);
-
-private:
-  std::ostream * logstream_;
-  std::vector<int> levels_;
-  int fullLevel_;
-  bool deleteStream;
-};
 
 struct BufferMessage {
   std::string text_;

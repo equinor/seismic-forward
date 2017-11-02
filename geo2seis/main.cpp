@@ -4,9 +4,9 @@
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// �    Redistributions of source code must retain the above copyright notice, this
+// o  Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
-// �    Redistributions in binary form must reproduce the above copyright notice, this list of
+// o  Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials
 //    provided with the distribution.
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
@@ -20,60 +20,78 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
-//#include <stdio.h>
-//#include <time.h>
-#include <assert.h>
 #include <fstream>
-//#include <string>
+#include <ctime>
 
-
-#include "nrlib/iotools/fileio.hpp"
-#include "nrlib/surface/regularsurface.hpp"
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/iotools/logkit.hpp"
-#include "modelsettings.hpp"
-#include "xmlmodelfile.hpp"
+
 #include "seismic_parameters.hpp"
 #include "seismic_regridding.hpp"
 #include "seismic_forward.hpp"
+#include "xmlmodelfile.hpp"
+#include "tasklist.hpp"
 
-
-
+#ifdef WITH_OMP
+#include <omp.h>
+#endif
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("A modelfile must be provided.\n");
-        printf("Usage: %s modelfile\n", argv[0]);
-        exit(1);
-    }
+  if (argc != 2) {
+    printf("A modelfile must be provided.\n");
+    printf("Usage: %s modelfile\n", argv[0]);
+    exit(1);
+  }
 
-    NRLib::LogKit::SetScreenLog(NRLib::LogKit::L_Low);
-    NRLib::LogKit::StartBuffering();
+  NRLib::LogKit::SetScreenLog(NRLib::LogKit::L_Low);
+  NRLib::LogKit::StartBuffering();
 
-    std::string inputfile(argv[1]);
-    bool failedModelFile = false;
-    std::cout << "************************************************************************ \n";
-    std::cout << "                Seismic Forward Modeling / Geo2Seis                      \n";
-    std::cout << "                           ver 4.0  2015                                 \n";
-    std::cout << "                   Norsk Regnesentral & Statoil                          \n";
-    std::cout << "************************************************************************ \n\n";
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n****************************************************************************************************");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                      Seismic Forward Modeling / Geo2Seis                                 *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                 version 4.2                                              *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                  Copyright (c) 2017 by Norsk Regnesentral / Statoil                      *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n****************************************************************************************************\n\n");
 
-    XmlModelFile modelFile(inputfile);
-    ModelSettings *model_settings = modelFile.getModelSettings();
-    if (modelFile.getParsingFailed()) {
-        failedModelFile = true;
-    }
+  std::string inputfile(argv[1]);
+  XmlModelFile    modelFile(inputfile);
+  ModelSettings * model_settings = modelFile.getModelSettings();
 
-    if (!failedModelFile) {
-        SeismicParameters seismic_parameters = SeismicParameters(model_settings);
-        SeismicRegridding::seismicRegridding(seismic_parameters);
-        SeismicForward::seismicForward(seismic_parameters);
-    } else {
-        printf("Press a key and then enter to continue.\n");
-        int x;
-        cin >> x;
+  if (!modelFile.getParsingFailed()) {
+    NRLib::LogKit::SetFileLog(model_settings->GetLogFileName(),
+                              model_settings->GetLogLevel());
+    NRLib::LogKit::EndBuffering();
 
-    }
-    NRLib::LogKit::EndLog();
+    //---find number of threads available and specified------------
+    int n_threads       = static_cast<int>(model_settings->GetMaxThreads());
+    int n_threads_avail = 1;
+#ifdef WITH_OMP
+    n_threads_avail = omp_get_num_procs();
+#endif
+    if (n_threads > n_threads_avail)
+      n_threads = n_threads_avail;
 
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"Threads in use                            :   %3d / %3d\n",n_threads, n_threads_avail);
+    NRLib::LogKit::WriteHeader("Model settings");
+    model_settings->PrintSettings();
+    time_t t1 = time(0);
+    NRLib::LogKit::WriteHeader("Setting up grid");
+    SeismicParameters seismic_parameters = SeismicParameters(model_settings);
+    SeismicRegridding::MakeSeismicRegridding(seismic_parameters,
+                                             model_settings,
+                                             n_threads);
+    seismic_parameters.PrintElapsedTime(t1, "for preprocesses");
+    NRLib::LogKit::WriteHeader("Forward modelling");
+    SeismicForward::DoSeismicForward(seismic_parameters);
+    //seismic_parameters.PrintElapsedTime(t1, "for total program");
+
+    TaskList::ViewAllTasks();
+  }
+  //else {
+  //  printf("Press a key and then enter to continue.\n");
+  //  int x;
+  //  cin >> x;
+  //}
+  NRLib::LogKit::EndLog();
 }

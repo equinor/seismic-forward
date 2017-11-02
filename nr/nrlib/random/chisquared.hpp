@@ -1,4 +1,4 @@
-// $Id: chisquared.hpp 1081 2012-09-28 09:11:07Z perroe $
+// $Id: chisquared.hpp 1468 2017-04-21 13:09:33Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -34,7 +34,7 @@ namespace NRLib {
 class ChiSquared : public Distribution<double>
 {
 public:
-  ChiSquared(double degrees_of_freedom);
+  explicit ChiSquared(double degrees_of_freedom);
 
   ~ChiSquared();
 

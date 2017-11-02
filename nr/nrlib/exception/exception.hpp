@@ -1,4 +1,4 @@
-// $Id: exception.hpp 1107 2012-11-06 08:40:41Z perroe $
+// $Id: exception.hpp 1430 2017-02-15 12:05:39Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.

@@ -1,4 +1,4 @@
-// $Id: eclipseeditnnc.hpp 1071 2012-09-18 11:42:51Z perroe $
+// $Id: eclipseeditnnc.hpp 1465 2017-04-07 13:28:48Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -22,21 +22,22 @@
 #ifndef NRLIB_ECLIPSEGRID_ECLIPSEEDITNNC_HPP
 #define NRLIB_ECLIPSEGRID_ECLIPSEEDITNNC_HPP
 
-#include <vector>
-#include <string>
+#include <fstream>
+#include <list>
 
 namespace NRLib {
 
 class EclipseEditNNC{
 public:
-  void ReadANNC(const std::vector<std::string>& line_segment);
-private:
-  int IX, IY, IZ,
-      JX, JY, JZ;
+  EclipseEditNNC(int ix, int iy, int iz, int jx, int jy, int jz, double value);
+  ~EclipseEditNNC() {};
 
-  double TRAN;
-  double IST1, IST2,
-         IPT1, IPT2;
+  static void WriteEditNNC(std::ofstream& out_file, const std::list<EclipseEditNNC>& editNNC);
+
+private:
+  int ix_, iy_, iz_,
+      jx_, jy_, jz_;
+  double tran_;
 };
 
 }

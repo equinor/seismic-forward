@@ -104,10 +104,11 @@ function(mex_compile MEX_SOURCE_FILE LINK_LIBRARIES DEPENDENCY)
     add_dependencies(mex_compile_${MEX_SOURCE_FILE} ${DEPENDENCY})
 endfunction()
 
-
 set(MEX_LINK_LIBRARIES
     $<TARGET_FILE:geo2seis_lib>
-    ${FFT_LIBRARIES}
+    ${FFT_MATLAB_LIBRARIES}
+    $<$<CONFIG:Debug>:${TBB_LIBRARIES_DEBUG}>
+    $<$<NOT:$<CONFIG:Debug>>:${TBB_LIBRARIES_RELEASE}>
 )
 
 mex_compile(g2s_model "${MEX_LINK_LIBRARIES}" geo2seis_lib)

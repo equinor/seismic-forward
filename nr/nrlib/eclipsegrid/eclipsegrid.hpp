@@ -1,4 +1,4 @@
-// $Id: eclipsegrid.hpp 1187 2013-06-14 13:34:45Z perroe $
+// $Id: eclipsegrid.hpp 1630 2017-07-13 07:37:46Z larsf $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -25,6 +25,7 @@
 #include "eclipsegeometry.hpp"
 #include "eclipsefault.hpp"
 #include "eclipsetransmult.hpp"
+#include "eclipseeditnnc.hpp"
 
 #include "../grid/grid.hpp"
 
@@ -173,6 +174,9 @@ public:
   Grid<double>& GetParameter(const std::string& parameter_name)
   { return continuous_parameters_[parameter_name]; }
 
+  /// Get vector containing all parameter names
+  inline std::vector<std::string> GetParameterNames() const;
+
   ParameterIterator       ParametersBegin()       { return continuous_parameters_.begin(); }
   ParameterConstIterator  ParametersBegin() const { return continuous_parameters_.begin(); }
   ParameterIterator       ParametersEnd()         { return continuous_parameters_.end(); }
@@ -184,6 +188,7 @@ public:
   // ====================== Fault accessors ==============================
 
   const std::map<std::string, EclipseFault>& GetFaults() const { return faults_; }
+  const EclipseFault& GetFault(std::string name) const { return faults_.find(name)->second; }
 
   FaultIterator      FaultsBegin()       { return faults_.begin(); }
   FaultConstIterator FaultsBegin() const { return faults_.begin(); }
@@ -218,6 +223,8 @@ public:
 
   /// \note This code is still not complete, at least not completely tested!!
   void AddTransMult(const EclipseTransMult& trans_mult);
+
+  void AddEditNNC(const EclipseEditNNC& edit_nnc);
 
   // ===========================  File IO  ===============================
 
@@ -269,11 +276,6 @@ private:
                           const NRLib::Grid<double> & parameter) const;
   void WriteFaults(std::ofstream& out_file) const;
   void WriteRefinementGroups(std::ofstream& out_file) const;
-  void WriteEditNNC(std::ofstream& out_file) const;
-  void WriteMultiply(std::ofstream& out_file) const;
-
-  //0 is x, 1 is y and 2 is z (for the direction)
-  void WriteTran(std::ofstream& out_file, int direction) const;
 
   // "k" is used to indicate that it can be used for x, y and z
   // Finds the start and end point for each of the 8 lines
@@ -367,7 +369,9 @@ private:
   std::string                          units_;
 
   /// Transmissibility multipliers. Currently not completely supported.
-  std::list<EclipseTransMult>          trans_mult_;
+  std::list<EclipseTransMult>          trans_mult_;     // For logical neighbors
+
+  std::list<EclipseEditNNC>            editNNC_;  //For non-neighbor connections.
 };
 
 
@@ -391,6 +395,16 @@ bool EclipseGrid::HasParameter(const std::string& parameter_name) const
   if (it == continuous_parameters_.end())
     return false;
   return true;
+}
+
+std::vector<std::string> EclipseGrid::GetParameterNames() const
+{
+  std::vector<std::string> names;
+  for (ParameterConstIterator iter = ParametersBegin(); iter != ParametersEnd(); ++iter)
+  {
+    names.push_back(iter->first);
+  }
+  return names;
 }
 
 } // namespace NRLib

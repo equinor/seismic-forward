@@ -1,4 +1,4 @@
-// $Id: delta.hpp 1110 2012-11-13 08:50:49Z perroe $
+// $Id: delta.hpp 1468 2017-04-21 13:09:33Z perroe $
 
 // Copyright (c)  2012, Norwegian Computing Center
 // All rights reserved.
@@ -32,7 +32,7 @@ namespace NRLib {
 class Delta : public Distribution<double> {
 public:
   Delta();
-  Delta(double val);
+  explicit Delta(double val);
   ~Delta();
 
   Distribution<double>* Clone() const;

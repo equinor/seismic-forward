@@ -1,4 +1,4 @@
-// $Id: point.cpp 882 2011-09-23 13:10:16Z perroe $
+// $Id: point.cpp 1693 2017-09-15 10:33:19Z vegard $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -20,8 +20,8 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "point.hpp"
-#include "line.hpp"
 #include <cmath>
+#include <algorithm>
 
 using namespace NRLib;
 
@@ -101,4 +101,47 @@ void NRLib::NRLibPrivate::Matrix3DInverse(const Point& v1, const Point& v2, cons
   s1.z = ( v1.y*v2.z - v1.z*v2.y ) * inverse_det;
   s2.z = ( v1.z*v2.x - v1.x*v2.z ) * inverse_det;
   s3.z = ( v1.x*v2.y - v1.y*v2.x ) * inverse_det;
+}
+
+
+
+
+
+/// algorithm from http://geomalgorithms.com
+double
+Point::LeftFromLineXY(const Point & P0, const Point & P1) const
+{
+  return (P1.x - P0.x)*(y - P0.y) - (x - P0.x)*(P1.y - P0.y);
+}
+
+
+bool
+Point::IsInList(const std::vector<Point> & point_list) const
+{
+  if (point_list.size() ==0){
+    return false;
+  }
+  else{
+    Point point = *this;
+    size_t length = point_list.size();
+    for (size_t i = 0; i < length; i++){
+      if (point == point_list[i]) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+double NRLib::Point::CalculatePointVectorLength(const std::vector<NRLib::Point>& points)
+{
+  if (points.size() < 2)
+    return 0.0;
+  else {
+    double acc_length = 0.0;
+    for (size_t i = 1; i < points.size(); i++) {
+      acc_length += (points[i] - points[i - 1]).Norm();
+    }
+    return acc_length;
+  }
 }

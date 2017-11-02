@@ -1,11 +1,13 @@
 #include "storm_writer.hpp"
 
-void STORM::writeStorm(NRLib::StormContGrid &grid,
+#include <cmath>
+
+void STORM::WriteStorm(NRLib::StormContGrid &grid,
                        std::string &filename,
                        double top_window,
                        double bot_window,
                        bool window_specified,
-                       bool keep_grid) 
+                       bool keep_grid)
 {
 
   if (window_specified == false) {
@@ -15,11 +17,10 @@ void STORM::writeStorm(NRLib::StormContGrid &grid,
     //printf("zmin = %d \n", static_cast<int>(z_min));
     double z_max = grid.GetZMax();
     //printf("zmax = %d \n", static_cast<int>(z_max));
-
-    if (top_window == z_min && bot_window == z_max) {
+    if (std::abs(top_window - z_min) < 0.01 && std::abs(bot_window - z_max) < 0.01) {
       grid.WriteToFile(filename);
-    } else {
-
+    } 
+    else {
       size_t i_top, j_top, i_bot, j_bot, k_bot, k_end, k_top_temp;
       int k_top;
       double x_min = grid.GetXMin();
@@ -36,7 +37,8 @@ void STORM::writeStorm(NRLib::StormContGrid &grid,
         } else {
           k_top = (top_window - z_min) / dz;
         }
-      } else {
+      } 
+      else {
         printf("Top window is below grid. No Storm grid written.\n");
         return;
       }
@@ -54,7 +56,6 @@ void STORM::writeStorm(NRLib::StormContGrid &grid,
       if ((k_bot - k_top) > nk) {
         grid.ResizeK(k_bot - k_top);
       }
-
       //first=grid.begin()+start_k*nx*ny;
       //last=grid.begin()+(end_k+1)*nx*ny;
       //result = grid.begin();
@@ -182,8 +183,7 @@ void STORM::writeStorm(NRLib::StormContGrid &grid,
           }
           NRLib::Volume *vol = static_cast<NRLib::Volume *>(&grid);
           *vol = volume_new;
-
-          grid.ResizeK((k_bot - k_top + 1));
+          grid.ResizeK((k_bot - k_top));
           grid.WriteToFile(filename);
         }
       }

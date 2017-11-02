@@ -31,7 +31,7 @@ ZoeppritzPS::~ZoeppritzPS() {
 
 }
 
-void ZoeppritzPS::ComputeConstants(double theta) 
+void ZoeppritzPS::ComputeConstants(double theta)
 {
   a1_ = 0.0;
   sin2theta_ = sin(theta) * sin(theta);
@@ -39,7 +39,7 @@ void ZoeppritzPS::ComputeConstants(double theta)
   cos_theta_ = cos(theta);
 }
 
-double ZoeppritzPS::GetReflection(double diffvp, double meanvp, double diffrho, double meanrho, double diffvs, double meanvs) 
+double ZoeppritzPS::GetReflection(double diffvp, double meanvp, double diffrho, double meanrho, double diffvs, double meanvs)
 {
   double cos_phi = cos(asin(meanvs * sin_theta_ / meanvp));
   a2_ = 2 * sin_theta_ * (meanvs * meanvs * sin2theta_ / (cos_phi * meanvp * meanvp) - meanvs * cos_theta_ / meanvp);

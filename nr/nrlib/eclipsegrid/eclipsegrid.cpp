@@ -1,4 +1,4 @@
-// $Id: eclipsegrid.cpp 1121 2012-11-21 08:27:28Z hgolsen $
+// $Id: eclipsegrid.cpp 1521 2017-06-20 11:59:14Z eyaker $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -98,6 +98,10 @@ void EclipseGrid::AddTransMult(const EclipseTransMult& trans_mult)
   trans_mult_.push_back(trans_mult);
 }
 
+void EclipseGrid::AddEditNNC(const EclipseEditNNC& edit_nnc)
+{
+  editNNC_.push_back(edit_nnc);
+}
 
 void EclipseGrid::AddParameter(const std::string& parameter_name, double val)
 {
@@ -257,6 +261,7 @@ void EclipseGrid::ReadFromFile(const std::string& file_name)
 
   bool local_coord = false;
   bool has_map_axes = false;
+  bool has_spec_grid = false;
   std::string map_units;
   std::string grid_unit;
 
@@ -270,6 +275,16 @@ void EclipseGrid::ReadFromFile(const std::string& file_name)
     }
     else if (token == "GRIDUNIT") {
       ReadGridUnit(in_file, grid_unit, local_coord);
+    }
+    else if (token == "SPECGRID") {
+      geometry_.ReadSpecGrid(in_file);
+      has_spec_grid = true;
+    }
+    else if (token == "COORD") {
+      if (!has_spec_grid) {
+        throw IOError("Missing keyword SPECGRID in " + file_name + " when reading grid coordinates.");
+      }
+      geometry_.ReadCoord(in_file);
     }
     else {
       ReadKeyword(in_file, token);
@@ -299,8 +314,8 @@ void EclipseGrid::ReadFromFile(const std::string& file_name)
 
           transformation.Transform(p1);
           transformation.Transform(p2);
-          Line line(p1, p2);
-          geometry_.SetCoordLine(i, j, line);
+          Line coordline(p1, p2);
+          geometry_.SetCoordLine(i, j, coordline);
         }
       }
     }
@@ -322,14 +337,8 @@ void EclipseGrid::ReadKeyword(std::ifstream& in_file, const std::string& token)
   else if (token == "ZCORN") {
     geometry_.ReadZCorn(in_file);
   }
-  else if (token == "COORD") {
-    geometry_.ReadCoord(in_file);
-  }
   else if (token == "ACTNUM") {
     geometry_.ReadActNum(in_file);
-  }
-  else if (token == "SPECGRID") {
-    geometry_.ReadSpecGrid(in_file);
   }
   else if (token == "FAULTS") {
     ReadFaults(in_file);
@@ -403,8 +412,8 @@ void EclipseGrid::WriteToFile(const std::string& file_name,
 
   WriteRefinementGroups(out_file);
 
-  WriteEditNNC(out_file);
-  WriteMultiply(out_file);
+  EclipseEditNNC::WriteEditNNC(out_file, editNNC_);
+  EclipseTransMult::WriteMultiply(out_file, trans_mult_);
 }
 
 
@@ -553,54 +562,6 @@ void EclipseGrid::WriteFaults(std::ofstream& out_file) const
   }
 }
 
-void EclipseGrid::WriteEditNNC(std::ofstream& out_file) const
-{
-  if (trans_mult_.empty())
-    return;
-
-  out_file << "EDITNNC\n";
-
-  out_file << "--" << std::setw(4) << "IX" << std::setw(7) << "IY" << std::setw(7)
-           << "IZ" << std::setw(7) << "JX" << std::setw(7) << "JY" << std::setw(7)
-           << "JZ" << std::setw(10) << "TRANM" << "\n\n";
-
-  //index +1
-  std::list<EclipseTransMult>::const_iterator it;
-  for (it = trans_mult_.begin(); it != trans_mult_.end(); it++){
-    out_file << std::setw(5);
-    out_file << it->GetCellFace().i_ + 1 << std::setw(7);
-    out_file << it->GetCellFace().j_ + 1 << std::setw(7);
-    out_file << it->GetCellFace().k_ + 1 << std::setw(7);
-
-    if (it->GetCellFace().face_ == PosX){
-      out_file << it->GetCellFace().i_ + 1 + 1 << std::setw(7);
-      out_file << it->GetCellFace().j_ + 1 << std::setw(7);
-    }
-    else if (it->GetCellFace().face_ == NegX){
-      out_file << it->GetCellFace().i_ - 1 + 1 << std::setw(7);
-      out_file << it->GetCellFace().j_ + 1 << std::setw(7);
-    }
-    else if (it->GetCellFace().face_ == PosY){
-      out_file << it->GetCellFace().i_ + 1 << std::setw(7);
-      out_file << it->GetCellFace().j_ + 1 + 1 << std::setw(7);
-    }
-    else if (it->GetCellFace().face_ == NegY){
-      out_file << it->GetCellFace().i_ + 1 << std::setw(7);
-      out_file << it->GetCellFace().j_ - 1 + 1 << std::setw(7);
-    }
-    else if (it->GetCellFace().face_ == PosZ || it->GetCellFace().face_ == NegZ){
-      out_file << it->GetCellFace().i_ + 1 << std::setw(7);
-      out_file << it->GetCellFace().j_ + 1 << std::setw(7);
-    }
-
-    out_file << it->GetNeighbour() + 1 << "  " << it->GetMultiplier() << std::setw(5) << "/\n";
-  }
-
-  out_file << "/\n\n";
-
-}
-
-
 void EclipseGrid::WriteRefinementGroups(std::ofstream& out_file) const
 {
   if (!refinement_groups_.empty()) {
@@ -612,71 +573,6 @@ void EclipseGrid::WriteRefinementGroups(std::ofstream& out_file) const
     out_file << "/\n\n";
   }
 }
-
-
-void EclipseGrid::WriteMultiply(std::ofstream& out_file) const
-{
-  if (!trans_mult_.empty()) {
-    WriteTran(out_file, 0);
-    WriteTran(out_file, 1);
-    WriteTran(out_file, 2);
-  }
-}
-
-
-void EclipseGrid::WriteTran(std::ofstream& out_file, int direction) const
-{
-  out_file << "MULTIPLY\n";
-
-  std::list<EclipseTransMult>::const_iterator it;
-  for (it = trans_mult_.begin(); it != trans_mult_.end(); it++){
-    int i_out = it->GetCellFace().i_;
-    int j_out = it->GetCellFace().j_;
-    bool write = false;
-    if (direction == 0){
-      if (it->GetCellFace().face_ == PosX){
-        out_file << "'TRANX'" << std::setw(10);
-        write = true;
-      }
-      else if (it->GetCellFace().face_ == NegX){
-        out_file << "'TRANX'" << std::setw(10);
-        i_out--;
-        write = true;
-      }
-    }
-    else if (direction == 1){
-      if (it->GetCellFace().face_ == PosY){
-        out_file << "'TRANY'" << std::setw(10);
-        write = true;
-      }
-      else if (it->GetCellFace().face_ == NegY){
-        out_file << "'TRANY'" << std::setw(10);
-        j_out--;
-        write = true;
-      }
-    }
-    else if (direction == 2){
-      if (it->GetCellFace().face_ == PosZ || it->GetCellFace().face_ == NegZ){
-        out_file << "'TRANZ'" << std::setw(10);
-        write = true;
-      }
-    }
-    if (write == true){
-      //index +1
-      out_file << it->GetMultiplier() << std::setw(5);
-      out_file << i_out + 1 << std::setw(7) << i_out + 1 << std::setw(7)
-               << j_out + 1 << std::setw(7) << j_out + 1 << std::setw(7)
-               << it->GetCellFace().k_ + 1 << std::setw(7) << it->GetCellFace().k_ + 1
-               << std::setw(5);
-
-      out_file << "/\n";
-    }
-
-  }
-
-  out_file << "/\n\n";
-}
-
 
 void EclipseGrid::GetNeighbourColumn(int i, int j, Face face, int& i_out, int& j_out) const
 {

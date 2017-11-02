@@ -1,4 +1,4 @@
-// $Id: regularsurfacerotated.hpp 882 2011-09-23 13:10:16Z perroe $
+// $Id: regularsurfacerotated.hpp 1571 2017-06-29 07:55:41Z larsf $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -32,6 +32,7 @@
 
 namespace NRLib {
 template <class A>
+
 class RegularSurfaceRotated : public Surface<A> {
 public:
   RegularSurfaceRotated();
@@ -47,14 +48,32 @@ public:
 
   RegularSurfaceRotated(const RegularSurface<A>& surface, double angle);
 
+  RegularSurfaceRotated(double x_ref, double y_ref, double lx, double ly, const Grid2D<A>& grid, double angle);
+
   /// \brief Read surface file on given format.
   /// \param filename  File name.
   /// \param format    File format. If SURF_UNKNOWN we try to determine the format.
   /// \throws IOError         If we failed to open the file
   /// \throws FileFormatError If we can not determine the file format, or the contents
   ///                         of the file does not match the file format.
-  RegularSurfaceRotated(const std::string& filename,
-                        SurfaceFileFormat  format = SURF_UNKNOWN);
+
+  RegularSurfaceRotated(std::string       filename,
+                        SurfaceFileFormat format        = SURF_UNKNOWN,
+                        double            angle         = 0.0,
+                        double            x_ref         = 0.0,
+                        double            y_ref         = 0.0,
+                        double            lx            = 0.0,
+                        double            ly            = 0.0,
+                        int             * ilxl_area     = NULL,
+                        int               il0           = 0,
+                        int               xl0           = 0,
+                        bool              first_axis_il = true,
+                        double            in_line0      = 0.0,
+                        double            cross_line0   = 0.0,
+                        double            il_step_x     = 0.0,
+                        double            il_step_y     = 0.0,
+                        double            xl_step_x     = 0.0,
+                        double            xl_step_y     = 0.0);
 
   Surface<A>* Clone() const
   { return new RegularSurfaceRotated<A>(*this); }
@@ -108,6 +127,12 @@ public:
   double GetLengthX() const { return surface_.GetLengthX(); }
   double GetLengthY() const { return surface_.GetLengthY(); }
 
+  void SetDimensions(double x_min, double y_min,
+                     double lx, double ly);
+
+  /// Resize grid. Overrides Grid2D's resize.
+  void Resize(size_t ni, size_t nj, const A& val = A());
+
   size_t GetNI() const { return surface_.GetNI(); }
   size_t GetNJ() const { return surface_.GetNJ(); }
   size_t GetN()  const { return surface_.GetN(); }
@@ -122,6 +147,14 @@ public:
   A Avg()             const { return surface_.Avg(); }
   A Avg(int& n_nodes) const { return surface_.Avg(n_nodes); }
 
+  ///The following routines are for binary operations with non-conform grids.
+  ///Missing areas will shrink.
+  ///Also works for identical definitions without missing, but is inefficient.
+  bool AddNonConform(const Surface<A> * s2);
+  bool SubtractNonConform(const Surface<A> * s2);
+  bool MultiplyNonConform(const Surface<A> * s2);
+  bool DivideNonConform(const Surface<A> *s2);
+
   double GetXRef() const { return x_ref_; }
   double GetYRef() const { return y_ref_; }
   double GetXMin() const { return x_min_; }
@@ -130,7 +163,9 @@ public:
   double GetYMax() const { return y_max_; }
 
   RegularSurface<A> ResampleSurface() const ;
-  double GetAngle() const {return angle_;}
+
+  double GetAngle() const       { return angle_  ;}
+  void   SetAngle(double angle) { angle_ = angle ;}
 
   A GetMissingValue() const { return surface_.GetMissingValue() ;}
   void SetMissingValue(A missing_val) { surface_.SetMissingValue(missing_val); }
@@ -148,8 +183,23 @@ public:
   /// \throws IOError         If we failed to open the file
   /// \throws FileFormatError If we can not determine the file format, or the contents
   ///                         of the file does not match the file format.
-  void ReadFromFile(const std::string& filename,
-                    SurfaceFileFormat  format = SURF_UNKNOWN);
+  void ReadFromFile(std::string       filename,
+                    SurfaceFileFormat format        = SURF_UNKNOWN,
+                    double            angle         = 0.0,
+                    double            x_ref         = 0.0,
+                    double            y_ref         = 0.0,
+                    double            lx            = 0.0,
+                    double            ly            = 0.0,
+                    int             * ilxl_area     = NULL,
+                    int               il0           = 0,
+                    int               xl0           = 0,
+                    bool              first_axis_il = true,
+                    double            il0_ref       = 0.0,
+                    double            xl0_ref       = 0.0,
+                    double            il_step_x     = 0.0,
+                    double            il_step_y     = 0.0,
+                    double            xl_step_x     = 0.0,
+                    double            xl_step_y     = 0.0);
 
   /// \brief Write surface to file on given format.
   /// If the file format does not support rotation, the resampled surface is written to file.
@@ -159,9 +209,9 @@ public:
 
 private:
  void GlobalToLocalCoord(double global_x,
-                          double global_y,
-                          double& local_x,
-                          double& local_y) const;
+                         double global_y,
+                         double& local_x,
+                         double& local_y) const;
   void LocalToGlobalCoord(double local_x,
                           double local_y,
                           double& global_x,
@@ -193,35 +243,90 @@ RegularSurfaceRotated<A>::RegularSurfaceRotated()
 
 
 template <class A>
-RegularSurfaceRotated<A>::RegularSurfaceRotated(double x_min, double y_min,
-                                  double lx, double ly,
-                                  size_t nx, size_t ny, double angle,
-                                  const A& value)
+RegularSurfaceRotated<A>::RegularSurfaceRotated(double x_ref, double y_ref,
+                                                double lx, double ly,
+                                                size_t nx, size_t ny, double angle,
+                                                const A& value)
   : angle_(angle),
-    x_ref_(x_min),
-    y_ref_(y_min)
+    x_ref_(x_ref),
+    y_ref_(y_ref)
 {
-  surface_ = RegularSurface<A>(x_min,y_min,lx,ly,nx,ny,value);
+  surface_ = RegularSurface<A>(x_ref, y_ref, lx, ly, nx, ny, value);
+  CalculateMinMaxXY();
+}
+
+template <class A>
+RegularSurfaceRotated<A>::RegularSurfaceRotated(const RegularSurface<A>& surface, double angle)
+  : angle_(angle)
+{
+  surface_ = surface;
+  x_ref_   = surface.GetXMin();
+  y_ref_   = surface.GetYMin();
+  SetMissingValue(surface.GetMissingValue());
+  CalculateMinMaxXY();
+}
+
+template <class A>
+RegularSurfaceRotated<A>::RegularSurfaceRotated(double x_ref, double y_ref,
+                                                double lx, double ly,
+                                                const Grid2D<A>& grid, double angle)
+  : angle_(angle),
+    x_ref_(x_ref),
+    y_ref_(y_ref)
+{
+  surface_ = RegularSurface<A>(x_ref, y_ref, lx, ly, grid);
   CalculateMinMaxXY();
 }
 
 
 template <class A>
-RegularSurfaceRotated<A>::RegularSurfaceRotated(const std::string& filename,
-                                                SurfaceFileFormat  format)
+RegularSurfaceRotated<A>::RegularSurfaceRotated(std::string       filename,
+                                                SurfaceFileFormat format,
+                                                double            angle,
+                                                double            x_ref,
+                                                double            y_ref,
+                                                double            lx,
+                                                double            ly,
+                                                int             * ilxl_area,
+                                                int               il0,
+                                                int               xl0,
+                                                bool              first_axis_il,
+                                                double            in_line0,
+                                                double            cross_line0,
+                                                double            il_step_x,
+                                                double            il_step_y,
+                                                double            xl_step_x,
+                                                double            xl_step_y)
+
 {
-  ReadFromFile(filename, format);
+  ReadFromFile(filename,
+               format,
+               angle,
+               x_ref,
+               y_ref,
+               lx,
+               ly,
+               ilxl_area,
+               il0,
+               xl0,
+               first_axis_il,
+               in_line0,
+               cross_line0,
+               il_step_x,
+               il_step_y,
+               xl_step_x,
+               xl_step_y);
 }
 
 
 template <class A>
 void
-RegularSurfaceRotated<A>::GlobalToLocalCoord(double global_x,
-                                double global_y,
-                                double& local_x,
-                                double& local_y) const
+RegularSurfaceRotated<A>::GlobalToLocalCoord(double  global_x,
+                                             double  global_y,
+                                             double& local_x,
+                                             double& local_y) const
 {
-  double x_rel = global_x-x_ref_;
+  double x_rel = global_x - x_ref_;
   double y_rel = global_y - y_ref_;
 
   local_x =   std::cos(angle_)*x_rel + std::sin(angle_)*y_rel ;
@@ -229,10 +334,10 @@ RegularSurfaceRotated<A>::GlobalToLocalCoord(double global_x,
 }
 
 template <class A>
-void RegularSurfaceRotated<A>::LocalToGlobalCoord(double local_x,
-                                     double local_y,
-                                     double& global_x,
-                                     double& global_y) const
+void RegularSurfaceRotated<A>::LocalToGlobalCoord(double  local_x,
+                                                  double  local_y,
+                                                  double& global_x,
+                                                  double& global_y) const
 {
   global_x = std::cos(angle_)*local_x - std::sin(angle_)*local_y + x_ref_;
   global_y = std::sin(angle_)*local_x + std::cos(angle_)*local_y + y_ref_;
@@ -263,9 +368,83 @@ bool RegularSurfaceRotated<A>::IsInsideSurface(double x, double y) const
   return z;
 
 }
+
+template <class A>
+bool RegularSurfaceRotated<A>::AddNonConform(const Surface<A> * s2)
+{
+  A missing_val = surface_.GetMissingValue();
+  for (size_t i = 0; i < this->GetN(); i++) {
+    if ((*this)(i) != missing_val) {
+      double x, y, value;
+      GetXY(i, x, y);
+      value = s2->GetZ(x, y);
+      if (s2->IsMissing(value) == false)
+        (*this)(i) += value;
+      else
+        (*this)(i) = missing_val;
+    }
+  }
+  return(true);
+}
+
+
+template <class A>
+bool RegularSurfaceRotated<A>::SubtractNonConform(const Surface<A> * s2)
+{
+  A missing_val = surface_.GetMissingValue();
+  for (size_t i = 0; i < this->GetN(); i++) {
+    if ((*this)(i) != missing_val) {
+      double x, y, value;
+      GetXY(i, x, y);
+      value = s2->GetZ(x, y);
+      if (s2->IsMissing(value) == false)
+        (*this)(i) -= value;
+      else
+        (*this)(i) = missing_val;
+    }
+  }
+  return(true);
+}
+
+template <class A>
+bool RegularSurfaceRotated<A>::MultiplyNonConform(const Surface<A> * s2)
+{
+  A missing_val = surface_.GetMissingValue();
+  for (size_t i = 0; i < this->GetN(); i++) {
+    if ((*this)(i) != missing_val) {
+      double x, y, value;
+      GetXY(i, x, y);
+      value = s2->GetZ(x, y);
+      if (s2->IsMissing(value) == false)
+        (*this)(i) *= value;
+      else
+        (*this)(i) = missing_val;
+    }
+  }
+  return(true);
+}
+
+template <class A>
+bool RegularSurfaceRotated<A>::DivideNonConform(const Surface<A> * s2)
+{
+  A missing_val = surface_.GetMissingValue();
+  for (size_t i = 0; i < this->GetN(); i++) {
+    if ((*this)(i) != missing_val) {
+      double x, y, value;
+      GetXY(i, x, y);
+      value = s2->GetZ(x, y);
+      if (s2->IsMissing(value) == false)
+        (*this)(i) /= value;
+      else
+        (*this)(i) = missing_val;
+    }
+  }
+  return(true);
+}
+
 template <class A>
 bool RegularSurfaceRotated<A>::EnclosesRectangle(double x_min, double x_max,
-                         double y_min, double y_max) const
+                                                 double y_min, double y_max) const
 {
  if (x_min < GetXMin() || x_max > GetXMax() ||
       y_min < GetYMin() || y_max > GetYMax()) {
@@ -295,21 +474,45 @@ void RegularSurfaceRotated<A>::CalculateMinMaxXY()
 }
 
 template <class A>
+void RegularSurfaceRotated<A>::SetDimensions(double x_min, double y_min,
+                                             double lx, double ly)
+{
+  surface_.SetDimensions(x_min, y_min, lx, ly);
+
+  x_ref_ = x_min;
+  y_ref_ = y_min;
+  CalculateMinMaxXY();
+}
+
+template <class A>
+void RegularSurfaceRotated<A>::Resize(size_t nx, size_t ny, const A& value)
+{
+  surface_.Resize(nx, ny, value);
+}
+
+
+template <class A>
 void RegularSurfaceRotated<A>::GetXY(size_t i, size_t j, double & x, double & y) const
 {
-  double xloc, yloc;
-  surface_.GetXY(i,j,xloc, yloc);
-  LocalToGlobalCoord(xloc,yloc,x,y);
+  double x_tmp, y_tmp;
+  surface_.GetXY(i,j,x_tmp,y_tmp);
 
+  double x_loc = x_tmp - x_ref_;
+  double y_loc = y_tmp - y_ref_;
+
+  LocalToGlobalCoord(x_loc,y_loc,x,y);
 }
 
 template <class A>
 void RegularSurfaceRotated<A>::GetXY(size_t index, double & x, double & y) const
 {
-  double xloc, yloc;
-  surface_.GetXY(index,xloc, yloc);
-  LocalToGlobalCoord(xloc,yloc,x,y);
+  double x_tmp, y_tmp;
+  surface_.GetXY(index,x_tmp,y_tmp);
 
+  double x_loc = x_tmp - x_ref_;
+  double y_loc = y_tmp - y_ref_;
+
+  LocalToGlobalCoord(x_loc,y_loc,x,y);
 }
 
 template <class A>
@@ -338,13 +541,29 @@ RegularSurface<A> RegularSurfaceRotated<A>::ResampleSurface() const
 
 
 template <class A>
-void RegularSurfaceRotated<A>::ReadFromFile(const std::string& filename,
-                                            SurfaceFileFormat  format)
+void RegularSurfaceRotated<A>::ReadFromFile(std::string       filename,
+                                            SurfaceFileFormat format,
+                                            double            segy_angle,
+                                            double            x_ref,
+                                            double            y_ref,
+                                            double            lx,
+                                            double            ly,
+                                            int             * ilxl_area,
+                                            int               il0,
+                                            int               xl0,
+                                            bool              first_axis_il,
+                                            double            in_line0,
+                                            double            cross_line0,
+                                            double            il_step_x,
+                                            double            il_step_y,
+                                            double            xl_step_x,
+                                            double            xl_step_y)
 {
   if (format == SURF_UNKNOWN) {
     format = FindSurfaceFileType(filename);
     if (format == SURF_UNKNOWN) {
-      throw FileFormatError("Failed to determine file format for surface file: " + filename);
+      throw FileFormatError("Failed to determine file format for surface file: " + filename
+                            + "Allowed formats are Irap Classic, Storm binary, Sgri, Multicolumn Ascii (X,Y,Z,IL,XL) and XYZ ascii.");
     }
   }
 
@@ -359,8 +578,40 @@ void RegularSurfaceRotated<A>::ReadFromFile(const std::string& filename,
     case SURF_SGRI:
       ReadSgriSurf(filename, surface_, angle_);
       break;
+    case SURF_XYZ_ASCII:
+      ReadXYZAsciiSurf(filename,
+                       surface_,
+                       x_ref,
+                       y_ref,
+                       lx,
+                       ly,
+                       ilxl_area,
+                       il0,
+                       xl0,
+                       first_axis_il,
+                       in_line0, //The last 6 variables are used to create an IL/XL map
+                       cross_line0,
+                       il_step_x,
+                       il_step_y,
+                       xl_step_x,
+                       xl_step_y);
+      angle_ = segy_angle;
+      break;
+    case SURF_MULT_ASCII:
+      ReadMulticolumnAsciiSurf(filename,
+                               surface_,
+                               x_ref,
+                               y_ref,
+                               lx,
+                               ly,
+                               ilxl_area,
+                               il0,
+                               xl0,
+                               first_axis_il);
+      angle_ = segy_angle;
+      break;
     default:
-      throw FileFormatError("Reading of file " + filename + " on format " + ToString(format)
+      throw FileFormatError("Reading of file " + filename + " on format " + GetSurfFormatString(format)
                              + " as a rotated grid is currently not supported.");
   }
 
@@ -392,7 +643,7 @@ void RegularSurfaceRotated<A>::WriteToFile(const std::string& filename,
       break;
     default:
       throw FileFormatError("Writing of surface to file " + filename + " on format "
-                            + ToString(format) + " is currently not supported.");
+                            + GetSurfFormatString(format) + " is currently not supported.");
   }
 }
 

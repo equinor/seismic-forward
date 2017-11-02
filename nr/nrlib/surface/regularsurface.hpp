@@ -1,4 +1,4 @@
-// $Id: regularsurface.hpp 1196 2013-09-09 12:01:04Z perroe $
+// $Id: regularsurface.hpp 1626 2017-07-13 07:26:51Z larsf $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -44,7 +44,7 @@ public:
   RegularSurface(double x0, double y0, double lx, double ly, size_t nx, size_t ny,
                  const A& value = A());
 
-  RegularSurface(double x0, double y0, double lx, double ly, Grid2D<A> grid);
+  RegularSurface(double x0, double y0, double lx, double ly, const Grid2D<A>& grid);
 
   /// \brief Read surface file on given format.
   /// \param filename  File name.
@@ -298,7 +298,7 @@ RegularSurface<A>::RegularSurface(double x_min, double y_min,
 template <class A>
 RegularSurface<A>::RegularSurface(double x_min, double  y_min,
                                   double lx, double ly,
-                                  Grid2D<A> grid)
+                                  const Grid2D<A>& grid)
   : Grid2D<A>(grid),
     x_min_(x_min),
     y_min_(y_min),

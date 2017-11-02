@@ -1,4 +1,4 @@
-// $Id: grid.hpp 1254 2014-02-28 13:25:07Z vigsnes $
+// $Id: grid.hpp 1648 2017-07-20 21:46:04Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -25,6 +25,7 @@
 #include <cassert>
 #include <sstream>
 #include <vector>
+#include <limits>
 
 namespace NRLib {
 
@@ -49,11 +50,16 @@ public:
     /// Values in the grid are kept when resized.
   void ResizeK(size_t nk);
 
+    /// Assign same value to all grid cells.
+  void Assign(size_t ni, size_t nj, size_t nk, const A& val);
+
   inline reference operator()(size_t i, size_t j, size_t k);
   inline reference operator()(size_t index);
+  inline reference GetValue(size_t i, size_t j, size_t k);
 
   inline const_reference operator()(size_t i, size_t j, size_t k) const;
   inline const_reference operator()(size_t index) const;
+  inline const_reference GetValue(size_t i, size_t j, size_t k) const;
 
   iterator       begin() {return( data_.begin()); }
   iterator       end()   {return( data_.end()); }
@@ -66,10 +72,17 @@ public:
   size_t         GetNK() const { return(nk_); }
   size_t         GetN()  const { return data_.size(); }
 
+  const std::vector<A> & GetStorage() const { return data_; }
+
   inline size_t  GetIndex(size_t i, size_t j, size_t k) const;
   void           GetIJK(size_t index, size_t &i, size_t &j, size_t &k) const;
+  void           SetValue(size_t i, size_t j, size_t k, const A& value);
 
   void           Swap(Grid<A>& other);
+
+  void GetAvgMinMax(A& avg, A& min, A& max) const;
+  void GetAvgMinMaxWithMissing(A& avg, A& min, A& max, A missing) const;
+  void LogTransform(A missing);
 
 private:
   size_t ni_;
@@ -119,12 +132,23 @@ void Grid<A>::ResizeK(size_t nk)
   data_.resize(ni_ * nj_ * nk_);
 }
 
+
+template<class A>
+void Grid<A>::Assign(size_t ni, size_t nj, size_t nk, const A& val)
+{
+  ni_ = ni;
+  nj_ = nj;
+  nk_ = nk;
+
+  data_.assign(ni_ * nj_ * nk_, val);
+}
+
+
 template<class A>
 typename Grid<A>::reference Grid<A>::operator()(size_t i, size_t j, size_t k)
 {
   return data_[GetIndex(i, j, k)];
 }
-
 
 template<class A>
 typename Grid<A>::reference Grid<A>::operator()(size_t index)
@@ -134,13 +158,17 @@ typename Grid<A>::reference Grid<A>::operator()(size_t index)
   return data_[index];
 }
 
+template<class A>
+typename Grid<A>::reference Grid<A>::GetValue(size_t i, size_t j, size_t k)
+{
+  return data_[GetIndex(i, j, k)];
+}
 
 template<class A>
 typename Grid<A>::const_reference Grid<A>::operator()(size_t i, size_t j, size_t k) const
 {
   return data_[GetIndex(i, j, k)];
 }
-
 
 template<class A>
 typename Grid<A>::const_reference Grid<A>::operator()(size_t index) const
@@ -150,6 +178,11 @@ typename Grid<A>::const_reference Grid<A>::operator()(size_t index) const
   return data_[index];
 }
 
+template<class A>
+typename Grid<A>::const_reference Grid<A>::GetValue(size_t i, size_t j, size_t k) const
+{
+  return data_[GetIndex(i, j, k)];
+}
 
 template<class A>
 size_t Grid<A>::GetIndex(size_t i, size_t j, size_t k) const
@@ -170,6 +203,12 @@ void Grid<A>::GetIJK(size_t index, size_t &i, size_t &j, size_t &k) const
 }
 
 template<class A>
+void Grid<A>::SetValue(size_t i, size_t j, size_t k, const A& value)
+{
+  data_[GetIndex(i, j, k)] = value;
+}
+
+template<class A>
 void Grid<A>::Swap(NRLib::Grid<A> &other)
 {
   std::swap(ni_, other.ni_);
@@ -177,6 +216,66 @@ void Grid<A>::Swap(NRLib::Grid<A> &other)
   std::swap(nk_, other.nk_);
   data_.swap(other.data_);
 }
+
+template<class A>
+void Grid<A>::GetAvgMinMax(A& avg, A& min, A& max) const
+{
+  A sum = 0.0;
+  A value = 0.0;
+  max = -std::numeric_limits<A>::infinity();
+  min = +std::numeric_limits<A>::infinity();
+
+  for (size_t i = 0; i < data_.size(); ++i) {
+    value = data_[i];
+    sum += value;
+
+    if (value > max)
+      max = value;
+
+    if (value < min)
+      min = value;
+  }
+
+  avg = sum /= GetN();
+}
+
+template<class A>
+void Grid<A>::GetAvgMinMaxWithMissing(A& avg, A& min, A& max, A missing) const
+{
+  A sum = 0.0;
+  A value = 0.0;
+  max = -std::numeric_limits<A>::infinity();
+  min = +std::numeric_limits<A>::infinity();
+
+  int n = 0;
+  for (size_t i = 0; i < data_.size(); ++i) {
+    value = data_[i];
+    if (value != missing) {
+      sum += value;
+      n++;
+      if (value > max)
+        max = value;
+
+      if (value < min)
+        min = value;
+    }
+  }
+
+  avg = sum / static_cast<A>(n);
+}
+
+template<class A>
+void Grid<A>::LogTransform(A missing)
+{
+  for (size_t i = 0; i < data_.size(); ++i) {
+    A value = data_[i];
+    if (value == missing || value <= 0.0) //First RMISSING
+      data_[i] = 0.0;
+    else
+      data_[i] = log(value);
+  }
+}
+
 
 }
 #endif

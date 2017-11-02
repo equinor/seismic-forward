@@ -1,4 +1,4 @@
-// $Id: randomgenerator.hpp 1189 2013-07-02 12:24:28Z anner $
+// $Id: randomgenerator.hpp 1468 2017-04-21 13:09:33Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -30,6 +30,8 @@ class RandomGenerator {
 public:
   RandomGenerator();
 
+  explicit RandomGenerator(unsigned long start_seed);
+
   ~RandomGenerator();
   ///Initializes with current time
   void Initialize();
@@ -52,17 +54,16 @@ public:
   unsigned long GetStartSeed();
 
 private:
-  /// RNG state
-  dsfmt_t dsfmt;
-
   /// Support function for Norm01
   double g(double x);
 
   void InitializeMT(unsigned long seed);
 
-  unsigned long start_seed_;
+  /// RNG state
+  dsfmt_t dsfmt;
 
-  bool is_initialized_;
+  unsigned long start_seed_;
+  bool          is_initialized_;
 };
 
 }

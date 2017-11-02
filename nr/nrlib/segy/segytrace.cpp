@@ -1,4 +1,4 @@
-// $Id: segytrace.cpp 1199 2013-10-02 08:24:02Z anner $
+// $Id: segytrace.cpp 1626 2017-07-13 07:26:51Z larsf $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -29,11 +29,12 @@
 #include "commonheaders.hpp"
 #include "traceheader.hpp"
 
-#include "../iotools/logkit.hpp"
 #include "../exception/exception.hpp"
+#include "../iotools/bigfile.hpp"
 #include "../iotools/fileio.hpp"
-#include "../surface/surface.hpp"
+#include "../iotools/logkit.hpp"
 #include "../iotools/stringtools.hpp"
+#include "../surface/surface.hpp"
 
 const float segyRMISSING = -99999.000;
 const int   segyIMISSING = -99999;
@@ -41,8 +42,9 @@ const int   segyIMISSING = -99999;
 using namespace NRLib;
 
 
-SegYTrace::SegYTrace(std::fstream & file, size_t jStart, size_t jEnd, int format,
+SegYTrace::SegYTrace(NRLib::BigFile & file, size_t jStart, size_t jEnd, int format,
                      size_t nz, const TraceHeader * trace_header)
+  : data_(jEnd - jStart + 1)
 {
   rmissing_      = segyRMISSING;
   imissing_      = segyIMISSING;
@@ -58,39 +60,35 @@ SegYTrace::SegYTrace(std::fstream & file, size_t jStart, size_t jEnd, int format
   table_index_   = 0;
   file_position_ = 0;
 
-  size_t nData = jEnd - jStart + 1;
+  size_t n_data = jEnd - jStart + 1;
   size_t i;
-  std::vector<float> predata;
-  predata.resize(nz);
-  data_.resize(nData);
+  std::vector<float> predata(nz);
 
   try {
     if (format == 1)
     {
       //IBM
       ReadBinaryIbmFloatArray(file, predata.begin(), nz);
-      for (i = 0; i < nData; i++)
-        data_[i] = predata[jStart+i];
+      std::copy(predata.begin() + jStart, predata.begin() + jStart + n_data, data_.begin());
     }
     else if (format == 2)
     {
       std::vector<int> b(nz);
       ReadBinaryIntArray(file, b.begin(), nz);
-      for (i = 0; i < nData; i++)
+      for (i = 0; i < n_data; i++)
         data_[i] =  static_cast<float> (b[jStart+i]);
     }
     else if (format == 3)
     {
       std::vector<short> b(nz);
       ReadBinaryShortArray(file, b.begin(), nz);
-      for (i = 0; i < nData; i++)
+      for (i = 0; i < n_data; i++)
         data_[i] =  static_cast<float> (b[jStart+i]);
     }
     else if (format == 5)
     {
       ReadBinaryFloatArray(file, predata.begin(), nz);
-      for (i = 0; i < nData; i++)
-        data_[i] = predata[jStart + i];
+      std::copy(predata.begin() + jStart, predata.begin() + jStart + n_data, data_.begin());
     }
     else
       throw FileFormatError("Bad format");
@@ -110,7 +108,7 @@ SegYTrace::SegYTrace(std::fstream & file, size_t jStart, size_t jEnd, int format
     text += "\n  buffer length                        = " + ToString(nz);
     text += "\n  inversion interval start index       = " + ToString(j_start_);
     text += "\n  inversion interval end index         = " + ToString(j_end_);
-    text += "\n  number of data in inversion interval = " + ToString(nData);
+    text += "\n  number of data in inversion interval = " + ToString(n_data);
     // This is an ugly way to get hold of the numbers, but the only(?) way
     // due to the exception throwing in read routines.
     if (e.what() != std::string("Bad format")) {
@@ -167,6 +165,24 @@ SegYTrace::SegYTrace(const TraceHeader& trace_header, bool keep_header)
   else
     trace_header_ = NULL;
 
+}
+
+SegYTrace::SegYTrace(const SegYTrace& trace)
+: data_(trace.data_),
+  j_start_(trace.j_start_),
+  j_end_(trace.j_end_),
+  x_(trace.x_),
+  y_(trace.y_),
+  in_line_(trace.in_line_),
+  cross_line_(trace.cross_line_),
+  coord1_(trace.coord1_),
+  coord2_(trace.coord2_),
+  rmissing_(trace.rmissing_),
+  imissing_(trace.imissing_),
+  table_index_(trace.table_index_),
+  file_position_(trace.file_position_)
+{
+  trace_header_ = new TraceHeader(*trace.trace_header_);
 }
 
 SegYTrace::~SegYTrace()

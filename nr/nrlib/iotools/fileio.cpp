@@ -1,4 +1,4 @@
-//$Id: fileio.cpp 1279 2014-06-03 14:47:05Z hauge $
+//$Id: fileio.cpp 1591 2017-07-06 13:23:59Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -24,7 +24,6 @@
 #include "../exception/exception.hpp"
 #include "stringtools.hpp"
 
-#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 
 #include <fstream>
@@ -52,16 +51,16 @@ void NRLib::OpenRead(std::ifstream&          stream,
   try {
     boost::filesystem::path file_path(filename);
     if (!fs::exists(file_path)) {
-      throw IOError("Failed to open " + file_path.file_string() + " for reading: " +
+      throw IOError("Failed to open " + file_path.string() + " for reading: " +
                     "File does not exist.");
     }
     if (fs::is_directory(file_path)) {
-      throw IOError("Failed to open " + file_path.file_string() + " for reading: " +
+      throw IOError("Failed to open " + file_path.string() + " for reading: " +
                     " It is a directory.");
     }
-    stream.open(file_path.file_string().c_str(), mode);
+    stream.open(file_path.string().c_str(), mode);
     if (!stream) {
-      throw IOError("Failed to open " + file_path.file_string() + " for reading.");
+      throw IOError("Failed to open " + file_path.string() + " for reading.");
     }
   }
   catch (fs::filesystem_error& e) {
@@ -79,16 +78,16 @@ void NRLib::OpenRead(std::fstream&          stream,
   try {
     boost::filesystem::path file_path(filename);
     if (!fs::exists(file_path)) {
-      throw IOError("Failed to open " + file_path.file_string() + " for reading: " +
+      throw IOError("Failed to open " + file_path.string() + " for reading: " +
                     "File does not exist.");
     }
     if (fs::is_directory(file_path)) {
-      throw IOError("Failed to open " + file_path.file_string() + " for reading: " +
+      throw IOError("Failed to open " + file_path.string() + " for reading: " +
                     " It is a directory.");
     }
-    stream.open(file_path.file_string().c_str(), mode);
+    stream.open(file_path.string().c_str(), mode);
     if (!stream) {
-      throw IOError("Failed to open " + file_path.file_string() + " for reading.");
+      throw IOError("Failed to open " + file_path.string() + " for reading.");
     }
   }
   catch (fs::filesystem_error& e) {
@@ -107,7 +106,7 @@ void NRLib::OpenWrite(std::ofstream&          stream,
     fs::path file_path(filename);
     fs::path dir = file_path.parent_path();
     if (fs::is_directory(file_path)) {
-      throw IOError("Failed to open " + file_path.file_string() + " for writing: " +
+      throw IOError("Failed to open " + file_path.string() + " for writing: " +
                     " It is a directory.");
     }
     if (!dir.empty()) {
@@ -115,13 +114,13 @@ void NRLib::OpenWrite(std::ofstream&          stream,
         create_directories(dir);
       }
       else if (!fs::exists(dir)) {
-        throw IOError("Failed to open " + file_path.file_string() + " for writing: "
+        throw IOError("Failed to open " + file_path.string() + " for writing: "
                       + "Parent directory does not exist.");
       }
     }
-    stream.open(file_path.file_string().c_str(), mode);
+    stream.open(file_path.string().c_str(), mode);
     if (!stream) {
-      throw IOError("Failed to open " + file_path.file_string() + " for writing.");
+      throw IOError("Failed to open " + file_path.string() + " for writing.");
     }
   }
   catch (fs::filesystem_error& e) {
@@ -140,7 +139,7 @@ void NRLib::OpenWrite(std::fstream&          stream,
     fs::path file_path(filename);
     fs::path dir = file_path.parent_path();
     if (fs::is_directory(file_path)) {
-      throw IOError("Failed to open " + file_path.file_string() + " for writing: " +
+      throw IOError("Failed to open " + file_path.string() + " for writing: " +
                     " It is a directory.");
     }
     if (!dir.empty()) {
@@ -148,13 +147,13 @@ void NRLib::OpenWrite(std::fstream&          stream,
         create_directories(dir);
       }
       else if (!fs::exists(dir)) {
-        throw IOError("Failed to open " + file_path.file_string() + " for writing: "
+        throw IOError("Failed to open " + file_path.string() + " for writing: "
                       + "Parent directory does not exist.");
       }
     }
-    stream.open(file_path.file_string().c_str(), mode);
+    stream.open(file_path.string().c_str(), mode);
     if (!stream) {
-      throw IOError("Failed to open " + file_path.file_string() + " for writing.");
+      throw IOError("Failed to open " + file_path.string() + " for writing.");
     }
   }
   catch (fs::filesystem_error& e) {
@@ -336,8 +335,7 @@ NRLib::FindFileSize(const std::string& filename)
 }
 
 
-int NRLib::FindGridFileType(const std::string& filename,
-                            Endianess file_format)
+int NRLib::FindGridFileType(const std::string& filename )
 {
   unsigned long long length = FindFileSize(filename);
   std::ifstream file(filename.c_str(), std::ios::in | std::ios::binary);
@@ -354,11 +352,11 @@ int NRLib::FindGridFileType(const std::string& filename,
     file.read(buffer, static_cast<std::streamsize>(length));
     buffer[length] = '\0';
   }
-  file.close();
+
   std::string stringbuffer = std::string(buffer);
-  std::istringstream i(stringbuffer);
+  std::istringstream iss(stringbuffer);
   std::string token;
-  i>>token;
+  iss >> token;
 
   if (token == format_desc[STORM_PETRO_BINARY]) {
       return STORM_PETRO_BINARY;
@@ -374,307 +372,45 @@ int NRLib::FindGridFileType(const std::string& filename,
   }
   else if (token == format_desc[SGRI]) {
     //std::getline(i, token);
-    i>>token;
-    i>>token;
-    i>>token;
-    i>>token;
+    iss >> token;
+    iss >> token;
+    iss >> token;
+    iss >> token;
     if(token == "v1.0" ||token == "v2.0" )
       return SGRI;
   }
   else if (NRLib::IsType<double>(token)) {
     return PLAIN_ASCII;
   }
-  else { //More complex checks, if we add more here, it should split into subroutines.
-         //Check for binary trend or SEGY.
-    //Binary trend: Check if three first numbers may be nx, ny and nz.
-    std::ifstream file2(filename.c_str(), std::ios::in | std::ios::binary);
-    int nx = ReadBinaryInt(file2, file_format);
-    int ny = ReadBinaryInt(file2, file_format);
-    int nz = ReadBinaryInt(file2, file_format);
-    file2.close();
-    if(nx > 0 && nx < 1000 && ny > 0 && ny < 1000 && nz > 0 && nz< 1000) {
-      return BINARY_TREND;
-    }
-    else if (length>3600) //Check SEGY: Looking for EBCDIC header.
-    {
-      unsigned char * buf = reinterpret_cast<unsigned char *>(buffer);
-      std::vector<int> frequency(256,0);
-      int i;
-      for(i=0;i<3200;i++)
-        frequency[buf[i]]++;
+  else if (length>3200) //Check SEGY: Looking for EBCDIC header.
+  {
+    unsigned char * buf = reinterpret_cast<unsigned char *>(buffer);
+    std::vector<int> frequency(256,0);
+    int i;
+    for(i=0;i<3200;i++)
+      frequency[buf[i]]++;
 
-      bool segy_ok = true;
-      for(i=0;(i<64) && (segy_ok == true);i++) {
-        if(frequency[i] > 0) //Should not encounter any of these in EBCDIC
-          segy_ok = false;
-      }
-      i++;
-      for(;(i<256) && (segy_ok == true);i++) {
-        if(frequency[i] > frequency[64]) //Assumption is that EBCDIC 64 (space) is most common in header.
-          segy_ok = false;
-      }
-      if(segy_ok == true)
-      {
-        return SEGY;
-      }
+    bool segy_ok = true;
+    int  low_count = 0;
+    for(i=0;i<64;i++)
+      low_count += frequency[i];
+
+    if(low_count > 5)
+      segy_ok = false;
+
+    i++;
+    for(;(i<256) && (segy_ok == true);i++) {
+      if(frequency[i] > frequency[64]) //Assumption is that EBCDIC 64 (space) is most common in header.
+        segy_ok = false;
+    }
+    if(segy_ok == true)
+    {
+      return SEGY;
     }
   }
   return(UNKNOWN);
 }
 
-void NRLib::WriteBinaryShort(std::ostream& stream,
-                              short s,
-                              Endianess file_format)
-{
-  char buffer[2];
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    WriteUInt16BE(buffer, static_cast<unsigned short>(s));
-    break;
-  case END_LITTLE_ENDIAN:
-    WriteUInt16LE(buffer, static_cast<unsigned short>(s));
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  if (!stream.write(buffer, 2)) {
-    throw Exception("Error writing to stream.");
-  }
-}
-
-
-short NRLib::ReadBinaryShort(std::istream& stream,
-                              Endianess file_format)
-{
-  unsigned short us;
-  char buffer[2];
-
-  if (!stream.read(buffer, 2)) {
-    if(stream.eof())
-      throw EndOfFile();
-    else
-      throw Exception("Error reading from stream (a).");
-  }
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    ParseUInt16BE(buffer, us);
-    break;
-  case END_LITTLE_ENDIAN:
-    ParseUInt16LE(buffer, us);
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  return static_cast<short>(us);
-}
-
-
-void NRLib::WriteBinaryInt(std::ostream& stream,
-                            int i,
-                            Endianess file_format)
-{
-  char buffer[4];
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    WriteUInt32BE(buffer, static_cast<unsigned int>(i));
-    break;
-  case END_LITTLE_ENDIAN:
-    WriteUInt32LE(buffer, static_cast<unsigned int>(i));
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  if (!stream.write(buffer, 4)) {
-    throw Exception("Error writing to stream.");
-  }
-}
-
-
-int NRLib::ReadBinaryInt(std::istream& stream,
-                          Endianess file_format)
-{
-  unsigned int ui;
-  char buffer[4];
-
-  if (!stream.read(buffer, 4)) {
-    if(stream.eof())
-      throw EndOfFile();
-    else
-      throw Exception("Error reading from stream (b).");
-  }
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    ParseUInt32BE(buffer, ui);
-    break;
-  case END_LITTLE_ENDIAN:
-    ParseUInt32LE(buffer, ui);
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  return static_cast<int>(ui);
-}
-
-
-void NRLib::WriteBinaryFloat(std::ostream& stream,
-                              float f,
-                              Endianess file_format)
-{
-  char buffer[4];
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    WriteIEEEFloatBE(buffer, f);
-    break;
-  case END_LITTLE_ENDIAN:
-    WriteIEEEFloatLE(buffer, f);
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  if (!stream.write(buffer, 4)) {
-    throw Exception("Error writing to stream.");
-  }
-}
-
-
-float NRLib::ReadBinaryFloat(std::istream& stream,
-                              Endianess file_format)
-{
-  float f;
-  char buffer[4];
-
-  if (!stream.read(buffer, 4)) {
-    if(stream.eof())
-      throw EndOfFile();
-    else
-      throw Exception("Error reading from stream (c).");
-  }
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    ParseIEEEFloatBE(buffer, f);
-    break;
-  case END_LITTLE_ENDIAN:
-    ParseIEEEFloatLE(buffer, f);
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  return f;
-}
-
-
-void NRLib::WriteBinaryDouble(std::ostream& stream,
-                               double d,
-                               Endianess file_format)
-{
-  char buffer[8];
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    WriteIEEEDoubleBE(buffer, d);
-    break;
-  case END_LITTLE_ENDIAN:
-    WriteIEEEDoubleLE(buffer, d);
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  if (!stream.write(buffer, 8)) {
-    throw Exception("Error writing to stream.");
-  }
-}
-
-
-double NRLib::ReadBinaryDouble(std::istream& stream,
-                                Endianess file_format)
-{
-  double d;
-  char buffer[8];
-
-  if (!stream.read(buffer, 8)) {
-    if(stream.eof())
-      throw EndOfFile();
-    else
-      throw Exception("Error reading from stream (d).");
-  }
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    ParseIEEEDoubleBE(buffer, d);
-    break;
-  case END_LITTLE_ENDIAN:
-    ParseIEEEDoubleLE(buffer, d);
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  return d;
-}
-
-
-void NRLib::WriteBinaryIbmFloat(std::ostream& stream,
-                                 float f,
-                                 Endianess file_format)
-{
-  char buffer[4];
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    WriteIBMFloatBE(buffer, f);
-    break;
-  case END_LITTLE_ENDIAN:
-    WriteIBMFloatLE(buffer, f);
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  if (!stream.write(buffer, 4)) {
-    throw Exception("Error writing to stream.");
-  }
-}
-
-
-float NRLib::ReadBinaryIbmFloat(std::istream& stream,
-                                 Endianess file_format)
-{
-  float f;
-  char buffer[4];
-
-  if (!stream.read(buffer, 4)) {
-    if(stream.eof())
-      throw EndOfFile();
-    else
-      throw Exception("Error reading from stream (e).");
-  }
-
-  switch (file_format) {
-  case END_BIG_ENDIAN:
-    ParseIBMFloatBE(buffer, f);
-    break;
-  case END_LITTLE_ENDIAN:
-    ParseIBMFloatLE(buffer, f);
-    break;
-  default:
-    throw Exception("Invalid file format.");
-  }
-
-  return f;
-}
 
 void NRLib::ReadNextQuoted(std::istream& stream, char quote, std::string&  s, int& line)
 {
@@ -740,4 +476,17 @@ int NRLib::Seek(FILE * file, long long offset, int origin)
 #endif
   return(ret);
 }
+
+
+long long NRLib::Tell(FILE * file)
+{
+  long long ret;
+#if defined(_MSC_VER)
+  ret = _ftelli64(file);
+#else
+  ret = ftell(file);
+#endif
+  return(ret);
+}
+
 

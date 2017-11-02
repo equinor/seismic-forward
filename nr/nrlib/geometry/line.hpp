@@ -1,4 +1,4 @@
-// $Id: line.hpp 1036 2012-06-25 14:21:49Z anner $
+// $Id: line.hpp 1453 2017-03-21 12:02:02Z veralh $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -91,6 +91,9 @@ public:
   /// Calc shortest distance from p_in to def.line (or extention of finite line) at proj_pt
   double FindDistance(const Point& p_in) const;
 
+  /// Calc shortest distance from p_in to def.line (or extention of finite line) at proj_pt and returns true if point is on right or false on left side of line
+  double FindDistanceAndSide(const Point& p_in, bool& right_side) const;
+
   /// Calculate shortest distance between def.line and line_in.
   inline double FindDistance(const Line& line_in) const;
 
@@ -112,10 +115,17 @@ public:
 
   /// True if def.line and line_in are overlapping (less than min_in):
   bool IsOverLapping(const Line& line_in, double min_in = min_) const;
+
+  /// Find intersection between two lines in 2D (z = 0) using Cramer's rule and equation of 2D line on general form
+  /// \returns true when there exists a point of intersection between two lines in 2D.
+  ///          When lines are not intersecting returns false and point (0,0,0)
+    bool IntersectXY(const Line & line_in, Point & intersect_pt, double min_in = min_) const;
+
 private:
   Point p1_, p2_;            // points that define the line
   bool  end1_, end2_;        // true when p1_, p2_ are endpoints
   static const double min_;  // used instead of zero for some comparision-functions
+
 };
 
 

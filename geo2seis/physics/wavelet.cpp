@@ -1,20 +1,13 @@
 #include "wavelet.hpp"
 
 #include <iostream>
-#include <stdio.h>
-#include <time.h>
-#include <assert.h>
 #include <fstream>
-
-
 #include <list>
 #include <complex>
 
 #include "nrlib/iotools/logkit.hpp"
 #include "nrlib/iotools/fileio.hpp"
-#include "nrlib/iotools/stringtools.hpp"
 #include "nrlib/surface/regularsurface.hpp"
-#include "nrlib/math/constants.hpp"
 #include "nrlib/fft/fft.hpp"
 
 Wavelet::Wavelet(std::string filename, std::string file_format) : is_ricker_(false)
@@ -30,14 +23,13 @@ Wavelet::Wavelet(std::string filename, std::string file_format) : is_ricker_(fal
       sample_number_for_zero_time_ = sample_number_for_zero_time_ - 1;
       size_t i = 0;
       double value;
-      while (i < number_of_samples + 1) {
+      while (i < number_of_samples) {
         file >> value;
         wavelet_.push_back(value);
         ++i;
       }
     }
-    peak_frequency_ = FindPeakFrequency(wavelet_, sample_number_for_zero_time_);
-    depth_adjustment_factor_ = FindDepthAdjustmentFactor(wavelet_, time_sampling_in_ms_);
+    FindTwtWavelet();
 
     std::vector<double> wavelet_out;
     size_t scale_factor = static_cast<size_t>(time_sampling_in_ms_);
@@ -77,27 +69,13 @@ file_format_(""),
   is_ricker_(true),
   peak_frequency_(peakF) {
 
-    depth_adjustment_factor_ = 1200 / peak_frequency_;
+  twt_wavelet_ = 1000 / peak_frequency_;
 }
 
 
 Wavelet::~Wavelet() {
-
 }
 
-
-double Wavelet::FindPeakFrequency(std::vector<double> wavelet, int sample_number_for_zero_time)
-{
-
-  std::vector<double> vector;
-  for (size_t i = sample_number_for_zero_time - 1; i < wavelet.size(); ++i) {
-    vector.push_back(wavelet[i]);
-  }
-  double max_value = FindAbsMaxOfVector(vector);
-  double peak_frequency = 1000 / max_value;
-
-  return peak_frequency;
-}
 
 double Wavelet::FindAbsMaxOfVector(std::vector<double> vector) {
   double max_value = 0.0;
@@ -109,65 +87,70 @@ double Wavelet::FindAbsMaxOfVector(std::vector<double> vector) {
   return max_value;
 }
 
-double Wavelet::FindDepthAdjustmentFactor(std::vector<double> wavelet, double time_sampling_in_ms) 
+void Wavelet::FindTwtWavelet()
 {
-  double return_value;
   size_t start = 0;
-  size_t end = wavelet.size() - 1;
-  double wavelet_max = FindAbsMaxOfVector(wavelet);
-  for (size_t i = 0; i < wavelet.size(); ++i) {
-    if (std::abs(wavelet[i]) > wavelet_max * 0.01) {
+  size_t end = wavelet_.size() - 1;
+  double wavelet_max = FindAbsMaxOfVector(wavelet_);
+  for (size_t i = 0; i < wavelet_.size(); ++i) {
+    if (std::abs(wavelet_[i]) > wavelet_max * 0.01) {
       start = i;
       break;
     }
   }
-  for (size_t i = wavelet.size() - 1; i >= 0; --i) {
-    if (std::abs(wavelet[i]) > wavelet_max * 0.01) {
+  for (size_t i = wavelet_.size() - 1; i >= 0; --i) {
+    if (std::abs(wavelet_[i]) > wavelet_max * 0.01) {
       end = i;
       break;
     }
   }
-  return_value = (end - start + 1) * time_sampling_in_ms;
-  return return_value;
+  double w1    = (sample_number_for_zero_time_ - start) * time_sampling_in_ms_;
+  double w2    = (end -   sample_number_for_zero_time_) * time_sampling_in_ms_;
+  std::cout << "w1, w2, start_i, end_i, sample_zero = " << w1 << " " << w2 << " " << start << " " << end << " " << sample_number_for_zero_time_ << "\n";
+  twt_wavelet_ = std::max(w1, w2);
 }
 
 
-double Wavelet::FindWaveletPoint(double t) 
+double Wavelet::FindWaveletPoint(double t)
 {
-  double return_value;
   if (is_ricker_) {
     double rickerConst = NRLib::Pi * NRLib::Pi * peak_frequency_ * peak_frequency_ * 1e-6;
     double c = rickerConst * t * t;
-    return_value = (1 - 2 * c) * exp(-c);
-  } else {
+    return (1 - 2 * c) * exp(-c);
+  }
+  else {
     if (wavelet_.size() > 0 && time_sampling_in_ms_ > 0) {
 
       size_t i;
       if (t < time_vector_[0]) {
         i = 0;
-      } else {
+      }
+      else {
         double start = (t - time_vector_[0]) / time_sampling_in_ms_;
         i = static_cast<size_t>(start);
         if (i < wavelet_.size() - 1 && t > time_vector_[i]) {
           ++i;
         }
       }
-
-      if (i > 0) {
-        double a = (time_vector_[i] - t) / (time_vector_[i] - time_vector_[i - 1]);
-        return_value = a * wavelet_[i - 1] + (1 - a) * wavelet_[i];
-      } else {
-        return_value = wavelet_[0];
+      if (i > wavelet_.size() - 1) {
+        return 0;
       }
-    } else {
-      return_value = 0;
+      else if (i > 0) {
+        double a = (time_vector_[i] - t) / (time_vector_[i] - time_vector_[i - 1]);
+        return a * wavelet_[i - 1] + (1 - a) * wavelet_[i];
+      }
+      else {
+        return 0;
+      }
+    }
+    else {
+      return 0;
     }
   }
-  return return_value;
 }
 
 
-void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &wavelet_out, size_t scale_factor) 
+void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &wavelet_out, size_t scale_factor)
 {
   //
   // Transform to Fourier domain
@@ -179,13 +162,13 @@ void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &w
   // Fill fine-sampled grid
   //
   std::vector<std::complex<double> > fine_data_fft(data_fft.size() * scale_factor);
-  for (size_t i = 0; i < data_fft.size() / 2; i++) {
+  for (size_t i = 0; i < data_fft.size() / 2 + 1; i++) {
     fine_data_fft[i] = data_fft[i];
   }
 
   //Pad with zeros
 
-  for (size_t i = data_fft.size() / 2; i < 1 * data_fft.size() * scale_factor; i++) {
+  for (size_t i = data_fft.size() / 2 + 1; i < data_fft.size() * scale_factor; i++) {
     fine_data_fft[i] = 0;
   }
 
@@ -197,6 +180,7 @@ void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &w
 
   // Scale wavelet out according to change of length
 
+  wavelet_out.resize(fine_data_fft.size() - scale_factor + 1);
   for (size_t i = 0; i < wavelet_out.size(); ++i) {
     wavelet_out[i] *= scale_factor;
   }

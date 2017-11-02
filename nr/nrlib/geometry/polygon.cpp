@@ -1,4 +1,4 @@
-// $Id: polygon.cpp 1233 2014-01-21 09:41:46Z anner $
+// $Id: polygon.cpp 1375 2016-10-13 10:43:25Z hannaz $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -21,7 +21,11 @@
 
 #include "polygon.hpp"
 #include "../math/constants.hpp"
+#include <algorithm>
 #include <vector>
+#include <algorithm>
+#include "point.hpp"
+
 
 using namespace NRLib;
 using std::cout;
@@ -261,4 +265,82 @@ void Polygon::MinEnclosingRectangle(double &x,
       angle=rotated_angle;
     }
   }
+}
+
+///algorithm from http://geomalgorithms.com
+void
+Polygon::TangentPointPoly(const Point & point, size_t & rtan, size_t & ltan) const ///< rtan and ltan must be initialised as 0, assume V[0] = both tangents
+{
+
+  const std::vector<Point>& V = polygon_points_;
+  size_t n =  V.size();
+  double  eprev, enext;        // V[i], previous and next edge turn direction
+
+  eprev = point.LeftFromLineXY(V[0], V[1]);
+  for (size_t i = 1; i < n-1; i++) {
+    enext = point.LeftFromLineXY(V[i], V[i+1]);
+    if ((eprev <= 0) && (enext > 0)) {
+      if (point.LeftFromLineXY(V[i],V[rtan]) >= 0)
+        rtan = i;
+      }
+    else if ((eprev > 0) && (enext <= 0)) {
+      if (point.LeftFromLineXY(V[i],V[ltan]) <= 0)
+        ltan = i;
+    }
+    eprev = enext;
+  }
+
+  enext = point.LeftFromLineXY(V[n-1], V[0]);
+  if ((eprev <= 0) && (enext > 0)) {
+    if (point.LeftFromLineXY(V[n-1],V[rtan]) >= 0)
+      rtan = n-1;
+    }
+  else if ((eprev > 0) && (enext <= 0)) {
+    if (point.LeftFromLineXY(V[n-1],V[ltan]) <= 0)
+      ltan = n-1;
+  }
+  eprev = enext;
+  return;
+}
+
+double
+Polygon::DistanceBetweenPointsXY(size_t index0, size_t index1) const
+{
+  Polygon poly = *this;
+
+  size_t max_index = std::max(index0, index1);
+  size_t min_index = std::min(index0, index1);
+
+  double dist = 0;
+  for (size_t i = min_index; i < max_index; i++){
+    dist = dist + (poly[i+1]-poly[i]).Norm();
+  }
+
+  return std::min(dist, poly.GetCircumferenceXY() - dist);
+}
+
+
+size_t
+Polygon::FindPointPosition(const Point & point) const
+{
+
+  std::vector<NRLib::Point> vec;
+  GetPoints(vec);
+
+  std::vector<NRLib::Point>::iterator it = std::find(vec.begin(), vec.end(), point);
+  size_t pos = it - vec.begin();
+  return pos;
+}
+
+double
+Polygon::GetCircumferenceXY() const
+{
+  Polygon poly = *this;
+  size_t poly_size = poly.GetSize();
+  double poly_circ = (poly[poly_size-1] - poly[0]).Norm();
+
+  for (size_t i = 0; i < poly_size - 2; i++){
+    poly_circ += (poly[i+1] - poly[i]).Norm();
+  }
+  return poly_circ;
 }

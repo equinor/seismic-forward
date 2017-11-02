@@ -1,4 +1,4 @@
-// $Id: traceheader.hpp 1257 2014-03-06 13:55:54Z vigsnes $
+// $Id: traceheader.hpp 1689 2017-09-13 09:37:00Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -22,14 +22,11 @@
 #ifndef TRACEHEADER_HPP
 #define TRACEHEADER_HPP
 
-#include <cstdio>
-
-#include <sstream>
-#include <iostream>
+#include <string>
 #include <vector>
 
-
 namespace NRLib {
+class BigFile;
 
 
 ///  The format of the trace header. Specifies the location
@@ -50,6 +47,7 @@ public:
     SIP       = 2,
     CHARISMA  = 3,
     SIPX      = 4, // Sebn: SIP probably messed up when they made volumes with this header specification.
+    HESS      = 5,
     numberOfFormats_
   };
 
@@ -65,6 +63,7 @@ public:
                     int utmyLoc,
                     int inlineLoc,
                     int crosslineLoc,
+                    int startTimeLoc,
                     int coordSys);
 
 
@@ -80,6 +79,7 @@ public:
                     int utmyLoc,
                     int inlineLoc,
                     int crosslineLoc,
+                    int startTimeLoc,
                     coordSys_t coordSys);
 
   TraceHeaderFormat();
@@ -101,14 +101,14 @@ public:
   /// Get location of the crossline field. (-1 if non-existant)
   int GetCrosslineLoc() const {return crossline_loc_;}
 
+  /// Get location of the start time. (-1 if non-existant)
+  int GetStartTimeLoc() const {return start_time_loc_;}
+
   /// Get location of the scaling cooefficient field. (-1 if non-existant)
   int GetScalCoLoc() const {return scal_co_loc_;}
 
   /// Get bypassCoodScaling status
   bool GetBypassCoordScaling() const {return scal_co_loc_ == -1;}
-
-  /// Get delay recording time location
-  int GetDelayRecTimeLoc() const {return delay_rec_time_loc_;}
 
   /// Get offset location
   int GetOffsetLoc() const { return offset_loc_;}
@@ -119,12 +119,16 @@ public:
   /// Get is this a standard type
   bool GetStandardType() const {return standard_type_;}
 
-  void SetScaleCoLoc(int loc)   {scal_co_loc_   = loc; standard_type_ = false; CheckFormat();}
-  void SetUtmxLoc(int loc)      {utmx_loc_      = loc; standard_type_ = false; CheckFormat();}
-  void SetUtmyLoc(int loc)      {utmy_loc_      = loc; standard_type_ = false; CheckFormat();}
-  void SetInlineLoc(int loc)    {inline_loc_    = loc; standard_type_ = false; CheckFormat();}
-  void SetCrosslineLoc(int loc) {crossline_loc_ = loc; standard_type_ = false; CheckFormat();}
-  void SetCoordSys(coordSys_t type) {coord_sys_ = type;}
+  void SetScaleCoLoc(int loc)       {scal_co_loc_    = loc; standard_type_ = false;}
+  void SetUtmxLoc(int loc)          {utmx_loc_       = loc; standard_type_ = false;}
+  void SetUtmyLoc(int loc)          {utmy_loc_       = loc; standard_type_ = false;}
+  void SetInlineLoc(int loc)        {inline_loc_     = loc; standard_type_ = false;}
+  void SetCrosslineLoc(int loc)     {crossline_loc_  = loc; standard_type_ = false;}
+  void SetStartTimeLoc(int loc)     {start_time_loc_ = loc; standard_type_ = false;}
+  void SetCoordSys(coordSys_t type) {coord_sys_      = type;}
+
+  /// Check that no two values point to the same byte. Throws if error.
+  void CheckFormat();
 
   /// String representation.
   std::string toString() const;
@@ -140,8 +144,6 @@ public:
 private:
   /// Set default values for standard formats
   void Init(int headerformat);
-  /// Check that no two values point to the same byte. Throws if error.
-  void CheckFormat();
   /// Format name
   std::string format_name_;
   /// Location of scaling coefficient. (-1 if non-existant)
@@ -154,12 +156,12 @@ private:
   int inline_loc_;
   /// Location of crossline coordinate field. (-1 if non-existant)
   int crossline_loc_;
-  /// Location of delay Recording Time
-  int delay_rec_time_loc_;
-  /// Location of offset
-  int offset_loc_;
+  /// Location of start time. (-1 if non-existant)
+  int start_time_loc_;
   /// Coordinate system to use.
   coordSys_t coord_sys_;
+  /// Location of offset
+  int offset_loc_;
   /// Standard type
   bool standard_type_;
 
@@ -174,20 +176,18 @@ public:
   TraceHeader(const TraceHeaderFormat& format = TraceHeaderFormat(TraceHeaderFormat::SEISWORKS));
 
   /// Read in a new header.
-  /// \param[in] inFile  input file.
-  /// \param[in] lineNo  line number. (from binary header.) -1 if not used.
-  void Read(std::istream& inFile,
-            int lineNo = -1);
+  /// \param[in] in_file  input file.
+  void Read(NRLib::BigFile& in_file);
 
   /// Write header to file.
   /// \param[in]  outFile output file.
-  int Write(std::ostream& outFile);
+  int Write(NRLib::BigFile& outFile);
 
   /// Dump what is stored in header buffer to file.
   /// May override the number of data. Intended for use when we copy headers
   /// from input to output.
   /// \param[in]  outFile output file.
-  void Dump(std::ostream& outFile, bool changeNs = false);
+  void Dump(NRLib::BigFile& outFile, bool changeNs = false);
 
   void WriteValues();
 
@@ -223,6 +223,14 @@ public:
   /// Does nothing if crossline location is not set in the format.
   void SetCrossline(int crossLine);
 
+  /// Get start time.
+  /// returns 0.0 if start time is not set in the format.
+  float GetStartTime() const;
+
+  /// Set start time.
+  /// Does nothing if start time is not set in the format.
+  void SetStartTime(float start_time);
+
   /// Get current first coordinate (either UTM x or IL depending on coordsys).
   /// returns #RMISSING if value is not set in the format.
   double GetCoord1() const;
@@ -243,16 +251,14 @@ public:
 
   void SetOffset(double offset) { offset_ = offset; };
 
-  void SetDelayRecTime(short value);
-
-  short GetDelayRecTime() const;
-
-
   /// Get status code.
   ///  0 - everything went OK.
   /// -1 - not a trace header, but EDBDIC header.
   /// -2 - error reading from file.
   int GetStatus() const {return status_;}
+
+  /// Returns false if header values are illegal.
+  bool IsHeaderOK() const;
 
 private:
   /// Header buffer in machine-specific byte order.
@@ -265,18 +271,18 @@ private:
   int status_;
 
   /// Scaling coefficient for UTM X and UTM Y.
-  float scal_co_;
+  double scal_co_;
 
   short scalcoinitial_;
   double utmx_;
   double utmy_;
   int inline_;
   int crossline_;
+  short start_time_;
   short ns_;
   short dt_;
   int imissing_;
   float rmissing_;
-  short delay_rec_time_;
   double offset_;
 
 

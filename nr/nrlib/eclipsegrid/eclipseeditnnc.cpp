@@ -1,4 +1,4 @@
-// $Id: eclipseeditnnc.cpp 1071 2012-09-18 11:42:51Z perroe $
+// $Id: eclipseeditnnc.cpp 1472 2017-04-27 11:41:04Z eyaker $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -23,20 +23,47 @@
 
 #include "../iotools/stringtools.hpp"
 
-#include <vector>
-#include <string>
-
-using namespace std;
 namespace NRLib{
-void EclipseEditNNC::ReadANNC(const std::vector<std::string>& line_tokens)
+
+EclipseEditNNC::EclipseEditNNC(int ix, int iy, int iz, int jx, int jy, int jz, double value)
+  : ix_(ix),
+    iy_(iy),
+    iz_(iz),
+    jx_(jx),
+    jy_(jy),
+    jz_(jz),
+    tran_(value)
+{}
+
+
+void EclipseEditNNC::WriteEditNNC(std::ofstream                   & out_file,
+                                  const std::list<EclipseEditNNC> & editNNC)
 {
-    this->IX = ParseType<int>(line_tokens[0]);
-    this->IY = ParseType<int>(line_tokens[1]);
-    this->IZ = ParseType<int>(line_tokens[2]);
-    this->JX = ParseType<int>(line_tokens[3]);
-    this->JY = ParseType<int>(line_tokens[4]);
-    this->JZ = ParseType<int>(line_tokens[5]);
-    this->TRAN = ParseType<double>(line_tokens[6]);
+    if (editNNC.empty())
+    return;
+
+  out_file << "EDITNNC\n";
+  out_file << std::setprecision(10);
+
+  out_file << "--" << std::setw(4)
+    << "IX" << std::setw(7) << "IY" << std::setw(7)
+    << "IZ" << std::setw(7) << "JX" << std::setw(7)
+    << "JY" << std::setw(7) << "JZ" << std::setw(15)
+    << "TRANM" << "\n\n";
+
+  std::list<EclipseEditNNC>::const_iterator it;
+  for (it = editNNC.begin(); it != editNNC.end(); ++it) {
+    out_file << std::setw(5);
+    out_file << it->ix_ << std::setw(7);
+    out_file << it->iy_ << std::setw(7);
+    out_file << it->iz_ << std::setw(7);
+    out_file << it->jx_ << std::setw(7);
+    out_file << it->jy_ << std::setw(7);
+    out_file << it->jz_ << std::setw(18);
+    out_file << it->tran_ << std::setw(10) << "/\n";
+  }
+
+  out_file << "/\n\n";
 }
 
 }

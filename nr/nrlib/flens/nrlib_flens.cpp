@@ -1,4 +1,4 @@
-// $Id: nrlib_flens.cpp 1283 2014-09-02 12:33:49Z perroe $
+// $Id: nrlib_flens.cpp 1672 2017-08-23 09:26:19Z ariel $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -28,6 +28,31 @@
 #include "../iotools/logkit.hpp"
 
 using namespace NRLib;
+
+void NRLib::TriangularSolve(const TriangularMatrix & A,
+                            const Vector           & b,
+                            Vector                 & x)
+{
+  Matrix B(b.length(), 1);
+  B(flens::_, 0) = b;                   // First column of B
+
+  int info = flens::trs(flens::NoTrans, A, B);
+  if (info != 0) {
+    std::ostringstream oss;
+    oss << "A is singular.";
+    throw Exception(oss.str());
+  }
+
+  x = B(flens::_, 0);
+}
+
+void NRLib::TriangularSolve(const SymmetricMatrix & A,
+                            const Vector          & b,
+                            Vector                & x)
+{
+  NRLib::TriangularMatrix A_t = A.triangular();
+  NRLib::TriangularSolve(A_t, b, x);
+}
 
 void NRLib::CholeskySolve(const SymmetricMatrix & A,
                           const Vector          & b,
@@ -107,7 +132,7 @@ void NRLib::CholeskyInvert(SymmetricMatrix& A)
   int infof = flens::potrf(A.upLo(), A.dim(), A.data(), A.leadingDimension());
   int infoi = flens::potri(A.upLo(), A.dim(), A.data(), A.leadingDimension());
 
-  if(infof > 0 || infoi > 0)
+  if(infof != 0 || infoi != 0)
     throw NRLib::Exception("Error in Cholesky inversion");
 }
 
@@ -131,18 +156,45 @@ void NRLib::ComputeEigenVectorsComplex(ComplexMatrix        & A,
 void NRLib::CholeskyFactorize(SymmetricMatrix & A)
 {
   int info = flens::potrf(A);
-
   if (info != 0) {
     std::ostringstream oss;
      oss << "Error in Cholesky: The leading minor of order " << info
           << " is not positive definite.";
      throw Exception(oss.str());
   }
-
-
 }
 
+void NRLib::CholeskyDeFactorize(SymmetricMatrix & A)
+{
+  //Must manually copy upper or lower half of SymmertricMatrix to Matrix
+  //since the transformation from TriangularMatrix to Matrix result in a
+  //full matrix and not only the upper or lower half.
+  //I.e. triangularmatrix.general() returns a full matrix
+  int n = A.dim();
+  if (A.upLo() == flens::Upper)
+  {
+    NRLib::Matrix m1(n, n);
+    for (int j = 0; j < n; j++) {
+      for (int i = 0; i <= j; i++) {
+        m1(i, j) = A(i, j);                               //Copy the upper of A (the Cholesky factors)
+      }
+    }
+    NRLib::Matrix m2 = flens::transpose(m1) * m1;
+    A = m2.upper().symmetric();
 
+  }
+  else
+  {
+    NRLib::Matrix m1(n, n);
+    for (int j = 0; j < n; j++) {
+      for (int i = n - 1; i >= j; i--) {
+        m1(i, j) = A(i, j);                               //Copy the lower of A (the Cholesky factors)
+      }
+    }
+    NRLib::Matrix m2 = m1 * flens::transpose(m1);
+    A = m2.lower().symmetric();
+  }
+}
 
 void NRLib::ComputeEigenVectorsSymmetric(const SymmetricMatrix & A,
                                          Vector                & eigen_values,
@@ -343,7 +395,7 @@ void NRLib::WriteComplexVector(const std::string   & header,
                                const ComplexVector & c)
 {
   int n = c.length();
-  LogKit::LogFormatted(LogKit::Error,"\n"+header+"\n");
+  LogKit::LogMessage(LogKit::Error,"\n"+header+"\n");
   for (int i=0; i < n ; i++) {
     LogKit::LogFormatted(LogKit::Error,"(%12.8f, %12.8f)\n",c(i).real(),c(i).imag());
   }
@@ -356,7 +408,7 @@ void NRLib::WriteComplexMatrix(const std::string   & header,
 {
   int m = C.numRows();
   int n = C.numCols();
-  LogKit::LogFormatted(LogKit::Error,"\n"+header+"\n");
+  LogKit::LogMessage(LogKit::Error,"\n"+header+"\n");
   for (int i=0; i < m ; i++) {
     for (int j=0; j < n ; j++) {
       LogKit::LogFormatted(LogKit::Error,"(%12.8f, %12.8f) ",C(i,j).real(),C(i,j).imag());
@@ -386,7 +438,7 @@ void NRLib::WriteMatrix(const std::string & header,
 {
   int m = C.numRows();
   int n = C.numCols();
-  LogKit::LogFormatted(LogKit::Error,"\n"+header+"\n");
+  LogKit::LogMessage(LogKit::Error,"\n"+header+"\n");
   for (int i=0; i < m ; i++) {
     for (int j=0; j < n ; j++) {
       LogKit::LogFormatted(LogKit::Error,"%20.8f ",C(i,j));

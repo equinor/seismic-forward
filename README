@@ -1,0 +1,38 @@
+1. To make an executable using CLion or anothe IDE
+--------------------------------------------------
+
+Go to the directory containing the Geo2Seis git repository
+
+  $ clion CMakeLists.txt
+
+
+2. To make an executable using cmake
+------------------------------------
+
+Go to the directory above the diretory containing the Geo2Seis git repository
+
+  $ cd dir-above-Geo2Seis
+
+Make directory where you want the project and executable to be build
+
+  $ mkdir my-proj-dir
+
+Go to this directory and run run_cmake.sh
+
+  $ cd my-proj-dir
+  $ ../Geo2Seis/run_cmake.sh
+
+
+2. Run the tests
+----------------
+
+To run all tests do
+
+  $ ../Geo2Seis/TestScript.pl
+
+To run a single test do
+
+  $ ../Geo2Seis/TestScript.pl case=1
+
+NBNB! If more than one angle is involved, I think that results for the first
+angle only is checked. This is the way NRLib currently works.

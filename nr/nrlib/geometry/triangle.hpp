@@ -40,6 +40,9 @@ public:
   // Find point in triangle nearest line. Returns the distance to the line.
   double FindNearestPoint(const Line& line, Point& nearest_pt) const;
 
+  void WriteToFile(const std::string & filename) const;
+  NRLib::Point TranslateAndRotate(const NRLib::Point & p) const;
+
 private:
   Point p1_;
   Point p2_;

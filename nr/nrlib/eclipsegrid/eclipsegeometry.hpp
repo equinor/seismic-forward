@@ -1,4 +1,4 @@
-// $Id: eclipsegeometry.hpp 1187 2013-06-14 13:34:45Z perroe $
+// $Id: eclipsegeometry.hpp 1460 2017-04-03 14:28:35Z eyaker $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -92,6 +92,9 @@ public:
   /// Finds the point on the pillar with given z-valu. If that point is outside the grid, the closest pillar point in the grid is chosen
   Point FindPointAtPillarInsideGrid(size_t i, size_t j, double z, bool & found) const;
 
+  /// Finds the mean pillar to pillar distance of the grid at a given depth z
+  double FindMeanPillarDistance(double z) const;
+
   /// Finds the point in the cell (i, j, k) with local coordinates (u, v, w).
   /// u, v and w must be between 0 and 1.
   Point FindPointInCell(size_t i, size_t j, size_t k, double u, double v, double w);
@@ -116,15 +119,15 @@ public:
   ///Stores z-values in layer k for a rectangle with a corner in x0,y0 and step lengths dx and dy, angle indicates rotated angle in the xy-plane
   ///\\param lower_or_upper 0 for upper, 1 for lower
   ///\\param bilinear_else_triangles true for calulating z-coordinates inside corners by bilinear interpolation, false for calculating by intersection of plane through triangles
-  void FindLayerSurface(NRLib::Grid2D<double> &z_surface,
-                        size_t k,
-                        int lower_or_upper,
-                        double dx,
-                        double dy,
-                        double x0,
-                        double y0,
-                        double angle,
-                        bool bilinear_else_triangles) const;
+  void FindLayer(NRLib::Grid2D<double> & z_surface,
+                 size_t                  k,
+                 int                     lower_or_upper,
+                 double                  dx,
+                 double                  dy,
+                 double                  x0,
+                 double                  y0,
+                 double                  angle,
+                 bool                    bilinear_else_triangles) const;
 
   void FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> &z_surface,
                                    size_t k,
@@ -135,6 +138,13 @@ public:
                                    double y0,
                                    double angle,
                                    bool bilinear_else_triangles) const;
+
+  void TranslateAndRotate(NRLib::Point       & corners,
+                          const NRLib::Point & C,
+                          const double         x0,
+                          const double         y0,
+                          const double         cosA,
+                          const double         sinA) const;
 
   void FindTopAndBotValuesOfGrid(std::vector<NRLib::Point>& top_points,
                                  std::vector<NRLib::Point>& bot_points) const;
@@ -154,9 +164,15 @@ public:
 
   double GetDZ(size_t i, size_t j, size_t k) const;
 
+  /// Finds the bottom z-value in cell (i,j,k) if at least one active cell in column (i,j)
+  double FindZBotInCellActiveColumn(size_t i, size_t j, size_t k, bool & found) const;
+
+  /// Finds the top z-value in cell (i,j,k) if at least one active cell in column (i,j)
+  double FindZTopInCellActiveColumn(size_t i, size_t j, size_t k, bool & found) const;
+
 private:
   // ----------------- PRIVATE FUNCTIONS ---------------------------
-    /// Finds the z-value at the pillar on top of the grid
+  /// Finds the z-value at the pillar on top of the grid
   double FindZTopAtPillar(size_t i, size_t j, bool & found) const;
 
   /// Finds the z-value at the pillar on bottom of the grid
@@ -220,22 +236,18 @@ private:
   void InitializeActivePillars();
 
   ///Function used by FindLayerSurface to fill in values to z_surface in the area inside the (NB) four corners (listed clockwise)
-  void TriangularFillInZValuesInArea(NRLib::Grid2D<double> &z_surface,
-                                     NRLib::Grid2D<int> &is_set,
-                                     double x0,
-                                     double y0,
-                                     const std::vector<NRLib::Point>& corners,
-                                     double dx,
-                                     double dy) const;
+  void TriangularFillInZValuesInArea(NRLib::Grid2D<double>           & z_surface,
+                                     NRLib::Grid2D<int>              & is_set,
+                                     const std::vector<NRLib::Point> & corners,
+                                     const double                      dx,
+                                     const double                      dy) const;
 
   ///Function used by FindLayerSurface to fill in values to z_surface in the area inside the (NB) four corners (listed clockwise)
-  void BilinearFillInZValuesInArea(NRLib::Grid2D<double> &z_surface,
-                                   NRLib::Grid2D<int> &is_set,
-                                   double x0,
-                                   double y0,
-                                   const std::vector<NRLib::Point>& corners,
-                                   double dx,
-                                   double dy) const;
+  void BilinearFillInZValuesInArea(NRLib::Grid2D<double>           & z_surface,
+                                   NRLib::Grid2D<int>              & is_set,
+                                   const std::vector<NRLib::Point> & corners,
+                                   const double                      dx,
+                                   const double                      dy) const;
 
   ///Function used by FindLayerSurface to fill in (average values of neighbour elements) to z_surface where is_set==false
   void FillInZValuesByAveraging(NRLib::Grid2D<double> &z_surface,
@@ -284,7 +296,7 @@ void EclipseGeometry::GetIJK(size_t index, size_t& i, size_t& j, size_t& k) cons
 
 size_t EclipseGeometry::GetIndex(size_t i, size_t j, size_t k) const
 {
-  assert(i < GetNI() && j < GetNI() && k < GetNK());
+  assert(i < GetNI() && j < GetNJ() && k < GetNK());
 
   return i + j*GetNI() + k*GetNI()*GetNJ();
 }

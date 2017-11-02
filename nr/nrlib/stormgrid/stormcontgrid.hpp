@@ -1,4 +1,4 @@
-// $Id: stormcontgrid.hpp 1190 2013-07-03 10:57:27Z ulvmoen $
+// $Id: stormcontgrid.hpp 1499 2017-05-29 19:01:53Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -31,11 +31,13 @@
 namespace NRLib {
   class StormContGrid : public Grid<float>, public Volume {
   public:
+    static const float StdMissingCode;
     enum FileFormat {STORM_BINARY = 0, STORM_ASCII};
 
     explicit StormContGrid(const std::string& filename, Endianess file_format = END_BIG_ENDIAN);
-    explicit StormContGrid(size_t nx = 0, size_t ny = 0, size_t nz = 0);
-    explicit StormContGrid(const Volume &vol, size_t nx = 0, size_t ny = 0, size_t nz = 0);
+    explicit StormContGrid(size_t nx = 0, size_t ny = 0, size_t nz = 0, float val = StdMissingCode);
+    StormContGrid(const Volume &vol, const Grid<float> & grid);
+    explicit StormContGrid(const Volume &vol, size_t nx = 0, size_t ny = 0, size_t nz = 0, float val = StdMissingCode);
 
     void SetMissingCode(float missing_code)
     { missing_code_ = missing_code; }
@@ -77,6 +79,13 @@ namespace NRLib {
                      bool plainAscii=false,
                      Endianess file_format = END_BIG_ENDIAN,
                      bool remove_path = true) const;
+
+    void WriteToSgriFile(const std::string & file_name,
+                         const std::string & file_name_header,
+                         const std::string & label,
+                         double              simbox_dz,
+                         Endianess           file_format = END_BIG_ENDIAN) const;
+
     /// \throw IOError if the file can not be opened.
     /// \throw FileFormatError if file format is not either storm_binary or storm_ascii, or if grid contains barriers.
     void ReadFromFile(const std::string& filename, bool commonPath = true, Endianess file_format = END_BIG_ENDIAN);
@@ -102,6 +111,10 @@ namespace NRLib {
                                                    const size_t & ind2,
                                                    const double & t) const;
 
+    float GetValueInterpolated(const int   & i,
+                               const int   & j,
+                               const float & k_value) const;
+
     double GetAvgRelThick() const;
 
     float  GetValueZInterpolated(double x, double y, double z)const;
@@ -111,6 +124,15 @@ namespace NRLib {
 
     void   FindCenterOfCell(size_t  i, size_t  j, size_t  k,
                             double& x, double& y, double& z) const;
+
+    void WriteCravaFile(const std::string & file_name,
+                        double              inline_0,
+                        double              crossline_0,
+                        double              il_step_x,
+                        double              il_step_y,
+                        double              xl_step_x,
+                        double              xl_step_y);
+
   private:
     double RecalculateLZ();
     void ReadSgriHeader(std::ifstream &headerFile, std::string &binFileName);

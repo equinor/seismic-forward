@@ -6,7 +6,7 @@
 
 class STORM {
   public:
-    static void writeStorm(NRLib::StormContGrid &grid,
+    static void WriteStorm(NRLib::StormContGrid &grid,
             std::string &filename,
             double top_window,
             double bot_window,

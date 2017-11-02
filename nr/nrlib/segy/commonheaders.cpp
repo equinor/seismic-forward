@@ -1,4 +1,4 @@
-// $Id: commonheaders.cpp 1279 2014-06-03 14:47:05Z hauge $
+// $Id: commonheaders.cpp 1616 2017-07-10 18:32:54Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -189,20 +189,13 @@ int TextualHeader::SetLine(int lineNo, const std::string& text)
 }
 
 
-void TextualHeader::Write(std::ostream& file) const
+void TextualHeader::Write(NRLib::BigFile& file) const
 {
-  //fwrite(buffer_, 1, 3200, file);
- // char buffer[3200];
-//  int i;
- // for (i=0;i<3200;i++)
- //   buffer[i] = buffer_[i];
-  for (size_t i=0;i<3200;i++)
-    file << buffer_[i] ;
-  //file.write(buffer_,3200);
+  file.write(buffer_.c_str(), 3200);
 }
 
 
-BinaryHeader::BinaryHeader(std::istream& file)
+BinaryHeader::BinaryHeader(NRLib::BigFile& file)
 {
   Update(file);
 }
@@ -214,52 +207,36 @@ BinaryHeader::BinaryHeader()
 
 
 void
-BinaryHeader::Update(std::istream& file)
+BinaryHeader::Update(NRLib::BigFile& file)
 {
-  ReadBinaryInt(file);
-  lino_ = ReadBinaryInt(file);
-  ReadBinaryInt(file);
-  ReadBinaryShort(file);
-  ReadBinaryShort(file);
-  hdt_ = ReadBinaryShort(file); ///=dz
-  ReadBinaryShort(file);
-  hns_ = ReadBinaryShort(file); ///=nz
-  ReadBinaryShort(file);
-  format_ = ReadBinaryShort(file);
+  char buffer[26];
+  file.read(buffer, 26);
 
-  char buffer[374];
-  file.read(buffer,374);
+  NRLib::ParseInt32BE(&buffer[4], lino_);
+  NRLib::ParseInt16BE(&buffer[16], hdt_);
+  NRLib::ParseInt16BE(&buffer[20], hns_);
+  NRLib::ParseInt16BE(&buffer[24], format_);
+
+  file.seek(374, SEEK_CUR);
 }
 
-void BinaryHeader::Write(std::ostream& file, double dz, size_t nz, short n_sam_per_ens) const
+void BinaryHeader::Write(NRLib::BigFile& file, double dz, size_t nz, short n_sam_per_ens) const
 {
-  int dummy = 9999;
-  WriteBinaryInt(file,dummy); //1-4
-  dummy = 1;
-  WriteBinaryInt(file,dummy); //5-8
-  WriteBinaryInt(file,dummy); //9-12
+  char buffer[400];
+  memset(buffer, 0, 400);
 
-  WriteBinaryShort(file, n_sam_per_ens); //13-14
-  WriteBinaryShort(file, n_sam_per_ens); //15-16
-  WriteBinaryShort(file, static_cast<short>(1000*dz)); // Hdt 17-18
-  short dummy2 = 0;
-  WriteBinaryShort(file, dummy2); //19-20
-  WriteBinaryShort(file, static_cast<short>(nz)); ///=nz Hns 21-22
-  WriteBinaryShort(file, dummy2); //23-24
-  dummy2 = 1;
-  WriteBinaryShort(file, dummy2); // format 25-26
-  WriteBinaryShort(file, n_sam_per_ens); // 27-28
-  dummy2 = 4;
-  WriteBinaryShort(file, dummy2); //29-30
-  dummy2 = 0;
-  int i;
-  for (i=0;i<12;i++)
-    WriteBinaryShort(file, dummy2); //31-54
-  dummy2 = 1;
-  WriteBinaryShort(file, dummy2); //55-56
-  char buffer[246];
-  memset(buffer, 0, 246);
-  file.write(buffer,246); //57-302
-  WriteBinaryShort(file, dummy2); //Constant tracelength, 303-304
-  file.write(buffer, 96); //305-400
+  NRLib::WriteInt32BE(&buffer[0], 9999);          // Job ID
+  NRLib::WriteInt32BE(&buffer[4], 1);             // Line number
+  NRLib::WriteInt32BE(&buffer[8], 1);             // Reel number
+  NRLib::WriteInt16BE(&buffer[12], n_sam_per_ens);
+  NRLib::WriteInt16BE(&buffer[14], n_sam_per_ens);
+  NRLib::WriteInt16BE(&buffer[16], static_cast<short>(1000 * dz));
+  NRLib::WriteInt16BE(&buffer[20], static_cast<short>(nz));
+  NRLib::WriteInt16BE(&buffer[24], 5);             // Format - IEEE 4-byte floating point
+  NRLib::WriteInt16BE(&buffer[26], n_sam_per_ens);
+  NRLib::WriteInt16BE(&buffer[28], 4);             // Trace sorting code
+  NRLib::WriteInt16BE(&buffer[54], 1);             // Measurement system
+  NRLib::WriteInt16BE(&buffer[302], 1);            // Constant trace length
+
+  file.write(buffer, 400);
 }

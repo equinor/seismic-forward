@@ -1,4 +1,4 @@
-// $Id: random.cpp 1175 2013-05-27 07:41:03Z perroe $
+// $Id: random.cpp 1488 2017-05-16 11:26:12Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -41,7 +41,7 @@ void Random::Initialize() {
   InitializeMT(start_seed_);
 }
 
-void Random::Initialize(unsigned long int seed) {
+void Random::Initialize(unsigned long seed) {
   start_seed_ = seed;
   is_initialized_ = true;
   InitializeMT(start_seed_);

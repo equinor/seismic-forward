@@ -1,0 +1,10 @@
+To get boost to compile, there must be a link to the boost include files in
+this directory. Typically these fiels are stored in /usr/include/boost.
+Therefore you need to do a:
+
+$ ln -s /usr/include/boost boost
+
+If boost is not installed on the machine and cannot be installed, the include
+files can be downloaded from
+
+http://www.boost.org/users/download

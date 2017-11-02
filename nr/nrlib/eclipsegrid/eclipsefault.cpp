@@ -1,4 +1,4 @@
-// $Id: eclipsefault.cpp 1288 2014-10-16 09:53:45Z perroe $
+// $Id: eclipsefault.cpp 1445 2017-02-20 15:13:06Z veralh $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -201,7 +201,14 @@ bool EclipseFault::SegmentsCross(const Segment & segment1,
     return false;
   }
 
-  int i_from_1, i_to_1, j_from_1, j_to_1, i_from_2, i_to_2, j_from_2, j_to_2;
+  int i_from_1 = 0;
+  int i_to_1   = 0;
+  int j_from_1 = 0;
+  int j_to_1   = 0;
+  int i_from_2 = 0;
+  int i_to_2   = 0;
+  int j_from_2 = 0;
+  int j_to_2   = 0;
 
   GetSegmentLowerCoord(segment1, i_from_1, j_from_1);
   GetSegmentUpperCoord(segment1, i_to_1, j_to_1);
@@ -239,4 +246,3 @@ bool EclipseFault::SegmentsCross(const Segment & segment1,
   }
   return false;
 }
-

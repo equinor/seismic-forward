@@ -1,4 +1,4 @@
-// $Id: eclipsetools.hpp 882 2011-09-23 13:10:16Z perroe $
+// $Id: eclipsetools.hpp 1416 2017-01-19 13:51:59Z veralh $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.

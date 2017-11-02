@@ -1,4 +1,4 @@
-// $Id: gamma.cpp 883 2011-09-26 09:17:05Z perroe $
+// $Id: gamma.cpp 1329 2016-04-26 13:44:29Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -21,8 +21,10 @@
 
 #include "gamma.hpp"
 #include "../exception/exception.hpp"
-#include <limits>
+#include <algorithm>
 #include <cmath>
+#include <limits>
+#include <algorithm>
 
 // Functions follow Numerical Recipes by Press, Teukolsky, Vetterling and Flannery
 
@@ -56,7 +58,7 @@ namespace NRLib {
     int    j;
     double x;
     double tmp;
-    double y;
+    double y_loc;
     double ser;
     static const double cof[14]={57.1562356658629235,-59.5979603554754912,
       14.1360979747417471,-0.491913816097620199,.339946499848118887e-4,
@@ -67,14 +69,14 @@ namespace NRLib {
     if (xx <= 0)
       throw Exception("Bad argument in gammln");
 
-    y=x=xx;
+    y_loc=x=xx;
     tmp = x+5.24218750000000000;
     tmp =(x+0.5)*std::log(tmp)-tmp;
     ser = 0.999999999999997092;
     for (j=0; j<14; j++)
     {
-      y++;
-      ser += cof[j]/y;
+      y_loc++;
+      ser += cof[j]/y_loc;
     }
     return tmp+log(2.5066282746310005*ser/x);
   }
@@ -200,10 +202,10 @@ namespace NRLib {
   {
     int    j;
     double x,err,t,u,pp;
-    double lna1      = 0.0;
-    double afac      = 0.0;
-    double a1        = a-1;
-    const double EPS = 1.e-8;
+    double lna1            = 0.0;
+    double afac            = 0.0;
+    double a1              = a-1;
+    const double LOCAL_EPS = 1.e-8;
 
     gln = gammln(a);
     if (a <= 0.0)
@@ -247,7 +249,7 @@ namespace NRLib {
       x -= (t=u/(1.0-0.5*std::min(1.0,u*((a-1.0)/x - 1))));
       if (x <= 0.0)
         x = 0.5*(x + t);
-      if (std::abs(t) < EPS*x )
+      if (std::abs(t) < LOCAL_EPS*x )
         break;
     }
     return x;

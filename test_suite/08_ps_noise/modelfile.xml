@@ -1,0 +1,99 @@
+<seismic-forward>
+
+<elastic-param>
+  <eclipse-file > ../../01_nmo_pp/input/Input_grid.grdecl </eclipse-file>
+
+  <default-values>
+    <vp-top>  2400 </vp-top>
+    <vp-mid>  2240 </vp-mid>
+    <vp-bot>  2240 </vp-bot>
+
+    <vs-top>  1100 </vs-top>
+    <vs-mid>   890 </vs-mid>
+    <vs-bot>   890 </vs-bot>
+
+    <rho-top> 2300 </rho-top>
+    <rho-mid> 2240 </rho-mid>
+    <rho-bot> 2240 </rho-bot>
+  </default-values>
+
+  <parameter-names>
+    <vp>    VP_DATA </vp>
+    <vs>    VS_DATA </vs>
+    <rho> RHO_DATA </rho>
+  </parameter-names>
+</elastic-param>
+
+<angle>
+  <theta-0>    0 </theta-0>
+  <dtheta>    15  </dtheta>
+  <theta-max>  45 </theta-max>
+</angle>
+
+<wavelet>
+  <ricker>
+    <peak-frequency> 30 </peak-frequency>
+  </ricker>
+  <scale> -1 </scale>
+</wavelet>
+
+<white-noise>
+  <standard-deviation> 0.15 </standard-deviation>
+  <seed> 123456 </seed>
+</white-noise>
+
+<output-grid>
+  <top-time>
+    <top-time-surface> ../../01_nmo_pp/input/Input_top_surface_PS.irap </top-time-surface>
+  </top-time>
+  <area>
+    <x0>  472546 </x0>
+    <y0> 6563310.00 </y0>
+    <ly>   25   </ly>
+    <lx>   25 </lx>
+    <angle>  -27.2155525644936 </angle>
+  </area>
+
+  <segy-indexes>
+    <inline-start>  2 </inline-start>
+    <xline-start>   2 </xline-start>
+    <inline-step>  -1 </inline-step>
+    <xline-step>   -1 </xline-step>
+    <inline-direction> x </inline-direction>
+  </segy-indexes>
+
+  <cell-size>
+    <dx>12.5</dx>
+    <dy>12.5</dy>
+    <dz> 4  </dz>
+    <dt> 4  </dt>
+  </cell-size>
+
+  <depth-window>
+    <top>    1500 </top>
+    <bot> 1900 </bot>
+  </depth-window>
+
+  <time-window>
+    <top> 2400 </top>
+    <bot> 2700 </bot>
+  </time-window>
+  <utm-precision> 0.01 </utm-precision>
+</output-grid>
+
+<output-parameters>
+  <zvalues>                  no     </zvalues>
+  <seismic-time>             no     </seismic-time>
+  <seismic-depth>            no     </seismic-depth>
+  <seismic-timeshift>        no     </seismic-timeshift>
+  <seismic-time-segy>        yes    </seismic-time-segy>
+  <seismic-depth-segy>       yes    </seismic-depth-segy>
+  <seismic-timeshift-segy>   yes    </seismic-timeshift-segy>
+</output-parameters>
+
+<ps-seismic> yes </ps-seismic>
+<timeshift-twt> ../../01_nmo_pp/input/Input_timeshift_minus50_twt_PS.storm </timeshift-twt>
+<traces-in-memory> 4 </traces-in-memory>
+<max-threads> 1 </max-threads>
+
+</seismic-forward>

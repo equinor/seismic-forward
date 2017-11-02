@@ -1,4 +1,4 @@
-// $Id: segytrace.hpp 1199 2013-10-02 08:24:02Z anner $
+// $Id: segytrace.hpp 1678 2017-08-30 12:06:06Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -22,7 +22,6 @@
 #ifndef SEGYTRACE_HPP
 #define SEGYTRACE_HPP
 
-#include <fstream>
 #include <string>
 #include <vector>
 
@@ -31,6 +30,8 @@
 
 namespace NRLib
 {
+class BigFile;
+
 class SegYTrace
 {
 public:
@@ -46,7 +47,7 @@ public:
  /// \param[in] crossLine      crossline number
 
 
-  SegYTrace(std::fstream      & file,
+  SegYTrace(NRLib::BigFile    & file,
             size_t              jStart,
             size_t              jEnd,
             int                 format,
@@ -63,6 +64,8 @@ public:
 
   SegYTrace(const TraceHeader & trace_header,
             bool                keep_header = true);                                      ///< Constructor for handling only headers.
+
+  explicit SegYTrace(const SegYTrace & trace);                                            ///< Copy constructor required for Python bindings
 
   ~SegYTrace();
 
@@ -87,8 +90,8 @@ public:
 
 
   void RemoveXY() { /// Void invalid x and y coordinates
-    x_      = static_cast<float>(in_line_);
-    y_      = static_cast<float>(cross_line_);
+    x_      = in_line_;
+    y_      = cross_line_;
     coord1_ = x_;
     coord2_ = y_;}
 
