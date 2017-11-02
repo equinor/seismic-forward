@@ -88,10 +88,10 @@ int main(int argc, char *argv[]) {
 
     TaskList::ViewAllTasks();
   }
-  else {
-    printf("Press a key and then enter to continue.\n");
-    int x;
-    cin >> x;
-  }
+  //else {
+  //  printf("Press a key and then enter to continue.\n");
+  //  int x;
+  //  cin >> x;
+  //}
   NRLib::LogKit::EndLog();
 }

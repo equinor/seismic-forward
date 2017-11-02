@@ -1206,11 +1206,11 @@ void EclipseGeometry::BilinearFillInZValuesInArea(NRLib::Grid2D<double>         
                                                               intersec1,
                                                               intersec2);
 
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%d %d num_int=%d\n", it1, it2, nu_of_intersec);
+      //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%d %d num_int=%d\n", it1, it2, nu_of_intersec);
 
       if (nu_of_intersec > 0) {
 
-        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "z(%d,%d) =  %7.2f\n",it1, it2, intersec1.z);
+        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "z(%d,%d) =  %7.2f\n",it1, it2, intersec1.z);
 
         double count = static_cast<double>(is_set(it1,it2));
 
@@ -1267,14 +1267,19 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
     vec1_vec2_angle += vec1.GetAngle(vec2);
 
     // Make delunay triangles (according to the sum of the angles)
-    if (vec1_vec2_angle <= NRLib::Pi) {
-      triangle1.SetCornerPoints(corners[3], corners[0], corners[1]);
-      triangle2.SetCornerPoints(corners[1], corners[2], corners[3]);
-    }
-    else {
-      triangle1.SetCornerPoints(corners[0], corners[1], corners[2]);
-      triangle2.SetCornerPoints(corners[2], corners[3], corners[0]);
-    }
+    //
+    // NBNB! To avoid GEOS-29 bug we choose to always use the same triangulation. This is
+    // crucial within a given column, and as we do the modelling layer by layer, this is
+    // the only wy to ensure consistency.
+    //
+    //if (vec1_vec2_angle <= NRLib::Pi) {
+    triangle1.SetCornerPoints(corners[3], corners[0], corners[1]);
+    triangle2.SetCornerPoints(corners[1], corners[2], corners[3]);
+    //}
+    //else {
+    //  triangle1.SetCornerPoints(corners[0], corners[1], corners[2]);
+    //  triangle2.SetCornerPoints(corners[2], corners[3], corners[0]);
+    //}
   }
 
   //Calculate the min and max in x- and y-direction (rotated, i.e. same direction as z_surface)
@@ -1319,6 +1324,9 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
 
       NRLib::Line line_xy(point_xy, point_xy + z_dir, false, false);
 
+      //triangle1.WriteToFile("triangle1.irap");
+      //triangle2.WriteToFile("triangle2.irap");
+
       if (triangle1.FindIntersection(line_xy, intersec, true)) {
         if (is_set(it1,it2) > 0) {
           z_surface(it1, it2) *= w1;
@@ -1328,6 +1336,9 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
         else {
           z_surface(it1,it2) = intersec.z;
           is_set(it1,it2)    = 1;
+
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "A: intersect(x,y,z) = (%7.2f,%7.2f,%7.2f)\n",intersec.x, intersec.y, intersec.z);
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "A: z(%d,%d) = %7.2f\n",it1, it2, z_surface(it1, it2));
         }
       }
       else if (two_triangles) {
@@ -1341,8 +1352,10 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
             z_surface(it1,it2) = intersec.z;
             is_set(it1,it2)    = 1;
 
-            NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "z(%d,%d) = %7.2f\n",it1, it2, z_surface(it1, it2));
-
+            //if (it1 == 1 && it2 == 1) {
+            //  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "B: intersect(x,y,z) = (%7.2f,%7.2f,%7.2f)\n",intersec.x, intersec.y, intersec.z);
+            //  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "B: z(%d,%d) = %7.2f\n",it1, it2, z_surface(it1, it2));
+            //}
           }
         }
       }
@@ -1361,12 +1374,6 @@ void EclipseGeometry::FindLayerSurfaceCornerpoint(NRLib::Grid2D<double> &z_surfa
                                        double angle,
                                        bool bilinear_else_triangles) const
 {
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner point is currently not supported. Please deactivate in model file and run again\n");
-  exit(1);
-  //
-  // Innfør oratsjon og translasjon som for TrangilarFillIN... nedenfor
-  //
-
   size_t m=z_surface.GetNJ();
   size_t n=z_surface.GetNI();
   double rot_x0=cos(angle)*x0+sin(angle)*y0;
@@ -1543,30 +1550,27 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_surface,
         TranslateAndRotate(Crot[2], C2, x0, y0, cosA, sinA);
         TranslateAndRotate(Crot[3], C3, x0, y0, cosA, sinA);
 
-        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "i,j,k =  %d, %d, %d\n",i,j,k);
+        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "i,j,k =  %d, %d, %d\n",i,j,k);
         //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "UnrotC 1:  %7.2f,  %7.2f, %7.2f\n",k,C0.x,C0.y,C0.z);
         //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "UnrotC 2:  %7.2f,  %7.2f, %7.2f\n",k,C1.x,C1.y,C1.z);
         //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "UnrotC 3:  %7.2f,  %7.2f, %7.2f\n",k,C2.x,C2.y,C2.z);
         //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "UnrotC 4:  %7.2f,  %7.2f, %7.2f\n",k,C3.x,C3.y,C3.z);
 
         if (FindTopCell(i,j) != nk_) {
-          NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 0:  %7.2f, %7.2f, %7.2f\n", k, Crot[0].x, Crot[0].y, Crot[0].z);
-          NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 1:  %7.2f, %7.2f, %7.2f\n", k, Crot[1].x, Crot[1].y, Crot[1].z);
-          NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 2:  %7.2f, %7.2f, %7.2f\n", k, Crot[2].x, Crot[2].y, Crot[2].z);
-          NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 3:  %7.2f, %7.2f, %7.2f\n", k, Crot[3].x, Crot[3].y, Crot[3].z);
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 0:  %7.2f, %7.2f, %7.2f\n", k, Crot[0].x, Crot[0].y, Crot[0].z);
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 1:  %7.2f, %7.2f, %7.2f\n", k, Crot[1].x, Crot[1].y, Crot[1].z);
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 2:  %7.2f, %7.2f, %7.2f\n", k, Crot[2].x, Crot[2].y, Crot[2].z);
+          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 3:  %7.2f, %7.2f, %7.2f\n", k, Crot[3].x, Crot[3].y, Crot[3].z);
 
-          // if (bilinear_else_triangles)
+          if (bilinear_else_triangles)
             BilinearFillInZValuesInArea(z_surface, is_set, Crot, dx, dy);
-            //   else
-            ///  TriangularFillInZValuesInArea(z_surface, is_set, Crot, dx, dy);
+          else
+            TriangularFillInZValuesInArea(z_surface, is_set, Crot, dx, dy);
         }
       }
     }
   }
   FillInZValuesByAveraging(z_surface, is_set);
-
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
-
 }
 
 void EclipseGeometry::TranslateAndRotate(NRLib::Point       & Crot,
@@ -1577,8 +1581,6 @@ void EclipseGeometry::TranslateAndRotate(NRLib::Point       & Crot,
                                          const double         sinA) const
 {
   // Translate and rotate eclipse grid nodes to surface grid
-  //Crot.x = cosA*C.x + sinA*C.y;
-  //Crot.y = cosA*C.y - sinA*C.x;
   Crot.x = cosA*(C.x - x0) + sinA*(C.y - y0);
   Crot.y = cosA*(C.y - y0) - sinA*(C.x - x0);
   Crot.z = C.z;

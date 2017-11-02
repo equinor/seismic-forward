@@ -216,22 +216,24 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
       geometry.FindLayerSurfaceCornerpoint(layer[k], k + top_k, 0, dx, dy, xmin, ymin, angle, false);
     }
     else {
-   // geometry.FindLayer(layer[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
+    //geometry.FindLayer(layer[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
       geometry.FindLayer(layer[k     ], k + top_k     , 0, dx, dy, xmin, ymin, angle, false);
-
-      //XXXX stop here
-      exit(1);
-
     }
     SetGridLayer(zgrid, layer[k], static_cast<size_t>(k));
   }
 
   std::vector<std::vector<double> > negative_dz_pts;
 
+  double dz_min = 0.0;
+  int    min_i  = -1;
+  int    min_j  = -1;
+  int    min_k  = -1;
+
 #ifdef WITH_OMP
   chunk_size = std::max(1, int(ni/(2*static_cast<int>(n_threads))));
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
+
   for (size_t i = 0; i < ni ; i++) {
     std::vector<std::vector<double> > neg_dz_pts;
     for (size_t j = 0; j < nj; j++) {
@@ -254,6 +256,12 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
           neg[3] = layer[kk](i, j);
           neg[4] = z2 - z1;
           neg_dz_pts.push_back(neg);
+          if (z2 - z1 < dz_min) {
+            dz_min = z2 - z1;
+            min_i  = i;
+            min_j  = j;
+            min_k  = k;
+          }
         }
       }
     }
@@ -268,16 +276,6 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
 
   size_t n = negative_dz_pts.size();
 
-  double max_neg = 0.0;
-  int    max_k   = static_cast<int>(nk);
-  for (size_t i = 0 ; i < n ; i++) {
-    double z21 = negative_dz_pts[i][4];
-    if (z21 < max_neg) {
-      max_neg = z21;
-      max_k   = static_cast<int>(negative_dz_pts[i][0]);
-    }
-  }
-
   if (n > 0) {
     if (rem_neg_delta)
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found and removed   : %5d", n);
@@ -285,7 +283,11 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNumber of negative dz found               : %5d", n);
       TaskList::AddTask("Check section 3: Negative dz values found when building z-grid");
     }
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value                    : %5.2f (layer %d starting from 0)\n", max_neg, max_k);
+    double x,y,z;
+    zgrid.FindCenterOfCell(min_i, min_j, min_k, x, y, z);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value                    : %5.2f\n", dz_min);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value location (x,y,z)   : (%.2f, %.2f, %.2f)\n", x, y, z);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value location (i,j,k)   : (%d, %d, %d)\n", min_i, min_j, min_k);
   }
   else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNo crossing depth values found!\n");
@@ -300,29 +302,13 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
     for (size_t i = 0; i < negative_dz_pts.size(); i++) {
       fout << std::fixed
            << std::setprecision(2)
-           << std::setw(12) << negative_dz_pts[i][1]
-           << std::setw(12) << negative_dz_pts[i][2]
-           << std::setw(8)  << negative_dz_pts[i][3]
+           << std::setw(12) << negative_dz_pts[i][1] << " "
+           << std::setw(12) << negative_dz_pts[i][2] << " "
+           << std::setw(8)  << negative_dz_pts[i][3] << " "
            << std::setw(8)  << negative_dz_pts[i][4]
            << std::endl;
     }
     fout.close();
-
-    /*
-    NRLib::RegularSurfaceRotated<double> s1(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), ni, nj, zgrid.GetAngle(), 0.00);
-    NRLib::RegularSurfaceRotated<double> s2(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), ni, nj, zgrid.GetAngle(), 0.00);
-    NRLib::RegularSurfaceRotated<double> s3(zgrid.GetXMin(), zgrid.GetYMin(), zgrid.GetLX(), zgrid.GetLY(), ni, nj, zgrid.GetAngle(), 0.00);
-    for (size_t i = 0; i < ni; i++) {
-      for (size_t j = 0; j < nj; j++) {
-        s1(i, j) = layer[max_k    ](i, j);
-        s2(i, j) = layer[max_k + 1](i, j);
-        s3(i, j) = s2(i, j) - s1(i, j);
-      }
-    }
-    s1.WriteToFile("largest_negative_dz_layer_top.irap", NRLib::SURF_IRAP_CLASSIC_ASCII);
-    s2.WriteToFile("largest_negative_dz_layer_bot.irap", NRLib::SURF_IRAP_CLASSIC_ASCII);
-    s3.WriteToFile("largest_negative_dz_values.irap"   , NRLib::SURF_IRAP_CLASSIC_ASCII);
-    */
   }
 }
 
