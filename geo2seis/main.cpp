@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n****************************************************************************************************");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                      Seismic Forward Modeling / Geo2Seis                                 *****");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                 version 4.2 beta                                         *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                 version 4.2                                              *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                  Copyright (c) 2017 by Norsk Regnesentral / Statoil                      *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n****************************************************************************************************\n\n");
