@@ -167,10 +167,12 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
 //-------------------------------------------------------------------------
 {
   NRLib::StormContGrid         & zgrid            = seismic_parameters.GetZGrid();
+  SeismicGeometry              * seismic_geometry = seismic_parameters.GetSeismicGeometry();
   const NRLib::EclipseGeometry & geometry         = seismic_parameters.GetEclipseGrid().GetGeometry();
   const size_t                   top_k            = seismic_parameters.GetTopK();
-  const bool                     use_corner_point = model_settings->GetUseCornerpointInterpol();
   const bool                     rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
+  const bool                     use_corner_point = model_settings->GetUseCornerpointInterpol();
+  const bool                     bilinear         = false;
 
   const double                   xmin             = zgrid.GetXMin();
   const double                   ymin             = zgrid.GetYMin();
@@ -182,25 +184,25 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   const size_t                   nj               = zgrid.GetNJ();
   const size_t                   nk               = zgrid.GetNK();
 
-  if (use_corner_point)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using corner-point interpolation.\n");
-  else
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid.\n");
+  const double                   missing          = -999.0;
 
   std::vector<NRLib::Grid2D<double> > layer(nk);
   for (size_t k = 0 ; k < nk ; k++) {
-    layer[k] = NRLib::Grid2D<double>(ni, nj, 0.0);
+    layer[k] = NRLib::Grid2D<double>(ni, nj, missing);
   }
+
+  NRLib::Grid2D<bool> extrapolate(ni, nj, true);
+  SeismicParameters::FindExtrapolationRegion(extrapolate, *seismic_geometry, xmin, ymin);  // Setup extrapolation mask grid
 
   //
   // Fill base layer
   //
-  if (use_corner_point) {
-    geometry.FindLayerSurfaceCornerpoint(layer[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
-  }
-  else {
-    geometry.FindLayer(layer[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
-  }
+  if (use_corner_point)
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using corner-point interpolation.\n");
+  else
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using center-point interpolation.\n");
+
+  geometry.FindLayer(layer[nk - 1], extrapolate, nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, use_corner_point, bilinear, missing);
   SetGridLayer(zgrid, layer[nk - 1], static_cast<size_t>(nk - 1));
 
   //
@@ -210,15 +212,8 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   int chunk_size = 1;
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
-
   for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
-    if (use_corner_point) {
-      geometry.FindLayerSurfaceCornerpoint(layer[k], k + top_k, 0, dx, dy, xmin, ymin, angle, false);
-    }
-    else {
-    //geometry.FindLayer(layer[nk - 1], nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, false);
-      geometry.FindLayer(layer[k     ], k + top_k     , 0, dx, dy, xmin, ymin, angle, false);
-    }
+    geometry.FindLayer(layer[k], extrapolate, k + top_k , 0, dx, dy, xmin, ymin, angle, use_corner_point, bilinear, missing);
     SetGridLayer(zgrid, layer[k], static_cast<size_t>(k));
   }
 

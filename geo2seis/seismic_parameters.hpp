@@ -33,36 +33,36 @@ class SeismicParameters
 
     ~SeismicParameters() {};
 
-    inline NRLib::StormContGrid               & GetVpGrid()               const { return *vpgrid_             ;}
-    inline NRLib::StormContGrid               & GetVsGrid()               const { return *vsgrid_             ;}
-    inline NRLib::StormContGrid               & GetRhoGrid()              const { return *rhogrid_            ;}
-    inline NRLib::StormContGrid               & GetZGrid()                const { return *zgrid_              ;}
-    inline NRLib::StormContGrid               & GetTwtGrid()              const { return *twtgrid_            ;}
-    inline NRLib::StormContGrid               & GetTwtSSGrid()            const { return *twtssgrid_          ;}
-    inline NRLib::StormContGrid               & GetTwtPPGrid()            const { return *twtppgrid_          ;}
-    inline NRLib::StormContGrid               & GetTwtShiftGrid()         const { return *twt_timeshift_      ;}
-    inline NRLib::StormContGrid               & GetVrmsGrid()             const { return *vrmsgrid_           ;}
-    inline std::vector<NRLib::StormContGrid>  & GetRGrids()               const { return *rgridvec_           ;}
-    inline std::vector<NRLib::StormContGrid*>   GetExtraParametersGrids() const { return extra_parameter_grid_;}
-    inline NRLib::EclipseGrid                 & GetEclipseGrid()          const { return *eclipse_grid_       ;}
+    inline NRLib::StormContGrid               & GetVpGrid()               const { return *vpgrid_              ;}
+    inline NRLib::StormContGrid               & GetVsGrid()               const { return *vsgrid_              ;}
+    inline NRLib::StormContGrid               & GetRhoGrid()              const { return *rhogrid_             ;}
+    inline NRLib::StormContGrid               & GetZGrid()                const { return *zgrid_               ;}
+    inline NRLib::StormContGrid               & GetTwtGrid()              const { return *twtgrid_             ;}
+    inline NRLib::StormContGrid               & GetTwtSSGrid()            const { return *twtssgrid_           ;}
+    inline NRLib::StormContGrid               & GetTwtPPGrid()            const { return *twtppgrid_           ;}
+    inline NRLib::StormContGrid               & GetTwtShiftGrid()         const { return *twt_timeshift_       ;}
+    inline NRLib::StormContGrid               & GetVrmsGrid()             const { return *vrmsgrid_            ;}
+    inline std::vector<NRLib::StormContGrid>  & GetRGrids()               const { return *rgridvec_            ;}
+    inline std::vector<NRLib::StormContGrid*>   GetExtraParametersGrids() const { return  extra_parameter_grid_;}
+    inline NRLib::EclipseGrid                 & GetEclipseGrid()          const { return *eclipse_grid_        ;}
 
-    inline NRLib::RegularSurface<double>      & GetTopTime()                    { return top_time_            ;}
-    inline NRLib::RegularSurface<double>      & GetBottomTime()                 { return bot_time_            ;}
-    inline NRLib::RegularSurface<double>      & GetTopEclipse()                 { return topeclipse_          ;}
-    inline NRLib::RegularSurface<double>      & GetBottomEclipse()              { return boteclipse_          ;}
+    inline NRLib::RegularSurface<double>      & GetTopTime()                    { return  top_time_            ;}
+    inline NRLib::RegularSurface<double>      & GetBottomTime()                 { return  bot_time_            ;}
+    inline NRLib::RegularSurface<double>      & GetTopEclipse()                 { return  topeclipse_          ;}
+    inline NRLib::RegularSurface<double>      & GetBottomEclipse()              { return  boteclipse_          ;}
 
-    inline ModelSettings                      * GetModelSettings()        const { return model_settings_      ;}
-    inline SeismicOutput                      * GetSeismicOutput()        const { return seismic_output_      ;}
-    inline SeismicGeometry                    * GetSeismicGeometry()      const { return seismic_geometry_    ;}
-    inline Wavelet                            * GetWavelet()              const { return wavelet_             ;}
-    inline double                               GetWaveletScale()         const { return wavelet_scale_       ;}
-    inline NRLib::SegyGeometry                * GetSegyGeometry()         const { return segy_geometry_       ;}
+    inline ModelSettings                      * GetModelSettings()        const { return  model_settings_      ;}
+    inline SeismicOutput                      * GetSeismicOutput()        const { return  seismic_output_      ;}
+    inline SeismicGeometry                    * GetSeismicGeometry()      const { return  seismic_geometry_    ;}
+    inline Wavelet                            * GetWavelet()              const { return  wavelet_             ;}
+    inline double                               GetWaveletScale()         const { return  wavelet_scale_       ;}
+    inline NRLib::SegyGeometry                * GetSegyGeometry()         const { return  segy_geometry_       ;}
 
-    inline size_t                               GetTopK()                 const { return top_k_               ;}
-    inline size_t                               GetBottomK()              const { return bottom_k_            ;}
-    inline std::vector<double>                & GetThetaVec()                   { return theta_vec_           ;}
-    inline std::vector<double>                & GetOffsetVec()                  { return offset_vec_          ;}
-    inline float                                GetMissingVal()           const { return missing_             ;}
+    inline size_t                               GetTopK()                 const { return  top_k_               ;}
+    inline size_t                               GetBottomK()              const { return  bottom_k_            ;}
+    inline std::vector<double>                & GetThetaVec()                   { return  theta_vec_           ;}
+    inline std::vector<double>                & GetOffsetVec()                  { return  offset_vec_          ;}
+    inline float                                GetMissingVal()           const { return  missing_             ;}
 
     inline bool                                 GetTimeOutput()           const;
     inline bool                                 GetDepthOutput()          const;
@@ -169,6 +169,12 @@ class SeismicParameters
                                               const std::vector<double> & y_in,
                                               const std::vector<double> & x_out,
                                               double                      extrap_value);
+
+
+    static void FindExtrapolationRegion(NRLib::Grid2D<bool> & extrapolate,
+                                        SeismicGeometry     & seismic_geometry,
+                                        double                xmin,
+                                        double                ymin);
 
     void DeleteEclipseGrid();
     void DeleteElasticParameterGrids();

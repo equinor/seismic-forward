@@ -4,9 +4,9 @@
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// •  Redistributions of source code must retain the above copyright notice, this
+//   Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
-// •  Redistributions in binary form must reproduce the above copyright notice, this list of
+//   Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials
 //    provided with the distribution.
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
@@ -76,6 +76,9 @@ public:
 
   A                      FindMin(A missingValue) const;
   A                      FindMax(A missingValue) const;
+  A                      FindAvg(A missingValue) const;
+
+  bool                   IsEdge(size_t i, size_t j, A missing) const;
 
 private:
   size_t ni_;
@@ -216,6 +219,51 @@ A Grid2D<A>::FindMax(A missingValue) const
   }
   return maxVal;
 }
+
+template<class A>
+A Grid2D<A>::FindAvg(A missingValue) const
+{
+  A      avg   = static_cast<A>(0);
+  size_t count = 0;
+  typename std::vector<A>::const_iterator i;
+  for (i = this->begin(); i < this->end(); i++) {
+    if ((*i) != missingValue) {
+      avg += *i;
+      count++;
+    }
+  }
+  if (count > 0)
+    return avg/count;
+  else
+    return missingValue;
+}
+
+template<class A>
+bool Grid2D<A>::IsEdge(size_t i,
+                       size_t j,
+                       A missing) const
+{
+  // Cell is undefined
+
+  if ((*this)(i, j) == missing)
+    return false;
+
+  // Cells is on the edge of the grid
+
+  if (i == 0 || i == GetNI() - 1 || j == 0 || j == GetNJ() - 1)
+    return true;
+
+  // Cell is defined and surrounded by defined cells
+
+  if ((*this)(i    , j - 1) != missing &&
+      (*this)(i    , j + 1) != missing &&
+      (*this)(i - 1, j    ) != missing &&
+      (*this)(i + 1, j    ) != missing)
+    return false;
+
+  return true;
+}
+
 
 } // namespace NRLib
 

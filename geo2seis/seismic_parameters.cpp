@@ -220,6 +220,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   size_t nx       = nxsurfec + 2;
   size_t ny       = nysurfec + 2;
 
+  double missing  = -999.0;
+
   //
   // Finding top and base time surfaces
   //
@@ -250,16 +252,10 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   }
 
   //
-  // Finding top and base Eclipse surfaces in depth
-  //
-  topeclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
-  boteclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, -999.0);
-
-  //
   // Layers for which at least one cell is active and non-collapsed
   //
-  top_k      = eclipse_geometry.FindTopLayer();
-  bot_k      = eclipse_geometry.FindBottomLayer();
+  top_k = eclipse_geometry.FindTopLayer();
+  bot_k = eclipse_geometry.FindBottomLayer();
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nTop layer of Eclipse grid                 : %4d"  , top_k);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nBase layer of Eclipse grid                : %4d\n", bot_k);
@@ -267,24 +263,33 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
 
   seismic_geometry->setZReflectorCount(static_cast<size_t>(bot_k + 2 - top_k));
 
-  double etdx = topeclipse.GetDX();
-  double etdy = topeclipse.GetDY();
-  double ebdx = boteclipse.GetDX();
-  double ebdy = boteclipse.GetDY();
+  //
+  // Finding top and base Eclipse surfaces in depth
+  //
+  topeclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing);
+  boteclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing);
 
-  NRLib::Grid2D<double> tvalues(nx, ny, 0.0);
-  NRLib::Grid2D<double> bvalues(nx, ny, 0.0);
+  NRLib::Grid2D<double> tvalues(nx, ny, missing);
+  NRLib::Grid2D<double> bvalues(nx, ny, missing);
+  NRLib::Grid2D<bool>   extrapolate(nx, ny, true);
 
-  if (model_settings->GetUseCornerpointInterpol()) {
-    eclipse_geometry.FindLayerSurfaceCornerpoint(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, 0);
-    eclipse_geometry.FindLayerSurfaceCornerpoint(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, 0);
+  FindExtrapolationRegion(extrapolate, *seismic_geometry, x0, y0);  // Setup extrapolation mask grid
+
+  double etdx     = topeclipse.GetDX();
+  double etdy     = topeclipse.GetDY();
+  double ebdx     = boteclipse.GetDX();
+  double ebdy     = boteclipse.GetDY();
+  double angle    = 0.0;
+  bool   cornerpt = model_settings->GetUseCornerpointInterpol();
+  bool   bilinear = false;
+
+  if (cornerpt)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
-   }
-  else {
-    eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, 0);
-    eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, 0);
+  else
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
-  }
+
+  eclipse_geometry.FindLayer(tvalues, extrapolate, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, missing);
+  eclipse_geometry.FindLayer(bvalues, extrapolate, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, missing);
 
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
@@ -293,9 +298,12 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
     }
   }
 
-  if (model_settings->GetOutputDepthSurfaces()) {
+  //if (model_settings->GetOutputDepthSurfaces()) {
     seismic_output_->WriteDepthSurfaces(topeclipse, boteclipse);
-  }
+  //}
+
+
+  exit(1);
 
   double min;
   double max;
@@ -379,6 +387,39 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid minimum value                        : %8.2f", d1);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid maximum value                        : %8.2f\n", d2);
+}
+
+//-------------------------------------------------------------------------------------
+void SeismicParameters::FindExtrapolationRegion(NRLib::Grid2D<bool> & extrapolate,
+                                                SeismicGeometry     & seismic_geometry,
+                                                double                xmin,
+                                                double                ymin)
+//-------------------------------------------------------------------------------------
+{
+  double x0      = seismic_geometry.x0();      // Rotation origin - x
+  double y0      = seismic_geometry.y0();      // Rotation origin - y
+  double xlength = seismic_geometry.xlength();
+  double ylength = seismic_geometry.ylength();
+  double xinc    = seismic_geometry.dx();
+  double yinc    = seismic_geometry.dy();
+  double angle   = seismic_geometry.angle();
+
+  double cosA    = cos(angle);
+  double sinA    = sin(angle);
+
+  for (size_t i = 0 ; i < extrapolate.GetNI() ; i++) {
+    for (size_t j = 0 ; j < extrapolate.GetNJ() ; j++) {
+      double x  = xmin + i*xinc;                      // x-coordinates in regular surface grid
+      double y  = ymin + j*yinc;                      // y-coordinates in regular surface grid
+      double xs = (x - x0)*cosA + (y - y0)*sinA;      // x-coordinates in seismic output grid
+      double ys = (y - y0)*cosA - (x - x0)*sinA;      // y-coordinates in seismic output grid
+
+      if (xs < 0.0 || xs > xlength || ys < 0.0 || ys > ylength)
+        extrapolate(i,j) = false;
+      else
+        extrapolate(i,j) = true;
+    }
+  }
 }
 
 //---------------------------------------------------------------------

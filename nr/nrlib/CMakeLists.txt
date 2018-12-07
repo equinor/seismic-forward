@@ -9,6 +9,7 @@ ${CMAKE_CURRENT_LIST_DIR}/eclipsegrid/eclipsegrid.hpp
 ${CMAKE_CURRENT_LIST_DIR}/eclipsegrid/eclipsetools.hpp
 ${CMAKE_CURRENT_LIST_DIR}/eclipsegrid/eclipsetransmult.hpp
 ${CMAKE_CURRENT_LIST_DIR}/exception/exception.hpp
+${CMAKE_CURRENT_LIST_DIR}/extrapolation/extrapolategrid2d.hpp
 ${CMAKE_CURRENT_LIST_DIR}/fft/fft.hpp
 ${CMAKE_CURRENT_LIST_DIR}/fft/fftgrid2d.hpp
 ${CMAKE_CURRENT_LIST_DIR}/fft/fftgrid3d.hpp
@@ -99,6 +100,7 @@ ${CMAKE_CURRENT_LIST_DIR}/eclipsegrid/eclipsegeometry.cpp
 ${CMAKE_CURRENT_LIST_DIR}/eclipsegrid/eclipsegrid.cpp
 ${CMAKE_CURRENT_LIST_DIR}/eclipsegrid/eclipsetools.cpp
 ${CMAKE_CURRENT_LIST_DIR}/eclipsegrid/eclipsetransmult.cpp
+${CMAKE_CURRENT_LIST_DIR}/extrapolation/extrapolategrid2d.cpp
 ${CMAKE_CURRENT_LIST_DIR}/fft/fft.cpp
 ${CMAKE_CURRENT_LIST_DIR}/fft/fftgrid2d.cpp
 ${CMAKE_CURRENT_LIST_DIR}/fft/fftgrid3d.cpp

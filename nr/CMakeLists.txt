@@ -11,6 +11,8 @@ set(SOURCE_FILES
     nrlib/eclipsegrid/eclipsetools.cpp
     nrlib/eclipsegrid/eclipsetransmult.cpp
 
+    nrlib/extrapolation/extrapolategrid2d.cpp
+
     nrlib/fft/fft.cpp
     nrlib/fft/fftgrid2d.cpp
     nrlib/fft/fftgrid3d.cpp
@@ -88,6 +90,8 @@ set(H_FILES
 
     nrlib/exception/exception.hpp
 
+    nrlib/extrapolation/extrapolategrid2d.hpp
+
     nrlib/fft/fft.hpp
     nrlib/fft/fftgrid2d.hpp
     nrlib/fft/fftgrid3d.hpp
@@ -102,7 +106,7 @@ set(H_FILES
     nrlib/geometry/polygon.hpp
     nrlib/geometry/transformation.hpp
     nrlib/geometry/triangle.hpp
-	nrlib/geometry/interpolation.hpp
+    nrlib/geometry/interpolation.hpp
 
     nrlib/grid/grid.hpp
     nrlib/grid/grid2d.hpp
