@@ -293,14 +293,17 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExporting points where there are negative dz values (z-value is the conflicting value)!\n");
     std::fstream fout;
     NRLib::OpenWrite(fout, "negative_dz_points.rxat");
-    fout << "Float Negative dz" << std::endl;
+    fout << "Float Negative dz\n"
+         << "Discrete Layer"
+         << std::endl;
     for (size_t i = 0; i < negative_dz_pts.size(); i++) {
       fout << std::fixed
            << std::setprecision(2)
            << std::setw(12) << negative_dz_pts[i][1] << " "
            << std::setw(12) << negative_dz_pts[i][2] << " "
            << std::setw(8)  << negative_dz_pts[i][3] << " "
-           << std::setw(8)  << negative_dz_pts[i][4]
+           << std::setw(8)  << negative_dz_pts[i][4] << " "
+           << std::setw(8)  << static_cast<int>(negative_dz_pts[i][0])
            << std::endl;
     }
     fout.close();

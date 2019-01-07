@@ -120,7 +120,7 @@ public:
   ///\\param lower_or_upper 0 for upper, 1 for lower
   ///\\param bilinear_else_triangles true for calulating z-coordinates inside corners by bilinear interpolation, false for calculating by intersection of plane through triangles
   void FindLayer(NRLib::Grid2D<double>     & z_grid,
-                 const NRLib::Grid2D<bool> & extrapolate,
+                 const NRLib::Grid2D<bool> & mask,
                  const size_t                k,
                  const int                   lower_or_upper,
                  const double                dx,
@@ -228,29 +228,27 @@ private:
   /// Initialize the active_pillars_ grid.
   void InitializeActivePillars();
 
-  void FindLayerCornerPointInterpolation(NRLib::Grid2D<double>     & z_grid,
-                                         const NRLib::Grid2D<bool> & extrapolate,
-                                         const size_t                k,
-                                         const int                   lower_or_upper,
-                                         const double                dx,
-                                         const double                dy,
-                                         const double                x0,
-                                         const double                y0,
-                                         const double                angle,
-                                         const bool                  bilinear_else_triangles,
-                                         const double                missingValue) const;
+  void FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & z_grid,
+                                         const size_t            k,
+                                         const int               lower_or_upper,
+                                         const double            dx,
+                                         const double            dy,
+                                         const double            x0,
+                                         const double            y0,
+                                         const double            angle,
+                                         const bool              bilinear_else_triangles,
+                                         const double            missingValue) const;
 
-   void FindLayerCenterPointInterpolation(NRLib::Grid2D<double>     & z_grid,
-                                          const NRLib::Grid2D<bool> & extrapolate,
-                                          const size_t                k,
-                                          const int                   lower_or_upper,
-                                          const double                dx,
-                                          const double                dy,
-                                          const double                x0,
-                                          const double                y0,
-                                          const double                angle,
-                                          const bool                  bilinear_else_triangles,
-                                          const double                missingValue) const;
+   void FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & z_grid,
+                                          const size_t            k,
+                                          const int               lower_or_upper,
+                                          const double            dx,
+                                          const double            dy,
+                                          const double            x0,
+                                          const double            y0,
+                                          const double            angle,
+                                          const bool              bilinear_else_triangles,
+                                          const double            missingValue) const;
 
   ///Function used by FindLayerSurface to fill in values to z_grid in the area inside the (NB) four corners (listed clockwise)
   void TriangularFillInZValuesInArea(NRLib::Grid2D<double>           & z_grid,

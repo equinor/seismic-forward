@@ -298,12 +298,9 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
     }
   }
 
-  //if (model_settings->GetOutputDepthSurfaces()) {
+  if (model_settings->GetOutputDepthSurfaces()) {
     seismic_output_->WriteDepthSurfaces(topeclipse, boteclipse);
-  //}
-
-
-  exit(1);
+  }
 
   double min;
   double max;

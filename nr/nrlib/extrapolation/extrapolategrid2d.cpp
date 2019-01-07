@@ -11,7 +11,7 @@ using namespace NRLib;
 
 //---------------------------------------------------------------------------------------------
 void ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(Grid2D<double>     & grid,
-                                                              const Grid2D<bool> & extrapolate, // Extrapolate where grid cells are true
+                                                              const Grid2D<bool> & mask, // Extrapolate where grid cells are true
                                                               const double         x0,
                                                               const double         y0,
                                                               const double         xinc,
@@ -33,11 +33,11 @@ void ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(Grid2D<double>    
                  regular_inside_indices,
                  control_indices,
                  grid,
-                 extrapolate,
+                 mask,
                  missing);
 
   // Do extrapolation with normed inverse distance
-  double power = 2.0;
+  double power = 1.0;
 
   for (size_t k = 0; k < missing_indices.size(); ++k) {
     size_t i        = missing_indices[k].first;
@@ -45,13 +45,14 @@ void ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(Grid2D<double>    
 
     double z_interp = 0.0;
     double norm     = 0.0;
+    double d2;
 
     for (size_t p = 0; p < control_indices.size(); ++p) {
       int    ip     = control_indices[p].first;
       int    jp     = control_indices[p].second;
-      int    dip    = static_cast<int>(i) - ip;
-      int    djp    = static_cast<int>(j) - jp;
-      double d2     = FindSquareDistanceInEclipseGrid(dip, djp, xinc, yinc, 1.0, 0.0); // cosA sinA
+      int    dipx   = (static_cast<int>(i) - ip)*xinc;
+      int    djpy   = (static_cast<int>(j) - jp)*yinc;
+      double d2     = dipx*dipx + djpy*djpy;
       //double dist   = std::sqrt(d2);
       //double weight = std::pow(dist, -power);
       double weight = 1.0/d2;       // Use inverse square distance for simplicity
@@ -72,26 +73,6 @@ void ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(Grid2D<double>    
               yinc);
 }
 
-//--------------------------------------------------------------------------
-double ExtrapolateGrid2D::FindSquareDistanceInEclipseGrid(const int    dip,
-                                                          const int    djp,
-                                                          const double xinc, // dx in surface grid (not Eclipse grid)
-                                                          const double yinc, // dy in surface grid (not Eclipse grid)
-                                                          const double cosA,
-                                                          const double sinA)
-//--------------------------------------------------------------------------
-{
-  Fjern vinkelavhengigheten (utkommenter med kommentar)
-
-  double du = dip*xinc;          // Surface grid
-  double dv = djp*yinc;          // Surface grid
-  double dx = cosA*du - sinA*dv; // Eclipse grid
-  double dy = cosA*dv + sinA*du; // Eclipse grid
-  double d2 = dx*dx + dy*dy;
-  return d2;
-}
-
-
 //-------------------------------------------------------------------------------------------------------
 void ExtrapolateGrid2D::ClassifyPoints(std::vector<std::pair<size_t, size_t> > & edge_indices,
                                        std::vector<std::pair<size_t, size_t> > & inside_indices,
@@ -100,7 +81,7 @@ void ExtrapolateGrid2D::ClassifyPoints(std::vector<std::pair<size_t, size_t> > &
                                        std::vector<std::pair<size_t, size_t> > & regular_inside_indices,
                                        std::vector<std::pair<size_t, size_t> > & control_indices,
                                        const Grid2D<double>                    & grid,
-                                       const Grid2D<bool>                      & extrapolate,
+                                       const Grid2D<bool>                      & mask,
                                        const double                              missing)
 //-------------------------------------------------------------------------------------------------------
 {
@@ -120,7 +101,7 @@ void ExtrapolateGrid2D::ClassifyPoints(std::vector<std::pair<size_t, size_t> > &
 
   for (size_t i = 0; i < nx; ++i) {
     for (size_t j = 0; j < ny; ++j) {
-      if (extrapolate(i, j)) {
+      if (mask(i, j)) {
         if (grid(i, j) == missing)
           missing_indices.push_back(std::pair<size_t, size_t>(i, j));
         else if (grid.IsEdge(i, j, missing))

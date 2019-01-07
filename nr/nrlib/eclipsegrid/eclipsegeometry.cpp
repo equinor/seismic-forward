@@ -1365,7 +1365,7 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
 }
 
 void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
-                                const NRLib::Grid2D<bool> & extrapolate,
+                                const NRLib::Grid2D<bool> & mask,
                                 const size_t                k,
                                 const int                   lower_or_upper,
                                 const double                dx,
@@ -1379,7 +1379,6 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
 {
   if (cornerpoint_interpolation)
     FindLayerCornerPointInterpolation(z_grid,
-                                      extrapolate,   // Currently not in use
                                       k,
                                       lower_or_upper,
                                       dx,
@@ -1391,7 +1390,6 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
                                       missingValue); // Currently not in use
   else
     FindLayerCenterPointInterpolation(z_grid,
-                                      extrapolate,
                                       k,
                                       lower_or_upper,
                                       dx,
@@ -1403,13 +1401,13 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
                                       missingValue);
 
 
-  NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(z_grid, extrapolate, x0, y0, dx, dy, missingValue);
+  NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(z_grid, mask, x0, y0, dx, dy, missingValue);
 
   double mean_of_defined_cells = z_grid.FindAvg(missingValue); // Do this before extrapolation???
 
   for (size_t i = 0 ; i < z_grid.GetNI() ; i++) {
     for (size_t j = 0 ; j < z_grid.GetNJ() ; j++) {
-      if (!extrapolate(i, j)) {
+      if (z_grid(i, j) == missingValue) {  //  If you want to use the mask grid here, a rotation is needed.
         z_grid(i, j) = mean_of_defined_cells;
       }
     }
@@ -1421,7 +1419,6 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
 
 // Corner point interpolation.  This routine does not work with reverse faults.
 void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>     & z_grid,
-                                                        const NRLib::Grid2D<bool> & extrapolate,
                                                         const size_t                k,
                                                         const int                   lower_or_upper,
                                                         const double                dx,
@@ -1570,7 +1567,6 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
 
 // center point interpolation
 void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double>     & z_grid,
-                                                        const NRLib::Grid2D<bool> & extrapolate,
                                                         const size_t                k,
                                                         const int                   lower_or_upper,
                                                         const double                dx,
