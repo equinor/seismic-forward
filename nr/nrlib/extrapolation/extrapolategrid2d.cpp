@@ -9,86 +9,73 @@
 
 using namespace NRLib;
 
-//---------------------------------------------------------------------------------------------
-void ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(Grid2D<double>     & grid,
-                                                              const Grid2D<bool> & mask, // Extrapolate where grid cells are true
-                                                              const double         x0,
-                                                              const double         y0,
-                                                              const double         xinc,
-                                                              const double         yinc,
-                                                              const double         missing)
-//---------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------
+void ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(NRLib::Grid2D<double>                         & grid,
+                                                              const std::vector<std::pair<size_t, size_t> > & miss_indices,
+                                                              const std::vector<std::pair<size_t, size_t> > & data_indices,
+                                                              const double                                    xinc,
+                                                              const double                                    yinc)
+//-------------------------------------------------------------------------------------------------------------------------
 {
-  std::vector<std::pair<size_t, size_t> > edge_indices;
-  std::vector<std::pair<size_t, size_t> > inside_indices;
-  std::vector<std::pair<size_t, size_t> > regular_inside_indices;
-  std::vector<std::pair<size_t, size_t> > missing_indices;
-  std::vector<std::pair<size_t, size_t> > stationary_indices;
-  std::vector<std::pair<size_t, size_t> > control_indices;
-
-  ClassifyPoints(edge_indices,
-                 inside_indices,
-                 missing_indices,
-                 stationary_indices,
-                 regular_inside_indices,
-                 control_indices,
-                 grid,
-                 mask,
-                 missing);
-
   // Do extrapolation with normed inverse distance
   double power = 1.0;
 
-  for (size_t k = 0; k < missing_indices.size(); ++k) {
-    size_t i        = missing_indices[k].first;
-    size_t j        = missing_indices[k].second;
+  double dmax  = 250;  // Look for values up to 250.0 (units = meters?) away
+  int    imax  = static_cast<int>(dmax/xinc);
+  int    jmax  = static_cast<int>(dmax/yinc);
+
+  for (size_t k = 0 ; k < miss_indices.size() ; k++) {
+
+    int    i        = miss_indices[k].first;
+    int    j        = miss_indices[k].second;
 
     double z_interp = 0.0;
     double norm     = 0.0;
-    double d2;
+    int    count    = 0;
 
-    for (size_t p = 0; p < control_indices.size(); ++p) {
-      int    ip     = control_indices[p].first;
-      int    jp     = control_indices[p].second;
-      int    dipx   = (static_cast<int>(i) - ip)*xinc;
-      int    djpy   = (static_cast<int>(j) - jp)*yinc;
-      double d2     = dipx*dipx + djpy*djpy;
-      //double dist   = std::sqrt(d2);
-      //double weight = std::pow(dist, -power);
-      double weight = 1.0/d2;       // Use inverse square distance for simplicity
-      double zp     = grid(ip, jp);
-      z_interp     += zp * weight;
-      norm         += weight;
+    for (size_t p = 0 ; p < data_indices.size() ; p++) {
+      int    ip     = data_indices[p].first;
+      int    jp     = data_indices[p].second;
+
+      if (std::abs(i - ip) <= imax) {
+        if (std::abs(j - jp) <= jmax) {
+          double dipx   = static_cast<double>(i - ip)*xinc;
+          double djpy   = static_cast<double>(j - jp)*yinc;
+
+          double d2     = dipx*dipx + djpy*djpy;
+          //double dist   = std::sqrt(d2);
+          //double weight = std::pow(dist, -power);
+
+
+          double weight = 1.0 / d2;       // Use inverse square distance for simplicity
+          double zp     = grid(ip, jp);
+          z_interp     += zp * weight;
+          norm         += weight;
+          count++;
+        }
+      }
     }
-    grid(i, j) = z_interp/norm;
+    if (count > 0) {
+      grid(i, j) = z_interp/norm;
+    }
   }
-
-  DumpResults(edge_indices,
-              stationary_indices,
-              regular_inside_indices,
-              control_indices,
-              x0,
-              y0,
-              xinc,
-              yinc);
 }
 
 //-------------------------------------------------------------------------------------------------------
-void ExtrapolateGrid2D::ClassifyPoints(std::vector<std::pair<size_t, size_t> > & edge_indices,
-                                       std::vector<std::pair<size_t, size_t> > & inside_indices,
-                                       std::vector<std::pair<size_t, size_t> > & missing_indices,
-                                       std::vector<std::pair<size_t, size_t> > & stationary_indices,
-                                       std::vector<std::pair<size_t, size_t> > & regular_inside_indices,
+void ExtrapolateGrid2D::ClassifyPoints(std::vector<std::pair<size_t, size_t> > & missing_indices,
                                        std::vector<std::pair<size_t, size_t> > & control_indices,
                                        const Grid2D<double>                    & grid,
                                        const Grid2D<bool>                      & mask,
                                        const double                              missing)
 //-------------------------------------------------------------------------------------------------------
 {
-  edge_indices.clear();
-  inside_indices.clear();
+  std::vector<std::pair<size_t, size_t> > edge_indices;
+  std::vector<std::pair<size_t, size_t> > inside_indices;
+  std::vector<std::pair<size_t, size_t> > regular_inside_indices;
+  std::vector<std::pair<size_t, size_t> > stationary_indices;
+
   missing_indices.clear();
-  stationary_indices.clear();
+  control_indices.clear();
 
   // Find edges
   size_t nx = grid.GetNI();
@@ -129,6 +116,7 @@ void ExtrapolateGrid2D::ClassifyPoints(std::vector<std::pair<size_t, size_t> > &
     dy[j][i] = grid(i, j + 1) - grid(i, j);
   }
 
+  /*
   // Find stationary points
 
   for (size_t i = 1; i < nx - 1; ++i) {
@@ -137,6 +125,7 @@ void ExtrapolateGrid2D::ClassifyPoints(std::vector<std::pair<size_t, size_t> > &
         stationary_indices.push_back(std::pair<size_t, size_t>(i, j));
     }
   }
+   */
 
   // Final control indices
 
@@ -156,6 +145,17 @@ void ExtrapolateGrid2D::ClassifyPoints(std::vector<std::pair<size_t, size_t> > &
   else {
     control_indices.insert(control_indices.begin(), stationary_indices.begin(), stationary_indices.end());
   }
+
+  /*
+  DumpResults(edge_indices,
+              stationary_indices,
+              regular_inside_indices,
+              control_indices,
+              x0,
+              y0,
+              xinc,
+              yinc);
+              */
 }
 
 

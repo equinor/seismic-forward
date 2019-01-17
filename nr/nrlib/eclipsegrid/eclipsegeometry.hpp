@@ -33,6 +33,7 @@
 #include "../grid/grid2d.hpp"
 #include "../pointset/pointset.hpp"
 #include "../surface/regularsurface.hpp"
+#include "../stormgrid/stormcontgrid.hpp"
 
 namespace NRLib {
 
@@ -116,7 +117,28 @@ public:
                            double& ly,
                            double& angle) const;
 
-  ///Stores z-values in layer k for a rectangle with a corner in x0,y0 and step lengths dx and dy, angle indicates rotated angle in the xy-plane
+  void FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
+                                const size_t           top_k,
+                                const size_t           n_threads,
+                                const bool             cornerpoint_interpolation,
+                                const bool             bilinear_else_triangles,
+                                const double           missingValue) const;
+
+  void SetupExtrapolation(NRLib::Grid2D<bool>                       & cells_to_extrapolate,
+                          NRLib::Grid2D<bool>                       & conditioning_cells,
+                          const std::vector<NRLib::Grid2D<double> > & layer,
+                          const size_t                                ni,
+                          const size_t                                nj,
+                          const double                                missing) const;
+
+  void ExtrapolateLayer(NRLib::Grid2D<double>                         & layer,
+                        const std::vector<std::pair<size_t, size_t> > & data_indices,
+                        const std::vector<std::pair<size_t, size_t> > & miss_indices,
+                        const double                                    xinc,
+                        const double                                    yinc);
+
+
+///Stores z-values in layer k for a rectangle with a corner in x0,y0 and step lengths dx and dy, angle indicates rotated angle in the xy-plane
   ///\\param lower_or_upper 0 for upper, 1 for lower
   ///\\param bilinear_else_triangles true for calulating z-coordinates inside corners by bilinear interpolation, false for calculating by intersection of plane through triangles
   void FindLayer(NRLib::Grid2D<double>     & z_grid,
@@ -130,6 +152,7 @@ public:
                  const double                angle,
                  const bool                  cornerpoint_interpolation,
                  const bool                  bilinear_else_triangles,
+                 const bool                  extrapolate,
                  const double                missingValue) const;
 
   void TranslateAndRotate(NRLib::Point       & corners,

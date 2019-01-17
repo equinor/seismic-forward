@@ -264,16 +264,16 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   seismic_geometry->setZReflectorCount(static_cast<size_t>(bot_k + 2 - top_k));
 
   //
-  // Finding top and base Eclipse surfaces in depth
+  // Finding top and base Eclipse surfaces in depth (regular and non-rotated)
   //
   topeclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing);
   boteclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing);
 
   NRLib::Grid2D<double> tvalues(nx, ny, missing);
   NRLib::Grid2D<double> bvalues(nx, ny, missing);
-  NRLib::Grid2D<bool>   extrapolate(nx, ny, true);
+  NRLib::Grid2D<bool>   mask(nx, ny, true);
 
-  FindExtrapolationRegion(extrapolate, *seismic_geometry, x0, y0);  // Setup extrapolation mask grid
+  FindExtrapolationRegion(mask, *seismic_geometry, x0, y0);  // Setup extrapolation mask grid
 
   double etdx     = topeclipse.GetDX();
   double etdy     = topeclipse.GetDY();
@@ -288,8 +288,9 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   else
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
 
-  eclipse_geometry.FindLayer(tvalues, extrapolate, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, missing);
-  eclipse_geometry.FindLayer(bvalues, extrapolate, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, missing);
+  bool extrapolate = false;
+  eclipse_geometry.FindLayer(tvalues, mask, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, extrapolate, missing);
+  eclipse_geometry.FindLayer(bvalues, mask, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, extrapolate, missing);
 
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
@@ -387,7 +388,7 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
 }
 
 //-------------------------------------------------------------------------------------
-void SeismicParameters::FindExtrapolationRegion(NRLib::Grid2D<bool> & extrapolate,
+void SeismicParameters::FindExtrapolationRegion(NRLib::Grid2D<bool> & mask,
                                                 SeismicGeometry     & seismic_geometry,
                                                 double                xmin,
                                                 double                ymin)
@@ -404,17 +405,17 @@ void SeismicParameters::FindExtrapolationRegion(NRLib::Grid2D<bool> & extrapolat
   double cosA    = cos(angle);
   double sinA    = sin(angle);
 
-  for (size_t i = 0 ; i < extrapolate.GetNI() ; i++) {
-    for (size_t j = 0 ; j < extrapolate.GetNJ() ; j++) {
+  for (size_t i = 0 ; i < mask.GetNI() ; i++) {
+    for (size_t j = 0 ; j < mask.GetNJ() ; j++) {
       double x  = xmin + i*xinc;                      // x-coordinates in regular surface grid
       double y  = ymin + j*yinc;                      // y-coordinates in regular surface grid
       double xs = (x - x0)*cosA + (y - y0)*sinA;      // x-coordinates in seismic output grid
       double ys = (y - y0)*cosA - (x - x0)*sinA;      // y-coordinates in seismic output grid
 
       if (xs < 0.0 || xs > xlength || ys < 0.0 || ys > ylength)
-        extrapolate(i,j) = false;
+        mask(i,j) = false;
       else
-        extrapolate(i,j) = true;
+        mask(i,j) = true;
     }
   }
 }

@@ -26,10 +26,9 @@ private:
                           ModelSettings     * model_settings,
                           size_t              n_threads);
 
-  static void SetGridLayer(NRLib::StormContGrid        & zgrid,
-                           const NRLib::Grid2D<double> & values,
-                           size_t                        k);
-
+  static void RemoveNegativeDz(NRLib::StormContGrid & zgrid,
+                               const size_t           n_threads,
+                               const bool             rem_neg_delta);
 
   static void FindParameters(SeismicParameters & seismic_parameters,
                              ModelSettings     * model_settings,

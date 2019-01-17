@@ -12,6 +12,8 @@
 
 //#include <fstream>
 
+#include <ctime>
+
 #ifdef WITH_OMP
 #include <omp.h>
 #endif
@@ -166,56 +168,39 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     size_t              n_threads)
 //-------------------------------------------------------------------------
 {
-  NRLib::StormContGrid         & zgrid            = seismic_parameters.GetZGrid();
-  SeismicGeometry              * seismic_geometry = seismic_parameters.GetSeismicGeometry();
-  const NRLib::EclipseGeometry & geometry         = seismic_parameters.GetEclipseGrid().GetGeometry();
-  const size_t                   top_k            = seismic_parameters.GetTopK();
-  const bool                     rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
-  const bool                     use_corner_point = model_settings->GetUseCornerpointInterpol();
-  const bool                     bilinear         = false;
+  NRLib::StormContGrid   & zgrid            = seismic_parameters.GetZGrid();
+  const NRLib::EclipseGeometry & geometry   = seismic_parameters.GetEclipseGrid().GetGeometry();
+  const size_t             top_k            = seismic_parameters.GetTopK();
 
-  const double                   xmin             = zgrid.GetXMin();
-  const double                   ymin             = zgrid.GetYMin();
-  const double                   dx               = zgrid.GetDX();
-  const double                   dy               = zgrid.GetDY();
-  const double                   angle            = zgrid.GetAngle();
+  const bool               rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
+  const bool               use_corner_point = model_settings->GetUseCornerpointInterpol();
+  const bool               bilinear         = false;
+  const double             missing          = -999.0;
 
-  const size_t                   ni               = zgrid.GetNI();
-  const size_t                   nj               = zgrid.GetNJ();
-  const size_t                   nk               = zgrid.GetNK();
+  geometry.FindRegularGridOfZValues(zgrid,
+                                    top_k,
+                                    n_threads,
+                                    use_corner_point,
+                                    bilinear,
+                                    missing);
 
-  const double                   missing          = -999.0;
+  RemoveNegativeDz(zgrid,
+                   n_threads,
+                   rem_neg_delta);
 
-  std::vector<NRLib::Grid2D<double> > layer(nk);
-  for (size_t k = 0 ; k < nk ; k++) {
-    layer[k] = NRLib::Grid2D<double>(ni, nj, missing);
-  }
 
-  NRLib::Grid2D<bool> extrapolate(ni, nj, true);
-  SeismicParameters::FindExtrapolationRegion(extrapolate, *seismic_geometry, xmin, ymin);  // Setup extrapolation mask grid
+  exit(1);
+}
 
-  //
-  // Fill base layer
-  //
-  if (use_corner_point)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using corner-point interpolation.\n");
-  else
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using center-point interpolation.\n");
-
-  geometry.FindLayer(layer[nk - 1], extrapolate, nk - 2 + top_k, 1, dx, dy, xmin, ymin, angle, use_corner_point, bilinear, missing);
-  SetGridLayer(zgrid, layer[nk - 1], static_cast<size_t>(nk - 1));
-
-  //
-  // Fill rest of the layers
-  //
-#ifdef WITH_OMP
-  int chunk_size = 1;
-#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
-#endif
-  for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
-    geometry.FindLayer(layer[k], extrapolate, k + top_k , 0, dx, dy, xmin, ymin, angle, use_corner_point, bilinear, missing);
-    SetGridLayer(zgrid, layer[k], static_cast<size_t>(k));
-  }
+//----------------------------------------------------------------------------
+void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
+                                         const size_t           n_threads,
+                                         const bool             rem_neg_delta)
+//----------------------------------------------------------------------------
+{
+  const size_t ni = zgrid.GetNI();
+  const size_t nj = zgrid.GetNJ();
+  const size_t nk = zgrid.GetNK();
 
   std::vector<std::vector<double> > negative_dz_pts;
 
@@ -225,6 +210,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   int    min_k  = -1;
 
 #ifdef WITH_OMP
+  int chunk_size = 1;
   chunk_size = std::max(1, int(ni/(2*static_cast<int>(n_threads))));
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
@@ -248,7 +234,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
           neg[0] = static_cast<double>(k);
           neg[1] = x;
           neg[2] = y;
-          neg[3] = layer[kk](i, j);
+          neg[3] = zgrid(i, j, k);
           neg[4] = z2 - z1;
           neg_dz_pts.push_back(neg);
           if (z2 - z1 < dz_min) {
@@ -298,30 +284,18 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
          << std::endl;
     for (size_t i = 0; i < negative_dz_pts.size(); i++) {
       fout << std::fixed
-           << std::setprecision(2)
-           << std::setw(12) << negative_dz_pts[i][1] << " "
-           << std::setw(12) << negative_dz_pts[i][2] << " "
-           << std::setw(8)  << negative_dz_pts[i][3] << " "
-           << std::setw(8)  << negative_dz_pts[i][4] << " "
-           << std::setw(8)  << static_cast<int>(negative_dz_pts[i][0])
+        << std::setprecision(2)
+        << std::setw(12) << negative_dz_pts[i][1] << " "
+        << std::setw(12) << negative_dz_pts[i][2] << " "
+        << std::setw(8)  << negative_dz_pts[i][3] << " "
+        << std::setw(8)  << negative_dz_pts[i][4] << " "
+        << std::setw(8)  << static_cast<int>(negative_dz_pts[i][0])
            << std::endl;
     }
     fout.close();
   }
 }
 
-//------------------------------------------------------------------------
-void SeismicRegridding::SetGridLayer(NRLib::StormContGrid        & zgrid,
-                                     const NRLib::Grid2D<double> & values,
-                                     size_t                        k)
-//------------------------------------------------------------------------
-{
-  for (size_t i = 0; i < zgrid.GetNI() ; i++) {
-    for (size_t j = 0; j < zgrid.GetNJ() ; j++) {
-      zgrid(i, j, k) = static_cast<float>(values(i, j));
-    }
-  }
-}
 
 //----------------------------------------------------------------------
 void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,

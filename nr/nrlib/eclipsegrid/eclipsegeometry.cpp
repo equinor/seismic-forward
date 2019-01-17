@@ -32,12 +32,18 @@
 #include "../iotools/stringtools.hpp"
 #include "../math/constants.hpp"
 
+#include "../surface/regularsurfacerotated.hpp"
+#include "../iotools/stringtools.hpp"
+
+
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
 #include <ostream>
 #include <istream>
 #include <vector>
+
+#include <ctime>
 
 using namespace NRLib;
 
@@ -1364,6 +1370,291 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
   }
 }
 
+void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
+                                               const size_t           top_k,
+                                               const size_t           n_threads,
+                                               const bool             cornerpoint_interpolation,
+                                               const bool             bilinear_else_triangles,
+                                               const double           missingValue) const
+{
+  const double xmin  = zgrid.GetXMin();
+  const double ymin  = zgrid.GetYMin();
+  const double dx    = zgrid.GetDX();
+  const double dy    = zgrid.GetDY();
+  const double angle = zgrid.GetAngle();
+
+  const size_t ni    = zgrid.GetNI();
+  const size_t nj    = zgrid.GetNJ();
+  const size_t nk    = zgrid.GetNK();
+
+  NRLib::Grid2D<bool> dummy_mask(ni, nj, false);
+
+  const bool extrapolate = false;
+
+
+  clock_t t1 = clock();
+
+  //
+  // Setup layers to fill
+  //
+  std::vector<NRLib::Grid2D<double> > layer(nk);
+  for (size_t k = 0; k < nk; k++) {
+    layer[k] = NRLib::Grid2D<double>(ni, nj, missingValue);
+  }
+
+  //
+  // Fill base layer
+  //
+  if (cornerpoint_interpolation)
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using corner-point interpolation.\n");
+  else
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using center-point interpolation.\n");
+
+  FindLayer(layer[nk - 1],
+            dummy_mask,
+            nk - 2 + top_k,
+            1,              // Use lower corner
+            dx,
+            dy,
+            xmin,
+            ymin,
+            angle,
+            cornerpoint_interpolation,
+            bilinear_else_triangles,
+            extrapolate,
+            missingValue);
+
+  //
+  // Fill rest of the layers
+  //
+#ifdef WITH_OMP
+  int chunk_size = 1;
+#include "../surface/regularsurfacerotated.hpp"
+#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
+#endif
+  for (int k = static_cast<int>(nk - 2); k >= 0; --k) {
+    FindLayer(layer[k],
+              dummy_mask, // Dummy
+              k + top_k,
+              0,          // Use upper corner
+              dx,
+              dy,
+              xmin,
+              ymin,
+              angle,
+              cornerpoint_interpolation,
+              bilinear_else_triangles,
+              extrapolate,
+              missingValue);
+  }
+
+  clock_t t2 = clock();
+  printf("Time to calculate z-grid layers with missing (%f seconds).\n", ((float)(t2 - t1)) / CLOCKS_PER_SEC);
+
+
+  NRLib::Grid2D<bool> missing_cells(ni, nj, false);
+  NRLib::Grid2D<bool> data_cells(ni, nj, false);
+
+  SetupExtrapolation(missing_cells,
+                     data_cells,
+                     layer,
+                     ni,
+                     nj,
+                     missingValue);
+
+
+  int count1 = 0;
+  int count2 = 0;
+  for (int i = 0 ; i < data_cells.GetNI() ; i++) {
+    for (int j = 0 ; j < data_cells.GetNJ() ; j++) {
+      if (data_cells(i,j)) {
+        count1++;
+      }
+      if (missing_cells(i,j)) {
+        count2++;
+      }
+    }
+  }
+  std::cout << "count1 : " << count1 << std::endl;
+  std::cout << "count2 : " << count2 << std::endl;
+
+
+
+  clock_t t3 = clock();
+  printf("Time to setup z-grid extrapolation (%f seconds).\n", ((float) (t3 - t2)) / CLOCKS_PER_SEC);
+
+
+  NRLib::StormContGrid ex(zgrid);
+  for (int k = 0; k < nk ; k++)
+    for (int i = 0; i < ni ; i++)
+      for (int j = 0; j < nj ; j++)
+        ex(i,j,k) = -999.0;
+
+
+  std::vector<std::pair<size_t, size_t> > miss_indices;
+  miss_indices.reserve(ni*nj);
+  for (int i = 0; i < ni ; i++) {
+    for (int j = 0; j < nj ; j++) {
+      if (missing_cells(i, j)) {
+        miss_indices.push_back(std::pair<int, int>(i, j));
+        for (size_t k = 0; k < nk ; k++)
+          ex(i,j,k) = 1;
+      }
+    }
+  }
+
+
+  for (size_t k = 0; k < nk ; k++) {
+    //
+    // Find data to use in extrapolation for this layer. And grid cells to fill
+    //
+    std::vector<std::pair<size_t, size_t> > data_indices;
+    data_indices.reserve(ni*nj);
+
+    for (int i = 0; i < ni ; i++) {
+      for (int j = 0; j < nj ; j++) {
+        if (data_cells(i, j) && layer[k](i, j) != missingValue) {
+          data_indices.push_back(std::pair<int, int>(i, j));
+          ex(i,j,k) = 2;
+        }
+      }
+    }
+
+    std::cout <<"k= " << k << "  miss = " << miss_indices.size() << "   data = " << data_indices.size() << std::endl;
+
+    NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(layer[k],
+                                                                    miss_indices,
+                                                                    data_indices,
+                                                                    dx,
+                                                                    dy);
+  }
+
+  ex.WriteToFile("data_and_missing.storm");
+
+
+  clock_t t4 = clock();
+  printf("Time to extrapolate z-grid layers (%f seconds).\n", ((float) (t4 - t3)) / CLOCKS_PER_SEC);
+
+  //
+  // fill in cells that are still undefined
+  //
+  for (size_t k = 0 ; k < nk ; k++) {
+
+    /*
+    double mean_of_defined_cells = layer[k].FindAvg(missingValue); // Do this before extrapolation???
+
+    for (size_t i = 0 ; i < ni ; i++) {
+      for (size_t j = 0 ; j < nj ; j++) {
+
+        if (k == 261 && layer[k](i, j) == missingValue && data_cells(i, j)) {
+          std::cout << "i,j = " << i << " " << j << std::endl;
+        }
+
+
+        if (!missing_cells(i, j) && !data_cells(i, j) && layer[k](i, j) == missingValue) {
+          layer[k](i, j) = mean_of_defined_cells;
+        }
+      }
+    }
+    */
+
+
+    //
+    // Copy layer to grid
+    //
+    for (size_t i = 0; i < ni ; i++) {
+      for (size_t j = 0; j < nj ; j++) {
+        zgrid(i, j, k) = static_cast<float>(layer[k](i, j));
+      }
+    }
+  }
+
+  // Denne må bort
+  zgrid.WriteToFile("paal_zgrid.storm");
+
+}
+
+//----------------------------------------------------------------------------------------------------------
+void EclipseGeometry::SetupExtrapolation(NRLib::Grid2D<bool>                       & missing_cells,
+                                         NRLib::Grid2D<bool>                       & data_cells,
+                                         const std::vector<NRLib::Grid2D<double> > & layer,
+                                         const size_t                                ni,
+                                         const size_t                                nj,
+                                         const double                                missing) const
+//----------------------------------------------------------------------------------------------------------
+{
+  //
+  // Find cells that should be filled using extrapolation. Some already has a value, but a dangerous/bogus one.
+  //
+  for (size_t k = 1 ; k < layer.size() ; k++) {
+    for (size_t i = 0; i < ni ; i++) {
+      for (size_t j = 0; j < nj ; j++) {
+        if (layer[k](i,j) != missing || layer[k - 1](i,j) != missing) {   // At least one cell is defined. Check difference
+
+          if (layer[k](i,j) == missing || layer[k - 1](i,j) == missing) { // Only one cell is defined. Need to extrapolate
+            missing_cells(i, j) = true;
+          }
+          else if (layer[k](i,j) - layer[k - 1](i,j) < 0.0) {             // Negative difference. Extrapolation needed
+            missing_cells(i, j) = true;
+          }
+        }
+      }
+    }
+  }
+  //
+  // Add edge-in-layer cells
+  //
+  for (size_t k = 0 ; k < layer.size() ; k++) {
+    for (size_t i = 0; i < ni ; i++) {
+      for (size_t j = 0; j < nj ; j++) {
+        if (layer[k].IsEdge(i, j, missing)) {
+          missing_cells(i, j) = true;
+        }
+      }
+    }
+  }
+  //
+  // Cells neighbouring an a cell to be filled is potentially a data cell. Add as long as it is not to be extrapolated
+  //
+  // Here we may use a Convex Hull algorithm to find more points to extrapolate ???
+  //
+  for (size_t i = 0 ; i < ni ; i++) {
+    for (size_t j = 0 ; j < nj ; j++) {
+
+      if (missing_cells(i, j)) {
+        if (i < ni - 1 && !missing_cells(i + 1, j    )) data_cells(i + 1, j    ) = true;
+        if (j > nj - 1 && !missing_cells(i    , j + 1)) data_cells(i    , j + 1) = true;
+        if (i > 0      && !missing_cells(i - 1, j    )) data_cells(i - 1, j    ) = true;
+        if (j > 0      && !missing_cells(i    , j - 1)) data_cells(i    , j - 1) = true;
+
+
+      if (i == 749 && j == 95) {
+        std::cout << "THERE\n" << std::endl;
+        std::cout << "missing(i,j)    = " << missing_cells(i,j) << std::endl;
+        std::cout << "missing(i+1,j)  = " << missing_cells(i+1,j) << std::endl;
+        std::cout << "missing(i-1,j)  = " << missing_cells(i-1,j) << std::endl;
+        std::cout << "missing(i,j+1)  = " << missing_cells(i,j+1) << std::endl;
+        std::cout << "missing(i,j-1)  = " << missing_cells(i,j-1) << std::endl;
+        std::cout << "data(i+1,j)     = " << data_cells(i+1,j) << std::endl;
+        std::cout << "data(i-1,j)     = " << data_cells(i-1,j) << std::endl;
+        std::cout << "data(i,j+1)     = " << data_cells(i,j+1) << std::endl;
+        std::cout << "data(i,j-1)     = " << data_cells(i,j-1) << std::endl;
+        exit(1);
+      }
+
+
+
+
+
+
+      }
+    }
+  }
+}
+
+//
+// We can use the method below when we extrapolate top and base surfaces of Eclipsegrid ...
+//
 void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
                                 const NRLib::Grid2D<bool> & mask,
                                 const size_t                k,
@@ -1375,6 +1666,7 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
                                 const double                angle,
                                 const bool                  cornerpoint_interpolation,
                                 const bool                  bilinear_else_triangles,
+                                const bool                  extrapolate,
                                 const double                missingValue) const
 {
   if (cornerpoint_interpolation)
@@ -1400,22 +1692,33 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
                                       bilinear_else_triangles,
                                       missingValue);
 
+  if (extrapolate) {
+    std::vector<std::pair<size_t, size_t> > missing_indices;
+    std::vector<std::pair<size_t, size_t> > data_indices;
 
-  NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(z_grid, mask, x0, y0, dx, dy, missingValue);
+    NRLib::ExtrapolateGrid2D::ClassifyPoints(missing_indices,
+                                             data_indices,
+                                             z_grid,
+                                             mask,
+                                             missingValue);
 
-  double mean_of_defined_cells = z_grid.FindAvg(missingValue); // Do this before extrapolation???
+    NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(z_grid,
+                                                                    missing_indices,
+                                                                    data_indices,
+                                                                    dx,
+                                                                    dy);
 
-  for (size_t i = 0 ; i < z_grid.GetNI() ; i++) {
-    for (size_t j = 0 ; j < z_grid.GetNJ() ; j++) {
-      if (z_grid(i, j) == missingValue) {  //  If you want to use the mask grid here, a rotation is needed.
-        z_grid(i, j) = mean_of_defined_cells;
+    double mean_of_defined_cells = z_grid.FindAvg(missingValue); // Do this before extrapolation???
+
+    for (size_t i = 0 ; i < z_grid.GetNI() ; i++) {
+      for (size_t j = 0 ; j < z_grid.GetNJ() ; j++) {
+        if (z_grid(i, j) == missingValue) {  //  If you want to use the mask grid here, a rotation is needed.
+          z_grid(i, j) = mean_of_defined_cells;
+        }
       }
     }
   }
-
-
 }
-
 
 // Corner point interpolation.  This routine does not work with reverse faults.
 void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>     & z_grid,
@@ -1585,7 +1888,7 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double>   
   NRLib::Point              C0, C1, C2, C3;
   std::vector<NRLib::Point> Crot(4);
 
-  for (size_t j = 0 ; j < nj_ - 1 ; j++) { //Loops over each cell in the given layer
+  for (size_t j = 0 ; j < nj_ - 1 ; j++) { // Loops over each i,j trace in Eclipse grid
     for (size_t i = 0 ; i < ni_ - 1 ; i++) {
       if (IsPillarActive(i  , j  ) &&
           IsPillarActive(i+1, j  ) &&
@@ -1597,10 +1900,10 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double>   
           IsPillarActive(i+1, j+2) &&
           IsPillarActive(i+2, j+2)) {
 
-        C0 = FindPointCellSurface(i  , j  , k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell
-        C1 = FindPointCellSurface(i+1, j  , k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell
-        C2 = FindPointCellSurface(i+1, j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell
-        C3 = FindPointCellSurface(i  , j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell
+        C0 = FindPointCellSurface(i  , j  , k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i  , j  )
+        C1 = FindPointCellSurface(i+1, j  , k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i+1, j  )
+        C2 = FindPointCellSurface(i+1, j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i+1, j+1)
+        C3 = FindPointCellSurface(i  , j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i  , j+1)
 
         TranslateAndRotate(Crot[0], C0, x0, y0, cosA, sinA);
         TranslateAndRotate(Crot[1], C1, x0, y0, cosA, sinA);
