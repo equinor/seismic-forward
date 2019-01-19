@@ -1455,39 +1455,38 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
                      missingValue);
 
 
+  if (miss_indices.size() > 0) {
 #ifdef WITH_OMP
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
-  for (size_t k = 0; k < nk ; k++) {
-    //
-    // Find data to use in extrapolation for this layer. And grid cells to fill
-    //
-    NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(layer[k],
-                                                                    miss_indices,
-                                                                    data_indices,
-                                                                    dx,
-                                                                    dy);
-  }
+    for (size_t k = 0; k < nk; k++) {
+      //
+      // Find data to use in extrapolation for this layer. And grid cells to fill
+      //
+      NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(layer[k],
+                                                                      miss_indices,
+                                                                      data_indices,
+                                                                      dx,
+                                                                      dy);
+      //
+      // fill in cells that are still undefined
+      //
+      double mean_of_defined_cells = layer[k].FindAvg(missingValue); // Do this before extrapolation???
 
-  //
-  // fill in cells that are still undefined
-  //
-  for (size_t k = 0 ; k < nk ; k++) {
-
-    double mean_of_defined_cells = layer[k].FindAvg(missingValue); // Do this before extrapolation???
-
-    for (size_t i = 0 ; i < ni ; i++) {
-      for (size_t j = 0 ; j < nj ; j++) {
-        //if (!missing_cells(i, j) && !data_cells(i, j) && layer[k](i, j) == missingValue) {
-        if (layer[k](i, j) == missingValue) {
-          layer[k](i, j) = mean_of_defined_cells;
+      for (size_t i = 0; i < ni; i++) {
+        for (size_t j = 0; j < nj; j++) {
+          //if (!missing_cells(i, j) && !data_cells(i, j) && layer[k](i, j) == missingValue) {
+          if (layer[k](i, j) == missingValue) {
+            layer[k](i, j) = mean_of_defined_cells;
+          }
         }
       }
     }
-
-    //
-    // Copy layer to grid
-    //
+  }
+  //
+  // Copy layer to grid
+  //
+  for (size_t k = 0 ; k < nk ; k++) {
     for (size_t i = 0; i < ni ; i++) {
       for (size_t j = 0; j < nj ; j++) {
         zgrid(i, j, k) = static_cast<float>(layer[k](i, j));

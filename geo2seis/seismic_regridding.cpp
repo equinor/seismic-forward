@@ -168,14 +168,14 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     size_t              n_threads)
 //-------------------------------------------------------------------------
 {
-  NRLib::StormContGrid   & zgrid            = seismic_parameters.GetZGrid();
-  const NRLib::EclipseGeometry & geometry   = seismic_parameters.GetEclipseGrid().GetGeometry();
-  const size_t             top_k            = seismic_parameters.GetTopK();
+  NRLib::StormContGrid         & zgrid            = seismic_parameters.GetZGrid();
+  const NRLib::EclipseGeometry & geometry         = seismic_parameters.GetEclipseGrid().GetGeometry();
+  const size_t                   top_k            = seismic_parameters.GetTopK();
 
-  const bool               rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
-  const bool               use_corner_point = model_settings->GetUseCornerpointInterpol();
-  const bool               bilinear         = false;
-  const double             missing          = -999.0;
+  const bool                     rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
+  const bool                     use_corner_point = model_settings->GetUseCornerpointInterpol();
+  const bool                     bilinear         = false;
+  const double                   missing          = -999.0;
 
   geometry.FindRegularGridOfZValues(zgrid,
                                     top_k,

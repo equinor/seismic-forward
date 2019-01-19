@@ -17,7 +17,7 @@ void ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(NRLib::Grid2D<doub
                                                               const double                                    yinc)
 //-------------------------------------------------------------------------------------------------------------------------
 {
-  int mind = 5;  // Require at least 5 grid cells to do extrapolation
+  int n_data = std::min(5, static_cast<int>(data_indices.size()));  // Require at least 5 grid cells to do extrapolation
 
   for (size_t k = 0 ; k < miss_indices.size() ; k++) {
     int    i     = miss_indices[k].first;
@@ -29,7 +29,7 @@ void ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(NRLib::Grid2D<doub
     double norm  = 0.0;
     int    count = 0;
 
-    while (count < mind) {
+    while (count < n_data) {
       count = 0; // Reset counting
       for (size_t p = 0 ; p < data_indices.size() ; p++) {
         int ip = data_indices[p].first;
