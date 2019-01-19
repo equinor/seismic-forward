@@ -17,46 +17,42 @@ void ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(NRLib::Grid2D<doub
                                                               const double                                    yinc)
 //-------------------------------------------------------------------------------------------------------------------------
 {
-  // Do extrapolation with normed inverse distance
-  double power = 1.0;
-
-  double dmax  = 250;  // Look for values up to 250.0 (units = meters?) away
-  int    imax  = static_cast<int>(dmax/xinc);
-  int    jmax  = static_cast<int>(dmax/yinc);
+  int mind = 5;  // Require at least 5 grid cells to do extrapolation
 
   for (size_t k = 0 ; k < miss_indices.size() ; k++) {
+    int    i     = miss_indices[k].first;
+    int    j     = miss_indices[k].second;
+    int    imax  = 10;  // Look for data +- 10 grid cells in i-direction
+    int    jmax  = 10;  // Look for data +- 10 grid cells in j-direction
 
-    int    i        = miss_indices[k].first;
-    int    j        = miss_indices[k].second;
+    double z     = 0.0;
+    double norm  = 0.0;
+    int    count = 0;
 
-    double z_interp = 0.0;
-    double norm     = 0.0;
-    int    count    = 0;
+    while (count < mind) {
+      count = 0; // Reset counting
+      for (size_t p = 0 ; p < data_indices.size() ; p++) {
+        int ip = data_indices[p].first;
+        int jp = data_indices[p].second;
 
-    for (size_t p = 0 ; p < data_indices.size() ; p++) {
-      int    ip     = data_indices[p].first;
-      int    jp     = data_indices[p].second;
-
-      if (std::abs(i - ip) <= imax) {
-        if (std::abs(j - jp) <= jmax) {
-          double dipx   = static_cast<double>(i - ip)*xinc;
-          double djpy   = static_cast<double>(j - jp)*yinc;
-
-          double d2     = dipx*dipx + djpy*djpy;
-          //double dist   = std::sqrt(d2);
-          //double weight = std::pow(dist, -power);
-
-
-          double weight = 1.0 / d2;       // Use inverse square distance for simplicity
-          double zp     = grid(ip, jp);
-          z_interp     += zp * weight;
-          norm         += weight;
-          count++;
+        if (std::abs(i - ip) <= imax) {
+          if (std::abs(j - jp) <= jmax) {
+            double dipx   = static_cast<double>(i - ip)*xinc;
+            double djpy   = static_cast<double>(j - jp)*yinc;
+            double d2     = dipx*dipx + djpy*djpy;
+            double weight = 1.0 / d2;       // Use inverse square distance for simplicity
+            double zp     = grid(ip, jp);
+            z            += zp * weight;
+            norm         += weight;
+            count++;
+          }
         }
       }
+      imax *= 2; // If not enough data points have been collected, double search radius
+      jmax *= 2; // If not enough data points have been collected, double search radius
     }
     if (count > 0) {
-      grid(i, j) = z_interp/norm;
+      grid(i, j) = z/norm;
     }
   }
 }
