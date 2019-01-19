@@ -1492,34 +1492,30 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
 
 
   std::vector<std::pair<size_t, size_t> > miss_indices;
+  std::vector<std::pair<size_t, size_t> > data_indices;
   miss_indices.reserve(ni*nj);
+  data_indices.reserve(ni*nj);
+
   for (int i = 0; i < ni ; i++) {
     for (int j = 0; j < nj ; j++) {
+
       if (missing_cells(i, j)) {
         miss_indices.push_back(std::pair<int, int>(i, j));
         for (size_t k = 0; k < nk ; k++)
           ex(i,j,k) = 1;
       }
+      if (data_cells(i, j)) {
+        data_indices.push_back(std::pair<int, int>(i, j));
+        for (size_t k = 0; k < nk ; k++)
+          ex(i,j,k) = 2;
+      }
     }
   }
-
 
   for (size_t k = 0; k < nk ; k++) {
     //
     // Find data to use in extrapolation for this layer. And grid cells to fill
     //
-    std::vector<std::pair<size_t, size_t> > data_indices;
-    data_indices.reserve(ni*nj);
-
-    for (int i = 0; i < ni ; i++) {
-      for (int j = 0; j < nj ; j++) {
-        if (data_cells(i, j) && layer[k](i, j) != missingValue) {
-          data_indices.push_back(std::pair<int, int>(i, j));
-          ex(i,j,k) = 2;
-        }
-      }
-    }
-
     std::cout <<"k= " << k << "  miss = " << miss_indices.size() << "   data = " << data_indices.size() << std::endl;
 
     NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(layer[k],
@@ -1629,11 +1625,6 @@ void EclipseGeometry::SetupExtrapolation(NRLib::Grid2D<bool>                    
   }
 
   //
-  // Add lakes/ponds to the extrapolation
-  //
-
-
-  //
   // Cells neighbouring an a cell to be filled is potentially a data cell. Add as long as it is not to be extrapolated
   //
   // Here we may use a Convex Hull algorithm to find more points to extrapolate ???
@@ -1645,6 +1636,73 @@ void EclipseGeometry::SetupExtrapolation(NRLib::Grid2D<bool>                    
         if (j < nj - 1 && !missing_cells(i    , j + 1)) data_cells(i    , j + 1) = true;
         if (i > 0      && !missing_cells(i - 1, j    )) data_cells(i - 1, j    ) = true;
         if (j > 0      && !missing_cells(i    , j - 1)) data_cells(i    , j - 1) = true;
+      }
+    }
+  }
+  //
+  // Turn off data cells, if one of the layers has a missing value in (i,j)
+  //
+  for (size_t i = 0 ; i < ni ; i++) {
+    for (size_t j = 0 ; j < nj ; j++) {
+      for (size_t k = 0 ; k < layer.size() ; k++) {
+        if (data_cells(i, j) && layer[k](i, j) == missing) {
+          data_cells(i, j) = false;
+        }
+      }
+    }
+  }
+
+  //
+  // Add lakes/ponds to the extrapolation
+  //
+  for (int i = 0 ; i < ni ; i++) {
+    for (int j = 0 ; j < nj ; j++) {
+
+      if (!missing_cells(i,j) && !data_cells(i,j)) {
+        bool edge1 = false;
+        bool edge2 = false;
+        bool edge3 = false;
+        bool edge4 = false;
+
+        for (int k = 1 ; k <= i ; k++) {
+          if (missing_cells(i - k, j)) {
+            edge1 = true;
+            break;
+          }
+          else if (data_cells(i - k, j)) {
+            break;
+          }
+        }
+        for (int k = 1 ; k < ni - i ; k++) {
+          if (missing_cells(i + k, j)) {
+            edge2 = true;
+            break;
+          }
+          else if (data_cells(i + k, j)) {
+            break;
+          }
+        }
+        for (int k = 1 ; k <= j ; k++) {
+          if (missing_cells(i, j - k)) {
+            edge3 = true;
+            break;
+          }
+          else if (data_cells(i, j - k)) {
+            break;
+          }
+        }
+        for (int k = 1 ; k < nj - j ; k++) {
+          if (missing_cells(i, j + k)) {
+            edge4 = true;
+            break;
+          }
+          else if (data_cells(i, j + k)) {
+            break;
+          }
+        }
+        if (edge1 && edge2 && edge3 && edge4) {
+          missing_cells(i, j) = true;
+        }
       }
     }
   }
