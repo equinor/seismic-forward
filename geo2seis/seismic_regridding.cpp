@@ -184,12 +184,12 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     bilinear,
                                     missing);
 
+  //
+  // There should be no more negative dz values anymore, but we check anyway ...
+  //
   RemoveNegativeDz(zgrid,
                    n_threads,
                    rem_neg_delta);
-
-
-  exit(1);
 }
 
 //----------------------------------------------------------------------------

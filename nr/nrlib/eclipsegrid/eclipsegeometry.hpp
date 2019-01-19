@@ -124,8 +124,8 @@ public:
                                 const bool             bilinear_else_triangles,
                                 const double           missingValue) const;
 
-  void SetupExtrapolation(NRLib::Grid2D<bool>                       & cells_to_extrapolate,
-                          NRLib::Grid2D<bool>                       & conditioning_cells,
+  void SetupExtrapolation(std::vector<std::pair<size_t, size_t> >   & miss_indices,
+                          std::vector<std::pair<size_t, size_t> >   & data_indices,
                           const std::vector<NRLib::Grid2D<double> > & layer,
                           const size_t                                ni,
                           const size_t                                nj,

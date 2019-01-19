@@ -1391,9 +1391,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
 
   const bool extrapolate = false;
 
-
-  clock_t t1 = clock();
-
   //
   // Setup layers to fill
   //
@@ -1429,7 +1426,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
   //
 #ifdef WITH_OMP
   int chunk_size = 1;
-#include "../surface/regularsurfacerotated.hpp"
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
   for (int k = static_cast<int>(nk - 2); k >= 0; --k) {
@@ -1448,76 +1444,24 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
               missingValue);
   }
 
-  clock_t t2 = clock();
-  printf("Time to calculate z-grid layers with missing (%f seconds).\n", ((float)(t2 - t1)) / CLOCKS_PER_SEC);
+  std::vector<std::pair<size_t, size_t> > miss_indices;
+  std::vector<std::pair<size_t, size_t> > data_indices;
 
-
-  NRLib::Grid2D<bool> missing_cells(ni, nj, false);
-  NRLib::Grid2D<bool> data_cells(ni, nj, false);
-
-  SetupExtrapolation(missing_cells,
-                     data_cells,
+  SetupExtrapolation(miss_indices,
+                     data_indices,
                      layer,
                      ni,
                      nj,
                      missingValue);
 
 
-  int count1 = 0;
-  int count2 = 0;
-  for (int i = 0 ; i < data_cells.GetNI() ; i++) {
-    for (int j = 0 ; j < data_cells.GetNJ() ; j++) {
-      if (data_cells(i,j)) {
-        count1++;
-      }
-      if (missing_cells(i,j)) {
-        count2++;
-      }
-    }
-  }
-  std::cout << "count1 : " << count1 << std::endl;
-  std::cout << "count2 : " << count2 << std::endl;
-
-
-
-  clock_t t3 = clock();
-  printf("Time to setup z-grid extrapolation (%f seconds).\n", ((float) (t3 - t2)) / CLOCKS_PER_SEC);
-
-
-  NRLib::StormContGrid ex(zgrid);
-  for (int k = 0; k < nk ; k++)
-    for (int i = 0; i < ni ; i++)
-      for (int j = 0; j < nj ; j++)
-        ex(i,j,k) = -999.0;
-
-
-  std::vector<std::pair<size_t, size_t> > miss_indices;
-  std::vector<std::pair<size_t, size_t> > data_indices;
-  miss_indices.reserve(ni*nj);
-  data_indices.reserve(ni*nj);
-
-  for (int i = 0; i < ni ; i++) {
-    for (int j = 0; j < nj ; j++) {
-
-      if (missing_cells(i, j)) {
-        miss_indices.push_back(std::pair<int, int>(i, j));
-        for (size_t k = 0; k < nk ; k++)
-          ex(i,j,k) = 1;
-      }
-      if (data_cells(i, j)) {
-        data_indices.push_back(std::pair<int, int>(i, j));
-        for (size_t k = 0; k < nk ; k++)
-          ex(i,j,k) = 2;
-      }
-    }
-  }
-
+#ifdef WITH_OMP
+#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
+#endif
   for (size_t k = 0; k < nk ; k++) {
     //
     // Find data to use in extrapolation for this layer. And grid cells to fill
     //
-    std::cout <<"k= " << k << "  miss = " << miss_indices.size() << "   data = " << data_indices.size() << std::endl;
-
     NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(layer[k],
                                                                     miss_indices,
                                                                     data_indices,
@@ -1525,35 +1469,21 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
                                                                     dy);
   }
 
-  ex.WriteToFile("data_and_missing.storm");
-
-
-  clock_t t4 = clock();
-  printf("Time to extrapolate z-grid layers (%f seconds).\n", ((float) (t4 - t3)) / CLOCKS_PER_SEC);
-
   //
   // fill in cells that are still undefined
   //
   for (size_t k = 0 ; k < nk ; k++) {
 
-    /*
     double mean_of_defined_cells = layer[k].FindAvg(missingValue); // Do this before extrapolation???
 
     for (size_t i = 0 ; i < ni ; i++) {
       for (size_t j = 0 ; j < nj ; j++) {
-
-        if (k == 261 && layer[k](i, j) == missingValue && data_cells(i, j)) {
-          std::cout << "i,j = " << i << " " << j << std::endl;
-        }
-
-
-        if (!missing_cells(i, j) && !data_cells(i, j) && layer[k](i, j) == missingValue) {
+        //if (!missing_cells(i, j) && !data_cells(i, j) && layer[k](i, j) == missingValue) {
+        if (layer[k](i, j) == missingValue) {
           layer[k](i, j) = mean_of_defined_cells;
         }
       }
     }
-    */
-
 
     //
     // Copy layer to grid
@@ -1564,21 +1494,23 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
       }
     }
   }
-
-  // Denne må bort
-  zgrid.WriteToFile("paal_zgrid.storm");
-
 }
 
-//----------------------------------------------------------------------------------------------------------
-void EclipseGeometry::SetupExtrapolation(NRLib::Grid2D<bool>                       & missing_cells,
-                                         NRLib::Grid2D<bool>                       & data_cells,
+//-------------------------------------------------------------------------------------------------
+void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >   & miss_indices,
+                                         std::vector<std::pair<size_t, size_t> >   & data_indices,
                                          const std::vector<NRLib::Grid2D<double> > & layer,
                                          const size_t                                ni,
                                          const size_t                                nj,
                                          const double                                missing) const
-//----------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 {
+  miss_indices.reserve(ni*nj);
+  data_indices.reserve(ni*nj);
+
+  NRLib::Grid2D<bool> missing_cells(ni, nj, false);
+  NRLib::Grid2D<bool> data_cells(ni, nj, false);
+
   //
   // Find cells that should be filled using extrapolation. Some already has a value, but a dangerous/bogus one.
   //
@@ -1703,6 +1635,19 @@ void EclipseGeometry::SetupExtrapolation(NRLib::Grid2D<bool>                    
         if (edge1 && edge2 && edge3 && edge4) {
           missing_cells(i, j) = true;
         }
+      }
+    }
+  }
+  //
+  // Transfer grid cell information to pair indices
+  //
+  for (int i = 0; i < ni ; i++) {
+    for (int j = 0; j < nj ; j++) {
+      if (missing_cells(i, j)) {
+        miss_indices.push_back(std::pair<int, int>(i, j));
+      }
+      if (data_cells(i, j)) {
+        data_indices.push_back(std::pair<int, int>(i, j));
       }
     }
   }
