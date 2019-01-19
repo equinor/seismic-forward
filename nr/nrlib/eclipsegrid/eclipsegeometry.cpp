@@ -1589,8 +1589,7 @@ void EclipseGeometry::SetupExtrapolation(NRLib::Grid2D<bool>                    
   for (size_t k = 1 ; k < layer.size() ; k++) {
     for (size_t i = 0; i < ni ; i++) {
       for (size_t j = 0; j < nj ; j++) {
-        if (layer[k](i,j) != missing || layer[k - 1](i,j) != missing) {   // At least one cell is defined. Check difference
-
+        if (layer[k](i,j) != missing || layer[k - 1](i,j) != missing) {   // At least one cell is defined.
           if (layer[k](i,j) == missing || layer[k - 1](i,j) == missing) { // Only one cell is defined. Need to extrapolate
             missing_cells(i, j) = true;
           }
@@ -1601,6 +1600,7 @@ void EclipseGeometry::SetupExtrapolation(NRLib::Grid2D<bool>                    
       }
     }
   }
+
   //
   // Add edge-in-layer cells
   //
@@ -1614,39 +1614,37 @@ void EclipseGeometry::SetupExtrapolation(NRLib::Grid2D<bool>                    
     }
   }
   //
+  // Add another "safety" cell to be extrapolated. This should really be chosen based on the Eclipse grid resolution
+  //
+  NRLib::Grid2D<bool> tmp(missing_cells);
+  for (size_t i = 0 ; i < ni ; i++) {
+    for (size_t j = 0 ; j < nj ; j++) {
+      if (tmp(i, j)) {
+        if (i < ni - 1) missing_cells(i + 1, j    ) = true;
+        if (j < nj - 1) missing_cells(i    , j + 1) = true;
+        if (i > 0     ) missing_cells(i - 1, j    ) = true;
+        if (j > 0     ) missing_cells(i    , j - 1) = true;
+      }
+    }
+  }
+
+  //
+  // Add lakes/ponds to the extrapolation
+  //
+
+
+  //
   // Cells neighbouring an a cell to be filled is potentially a data cell. Add as long as it is not to be extrapolated
   //
   // Here we may use a Convex Hull algorithm to find more points to extrapolate ???
   //
   for (size_t i = 0 ; i < ni ; i++) {
     for (size_t j = 0 ; j < nj ; j++) {
-
       if (missing_cells(i, j)) {
         if (i < ni - 1 && !missing_cells(i + 1, j    )) data_cells(i + 1, j    ) = true;
-        if (j > nj - 1 && !missing_cells(i    , j + 1)) data_cells(i    , j + 1) = true;
+        if (j < nj - 1 && !missing_cells(i    , j + 1)) data_cells(i    , j + 1) = true;
         if (i > 0      && !missing_cells(i - 1, j    )) data_cells(i - 1, j    ) = true;
         if (j > 0      && !missing_cells(i    , j - 1)) data_cells(i    , j - 1) = true;
-
-
-      if (i == 749 && j == 95) {
-        std::cout << "THERE\n" << std::endl;
-        std::cout << "missing(i,j)    = " << missing_cells(i,j) << std::endl;
-        std::cout << "missing(i+1,j)  = " << missing_cells(i+1,j) << std::endl;
-        std::cout << "missing(i-1,j)  = " << missing_cells(i-1,j) << std::endl;
-        std::cout << "missing(i,j+1)  = " << missing_cells(i,j+1) << std::endl;
-        std::cout << "missing(i,j-1)  = " << missing_cells(i,j-1) << std::endl;
-        std::cout << "data(i+1,j)     = " << data_cells(i+1,j) << std::endl;
-        std::cout << "data(i-1,j)     = " << data_cells(i-1,j) << std::endl;
-        std::cout << "data(i,j+1)     = " << data_cells(i,j+1) << std::endl;
-        std::cout << "data(i,j-1)     = " << data_cells(i,j-1) << std::endl;
-        exit(1);
-      }
-
-
-
-
-
-
       }
     }
   }
