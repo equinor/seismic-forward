@@ -174,13 +174,27 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
 
   const bool                     rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
   const bool                     use_corner_point = model_settings->GetUseCornerpointInterpol();
+
   const bool                     bilinear         = false;
   const double                   missing          = -999.0;
+
+  const bool                     use_data_data_from_traces_with_undef = model_settings->GetUseDataFromTracesWithUndefinedCells();
+  const bool                     fill_1st_rim_of_undefined_cells      = model_settings->GetFill1stRimOfUndefinedCells();
+  const bool                     fill_2nd_rim_of_undefined_cells      = model_settings->GetFill2ndRimOfUndefinedCells();
+  const bool                     fill_edge_cells                      = model_settings->GetFillEdgeCells();
+  const bool                     fill_lakes                           = model_settings->GetFillLakes();
+  const bool                     fill_the_rest_with_avg_values        = model_settings->GetFillTheRestWithAvgValues();
 
   geometry.FindRegularGridOfZValues(zgrid,
                                     top_k,
                                     n_threads,
                                     use_corner_point,
+                                    use_data_data_from_traces_with_undef,
+                                    fill_1st_rim_of_undefined_cells,
+                                    fill_2nd_rim_of_undefined_cells,
+                                    fill_edge_cells,
+                                    fill_lakes,
+                                    fill_the_rest_with_avg_values,
                                     bilinear,
                                     missing);
 

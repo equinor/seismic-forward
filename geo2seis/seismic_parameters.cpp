@@ -283,14 +283,23 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   bool   cornerpt = model_settings->GetUseCornerpointInterpol();
   bool   bilinear = false;
 
+  //bool use_data_data_from_traces_with_undef = model_settings->GetUseDataFromTracesWithUndefinedCells();
+  //bool fill_1st_rim_of_undefined_cells      = model_settings->GetFill1stRimOfUndefinedCells();
+  //bool fill_2nd_rim_of_undefined_cells      = model_settings->GetFill2ndRimOfUndefinedCells();
+  //bool fill_edge_cells                      = model_settings->GetFillEdgeCells();
+  //bool fill_lakes                           = model_settings->GetFillLakes();
+  //bool fill_the_rest_with_avg_values        = model_settings->GetFillTheRestWithAvgValues();
+
   if (cornerpt)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
   else
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
 
   bool extrapolate = true;
-  eclipse_geometry.FindLayer(tvalues, mask, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, extrapolate, missing);
-  eclipse_geometry.FindLayer(bvalues, mask, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, extrapolate, missing);
+  eclipse_geometry.FindLayer(tvalues, mask, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, extrapolate,
+                             missing);
+  eclipse_geometry.FindLayer(bvalues, mask, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, extrapolate,
+                             missing);
 
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {

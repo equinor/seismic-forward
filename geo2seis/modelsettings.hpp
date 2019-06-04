@@ -165,6 +165,13 @@ public:
   bool                      GetOutputSeismicStackDepthSegy()          { return seismic_stack_depth_segy_       ;}
   NRLib::TraceHeaderFormat  GetOutputSegyFileFormat()                 { return output_segy_file_format_        ;}
 
+  bool                      GetUseDataFromTracesWithUndefinedCells()  { return use_data_data_from_traces_with_undef_ ;}
+  bool                      GetFill1stRimOfUndefinedCells()           { return fill_1st_rim_of_undefined_cells_      ;}
+  bool                      GetFill2ndRimOfUndefinedCells()           { return fill_2nd_rim_of_undefined_cells_      ;}
+  bool                      GetFillEdgeCells()                        { return fill_edge_cells_                      ;}
+  bool                      GetFillLakes()                            { return fill_lakes_                           ;}
+  bool                      GetFillTheRestWithAvgValues()             { return fill_the_rest_with_avg_values_        ;}
+
   void SetLogLevel(int level)                          { log_level_                           = level    ;}
 
   void SetEclipseGrid(std::string filename)            { eclipse_file_name_                   = filename ;}
@@ -294,6 +301,15 @@ public:
   void AddExtraParameterName(std::string name)         { extra_parameter_names_.push_back(name);}
   void AddExtraParameterDefaultValue(double value)     { extra_parameter_default_values_.push_back(value);}
 
+  void SetUseDataFromTracesWithUndefinedCells(bool use) { use_data_data_from_traces_with_undef_ = use      ;}
+  void SetFill1stRimOfUndefinedCells(bool activate)     { fill_1st_rim_of_undefined_cells_      = activate ;}
+  void SetFill2ndRimOfUndefinedCells(bool activate)     { fill_2nd_rim_of_undefined_cells_      = activate ;}
+  void SetFillEdgeCells(bool activate)                  { fill_edge_cells_                      = activate ;}
+  void SetFillLakes(bool activate)                      { fill_lakes_                           = activate ;}
+  void SetFillTheRestWithAvgValues(bool activate)       { fill_the_rest_with_avg_values_        = activate ;}
+
+
+
 private:
 
   std::string               prefix_;
@@ -415,6 +431,14 @@ private:
 
   bool                      time_window_specified_;
   bool                      depth_window_specified_;
+
+  bool                      use_data_data_from_traces_with_undef_;
+  bool                      fill_1st_rim_of_undefined_cells_;
+  bool                      fill_2nd_rim_of_undefined_cells_;
+  bool                      fill_edge_cells_;
+  bool                      fill_lakes_;
+  bool                      fill_the_rest_with_avg_values_;
+
 };
 
 #endif

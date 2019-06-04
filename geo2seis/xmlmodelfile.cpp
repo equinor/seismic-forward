@@ -106,18 +106,19 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   std::vector<std::string> legalCommands;
   legalCommands.push_back("angle");
   legalCommands.push_back("default-underburden");
-  legalCommands.push_back("elastic-parameters");   // PAALADDED
+  legalCommands.push_back("elastic-parameters");    // PAALADDED
   legalCommands.push_back("elastic-param");
-  legalCommands.push_back("max-threads");          // Deprecated
+  legalCommands.push_back("max-threads");           // Deprecated
   legalCommands.push_back("nmo-stretch");
   legalCommands.push_back("output-grid");
   legalCommands.push_back("output-parameters");
-  legalCommands.push_back("project-settings");     // PAALADDED
+  legalCommands.push_back("project-settings");      // PAALADDED
   legalCommands.push_back("ps-seismic");
   legalCommands.push_back("timeshift-twt");
-  legalCommands.push_back("traces-in-memory");     // Deprecated
+  legalCommands.push_back("traces-in-memory");      // Deprecated
   legalCommands.push_back("wavelet");
   legalCommands.push_back("white-noise");
+  legalCommands.push_back("zvalue-extrapolation");  // PAALADDED
 
   if (ParseNMOStretch(root, errTxt)){
     modelSettings_->SetNMOCorr(true);
@@ -127,6 +128,9 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   ParseElasticParam(root, errTxt);
   ParseWavelet(root, errTxt);
   ParseProjectSettings(root, errTxt);
+
+  if (ParseZValueExtrapolation(root, errTxt)) {
+  }
 
   if (ParseWhiteNoise(root, errTxt)) {
     modelSettings_->SetWhiteNoise();
@@ -1272,6 +1276,53 @@ bool XmlModelFile::ParseWhiteNoise(TiXmlNode   * node,
     modelSettings_->SetSeed(seed);
   }
 
+
+  CheckForJunk(root, errTxt, legalCommands);
+
+  return true;
+}
+
+
+bool XmlModelFile::ParseZValueExtrapolation(TiXmlNode   * node,
+                                            std::string & errTxt)
+{
+  TiXmlNode *root = node->FirstChildElement("zvalue-extrapolation");
+  if (root == 0) {
+    return (false);
+  }
+
+  std::vector<std::string> legalCommands;
+  legalCommands.push_back("use-data-from-traces-with-undefined-cells");
+  legalCommands.push_back("fill-1st-rim-of-undefined-cells");
+  legalCommands.push_back("fill-2nd-rim-of-undefined-cells");
+  legalCommands.push_back("fill-edge-cells");
+  legalCommands.push_back("fill-lakes");
+  legalCommands.push_back("fill-the-rest-with-average-values");
+
+  bool activate;
+  if (ParseBool(root, "use-data-from-traces-with-undefined-cells", activate, errTxt)) {
+    modelSettings_->SetUseDataFromTracesWithUndefinedCells(activate);
+  }
+
+  if (ParseBool(root, "fill-1st-rim-of-undefined-cells", activate, errTxt)) {
+    modelSettings_->SetFill1stRimOfUndefinedCells(activate);
+  }
+
+  if (ParseBool(root, "fill-2nd-rim-of-undefined-cells", activate, errTxt)) {
+    modelSettings_->SetFill2ndRimOfUndefinedCells(activate);
+  }
+
+  if (ParseBool(root, "fill-edge-cells", activate, errTxt)) {
+    modelSettings_->SetFillEdgeCells(activate);
+  }
+
+  if (ParseBool(root, "fill-lakes", activate, errTxt)) {
+    modelSettings_->SetFillLakes(activate);
+  }
+
+  if (ParseBool(root, "fill-the-rest-with-average-values", activate, errTxt)) {
+    modelSettings_->SetFillTheRestWithAvgValues(activate);
+  }
 
   CheckForJunk(root, errTxt, legalCommands);
 

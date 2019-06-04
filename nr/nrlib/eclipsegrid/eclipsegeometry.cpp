@@ -1370,12 +1370,20 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
   }
 }
 
+//---------------------------------------------------------------------------------------------------------
 void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
                                                const size_t           top_k,
                                                const size_t           n_threads,
                                                const bool             cornerpoint_interpolation,
                                                const bool             bilinear_else_triangles,
+                                               const bool             use_data_data_from_traces_with_undef,
+                                               const bool             fill_1st_rim_of_undefined_cells,
+                                               const bool             fill_2nd_rim_of_undefined_cells,
+                                               const bool             fill_edge_cells,
+                                               const bool             fill_lakes,
+                                               const bool             fill_the_rest,
                                                const double           missingValue) const
+//---------------------------------------------------------------------------------------------------------
 {
   const double xmin  = zgrid.GetXMin();
   const double ymin  = zgrid.GetYMin();
@@ -1452,6 +1460,11 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
                      layer,
                      ni,
                      nj,
+                     use_data_data_from_traces_with_undef,
+                     fill_1st_rim_of_undefined_cells,
+                     fill_2nd_rim_of_undefined_cells,
+                     fill_edge_cells,
+                     fill_lakes,
                      missingValue);
 
 
@@ -1471,13 +1484,15 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
       //
       // fill in cells that are still undefined
       //
-      double mean_of_defined_cells = layer[k].FindAvg(missingValue); // Do this before extrapolation???
+      if (fill_the_rest) {
+        double mean_of_defined_cells = layer[k].FindAvg(missingValue); // Do this before extrapolation???
 
-      for (size_t i = 0; i < ni; i++) {
-        for (size_t j = 0; j < nj; j++) {
-          //if (!missing_cells(i, j) && !data_cells(i, j) && layer[k](i, j) == missingValue) {
-          if (layer[k](i, j) == missingValue) {
-            layer[k](i, j) = mean_of_defined_cells;
+        for (size_t i = 0; i < ni; i++) {
+          for (size_t j = 0; j < nj; j++) {
+            //if (!missing_cells(i, j) && !data_cells(i, j) && layer[k](i, j) == missingValue) {
+            if (layer[k](i, j) == missingValue) {
+              layer[k](i, j) = mean_of_defined_cells;
+            }
           }
         }
       }
@@ -1501,6 +1516,11 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
                                          const std::vector<NRLib::Grid2D<double> > & layer,
                                          const size_t                                ni,
                                          const size_t                                nj,
+                                         const bool                                  use_data_data_from_traces_with_undef,
+                                         const bool                                  fill_1st_rim_of_undefined_cells,
+                                         const bool                                  fill_2nd_rim_of_undefined_cells,
+                                         const bool                                  fill_edge_cells,
+                                         const bool                                  fill_lakes,
                                          const double                                missing) const
 //-------------------------------------------------------------------------------------------------
 {
@@ -1513,15 +1533,17 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
   //
   // Find cells that should be filled using extrapolation. Some already has a value, but a dangerous/bogus one.
   //
-  for (size_t k = 1 ; k < layer.size() ; k++) {
-    for (size_t i = 0; i < ni ; i++) {
-      for (size_t j = 0; j < nj ; j++) {
-        if (layer[k](i,j) != missing || layer[k - 1](i,j) != missing) {   // At least one cell is defined.
-          if (layer[k](i,j) == missing || layer[k - 1](i,j) == missing) { // Only one cell is defined. Need to extrapolate
-            missing_cells(i, j) = true;
-          }
-          else if (layer[k](i,j) - layer[k - 1](i,j) < 0.0) {             // Negative difference. Extrapolation needed
-            missing_cells(i, j) = true;
+  if (fill_1st_rim_of_undefined_cells) {
+    for (size_t k = 1 ; k < layer.size() ; k++) {
+      for (size_t i = 0; i < ni ; i++) {
+        for (size_t j = 0; j < nj ; j++) {
+          if (layer[k](i,j) != missing || layer[k - 1](i,j) != missing) {   // At least one cell is defined.
+            if (layer[k](i,j) == missing || layer[k - 1](i,j) == missing) { // Only one cell is defined. Need to extrapolate
+              missing_cells(i, j) = true;
+            }
+            else if (layer[k](i,j) - layer[k - 1](i,j) < 0.0) {             // Negative difference. Extrapolation needed
+              missing_cells(i, j) = true;
+            }
           }
         }
       }
@@ -1531,11 +1553,13 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
   //
   // Add edge-in-layer cells
   //
-  for (size_t k = 0 ; k < layer.size() ; k++) {
-    for (size_t i = 0; i < ni ; i++) {
-      for (size_t j = 0; j < nj ; j++) {
-        if (layer[k].IsEdge(i, j, missing)) {
-          missing_cells(i, j) = true;
+  if (fill_edge_cells) {
+    for (size_t k = 0 ; k < layer.size() ; k++) {
+      for (size_t i = 0; i < ni ; i++) {
+        for (size_t j = 0; j < nj ; j++) {
+          if (layer[k].IsEdge(i, j, missing)) {
+            missing_cells(i, j) = true;
+          }
         }
       }
     }
@@ -1543,14 +1567,16 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
   //
   // Add another "safety" cell to be extrapolated. This should really be chosen based on the Eclipse grid resolution
   //
-  NRLib::Grid2D<bool> tmp(missing_cells);
-  for (size_t i = 0 ; i < ni ; i++) {
-    for (size_t j = 0 ; j < nj ; j++) {
-      if (tmp(i, j)) {
-        if (i < ni - 1) missing_cells(i + 1, j    ) = true;
-        if (j < nj - 1) missing_cells(i    , j + 1) = true;
-        if (i > 0     ) missing_cells(i - 1, j    ) = true;
-        if (j > 0     ) missing_cells(i    , j - 1) = true;
+  if (fill_2nd_rim_of_undefined_cells) {
+    NRLib::Grid2D<bool> tmp(missing_cells);
+    for (size_t i = 0 ; i < ni ; i++) {
+      for (size_t j = 0 ; j < nj ; j++) {
+        if (tmp(i, j)) {
+          if (i < ni - 1) missing_cells(i + 1, j    ) = true;
+          if (j < nj - 1) missing_cells(i    , j + 1) = true;
+          if (i > 0     ) missing_cells(i - 1, j    ) = true;
+          if (j > 0     ) missing_cells(i    , j - 1) = true;
+        }
       }
     }
   }
@@ -1573,11 +1599,13 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
   //
   // Turn off data cells, if one of the layers has a missing value in (i,j)
   //
-  for (size_t i = 0 ; i < ni ; i++) {
-    for (size_t j = 0 ; j < nj ; j++) {
-      for (size_t k = 0 ; k < layer.size() ; k++) {
-        if (data_cells(i, j) && layer[k](i, j) == missing) {
-          data_cells(i, j) = false;
+  if (use_data_data_from_traces_with_undef) {
+    for (size_t i = 0 ; i < ni ; i++) {
+      for (size_t j = 0 ; j < nj ; j++) {
+        for (size_t k = 0 ; k < layer.size() ; k++) {
+          if (data_cells(i, j) && layer[k](i, j) == missing) {
+            data_cells(i, j) = false;
+          }
         }
       }
     }
@@ -1586,53 +1614,55 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
   //
   // Add lakes/ponds to the extrapolation
   //
-  for (int i = 0 ; i < ni ; i++) {
-    for (int j = 0 ; j < nj ; j++) {
+  if (fill_lakes) {
+    for (int i = 0 ; i < ni ; i++) {
+      for (int j = 0 ; j < nj ; j++) {
 
-      if (!missing_cells(i,j) && !data_cells(i,j)) {
-        bool edge1 = false;
-        bool edge2 = false;
-        bool edge3 = false;
-        bool edge4 = false;
+        if (!missing_cells(i,j) && !data_cells(i,j)) {
+          bool edge1 = false;
+          bool edge2 = false;
+          bool edge3 = false;
+          bool edge4 = false;
 
-        for (int k = 1 ; k <= i ; k++) {
-          if (missing_cells(i - k, j)) {
-            edge1 = true;
-            break;
+          for (int k = 1 ; k <= i ; k++) {
+            if (missing_cells(i - k, j)) {
+              edge1 = true;
+              break;
+            }
+            else if (data_cells(i - k, j)) {
+              break;
+            }
           }
-          else if (data_cells(i - k, j)) {
-            break;
+          for (int k = 1 ; k < ni - i ; k++) {
+            if (missing_cells(i + k, j)) {
+              edge2 = true;
+              break;
+            }
+            else if (data_cells(i + k, j)) {
+              break;
+            }
           }
-        }
-        for (int k = 1 ; k < ni - i ; k++) {
-          if (missing_cells(i + k, j)) {
-            edge2 = true;
-            break;
+          for (int k = 1 ; k <= j ; k++) {
+            if (missing_cells(i, j - k)) {
+              edge3 = true;
+              break;
+            }
+            else if (data_cells(i, j - k)) {
+              break;
+            }
           }
-          else if (data_cells(i + k, j)) {
-            break;
+          for (int k = 1 ; k < nj - j ; k++) {
+            if (missing_cells(i, j + k)) {
+              edge4 = true;
+              break;
+            }
+            else if (data_cells(i, j + k)) {
+              break;
+            }
           }
-        }
-        for (int k = 1 ; k <= j ; k++) {
-          if (missing_cells(i, j - k)) {
-            edge3 = true;
-            break;
+          if (edge1 && edge2 && edge3 && edge4) {
+            missing_cells(i, j) = true;
           }
-          else if (data_cells(i, j - k)) {
-            break;
-          }
-        }
-        for (int k = 1 ; k < nj - j ; k++) {
-          if (missing_cells(i, j + k)) {
-            edge4 = true;
-            break;
-          }
-          else if (data_cells(i, j + k)) {
-            break;
-          }
-        }
-        if (edge1 && edge2 && edge3 && edge4) {
-          missing_cells(i, j) = true;
         }
       }
     }
@@ -1692,6 +1722,9 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
                                       bilinear_else_triangles,
                                       missingValue);
 
+  //
+  // The extrapolation below is used when we can extrapolate layer by layer
+  //
   if (extrapolate) {
     std::vector<std::pair<size_t, size_t> > missing_indices;
     std::vector<std::pair<size_t, size_t> > data_indices;

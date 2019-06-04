@@ -122,6 +122,12 @@ public:
                                 const size_t           n_threads,
                                 const bool             cornerpoint_interpolation,
                                 const bool             bilinear_else_triangles,
+                                const bool             use_data_data_from_traces_with_undef,
+                                const bool             fill_1st_rim_of_undefined_cells,
+                                const bool             fill_2nd_rim_of_undefined_cells,
+                                const bool             fill_edge_cells,
+                                const bool             fill_lakes,
+                                const bool             fill_the_rest,
                                 const double           missingValue) const;
 
   void SetupExtrapolation(std::vector<std::pair<size_t, size_t> >   & miss_indices,
@@ -129,6 +135,11 @@ public:
                           const std::vector<NRLib::Grid2D<double> > & layer,
                           const size_t                                ni,
                           const size_t                                nj,
+                          const bool                                  use_data_data_from_traces_with_undef,
+                          const bool                                  fill_1st_rim_of_undefined_cells,
+                          const bool                                  fill_2nd_rim_of_undefined_cells,
+                          const bool                                  fill_edge_cells,
+                          const bool                                  fill_lakes,
                           const double                                missing) const;
 
   void ExtrapolateLayer(NRLib::Grid2D<double>                         & layer,
