@@ -129,8 +129,7 @@ ModelSettings::ModelSettings(void)
   output_depth_segy_                   = false;
   output_timeshift_segy_               = false;
   output_prenmo_time_segy_             = false;
-  output_segy_file_format_             = NRLib::TraceHeaderFormat(NRLib::TraceHeaderFormat::SEISWORKS);
-
+  output_segy_file_format_             = NRLib::TraceHeaderFormat(NRLib::TraceHeaderFormat::SIP);
 }
 
 ModelSettings::~ModelSettings(void)
