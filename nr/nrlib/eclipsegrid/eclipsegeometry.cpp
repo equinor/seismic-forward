@@ -1397,7 +1397,13 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
 
   NRLib::Grid2D<bool> dummy_mask(ni, nj, false);
 
-  const bool extrapolate = false;
+  const bool   extrapolate = false;
+
+  float        monitor_size;
+  float        next_monitor;
+  float        count;
+  std::string  carets;
+  std::string  rest_carets;
 
   //
   // Setup layers to fill
@@ -1429,6 +1435,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
             extrapolate,
             missingValue);
 
+
   //
   // Fill rest of the layers
   //
@@ -1452,6 +1459,8 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
               missingValue);
   }
 
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtrapolating/interpolating values that are undefined or sketchy.\n");
+
   std::vector<std::pair<size_t, size_t> > miss_indices;
   std::vector<std::pair<size_t, size_t> > data_indices;
 
@@ -1467,8 +1476,9 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
                      fill_lakes,
                      missingValue);
 
-
   if (miss_indices.size() > 0) {
+    MonitorInitialize(nk, monitor_size, next_monitor, count, carets, rest_carets);
+
 #ifdef WITH_OMP
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
@@ -1496,7 +1506,9 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
           }
         }
       }
+      Monitor(nk, k,  monitor_size, next_monitor, count, carets);
     }
+    MonitorFinish(rest_carets);
   }
   //
   // Copy layer to grid
@@ -1508,6 +1520,65 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
       }
     }
   }
+}
+
+
+//----------------------------------------------------------------------
+void EclipseGeometry::MonitorInitialize(size_t        n,
+                                        float       & monitor_size,
+                                        float       & next_monitor,
+                                        float       & count,
+                                        std::string & carets,
+                                        std::string & rest_carets) const
+//----------------------------------------------------------------------
+{
+  count        = 1.0f;
+  monitor_size = static_cast<float>(n)*0.02f;
+  carets       = "^";
+  rest_carets  =  "";
+
+  if (monitor_size < 1.0f) {
+    int n_carets = static_cast<int>(floor(1.0f/monitor_size));
+    int m_carets = 50 - n*n_carets;
+    carets       = std::string(n_carets,'^');
+    rest_carets  = std::string(m_carets,'^');
+    monitor_size = 1.0f;
+  }
+  next_monitor = monitor_size;
+
+  std::cout
+    << "\n  0%       20%       40%       60%       80%      100%"
+    << "\n  |    |    |    |    |    |    |    |    |    |    |"
+    << "\n  ^"
+    << std::flush;
+}
+
+//-------------------------------------------------------
+void EclipseGeometry::Monitor(size_t        n,
+                              size_t        k,
+                              float         monitor_size,
+                              float       & next_monitor,
+                              float       & count,
+                              std::string & carets) const
+//-------------------------------------------------------
+{
+#ifdef PARALLEL
+#pragma omp critical
+#endif
+  {
+    if (count >= next_monitor || k == n - 1) {
+      next_monitor += monitor_size;
+      std::cout << carets;
+    }
+    count += 1.0f;
+  }
+}
+
+//------------------------------------------------------------------------
+void EclipseGeometry::MonitorFinish(const std::string & rest_carets) const
+//------------------------------------------------------------------------
+{
+  std::cout << rest_carets << std::endl;;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1528,7 +1599,7 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
   data_indices.reserve(ni*nj);
 
   NRLib::Grid2D<bool> missing_cells(ni, nj, false);
-  NRLib::Grid2D<bool> data_cells(ni, nj, false);
+  NRLib::Grid2D<bool> data_cells   (ni, nj, false);
 
   //
   // Find cells that should be filled using extrapolation. Some already has a value, but a dangerous/bogus one.
@@ -1551,21 +1622,7 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
   }
 
   //
-  // Add edge-in-layer cells
-  //
-  if (fill_edge_cells) {
-    for (size_t k = 0 ; k < layer.size() ; k++) {
-      for (size_t i = 0; i < ni ; i++) {
-        for (size_t j = 0; j < nj ; j++) {
-          if (layer[k].IsEdge(i, j, missing)) {
-            missing_cells(i, j) = true;
-          }
-        }
-      }
-    }
-  }
-  //
-  // Add another "safety" cell to be extrapolated. This should really be chosen based on the Eclipse grid resolution
+  // Add another "safety" cell to be extrapolated. NBNB!!! This also turns data cells into cells to be extrapolated
   //
   if (fill_2nd_rim_of_undefined_cells) {
     NRLib::Grid2D<bool> tmp(missing_cells);
@@ -1576,6 +1633,21 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
           if (j < nj - 1) missing_cells(i    , j + 1) = true;
           if (i > 0     ) missing_cells(i - 1, j    ) = true;
           if (j > 0     ) missing_cells(i    , j - 1) = true;
+        }
+      }
+    }
+  }
+
+  //
+  // Add edge-in-layer cells
+  //
+  if (fill_edge_cells) {
+    for (size_t k = 0 ; k < layer.size() ; k++) {
+      for (size_t i = 0; i < ni ; i++) {
+        for (size_t j = 0; j < nj ; j++) {
+          if (layer[k].IsEdge(i, j, missing)) {
+            missing_cells(i, j) = true;
+          }
         }
       }
     }
@@ -1667,6 +1739,7 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
       }
     }
   }
+
   //
   // Transfer grid cell information to pair indices
   //
@@ -1680,6 +1753,283 @@ void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >
       }
     }
   }
+
+  /*
+  if (miss_indices.size() > 0) {
+    std::fstream fout;
+    NRLib::OpenWrite(fout, "surf_miss.rxat");
+    fout << "Discrete Missing"
+         << std::endl;
+    for (size_t i = 0 ; i < miss_indices.size() ; i++) {
+      fout << std::fixed
+        << std::setprecision(2)
+        << std::setw(12) << miss_indices[i].first  << " "
+        << std::setw(12) << miss_indices[i].second << " "
+        << std::setw(12) << 0.0                    << " "
+        << std::setw(8)  << 1                      << " "
+         << std::endl;
+    }
+    fout.close();
+  }
+  if (data_indices.size() > 0) {
+    std::fstream fout;
+    NRLib::OpenWrite(fout, "surf_data.rxat");
+    fout << "Discrete Data"
+         << std::endl;
+    for (size_t i = 0 ; i < data_indices.size() ; i++) {
+      fout << std::fixed
+        << std::setprecision(2)
+        << std::setw(12) << data_indices[i].first  << " "
+        << std::setw(12) << data_indices[i].second << " "
+        << std::setw(12) << 0.0                    << " "
+        << std::setw(8)  << 1                      << " "
+         << std::endl;
+    }
+    fout.close();
+  }
+
+  std::cout << use_data_data_from_traces_with_undef << std::endl;
+  std::cout << fill_1st_rim_of_undefined_cells      << std::endl;
+  std::cout << fill_2nd_rim_of_undefined_cells      << std::endl;
+  std::cout << fill_edge_cells                      << std::endl;
+  std::cout << fill_lakes                           << std::endl;
+  */
+
+  std::cout << "\nData cells      = " << data_indices.size()
+            << "\nUndefined cells = " << miss_indices.size() << std::endl;
+
+
+}
+//-------------------------------------------------------------------------------------------------
+void EclipseGeometry::SetupExtrapolation2(std::vector<std::pair<size_t, size_t> >   & miss_indices,
+                                         std::vector<std::pair<size_t, size_t> >   & data_indices,
+                                         const std::vector<NRLib::Grid2D<double> > & layer,
+                                         const size_t                                ni,
+                                         const size_t                                nj,
+                                         const bool                                  use_data_data_from_traces_with_undef,
+                                         const bool                                  fill_1st_rim_of_undefined_cells,
+                                         const bool                                  fill_2nd_rim_of_undefined_cells,
+                                         const bool                                  fill_edge_cells,
+                                         const bool                                  fill_lakes,
+                                         const double                                missing) const
+//-------------------------------------------------------------------------------------------------
+{
+  miss_indices.reserve(ni*nj);
+  data_indices.reserve(ni*nj);
+
+  NRLib::Grid2D<bool> missing_cells(ni, nj, false);
+  NRLib::Grid2D<bool> data_cells   (ni, nj, false);
+
+  //
+  // Find cells that should be filled using extrapolation. Some already has a value, but a dangerous/bogus one.
+  //
+  if (fill_1st_rim_of_undefined_cells) {
+    int count = 0;
+    for (size_t k = 1 ; k < layer.size() ; k++) {
+      for (size_t i = 0; i < ni ; i++) {
+        for (size_t j = 0; j < nj ; j++) {
+          if (layer[k](i,j) != missing || layer[k - 1](i,j) != missing) {   // At least one cell is defined.
+            if (layer[k](i,j) == missing || layer[k - 1](i,j) == missing) { // Only one cell is defined. Need to extrapolate
+              missing_cells(i, j) = true;
+              count++;
+            }
+            else if (layer[k](i,j) - layer[k - 1](i,j) < 0.0) {             // Negative difference. Extrapolation needed
+              missing_cells(i, j) = true;
+              count++;
+            }
+          }
+        }
+      }
+    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "First rim undefs   : %6d\n", count);
+  }
+
+  //
+  // Add another "safety" cell to be extrapolated. This should really be chosen based on the Eclipse grid resolution
+  //
+  if (fill_2nd_rim_of_undefined_cells) {
+    int count = 0;
+    NRLib::Grid2D<bool> tmp(missing_cells);
+    for (size_t i = 0 ; i < ni ; i++) {
+      for (size_t j = 0 ; j < nj ; j++) {
+        if (tmp(i, j)) {
+          if (i < ni - 1) { missing_cells(i + 1, j    ) = true; count++; }
+          if (j < nj - 1) { missing_cells(i    , j + 1) = true; count++; }
+          if (i > 0     ) { missing_cells(i - 1, j    ) = true; count++; }
+          if (j > 0     ) { missing_cells(i    , j - 1) = true; count++; }
+        }
+      }
+    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Second rim undefs  : %6d\n", count);
+  }
+
+  //
+  // Add edge-in-layer cells
+  //
+  if (fill_edge_cells) {
+    int count = 0;
+    for (size_t k = 0 ; k < layer.size() ; k++) {
+      for (size_t i = 0; i < ni ; i++) {
+        for (size_t j = 0; j < nj ; j++) {
+          if (layer[k].IsEdge(i, j, missing)) {
+            missing_cells(i, j) = true;
+            count++;
+          }
+        }
+      }
+    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Edge undefs        : %6d\n", count);
+  }
+
+  //
+  // Cells neighbouring an a cell to be filled is potentially a data cell. Add as long as it is not to be extrapolated
+  //
+  // Here we may use a Convex Hull algorithm to find more points to extrapolate ???
+  //
+  for (size_t i = 0 ; i < ni ; i++) {
+    for (size_t j = 0 ; j < nj ; j++) {
+      if (missing_cells(i, j)) {
+        if (i < ni - 1 && !missing_cells(i + 1, j    )) data_cells(i + 1, j    ) = true;
+        if (j < nj - 1 && !missing_cells(i    , j + 1)) data_cells(i    , j + 1) = true;
+        if (i > 0      && !missing_cells(i - 1, j    )) data_cells(i - 1, j    ) = true;
+        if (j > 0      && !missing_cells(i    , j - 1)) data_cells(i    , j - 1) = true;
+      }
+    }
+  }
+  //
+  // Turn off data cells, if one of the layers has a missing value in (i,j)
+  //
+  if (use_data_data_from_traces_with_undef) {
+    int count = 0;
+    for (size_t i = 0 ; i < ni ; i++) {
+      for (size_t j = 0 ; j < nj ; j++) {
+        for (size_t k = 0 ; k < layer.size() ; k++) {
+          if (data_cells(i, j) && layer[k](i, j) == missing) {
+            data_cells(i, j) = false;
+            count++;
+          }
+        }
+      }
+    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Data in traces with undefs : %6d\n", count);
+  }
+
+  //
+  // Add lakes/ponds to the extrapolation
+  //
+  if (fill_lakes) {
+    int count = 0;
+    for (int i = 0 ; i < ni ; i++) {
+      for (int j = 0 ; j < nj ; j++) {
+
+        if (!missing_cells(i,j) && !data_cells(i,j)) {
+          bool edge1 = false;
+          bool edge2 = false;
+          bool edge3 = false;
+          bool edge4 = false;
+
+          for (int k = 1 ; k <= i ; k++) {
+            if (missing_cells(i - k, j)) {
+              edge1 = true;
+              break;
+            }
+            else if (data_cells(i - k, j)) {
+              break;
+            }
+          }
+          for (int k = 1 ; k < ni - i ; k++) {
+            if (missing_cells(i + k, j)) {
+              edge2 = true;
+              break;
+            }
+            else if (data_cells(i + k, j)) {
+              break;
+            }
+          }
+          for (int k = 1 ; k <= j ; k++) {
+            if (missing_cells(i, j - k)) {
+              edge3 = true;
+              break;
+            }
+            else if (data_cells(i, j - k)) {
+              break;
+            }
+          }
+          for (int k = 1 ; k < nj - j ; k++) {
+            if (missing_cells(i, j + k)) {
+              edge4 = true;
+              break;
+            }
+            else if (data_cells(i, j + k)) {
+              break;
+            }
+          }
+          if (edge1 && edge2 && edge3 && edge4) {
+            missing_cells(i, j) = true;
+            count++;
+          }
+        }
+      }
+    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Undefs in lakes    : %6\n", count);
+  }
+
+  //
+  // Transfer grid cell information to pair indices
+  //
+  for (int i = 0; i < ni ; i++) {
+    for (int j = 0; j < nj ; j++) {
+      if (missing_cells(i, j)) {
+        miss_indices.push_back(std::pair<int, int>(i, j));
+      }
+      if (data_cells(i, j)) {
+        data_indices.push_back(std::pair<int, int>(i, j));
+      }
+    }
+  }
+
+  if (miss_indices.size() > 0) {
+    std::fstream fout;
+    NRLib::OpenWrite(fout, "surf_miss.rxat");
+    fout << "Discrete Missing"
+         << std::endl;
+    for (size_t i = 0 ; i < miss_indices.size() ; i++) {
+      fout << std::fixed
+        << std::setprecision(2)
+        << std::setw(12) << miss_indices[i].first  << " "
+        << std::setw(12) << miss_indices[i].second << " "
+        << std::setw(12) << 0.0                    << " "
+        << std::setw(8)  << 1                      << " "
+         << std::endl;
+    }
+    fout.close();
+  }
+  if (data_indices.size() > 0) {
+    std::fstream fout;
+    NRLib::OpenWrite(fout, "surf_data.rxat");
+    fout << "Discrete Data"
+         << std::endl;
+    for (size_t i = 0 ; i < data_indices.size() ; i++) {
+      fout << std::fixed
+        << std::setprecision(2)
+        << std::setw(12) << data_indices[i].first  << " "
+        << std::setw(12) << data_indices[i].second << " "
+        << std::setw(12) << 0.0                    << " "
+        << std::setw(8)  << 1                      << " "
+         << std::endl;
+    }
+    fout.close();
+  }
+
+
+  std::cout << use_data_data_from_traces_with_undef << std::endl;
+  std::cout << fill_1st_rim_of_undefined_cells      << std::endl;
+  std::cout << fill_2nd_rim_of_undefined_cells      << std::endl;
+  std::cout << fill_edge_cells                      << std::endl;
+  std::cout << fill_lakes                           << std::endl;
+
+  std::cout << "Data = " << data_indices.size() << "   missing = " << miss_indices.size() << std::endl;
+
 }
 
 //

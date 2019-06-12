@@ -189,13 +189,13 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     top_k,
                                     n_threads,
                                     use_corner_point,
+                                    bilinear,
                                     use_data_data_from_traces_with_undef,
                                     fill_1st_rim_of_undefined_cells,
                                     fill_2nd_rim_of_undefined_cells,
                                     fill_edge_cells,
                                     fill_lakes,
                                     fill_the_rest_with_avg_values,
-                                    bilinear,
                                     missing);
 
   //

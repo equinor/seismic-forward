@@ -142,6 +142,18 @@ public:
                           const bool                                  fill_lakes,
                           const double                                missing) const;
 
+  void SetupExtrapolation2(std::vector<std::pair<size_t, size_t> >   & miss_indices,
+                          std::vector<std::pair<size_t, size_t> >   & data_indices,
+                          const std::vector<NRLib::Grid2D<double> > & layer,
+                          const size_t                                ni,
+                          const size_t                                nj,
+                          const bool                                  use_data_data_from_traces_with_undef,
+                          const bool                                  fill_1st_rim_of_undefined_cells,
+                          const bool                                  fill_2nd_rim_of_undefined_cells,
+                          const bool                                  fill_edge_cells,
+                          const bool                                  fill_lakes,
+                          const double                                missing) const;
+
   void ExtrapolateLayer(NRLib::Grid2D<double>                         & layer,
                         const std::vector<std::pair<size_t, size_t> > & data_indices,
                         const std::vector<std::pair<size_t, size_t> > & miss_indices,
@@ -175,6 +187,22 @@ public:
 
   void FindTopAndBotValuesOfGrid(std::vector<NRLib::Point>& top_points,
                                  std::vector<NRLib::Point>& bot_points) const;
+
+  void MonitorInitialize(size_t        n,
+                         float       & monitor_size,
+                         float       & next_monitor,
+                         float       & count,
+                         std::string & carets,
+                         std::string & rest_carets) const;
+
+  void Monitor(size_t        n,
+               size_t        k,
+               float         monitor_size,
+               float       & next_monitor,
+               float       & count,
+               std::string & carets) const;
+
+  void MonitorFinish(const std::string & rest_carets) const;
 
   void FindMinAndMaxZValueAndSetPolygons();
 
