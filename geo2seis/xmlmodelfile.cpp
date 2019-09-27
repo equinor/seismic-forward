@@ -1292,24 +1292,24 @@ bool XmlModelFile::ParseZValueExtrapolation(TiXmlNode   * node,
   }
 
   std::vector<std::string> legalCommands;
-  legalCommands.push_back("use-data-from-traces-with-undefined-cells");
-  legalCommands.push_back("fill-1st-rim-of-undefined-cells");
-  legalCommands.push_back("fill-2nd-rim-of-undefined-cells");
+  legalCommands.push_back("fill-crossing-cells");
+  legalCommands.push_back("fill-when-neighbour-is-undefined");
+  legalCommands.push_back("fill-a-safety-rim");
   legalCommands.push_back("fill-edge-cells");
   legalCommands.push_back("fill-lakes");
   legalCommands.push_back("fill-the-rest-with-average-values");
 
   bool activate;
-  if (ParseBool(root, "use-data-from-traces-with-undefined-cells", activate, errTxt)) {
-    modelSettings_->SetUseDataFromTracesWithUndefinedCells(activate);
+  if (ParseBool(root, "fill-crossing-cells", activate, errTxt)) {
+    modelSettings_->SetFillCrossingCells(activate);
   }
 
-  if (ParseBool(root, "fill-1st-rim-of-undefined-cells", activate, errTxt)) {
-    modelSettings_->SetFill1stRimOfUndefinedCells(activate);
+  if (ParseBool(root, "fill-when-neighbour-is-undefined", activate, errTxt)) {
+    modelSettings_->SetFillWhenNeighbourIsUndef(activate);
   }
 
-  if (ParseBool(root, "fill-2nd-rim-of-undefined-cells", activate, errTxt)) {
-    modelSettings_->SetFill2ndRimOfUndefinedCells(activate);
+  if (ParseBool(root, "fill-a-safety-rim", activate, errTxt)) {
+    modelSettings_->SetFillASafetyRim(activate);
   }
 
   if (ParseBool(root, "fill-edge-cells", activate, errTxt)) {

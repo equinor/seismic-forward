@@ -168,31 +168,31 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     size_t              n_threads)
 //-------------------------------------------------------------------------
 {
-  NRLib::StormContGrid         & zgrid            = seismic_parameters.GetZGrid();
-  const NRLib::EclipseGeometry & geometry         = seismic_parameters.GetEclipseGrid().GetGeometry();
-  const size_t                   top_k            = seismic_parameters.GetTopK();
+  NRLib::StormContGrid         & zgrid                         = seismic_parameters.GetZGrid();
+  const NRLib::EclipseGeometry & geometry                      = seismic_parameters.GetEclipseGrid().GetGeometry();
+  const size_t                   top_k                         = seismic_parameters.GetTopK();
 
-  const bool                     rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
-  const bool                     use_corner_point = model_settings->GetUseCornerpointInterpol();
+  const bool                     rem_neg_delta                 = model_settings->GetRemoveNegativeDeltaZ();
+  const bool                     use_corner_point              = model_settings->GetUseCornerpointInterpol();
 
-  const bool                     bilinear         = false;
-  const double                   missing          = -999.0;
+  const bool                     fill_crossing_cells           = model_settings->GetFillCrossingCells();
+  const bool                     fill_when_neighbour_is_undef  = model_settings->GetFillWhenNeighbourIsUndefined();
+  const bool                     fill_a_safety_rim             = model_settings->GetFillASafetyRim();
+  const bool                     fill_edge_cells               = model_settings->GetFillEdgeCells();
+  const bool                     fill_lakes                    = model_settings->GetFillLakes();
+  const bool                     fill_the_rest_with_avg_values = model_settings->GetFillTheRestWithAvgValues();
 
-  const bool                     use_data_data_from_traces_with_undef = model_settings->GetUseDataFromTracesWithUndefinedCells();
-  const bool                     fill_1st_rim_of_undefined_cells      = model_settings->GetFill1stRimOfUndefinedCells();
-  const bool                     fill_2nd_rim_of_undefined_cells      = model_settings->GetFill2ndRimOfUndefinedCells();
-  const bool                     fill_edge_cells                      = model_settings->GetFillEdgeCells();
-  const bool                     fill_lakes                           = model_settings->GetFillLakes();
-  const bool                     fill_the_rest_with_avg_values        = model_settings->GetFillTheRestWithAvgValues();
+  const bool                     bilinear                      = false;
+  const double                   missing                       = -999.0;
 
   geometry.FindRegularGridOfZValues(zgrid,
                                     top_k,
                                     n_threads,
                                     use_corner_point,
                                     bilinear,
-                                    use_data_data_from_traces_with_undef,
-                                    fill_1st_rim_of_undefined_cells,
-                                    fill_2nd_rim_of_undefined_cells,
+                                    fill_crossing_cells,
+                                    fill_when_neighbour_is_undef,
+                                    fill_a_safety_rim,
                                     fill_edge_cells,
                                     fill_lakes,
                                     fill_the_rest_with_avg_values,
@@ -228,7 +228,6 @@ void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
   chunk_size = std::max(1, int(ni/(2*static_cast<int>(n_threads))));
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
-
   for (size_t i = 0; i < ni ; i++) {
     std::vector<std::vector<double> > neg_dz_pts;
     for (size_t j = 0; j < nj; j++) {

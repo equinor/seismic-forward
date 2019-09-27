@@ -176,6 +176,12 @@ class SeismicParameters
                                         double                xmin,
                                         double                ymin);
 
+    void ExtrapolateLayer(NRLib::Grid2D<double>       z_grid,
+                          const NRLib::Grid2D<bool> & mask,
+                          const double                dx,
+                          const double                dy,
+                          const double                missing) const;
+
     void DeleteEclipseGrid();
     void DeleteElasticParameterGrids();
     void DeleteExtraParameterGrids();

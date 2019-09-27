@@ -1,7 +1,6 @@
+#include "nrlib/extrapolation/extrapolategrid2d.hpp"
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
-
 #include "nrlib/geometry/interpolation.hpp"
-
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
@@ -283,21 +282,16 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   bool   cornerpt = model_settings->GetUseCornerpointInterpol();
   bool   bilinear = false;
 
-  //bool use_data_data_from_traces_with_undef = model_settings->GetUseDataFromTracesWithUndefinedCells();
-  //bool fill_1st_rim_of_undefined_cells      = model_settings->GetFill1stRimOfUndefinedCells();
-  //bool fill_2nd_rim_of_undefined_cells      = model_settings->GetFill2ndRimOfUndefinedCells();
-  //bool fill_edge_cells                      = model_settings->GetFillEdgeCells();
-  //bool fill_lakes                           = model_settings->GetFillLakes();
-  //bool fill_the_rest_with_avg_values        = model_settings->GetFillTheRestWithAvgValues();
-
   if (cornerpt)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
   else
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
 
-  bool extrapolate = true;
-  eclipse_geometry.FindLayer(tvalues, mask, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, extrapolate, missing);
-  eclipse_geometry.FindLayer(bvalues, mask, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, extrapolate,  missing);
+  eclipse_geometry.FindLayer(tvalues, mask, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, missing);
+  eclipse_geometry.FindLayer(bvalues, mask, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, missing);
+
+  ExtrapolateLayer(tvalues, mask, etdx, etdy, missing);
+  ExtrapolateLayer(bvalues, mask, ebdx, ebdy, missing);
 
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
@@ -423,6 +417,40 @@ void SeismicParameters::FindExtrapolationRegion(NRLib::Grid2D<bool> & mask,
         mask(i,j) = false;
       else
         mask(i,j) = true;
+    }
+  }
+}
+
+//---------------------------------------------------------------------------------
+void SeismicParameters::ExtrapolateLayer(NRLib::Grid2D<double>       z_grid,
+                                         const NRLib::Grid2D<bool> & mask,
+                                         const double                dx,
+                                         const double                dy,
+                                         const double                missing) const
+//---------------------------------------------------------------------------------
+{
+  std::vector<std::pair<size_t, size_t> > missing_indices;
+  std::vector<std::pair<size_t, size_t> > data_indices;
+
+  NRLib::ExtrapolateGrid2D::ClassifyPoints(missing_indices,
+                                           data_indices,
+                                           z_grid,
+                                           mask,
+                                           missing);
+
+  NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(z_grid,
+                                                                  missing_indices,
+                                                                  data_indices,
+                                                                  dx,
+                                                                  dy);
+
+  double mean_of_defined_cells = z_grid.FindAvg(missing); // Do this before extrapolation???
+
+  for (size_t i = 0 ; i < z_grid.GetNI() ; i++) {
+    for (size_t j = 0 ; j < z_grid.GetNJ() ; j++) {
+      if (z_grid(i, j) == missing) {  //  If you want to use the mask grid here, a rotation is needed.
+        z_grid(i, j) = mean_of_defined_cells;
+      }
     }
   }
 }
