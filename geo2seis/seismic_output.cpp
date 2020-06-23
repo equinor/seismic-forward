@@ -142,7 +142,7 @@ bool SeismicOutput::CheckUTMPrecision(SeismicParameters   & seismic_parameters,
   return true;
 }
 
-//-----------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
                                 const std::vector<double> & twt_0,
                                 size_t                      n_samples,
@@ -152,7 +152,7 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
                                 size_t                      n_traces_per_ensamble,
                                 bool                        time,
                                 bool                        nmo)
-//-----------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 {
   double z_min = twt_0[0];
   double z_max = twt_0[n_samples-1];
@@ -232,19 +232,16 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
   ebcdic_header.SetLine(6, line);
   ebcdic_header.SetLine(7, line2);
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nInitializing Segy file \'%s\' using format SIP (currently hard coded)\n",filename_out.c_str());
-  NRLib::TraceHeaderFormat thf(NRLib::TraceHeaderFormat::SIP);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nInitializing Segy file \'%s\' using format %s\n",filename_out.c_str(),thf_.GetFormatName().c_str());
 
   segyout.Initialize(filename_out,
                      static_cast<float>(z0),
                      static_cast<size_t>(nz),
                      static_cast<float>(dz),
                      ebcdic_header,
-                     thf,
+                     thf_,
                      short(n_traces_per_ensamble));
   segyout.SetGeometry(geometry);
-  //NBNB-PAL: Denne finnes ikke i nye NRLIB. Tror Håvard fjernet den
-  //segyout.SetDelayRecTime(short(z0));
   return true;
 }
 

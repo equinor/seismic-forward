@@ -118,7 +118,6 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   legalCommands.push_back("traces-in-memory");      // Deprecated
   legalCommands.push_back("wavelet");
   legalCommands.push_back("white-noise");
-  legalCommands.push_back("zvalue-extrapolation");  // PAALADDED
 
   if (ParseNMOStretch(root, errTxt)){
     modelSettings_->SetNMOCorr(true);
@@ -128,9 +127,6 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   ParseElasticParam(root, errTxt);
   ParseWavelet(root, errTxt);
   ParseProjectSettings(root, errTxt);
-
-  if (ParseZValueExtrapolation(root, errTxt)) {
-  }
 
   if (ParseWhiteNoise(root, errTxt)) {
     modelSettings_->SetWhiteNoise();
@@ -1281,54 +1277,6 @@ bool XmlModelFile::ParseWhiteNoise(TiXmlNode   * node,
 
   return true;
 }
-
-
-bool XmlModelFile::ParseZValueExtrapolation(TiXmlNode   * node,
-                                            std::string & errTxt)
-{
-  TiXmlNode *root = node->FirstChildElement("zvalue-extrapolation");
-  if (root == 0) {
-    return (false);
-  }
-
-  std::vector<std::string> legalCommands;
-  legalCommands.push_back("fill-crossing-cells");
-  legalCommands.push_back("fill-when-neighbour-is-undefined");
-  legalCommands.push_back("fill-a-safety-rim");
-  legalCommands.push_back("fill-edge-cells");
-  legalCommands.push_back("fill-lakes");
-  legalCommands.push_back("fill-the-rest-with-average-values");
-
-  bool activate;
-  if (ParseBool(root, "fill-crossing-cells", activate, errTxt)) {
-    modelSettings_->SetFillCrossingCells(activate);
-  }
-
-  if (ParseBool(root, "fill-when-neighbour-is-undefined", activate, errTxt)) {
-    modelSettings_->SetFillWhenNeighbourIsUndef(activate);
-  }
-
-  if (ParseBool(root, "fill-a-safety-rim", activate, errTxt)) {
-    modelSettings_->SetFillASafetyRim(activate);
-  }
-
-  if (ParseBool(root, "fill-edge-cells", activate, errTxt)) {
-    modelSettings_->SetFillEdgeCells(activate);
-  }
-
-  if (ParseBool(root, "fill-lakes", activate, errTxt)) {
-    modelSettings_->SetFillLakes(activate);
-  }
-
-  if (ParseBool(root, "fill-the-rest-with-average-values", activate, errTxt)) {
-    modelSettings_->SetFillTheRestWithAvgValues(activate);
-  }
-
-  CheckForJunk(root, errTxt, legalCommands);
-
-  return true;
-}
-
 
 bool XmlModelFile::ParseBool(TiXmlNode         * node,
                              const std::string & keyword,

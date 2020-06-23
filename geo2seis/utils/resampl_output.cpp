@@ -32,11 +32,11 @@ ResamplOutput::ResamplOutput(SeismicParameters &seismic_parameters, bool time, s
 
 }
 
-void ResamplOutput::AddResampleCase(std::string           filename,
-                                    NRLib::StormContGrid &input_grid,
-                                    bool                  time,
-                                    std::vector<double>  &time_or_depth_vec_reg,
-                                    SeismicParameters    &seismic_parameters)
+void ResamplOutput::AddResampleCase(std::string            filename,
+                                    NRLib::StormContGrid & input_grid,
+                                    bool                   time,
+                                    std::vector<double>  & time_or_depth_vec_reg,
+                                    SeismicParameters    & seismic_parameters)
 {
   std::vector<double> dummy_vec(1);
   dummy_vec[0] = 0;
@@ -66,4 +66,3 @@ void ResamplOutput::AddTrace(SeismicParameters                    &seismic_param
     }
   }
 }
-

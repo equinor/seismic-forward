@@ -1,3 +1,4 @@
+
 1. To make an executable using CLion or anothe IDE
 --------------------------------------------------
 
@@ -23,7 +24,7 @@ Go to this directory and run run_cmake.sh
   $ ../Geo2Seis/run_cmake.sh
 
 
-2. Run the tests
+3. Run the tests
 ----------------
 
 To run all tests do

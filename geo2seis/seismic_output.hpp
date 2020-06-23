@@ -96,6 +96,7 @@ private:
   bool                     xline_x_axis_;
   int                      inline_step_;
   int                      xline_step_;
+
   NRLib::TraceHeaderFormat thf_;
 };
 

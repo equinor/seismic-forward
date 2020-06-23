@@ -27,12 +27,12 @@
 #include <cstdlib>
 
 ModelSettings::ModelSettings(void)
+  : constvp_(3),
+    constvs_(3),
+    constrho_(3),
+    parameter_names_(3),
+    output_segy_file_format_(NRLib::TraceHeaderFormat(NRLib::TraceHeaderFormat::SIP))
 {
-  constvp_.resize(3);
-  constvs_.resize(3);
-  constrho_.resize(3);
-  parameter_names_.resize(3);
-
   log_file_name_                       = "Logfile";
   log_level_                           = NRLib::LogKit::L_Low;
 
@@ -129,7 +129,6 @@ ModelSettings::ModelSettings(void)
   output_depth_segy_                   = false;
   output_timeshift_segy_               = false;
   output_prenmo_time_segy_             = false;
-  output_segy_file_format_             = NRLib::TraceHeaderFormat(NRLib::TraceHeaderFormat::SIP);
 }
 
 ModelSettings::~ModelSettings(void)
@@ -340,6 +339,7 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth                                   : %10s\n", GetOutputSeismicDepth()               ? "yes" : "no");
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic stack time/depth in SEGY format:\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Format name                             : %10s\n", GetOutputSegyFileFormat().GetFormatName().c_str());
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time                                    : %10s\n", GetOutputSeismicStackTimeSegy()       ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Time shift                              : %10s\n", GetOutputSeismicStackTimeShiftSegy()  ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Depth                                   : %10s\n", GetOutputSeismicStackDepthSegy()      ? "yes" : "no");

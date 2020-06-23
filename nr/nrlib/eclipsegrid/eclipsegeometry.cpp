@@ -527,24 +527,6 @@ bool EclipseGeometry::FindIndex(double x_in, double y_in, double z_in,
       return true;
     }
   }
-
- /*   for ( size_t k = 0; k < nk_; k++ )  {
-      bool above_top = false, above_bot = false;
-
-      // Points on the top surface belongs to the cell, while points on the bottom surface don't
-      if (z_in < FindPointCellSurface(i_out, j_out, k, 0, u, v).z )
-        above_top = true;
-      if (z_in < FindPointCellSurface(i_out, j_out, k, 1, u, v).z )
-        above_bot = true;
-
-      if (above_top != above_bot) {
-        // then point is inside cell
-        k_out       = k;
-        return true;
-      }
-    }   // end of k-loop
-  }     // end of if (is_inside_ij)-test
- */
   return false;
 }
 
@@ -830,8 +812,7 @@ Point EclipseGeometry::FindPointCellSurface(size_t i_in, size_t j_in, size_t k_i
   Point b2 = r10 + r11 - 2*p10;
   Point c2 = p00 + p10 - q00 - q10;
 
-  Point a1 = (p00 + p10 - q00 - q10) + (p10 + p11 - r10 - r11) - (p01 + p11 - q01 - q11)
-             - (p00 + p01 - r00 - r01) + (r10 + r11 - 2*p10);
+  Point a1 = (p00 + p10 - q00 - q10) + (p10 + p11 - r10 - r11) - (p01 + p11 - q01 - q11) - (p00 + p01 - r00 - r01) + (r10 + r11 - 2*p10);
   Point b1 = -1*(r00 + r01 - 2*p00);
   Point c1 = q00 + q10 - 2*p00;
 
@@ -842,6 +823,47 @@ Point EclipseGeometry::FindPointCellSurface(size_t i_in, size_t j_in, size_t k_i
   Point f = (a2 * v_in*v_in + b2*v_in + c2) * u_in*u_in
             + (a1 * v_in*v_in + b1*v_in + c1) * u_in
             + a0 * v_in*v_in + b0*v_in + c0;
+
+  /*
+  For debugging
+
+  PointSet ps1;
+  ps1.AddPoint(p00);
+  ps1.AddPoint(p10);
+  ps1.AddPoint(p01);
+  ps1.AddPoint(p11);
+  ps1.AddPoint(q00);
+  ps1.AddPoint(q10);
+  ps1.AddPoint(q01);
+  ps1.AddPoint(q11);
+  ps1.AddPoint(r00);
+  ps1.AddPoint(r10);
+  ps1.AddPoint(r01);
+  ps1.AddPoint(r11);
+  std::vector<std::string> labels1{"p00", "p10", "p01", "p11", "q00", "q10", "q01", "q11", "r00", "r10", "r01", "r11"};
+  ps1.AddStringParameter("Point", labels1);
+  ps1.WriteToFile("01_first_points.rxat", PointSet::RmsInternalPoints);
+
+  PointSet ps2;
+  ps2.AddPoint(a0);
+  ps2.AddPoint(a1);
+  ps2.AddPoint(a2);
+  ps2.AddPoint(b0);
+  ps2.AddPoint(b1);
+  ps2.AddPoint(b2);
+  ps2.AddPoint(c0);
+  ps2.AddPoint(c1);
+  ps2.AddPoint(c2);
+  std::vector<std::string> labels2{"a0", "a1", "a2", "b0", "b1", "b2", "c0", "c1", "c2"};
+  ps2.AddStringParameter("Point", labels2);
+  ps2.WriteToFile("02_second_points.rxat", PointSet::RmsInternalPoints);
+
+  PointSet ps3;
+  ps3.AddPoint(f);
+  std::vector<std::string> labels3{"f"};
+  ps3.AddStringParameter("Point", labels3);
+  ps3.WriteToFile("03_final_point.rxat", PointSet::RmsInternalPoints);
+  */
 
   return f;
 }
@@ -1213,12 +1235,7 @@ void EclipseGeometry::BilinearFillInZValuesInArea(NRLib::Grid2D<double>         
                                                               intersec1,
                                                               intersec2);
 
-      //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%d %d num_int=%d\n", it1, it2, nu_of_intersec);
-
       if (nu_of_intersec > 0) {
-
-        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "z(%d,%d) =  %7.2f\n",it1, it2, intersec1.z);
-
         double count = static_cast<double>(is_set(it1,it2));
 
         if (is_set(it1,it2)) {
@@ -1277,7 +1294,7 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
     //
     // NBNB! To avoid GEOS-29 bug we choose to always use the same triangulation. This is
     // crucial within a given column, and as we do the modelling layer by layer, this is
-    // the only wy to ensure consistency.
+    // the only way to ensure consistency.
     //
     //if (vec1_vec2_angle <= NRLib::Pi) {
     triangle1.SetCornerPoints(corners[3], corners[0], corners[1]);
@@ -1331,9 +1348,6 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
 
       NRLib::Line line_xy(point_xy, point_xy + z_dir, false, false);
 
-      //triangle1.WriteToFile("triangle1.irap");
-      //triangle2.WriteToFile("triangle2.irap");
-
       if (triangle1.FindIntersection(line_xy, intersec, true)) {
         if (is_set(it1,it2) > 0) {
           z_grid(it1, it2) *= w1;
@@ -1343,9 +1357,6 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
         else {
           z_grid(it1,it2) = intersec.z;
           is_set(it1,it2) = 1;
-
-          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "A: intersect(x,y,z) = (%7.2f,%7.2f,%7.2f)\n",intersec.x, intersec.y, intersec.z);
-          //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "A: z(%d,%d) = %7.2f\n",it1, it2, z_grid(it1, it2));
         }
       }
       else if (two_triangles) {
@@ -1358,11 +1369,6 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
           else {
             z_grid(it1,it2) = intersec.z;
             is_set(it1,it2) = 1;
-
-            //if (it1 == 1 && it2 == 1) {
-            //  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "B: intersect(x,y,z) = (%7.2f,%7.2f,%7.2f)\n",intersec.x, intersec.y, intersec.z);
-            //  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "B: z(%d,%d) = %7.2f\n",it1, it2, z_grid(it1, it2));
-            //}
           }
         }
       }
@@ -1370,20 +1376,22 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
   }
 }
 
-//---------------------------------------------------------------------------------------------------------
-void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
-                                               const size_t           top_k,
-                                               const size_t           n_threads,
-                                               const bool             cornerpoint_interpolation,
-                                               const bool             bilinear_else_triangles,
-                                               const bool             fill_crossing_cells,
-                                               const bool             fill_when_neighbour_is_undef,
-                                               const bool             fill_a_safety_rim,
-                                               const bool             fill_edge_cells,
-                                               const bool             fill_lakes,
-                                               const bool             fill_the_rest,
-                                               const double           missingValue) const
-//---------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------
+void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid                & zgrid,
+                                               const NRLib::RegularSurface<double> & topeclipse,
+                                               const NRLib::RegularSurface<double> & boteclipse,
+                                               const size_t                          top_k,
+                                               const size_t                          n_threads,
+                                               const bool                            cornerpoint_interpolation,
+                                               const bool                            bilinear_else_triangles,
+                                               const bool                            fill_crossing_cells,
+                                               const bool                            fill_when_neighbour_is_undef,
+                                               const bool                            fill_a_safety_rim,
+                                               const bool                            fill_edge_cells,
+                                               const bool                            fill_lakes,
+                                               const bool                            fill_the_rest,
+                                               const double                          missingValue) const
+//----------------------------------------------------------------------------------------------------------------
 {
   const double xmin  = zgrid.GetXMin();
   const double ymin  = zgrid.GetYMin();
@@ -1432,15 +1440,16 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
             bilinear_else_triangles,
             missingValue);
 
-
   //
   // Fill rest of the layers
   //
+  MonitorInitialize(nk - 1, monitor_size, next_monitor, count, carets, rest_carets);
+
 #ifdef WITH_OMP
   int chunk_size = 1;
 #pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
 #endif
-  for (int k = static_cast<int>(nk - 2); k >= 0; --k) {
+  for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
     FindLayer(layer[k],
               dummy_mask, // Dummy
               k + top_k,
@@ -1453,99 +1462,18 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
               cornerpoint_interpolation,
               bilinear_else_triangles,
               missingValue);
-  }
-
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtrapolating/interpolating values that are undefined or sketchy.\n");
-
-  /*
-    std::vector<std::pair<size_t, size_t> > miss_indices;
-    std::vector<std::pair<size_t, size_t> > data_indices;
-
-    SetupExtrapolation(miss_indices,
-    data_indices,
-    layer,
-    ni,
-    nj,
-    use_data_from_traces_with_undef,
-    fill_1st_rim_of_undefined_cells,
-    fill_2nd_rim_of_undefined_cells,
-    fill_edge_cells,
-    fill_lakes,
-    missingValue);
-  */
-
-  MonitorInitialize(nk, monitor_size, next_monitor, count, carets, rest_carets);
-
-#ifdef WITH_OMP
-#pragma omp parallel for schedule(dynamic, chunk_size) num_threads(n_threads)
-#endif
-    for (size_t k = 0; k < nk; k++) {
-    std::vector<std::pair<size_t, size_t> > miss_indices;
-    std::vector<std::pair<size_t, size_t> > data_indices;
-    //
-    // Find cells to be extrapolated
-    //
-    SetupExtrapolation2(miss_indices,
-                        data_indices,
-                        layer,           // Send inn all layers. Extrapolate if neighbouring layer cell is undef.
-                        ni,
-                        nj,
-                        nk,
-                        k,
-                        fill_crossing_cells,
-                        fill_when_neighbour_is_undef,
-                        fill_a_safety_rim,
-                        fill_edge_cells,
-                        fill_lakes,
-                        missingValue);
-    //
-    // Find data to use in extrapolation for this layer. And grid cells to fill
-    //
-
-    if (k == 104) {
-      NRLib::RegularSurfaceRotated<double> tmp(xmin, ymin, ni*dx, nj*dy, ni, nj, angle, missingValue);
-      for (size_t i = 0 ; i < ni ; i++)
-        for (size_t j = 0 ; j < nj ; j++)
-          tmp(i,j) = layer[k](i,j);
-      tmp.WriteToFile("layer104_before.irap", SURF_IRAP_CLASSIC_ASCII);
-    }
-
-    NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(layer[k],
-                                                                    miss_indices,
-                                                                    data_indices,
-                                                                    dx,
-                                                                    dy);
-
-    /*
-    if (k == 104) {
-      NRLib::RegularSurfaceRotated<double> tmp(xmin, ymin, ni*dx, nj*dy, ni, nj, angle, missingValue);
-      for (size_t i = 0 ; i < ni ; i++)
-        for (size_t j = 0 ; j < nj ; j++)
-          tmp(i,j) = layer[k](i,j);
-      tmp.WriteToFile("layer104_after.irap", SURF_IRAP_CLASSIC_ASCII);
-    }
-    */
-
-
-    //
-    // fill in cells that are still undefined
-    //
-    if (fill_the_rest) {
-      double mean_of_defined_cells = layer[k].FindAvg(missingValue); // Do this before extrapolation???
-
-      for (size_t i = 0; i < ni; i++) {
-        for (size_t j = 0; j < nj; j++) {
-          //if (!missing_cells(i, j) && !data_cells(i, j) && layer[k](i, j) == missingValue) {
-          if (layer[k](i, j) == missingValue) {
-            layer[k](i, j) = mean_of_defined_cells;
-          }
-        }
-      }
-    }
-    Monitor(nk, k,  monitor_size, next_monitor, count, carets);
+    Monitor(nk - 1, nk - 2 - k,  monitor_size, next_monitor, count, carets);
   }
   MonitorFinish(rest_carets);
 
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nInterpolating z-values that are undefined using vertical interpolation.\n");
+
+  VerticalInterpolation(layer,
+                        zgrid,
+                        topeclipse,
+                        boteclipse,
+                        ni, nj, nk,
+                        missingValue);
   //
   // Copy layer to grid
   //
@@ -1558,6 +1486,109 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
   }
 }
 
+//------------------------------------------------------------------------------------------------
+void EclipseGeometry::VerticalInterpolation(std::vector<NRLib::Grid2D<double> > & layer,
+                                            const NRLib::StormContGrid          & zgrid,
+                                            const NRLib::RegularSurface<double> & topeclipse,
+                                            const NRLib::RegularSurface<double> & boteclipse,
+                                            const size_t                          ni,
+                                            const size_t                          nj,
+                                            const size_t                          nk,
+                                            const double                          missing) const
+//------------------------------------------------------------------------------------------------
+{
+  std::vector<size_t> indices(nk);
+  std::vector<std::pair<size_t, size_t> > range;
+
+  size_t count = 0;
+
+  for (size_t i = 0 ; i < ni ; i++) {
+    for (size_t j = 0 ; j < nj ; j++) {
+      //
+      // If first/last grid cell is unset/missing set from surface
+      //
+      double x,y,z;
+      zgrid.FindCenterOfCell(i, j, 0, x, y, z); // Using k = 0
+
+      double ztop = topeclipse.GetZ(x, y);
+      double zbot = boteclipse.GetZ(x, y);
+
+      assert(ztop != missing);
+      assert(zbot != missing);
+
+      if (layer[0](i, j) == missing)
+        layer[0](i, j) = ztop;
+
+      if (layer[nk - 1](i, j) == missing)
+        layer[nk - 1](i, j) = zbot;
+
+      //
+      // Find all unset/missing values
+      //
+      indices.clear();
+      for (size_t k = 0 ; k < nk ; k++) {
+        if (layer[k](i, j) == missing) {
+          indices.push_back(k);
+        }
+      }
+
+      if (!indices.empty()) {
+        //
+        // Find range of unset/missing values
+        //
+        range.clear();
+
+        if (indices.size() == 1) { // There is only one unset grid cell
+          range.push_back(std::make_pair(indices[0], indices[0])); // Single layer with unset value
+        }
+        else {
+          size_t kstart = indices[0];
+          size_t kprev  = indices[0];
+
+          for (size_t k = 1; k < indices.size(); k++) {
+            if (indices[k] != kprev + 1) {                           // Next undefined values is not in series / last series has only one undef
+              range.push_back(std::make_pair(kstart, kprev));        // Layers with unset values
+              kstart = indices[k];                                   // Start of next undefined series
+              if (k == indices.size() - 1) {                         // The last undef is single
+                range.push_back(std::make_pair(kstart, kstart));     // Layers with unset values
+              }
+            }
+            else if (k == indices.size() - 1) {                      // Special treatment for the last undef series
+              range.push_back(std::make_pair(kstart, indices[k]));   // Layers with unset values
+            }
+            kprev = indices[k];
+          }
+        }
+        count += indices.size();
+
+        //
+        // Find values used for interpolation
+        //
+        for (size_t k = 0 ; k < range.size() ; k++) {
+          size_t k1 = range[k].first;
+          size_t k2 = range[k].second;
+          double z1 = layer[k1 - 1](i, j);            // Interpolation top value is grid cell value layer above
+          double z2 = layer[k2 + 1](i, j);            // Interpolation top value is grid cell value layer below
+          double dz = (z2 - z1)/static_cast<double>(k2 - k1 + 2);
+
+          //
+          // Do interpolation
+          //
+          for (size_t kk = k1 ; kk <= k2 ; kk++) {
+            layer[kk](i, j) = z1 + dz*(kk - k1 + 1);
+          }
+        }
+      }
+    }
+  }
+  if (count > 0) {
+    size_t ntot = ni*nj*nk;
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  %d of %d cells were interpolated (= %.2f %).\n", count, ntot, 100.0*count/ntot);
+  }
+  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  No interpolation needed.\n");
+  }
+}
 
 //----------------------------------------------------------------------
 void EclipseGeometry::MonitorInitialize(size_t        n,
@@ -1615,454 +1646,6 @@ void EclipseGeometry::MonitorFinish(const std::string & rest_carets) const
 //------------------------------------------------------------------------
 {
   std::cout << rest_carets << std::endl;;
-}
-
-//-------------------------------------------------------------------------------------------------
-void EclipseGeometry::SetupExtrapolation(std::vector<std::pair<size_t, size_t> >   & miss_indices,
-                                         std::vector<std::pair<size_t, size_t> >   & data_indices,
-                                         const std::vector<NRLib::Grid2D<double> > & layer,
-                                         const size_t                                ni,
-                                         const size_t                                nj,
-                                         const bool                                  use_data_from_traces_with_undef,
-                                         const bool                                  fill_1st_rim_of_undefined_cells,
-                                         const bool                                  fill_2nd_rim_of_undefined_cells,
-                                         const bool                                  fill_edge_cells,
-                                         const bool                                  fill_lakes,
-                                         const double                                missing) const
-//-------------------------------------------------------------------------------------------------
-{
-  miss_indices.reserve(ni*nj);
-  data_indices.reserve(ni*nj);
-
-  NRLib::Grid2D<bool> missing_cells(ni, nj, false);
-  NRLib::Grid2D<bool> data_cells   (ni, nj, false);
-
-  //
-  // Find cells that should be filled using extrapolation. Some already has a value, but a dangerous/bogus one.
-  //
-  if (fill_1st_rim_of_undefined_cells) {
-    for (size_t k = 1 ; k < layer.size() ; k++) {
-      for (size_t i = 0; i < ni ; i++) {
-        for (size_t j = 0; j < nj ; j++) {
-          if (layer[k](i,j) != missing || layer[k - 1](i,j) != missing) {   // At least one cell is defined.
-            if (layer[k](i,j) == missing || layer[k - 1](i,j) == missing) { // Only one cell is defined. Need to extrapolate
-              missing_cells(i, j) = true;
-            }
-            else if (layer[k](i,j) - layer[k - 1](i,j) < 0.0) {             // Negative difference. Extrapolation needed
-              missing_cells(i, j) = true;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  //
-  // Add another "safety" cell to be extrapolated. NBNB!!! This also turns data cells into cells to be extrapolated
-  //
-  if (fill_2nd_rim_of_undefined_cells) {
-    NRLib::Grid2D<bool> tmp(missing_cells);
-    for (size_t i = 0 ; i < ni ; i++) {
-      for (size_t j = 0 ; j < nj ; j++) {
-        if (tmp(i, j)) {
-          if (i < ni - 1) missing_cells(i + 1, j    ) = true;
-          if (j < nj - 1) missing_cells(i    , j + 1) = true;
-          if (i > 0     ) missing_cells(i - 1, j    ) = true;
-          if (j > 0     ) missing_cells(i    , j - 1) = true;
-        }
-      }
-    }
-  }
-
-  //
-  // Add edge-in-layer cells. This turns data cells into cells to be extrapolated
-  //
-  if (fill_edge_cells) {
-    for (size_t k = 0 ; k < layer.size() ; k++) {
-      for (size_t i = 0; i < ni ; i++) {
-        for (size_t j = 0; j < nj ; j++) {
-          if (layer[k].IsEdge(i, j, missing)) {
-            missing_cells(i, j) = true;
-          }
-        }
-      }
-    }
-  }
-
-  //
-  // Cells neighbouring an a cell to be filled is potentially a data cell. Add as long as it is not to be extrapolated
-  //
-  // Here we may use a Convex Hull algorithm to find more points to extrapolate ???
-  //
-  for (size_t i = 0 ; i < ni ; i++) {
-    for (size_t j = 0 ; j < nj ; j++) {
-      if (missing_cells(i, j)) {
-        if (i < ni - 1 && !missing_cells(i + 1, j    )) data_cells(i + 1, j    ) = true;
-        if (j < nj - 1 && !missing_cells(i    , j + 1)) data_cells(i    , j + 1) = true;
-        if (i > 0      && !missing_cells(i - 1, j    )) data_cells(i - 1, j    ) = true;
-        if (j > 0      && !missing_cells(i    , j - 1)) data_cells(i    , j - 1) = true;
-      }
-    }
-  }
-  //
-  // Turn off data cells, if one of the layers has a missing value in (i,j)
-  //
-  if (use_data_from_traces_with_undef) {
-    for (size_t i = 0 ; i < ni ; i++) {
-      for (size_t j = 0 ; j < nj ; j++) {
-        for (size_t k = 0 ; k < layer.size() ; k++) {
-          if (data_cells(i, j) && layer[k](i, j) == missing) {
-            data_cells(i, j) = false;
-          }
-        }
-      }
-    }
-  }
-
-  //
-  // Add lakes/ponds to the extrapolation
-  //
-  if (fill_lakes) {
-    for (int i = 0 ; i < ni ; i++) {
-      for (int j = 0 ; j < nj ; j++) {
-
-        if (!missing_cells(i,j) && !data_cells(i,j)) {
-          bool edge1 = false;
-          bool edge2 = false;
-          bool edge3 = false;
-          bool edge4 = false;
-
-          for (int k = 1 ; k <= i ; k++) {
-            if (missing_cells(i - k, j)) {
-              edge1 = true;
-              break;
-            }
-            else if (data_cells(i - k, j)) {
-              break;
-            }
-          }
-          for (int k = 1 ; k < ni - i ; k++) {
-            if (missing_cells(i + k, j)) {
-              edge2 = true;
-              break;
-            }
-            else if (data_cells(i + k, j)) {
-              break;
-            }
-          }
-          for (int k = 1 ; k <= j ; k++) {
-            if (missing_cells(i, j - k)) {
-              edge3 = true;
-              break;
-            }
-            else if (data_cells(i, j - k)) {
-              break;
-            }
-          }
-          for (int k = 1 ; k < nj - j ; k++) {
-            if (missing_cells(i, j + k)) {
-              edge4 = true;
-              break;
-            }
-            else if (data_cells(i, j + k)) {
-              break;
-            }
-          }
-          if (edge1 && edge2 && edge3 && edge4) {
-            missing_cells(i, j) = true;
-          }
-        }
-      }
-    }
-  }
-
-  //
-  // Transfer grid cell information to pair indices
-  //
-  for (int i = 0; i < ni ; i++) {
-    for (int j = 0; j < nj ; j++) {
-      if (missing_cells(i, j)) {
-        miss_indices.push_back(std::pair<int, int>(i, j));
-      }
-      if (data_cells(i, j)) {
-        data_indices.push_back(std::pair<int, int>(i, j));
-      }
-    }
-  }
-
-  /*
-  if (miss_indices.size() > 0) {
-    std::fstream fout;
-    NRLib::OpenWrite(fout, "surf_miss.rxat");
-    fout << "Discrete Missing"
-         << std::endl;
-    for (size_t i = 0 ; i < miss_indices.size() ; i++) {
-      fout << std::fixed
-        << std::setprecision(2)
-        << std::setw(12) << miss_indices[i].first  << " "
-        << std::setw(12) << miss_indices[i].second << " "
-        << std::setw(12) << 0.0                    << " "
-        << std::setw(8)  << 1                      << " "
-         << std::endl;
-    }
-    fout.close();
-  }
-  if (data_indices.size() > 0) {
-    std::fstream fout;
-    NRLib::OpenWrite(fout, "surf_data.rxat");
-    fout << "Discrete Data"
-         << std::endl;
-    for (size_t i = 0 ; i < data_indices.size() ; i++) {
-      fout << std::fixed
-        << std::setprecision(2)
-        << std::setw(12) << data_indices[i].first  << " "
-        << std::setw(12) << data_indices[i].second << " "
-        << std::setw(12) << 0.0                    << " "
-        << std::setw(8)  << 1                      << " "
-         << std::endl;
-    }
-    fout.close();
-  }
-
-  std::cout << use_data_from_traces_with_undef      << std::endl;
-  std::cout << fill_1st_rim_of_undefined_cells      << std::endl;
-  std::cout << fill_2nd_rim_of_undefined_cells      << std::endl;
-  std::cout << fill_edge_cells                      << std::endl;
-  std::cout << fill_lakes                           << std::endl;
-  */
-
-  std::cout << "\nData cells      = " << data_indices.size()
-            << "\nUndefined cells = " << miss_indices.size() << std::endl;
-
-
-}
-
-//-------------------------------------------------------------------------------------------------
-void EclipseGeometry::SetupExtrapolation2(std::vector<std::pair<size_t, size_t> >   & miss_indices,
-                                          std::vector<std::pair<size_t, size_t> >   & data_indices,
-                                          const std::vector<NRLib::Grid2D<double> > & layer,
-                                          const size_t                                ni,
-                                          const size_t                                nj,
-                                          const size_t                                nk,
-                                          const size_t                                k,
-                                          const bool                                  fill_crossing_cells,
-                                          const bool                                  fill_when_neighbour_is_undef,
-                                          const bool                                  fill_a_safety_rim,
-                                          const bool                                  fill_edge_cells,
-                                          const bool                                  fill_lakes,
-                                          const double                                missing) const
-//-------------------------------------------------------------------------------------------------
-{
-  //
-  // Find cells that should be filled using extrapolation. Some already has a value, but a dangerous/bogus one.
-  //
-  miss_indices.reserve(ni*nj);
-  data_indices.reserve(ni*nj);
-
-  NRLib::Grid2D<bool> missing_cells(ni, nj, false);
-  NRLib::Grid2D<bool> data_cells   (ni, nj, false);
-
-  const NRLib::Grid2D<double> & layer1 = layer[k - 1];
-  const NRLib::Grid2D<double> & layer2 = layer[k    ];
-  const NRLib::Grid2D<double> & layer3 = layer[k + 1];
-
-  //
-  // Extrapolate layer cells if they cross cell above or below
-  //
-  if (fill_crossing_cells) {
-    for (size_t i = 0 ; i < ni ; i++) {
-      for (size_t j = 0 ; j < nj ; j++) {
-        if (k > 0      && layer2(i,j) != missing && layer1(i,j) != missing && layer2(i,j) - layer1(i,j) < 0.0) { // Cross layer above
-          missing_cells(i, j) = true;
-        }
-        if (k < nk - 1 && layer2(i,j) != missing && layer3(i,j) != missing && layer3(i,j) - layer2(i,j) < 0.0) { // Cross layer below
-          missing_cells(i, j) = true;
-        }
-      }
-    }
-  }
-
-  //
-  // Extrapolate layer cells if neighbour directly above or below is undefined.
-  //
-  if (fill_when_neighbour_is_undef) {
-    for (size_t i = 0 ; i < ni ; i++) {
-      for (size_t j = 0 ; j < nj ; j++) {
-        if (k > 0      && (layer2(i,j) != missing ^ layer1(i,j) != missing)) {   // One cell is defined.
-          missing_cells(i, j) = true;
-        }
-        if (k < nk - 1 && (layer2(i,j) != missing ^ layer3(i,j) != missing)) {   // One cell is defined.
-          missing_cells(i, j) = true;
-        }
-      }
-    }
-  }
-
-  //
-  // Add a buffer cells to be extrapolated around already chosen cells. NBNB!!! This also turns data cells into cells to be extrapolated
-  //
-  if (fill_a_safety_rim) {
-    NRLib::Grid2D<bool> tmp(missing_cells);
-    for (size_t i = 0 ; i < ni ; i++) {
-      for (size_t j = 0 ; j < nj ; j++) {
-        if (tmp(i, j)) {
-          if (i < ni - 1) missing_cells(i + 1, j    ) = true;
-          if (j < nj - 1) missing_cells(i    , j + 1) = true;
-          if (i > 0     ) missing_cells(i - 1, j    ) = true;
-          if (j > 0     ) missing_cells(i    , j - 1) = true;
-        }
-      }
-    }
-  }
-
-  //
-  // Add edge-in-layer cells
-  //
-  if (fill_edge_cells) {
-    for (size_t k = 0 ; k < layer.size() ; k++) {
-      for (size_t i = 0; i < ni ; i++) {
-        for (size_t j = 0; j < nj ; j++) {
-          if (layer[k].IsEdge(i, j, missing)) {
-            missing_cells(i, j) = true;
-          }
-        }
-      }
-    }
-  }
-
-  //
-  // Cells neighbouring an a cell to be filled is potentially a data cell. Add as long as it is not to be extrapolated
-  //
-  // Here we may use a Convex Hull algorithm to find more points to extrapolate ???
-  //
-  for (size_t i = 0 ; i < ni ; i++) {
-    for (size_t j = 0 ; j < nj ; j++) {
-      if (missing_cells(i, j)) {
-        if (i < ni - 1 && !missing_cells(i + 1, j    )) data_cells(i + 1, j    ) = true;
-        if (j < nj - 1 && !missing_cells(i    , j + 1)) data_cells(i    , j + 1) = true;
-        if (i > 0      && !missing_cells(i - 1, j    )) data_cells(i - 1, j    ) = true;
-        if (j > 0      && !missing_cells(i    , j - 1)) data_cells(i    , j - 1) = true;
-      }
-    }
-  }
-
-  //
-  // Add lakes/ponds to the extrapolation
-  //
-  if (fill_lakes) {
-    for (int i = 0 ; i < ni ; i++) {
-      for (int j = 0 ; j < nj ; j++) {
-
-        if (!missing_cells(i,j) && !data_cells(i,j)) {
-          bool edge1 = false;
-          bool edge2 = false;
-          bool edge3 = false;
-          bool edge4 = false;
-
-          for (int k = 1 ; k <= i ; k++) {
-            if (missing_cells(i - k, j)) {
-              edge1 = true;
-              break;
-            }
-            else if (data_cells(i - k, j)) {
-              break;
-            }
-          }
-          for (int k = 1 ; k < ni - i ; k++) {
-            if (missing_cells(i + k, j)) {
-              edge2 = true;
-              break;
-            }
-            else if (data_cells(i + k, j)) {
-              break;
-            }
-          }
-          for (int k = 1 ; k <= j ; k++) {
-            if (missing_cells(i, j - k)) {
-              edge3 = true;
-              break;
-            }
-            else if (data_cells(i, j - k)) {
-              break;
-            }
-          }
-          for (int k = 1 ; k < nj - j ; k++) {
-            if (missing_cells(i, j + k)) {
-              edge4 = true;
-              break;
-            }
-            else if (data_cells(i, j + k)) {
-              break;
-            }
-          }
-          if (edge1 && edge2 && edge3 && edge4) {
-            missing_cells(i, j) = true;
-          }
-        }
-      }
-    }
-  }
-
-  //
-  // Transfer grid cell information to pair indices
-  //
-  for (int i = 0; i < ni ; i++) {
-    for (int j = 0; j < nj ; j++) {
-      if (missing_cells(i, j)) {
-        miss_indices.push_back(std::pair<int, int>(i, j));
-      }
-      if (data_cells(i, j)) {
-        data_indices.push_back(std::pair<int, int>(i, j));
-      }
-    }
-  }
-
-  /*
-  if (miss_indices.size() > 0) {
-    std::fstream fout;
-    NRLib::OpenWrite(fout, "surf_miss.rxat");
-    fout << "Discrete Missing"
-         << std::endl;
-    for (size_t i = 0 ; i < miss_indices.size() ; i++) {
-      fout << std::fixed
-        << std::setprecision(2)
-        << std::setw(12) << miss_indices[i].first  << " "
-        << std::setw(12) << miss_indices[i].second << " "
-        << std::setw(12) << 0.0                    << " "
-        << std::setw(8)  << 1                      << " "
-         << std::endl;
-    }
-    fout.close();
-  }
-  if (data_indices.size() > 0) {
-    std::fstream fout;
-    NRLib::OpenWrite(fout, "surf_data.rxat");
-    fout << "Discrete Data"
-         << std::endl;
-    for (size_t i = 0 ; i < data_indices.size() ; i++) {
-      fout << std::fixed
-        << std::setprecision(2)
-        << std::setw(12) << data_indices[i].first  << " "
-        << std::setw(12) << data_indices[i].second << " "
-        << std::setw(12) << 0.0                    << " "
-        << std::setw(8)  << 1                      << " "
-         << std::endl;
-    }
-    fout.close();
-  }
-
-  std::cout << use_data_from_traces_with_undef << std::endl;
-  std::cout << fill_1st_rim_of_undefined_cells      << std::endl;
-  std::cout << fill_2nd_rim_of_undefined_cells      << std::endl;
-  std::cout << fill_edge_cells                      << std::endl;
-  std::cout << fill_lakes                           << std::endl;
-
-  std::cout << "\nSetupExtrapolation2:"
-  << "\nData cells      = " << data_indices.size()
-  << "\nUndefined cells = " << miss_indices.size() << std::endl;
-  */
-
-
 }
 
 //
@@ -2273,22 +1856,29 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double>   
   NRLib::Point              C0, C1, C2, C3;
   std::vector<NRLib::Point> Crot(4);
 
-  for (size_t j = 0 ; j < nj_ - 1 ; j++) { // Loops over each i,j trace in Eclipse grid
-    for (size_t i = 0 ; i < ni_ - 1 ; i++) {
-      if (IsPillarActive(i  , j  ) &&
-          IsPillarActive(i+1, j  ) &&
-          IsPillarActive(i  , j+1) &&
-          IsPillarActive(i+1, j+1) &&
-          IsPillarActive(i+2,   j) &&
-          IsPillarActive(i+2, j+1) &&
-          IsPillarActive(i  , j+2) &&
-          IsPillarActive(i+1, j+2) &&
-          IsPillarActive(i+2, j+2)) {
+  for (size_t j = 0 ; j < nj_ - 2 ; j++) { // Loops over each i,j trace in Eclipse grid
+    for (size_t i = 0 ; i < ni_ - 2 ; i++) {
+      if (IsColumnActive(i  , j  ) &&   //  o-----o-----o  (i+2, j+2)
+          IsColumnActive(i+1, j  ) &&   //  | C2  | C3  |
+          IsColumnActive(i  , j+1) &&   //  o-----o-----o
+          IsColumnActive(i+1, j+1) &&   //  | C0  | C1  |
+          IsColumnActive(i+2,   j) &&   //  o-----o-----o  (i+2, j)
+          IsColumnActive(i+2, j+1) &&
+          IsColumnActive(i  , j+2) &&
+          IsColumnActive(i+1, j+2) &&
+          IsColumnActive(i+2, j+2)) {
+
+        //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "i,j =  %d, %d\n",i,j);
 
         C0 = FindPointCellSurface(i  , j  , k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i  , j  )
         C1 = FindPointCellSurface(i+1, j  , k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i+1, j  )
         C2 = FindPointCellSurface(i+1, j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i+1, j+1)
         C3 = FindPointCellSurface(i  , j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i  , j+1)
+
+        //NRLib::Triangle triangle1(C3, C0, C1);
+        //NRLib::Triangle triangle2(C1, C2, C3);
+        //triangle1.WriteToFile("triangle1.irap");
+        //triangle2.WriteToFile("triangle2.irap");
 
         TranslateAndRotate(Crot[0], C0, x0, y0, cosA, sinA);
         TranslateAndRotate(Crot[1], C1, x0, y0, cosA, sinA);

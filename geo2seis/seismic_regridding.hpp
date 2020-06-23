@@ -28,7 +28,8 @@ private:
 
   static void RemoveNegativeDz(NRLib::StormContGrid & zgrid,
                                const size_t           n_threads,
-                               const bool             rem_neg_delta);
+                               const bool             rem_neg_delta,
+                               const double           missing);
 
   static void FindParameters(SeismicParameters & seismic_parameters,
                              ModelSettings     * model_settings,

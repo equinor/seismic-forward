@@ -145,10 +145,12 @@ double Triangle::FindNearestPoint(const Line& line, Point& nearest_pt) const
 
 void Triangle::WriteToFile(const std::string & filename) const
 {
-
-  NRLib::Point p1 = TranslateAndRotate(p1_);
-  NRLib::Point p2 = TranslateAndRotate(p2_);
-  NRLib::Point p3 = TranslateAndRotate(p3_);
+  //NRLib::Point p1 = TranslateAndRotate(p1_);  // Hack to test GEOS-29 bug.
+  //NRLib::Point p2 = TranslateAndRotate(p2_);
+  //NRLib::Point p3 = TranslateAndRotate(p3_);
+  NRLib::Point p1 = p1_;
+  NRLib::Point p2 = p2_;
+  NRLib::Point p3 = p3_;
 
   std::fstream fout;
   NRLib::OpenWrite(fout, filename);
