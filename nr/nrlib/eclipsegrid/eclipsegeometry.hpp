@@ -117,51 +117,23 @@ public:
                            double& ly,
                            double& angle) const;
 
-  void FindRegularGridOfZValues(NRLib::StormContGrid & zgrid,
-                                const size_t           top_k,
-                                const size_t           n_threads,
-                                const bool             cornerpoint_interpolation,
-                                const bool             bilinear_else_triangles,
-                                const bool             fill_crossing_cells,
-                                const bool             fill_when_neighbour_is_undef,
-                                const bool             fill_a_safety_rim,
-                                const bool             fill_edge_cells,
-                                const bool             fill_lakes,
-                                const bool             fill_the_rest,
-                                const double           missingValue) const;
+  void FindRegularGridOfZValues(NRLib::StormContGrid                & zgrid,
+                                const NRLib::RegularSurface<double> & topeclipse,
+                                const NRLib::RegularSurface<double> & boteclipse,
+                                const size_t                          top_k,
+                                const size_t                          n_threads,
+                                const bool                            cornerpoint_interpolation,
+                                const bool                            bilinear_else_triangles,
+                                const double                          missingValue) const;
 
-  void SetupExtrapolation(std::vector<std::pair<size_t, size_t> >   & miss_indices,
-                          std::vector<std::pair<size_t, size_t> >   & data_indices,
-                          const std::vector<NRLib::Grid2D<double> > & layer,
-                          const size_t                                ni,
-                          const size_t                                nj,
-                          const bool                                  use_data_from_traces_with_undef,
-                          const bool                                  fill_1st_rim_of_undefined_cells,
-                          const bool                                  fill_2nd_rim_of_undefined_cells,
-                          const bool                                  fill_edge_cells,
-                          const bool                                  fill_lakes,
-                          const double                                missing) const;
-
-  void SetupExtrapolation2(std::vector<std::pair<size_t, size_t> >   & miss_indices,
-                           std::vector<std::pair<size_t, size_t> >   & data_indices,
-                           const std::vector<NRLib::Grid2D<double> > & layer,
-                           const size_t                                ni,
-                           const size_t                                nj,
-                           const size_t                                nk,
-                           const size_t                                k,
-                           const bool                                  fill_crossing_cells,
-                           const bool                                  fill_when_neighbour_is_undef,
-                           const bool                                  fill_a_safety_rim,
-                           const bool                                  fill_edge_cells,
-                           const bool                                  fill_lakes,
-                           const double                                missing) const;
-
-  void ExtrapolateLayer(NRLib::Grid2D<double>                         & layer,
-                        const std::vector<std::pair<size_t, size_t> > & data_indices,
-                        const std::vector<std::pair<size_t, size_t> > & miss_indices,
-                        const double                                    xinc,
-                        const double                                    yinc) const;
-
+  void VerticalInterpolation(std::vector<NRLib::Grid2D<double> > & layer,
+                             const NRLib::StormContGrid          & zgrid,
+                             const NRLib::RegularSurface<double> & topeclipse,
+                             const NRLib::RegularSurface<double> & boteclipse,
+                             const size_t                          ni,
+                             const size_t                          nj,
+                             const size_t                          nk,
+                             const double                          missing) const;
 
 ///Stores z-values in layer k for a rectangle with a corner in x0,y0 and step lengths dx and dy, angle indicates rotated angle in the xy-plane
   ///\\param lower_or_upper 0 for upper, 1 for lower

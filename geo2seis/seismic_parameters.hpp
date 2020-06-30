@@ -174,9 +174,11 @@ class SeismicParameters
     static void FindExtrapolationRegion(NRLib::Grid2D<bool> & extrapolate,
                                         SeismicGeometry     & seismic_geometry,
                                         double                xmin,
-                                        double                ymin);
+                                        double                ymin,
+                                        double                etdx,
+                                        double                etdy);
 
-    void ExtrapolateLayer(NRLib::Grid2D<double>       z_grid,
+    void ExtrapolateLayer(NRLib::Grid2D<double>     & z_grid,
                           const NRLib::Grid2D<bool> & mask,
                           const double                dx,
                           const double                dy,

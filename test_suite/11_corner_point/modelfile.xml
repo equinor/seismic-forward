@@ -46,6 +46,7 @@
 </wavelet>
 
 <output-grid>
+  <segy-file-format> seisworks </segy-file-format>
   <top-time>
     <top-time-constant> 2200 </top-time-constant>
   </top-time>

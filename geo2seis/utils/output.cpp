@@ -33,7 +33,6 @@ Output::Output(SeismicParameters   & seismic_parameters,
 
   SeismicOutput * seismic_output = seismic_parameters.GetSeismicOutput();
 
-
   if (seismic_parameters.GetSegyOutput()) {
     seismic_output->SetSegyGeometry(seismic_parameters, volume_t, nx, ny);
     segy_ok_ = seismic_output->CheckUTMPrecision(seismic_parameters, volume_t, nx, ny);

@@ -168,34 +168,36 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     size_t              n_threads)
 //-------------------------------------------------------------------------
 {
-  NRLib::StormContGrid         & zgrid                         = seismic_parameters.GetZGrid();
-  const NRLib::EclipseGeometry & geometry                      = seismic_parameters.GetEclipseGrid().GetGeometry();
-  const size_t                   top_k                         = seismic_parameters.GetTopK();
+  NRLib::StormContGrid                & zgrid            = seismic_parameters.GetZGrid();
+  const NRLib::EclipseGeometry        & geometry         = seismic_parameters.GetEclipseGrid().GetGeometry();
+  const size_t                          top_k            = seismic_parameters.GetTopK();
+  const NRLib::RegularSurface<double> & topeclipse       = seismic_parameters.GetTopEclipse();
+  const NRLib::RegularSurface<double> & boteclipse       = seismic_parameters.GetBottomEclipse();
 
-  const bool                     rem_neg_delta                 = model_settings->GetRemoveNegativeDeltaZ();
-  const bool                     use_corner_point              = model_settings->GetUseCornerpointInterpol();
+  const bool                            rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
+  const bool                            use_corner_point = model_settings->GetUseCornerpointInterpol();
 
-  const bool                     fill_crossing_cells           = model_settings->GetFillCrossingCells();
-  const bool                     fill_when_neighbour_is_undef  = model_settings->GetFillWhenNeighbourIsUndefined();
-  const bool                     fill_a_safety_rim             = model_settings->GetFillASafetyRim();
-  const bool                     fill_edge_cells               = model_settings->GetFillEdgeCells();
-  const bool                     fill_lakes                    = model_settings->GetFillLakes();
-  const bool                     fill_the_rest_with_avg_values = model_settings->GetFillTheRestWithAvgValues();
+  const bool                            bilinear         = false;
+  const double                          missing          = -999.0;
 
-  const bool                     bilinear                      = false;
-  const double                   missing                       = -999.0;
+
+
+  const double                          z_top_shift      = model_settings->GetZWaveletTop();
+  const double                          z_bot_shift      = model_settings->GetZWaveletBot();
+
+  NRLib::RegularSurface<double>         orig_top(topeclipse);
+  NRLib::RegularSurface<double>         orig_bot(boteclipse);
+
+  //orig_top.Add(     z_top_shift);
+  //orig_bot.Add(-1 * z_bot_shift);
 
   geometry.FindRegularGridOfZValues(zgrid,
+                                    orig_top,
+                                    orig_bot,
                                     top_k,
                                     n_threads,
                                     use_corner_point,
                                     bilinear,
-                                    fill_crossing_cells,
-                                    fill_when_neighbour_is_undef,
-                                    fill_a_safety_rim,
-                                    fill_edge_cells,
-                                    fill_lakes,
-                                    fill_the_rest_with_avg_values,
                                     missing);
 
   //
@@ -203,13 +205,15 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   //
   RemoveNegativeDz(zgrid,
                    n_threads,
-                   rem_neg_delta);
+                   rem_neg_delta,
+                   missing);
 }
 
 //----------------------------------------------------------------------------
 void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
                                          const size_t           n_threads,
-                                         const bool             rem_neg_delta)
+                                         const bool             rem_neg_delta,
+                                         const double           missing)
 //----------------------------------------------------------------------------
 {
   const size_t ni = zgrid.GetNI();
@@ -235,7 +239,8 @@ void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
         size_t kk = static_cast<size_t>(k);
         float  z1 = zgrid(i, j, kk    );
         float  z2 = zgrid(i, j, kk + 1);
-        if (z1 > z2) {
+
+        if (z1 != missing && z2 != missing && z1 > z2) {
           if (rem_neg_delta) {
             zgrid(i, j, kk) = z2;
           }
@@ -1357,12 +1362,12 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
       }
     }
   }
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in trace equal to default reservoir value    : %7d", count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in bottom layer equal to default reservoir value       : %7d", count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in trace equal to default reservoir value    : %10d", count3);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in bottom layer equal to default reservoir value       : %10d", count1);
   if (default_underburden)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to default underburden                  : %7d\n", count2);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to default underburden                  : %10d\n", count2);
   else
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to layer below                          : %7d\n", count2);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to layer below                          : %10d\n", count2);
 }
 
 //---------------------------------------------------------------------------------

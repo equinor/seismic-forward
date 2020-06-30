@@ -37,6 +37,7 @@
 </wavelet>
 
 <output-grid>
+  <segy-file-format> seisworks </segy-file-format>
   <top-time>
     <top-time-surface> ../../01_nmo_pp/input/Input_top_surface_PP.irap </top-time-surface>
   </top-time>

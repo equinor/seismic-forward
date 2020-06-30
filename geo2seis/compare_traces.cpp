@@ -136,6 +136,8 @@ bool CompareGridDefinitions(NRLib::SegyGeometry * output,
                             NRLib::SegyGeometry * answer)
 //-------------------------------------------------------
 {
+  std::cout << std::fixed << std::setprecision(2);
+
   std::cout << "ANSWER-CUBE\n"
             << "MinIL()  : " << answer->GetMinIL()  << "\n"
             << "MaxIL()  : " << answer->GetMaxIL()  << "\n"

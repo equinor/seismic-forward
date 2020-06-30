@@ -22,6 +22,7 @@
 #include "point.hpp"
 #include <cmath>
 #include <algorithm>
+#include <iomanip>
 
 using namespace NRLib;
 
@@ -72,7 +73,10 @@ double Point::GetAngle(const Point& p_in) const
 
 std::ostream & NRLib::operator<<( std::ostream& out, const Point& p )
 {
-  out << "( " << p.x << ", " << p.y << ", " << p.z << " )";
+  out  << std::fixed << std::setprecision(2) << std::right <<  "( "
+       << std::setw(10) << p.x << ", "
+       << std::setw(10) << p.y << ", "
+       << std::setw(10) << p.z << " )";
   return out;
 }
 

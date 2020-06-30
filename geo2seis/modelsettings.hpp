@@ -291,7 +291,8 @@ public:
   void SetOutputSeismicStackTimeSegy(bool value)       { seismic_stack_time_segy_        = value ;}
   void SetOutputSeismicStackTimeShiftSegy(bool value)  { seismic_stack_time_shift_segy_  = value ;}
   void SetOutputSeismicStackDepthSegy(bool value)      { seismic_stack_depth_segy_       = value ;}
-  void SetOutputSegyFileFormat(NRLib::TraceHeaderFormat thf) {output_segy_file_format_ = thf ;}
+
+  void SetOutputSegyFileFormat(NRLib::TraceHeaderFormat thf) { output_segy_file_format_  = thf   ;}
 
   void SetOutputElasticParametersTimeSegy(bool value)  { elastic_parameters_time_segy_   = value ;}
   void SetOutputElasticParametersDepthSegy(bool value) { elastic_parameters_depth_segy_  = value ;}
