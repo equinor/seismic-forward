@@ -124,12 +124,6 @@ public:
                                 const size_t                          n_threads,
                                 const bool                            cornerpoint_interpolation,
                                 const bool                            bilinear_else_triangles,
-                                const bool                            fill_crossing_cells,
-                                const bool                            fill_when_neighbour_is_undef,
-                                const bool                            fill_a_safety_rim,
-                                const bool                            fill_edge_cells,
-                                const bool                            fill_lakes,
-                                const bool                            fill_the_rest,
                                 const double                          missingValue) const;
 
   void VerticalInterpolation(std::vector<NRLib::Grid2D<double> > & layer,

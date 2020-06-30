@@ -1384,12 +1384,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
                                                const size_t                          n_threads,
                                                const bool                            cornerpoint_interpolation,
                                                const bool                            bilinear_else_triangles,
-                                               const bool                            fill_crossing_cells,
-                                               const bool                            fill_when_neighbour_is_undef,
-                                               const bool                            fill_a_safety_rim,
-                                               const bool                            fill_edge_cells,
-                                               const bool                            fill_lakes,
-                                               const bool                            fill_the_rest,
                                                const double                          missingValue) const
 //----------------------------------------------------------------------------------------------------------------
 {
@@ -1582,8 +1576,8 @@ void EclipseGeometry::VerticalInterpolation(std::vector<NRLib::Grid2D<double> > 
     }
   }
   if (count > 0) {
-    size_t ntot = ni*nj*nk;
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  %d of %d cells were interpolated (= %.2f %).\n", count, ntot, 100.0*count/ntot);
+    double ntot = static_cast<double>(ni*nj*nk);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  %5.2f%% of the cells were interpolated.\n", 100.0*count/ntot);
   }
   else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  No interpolation needed.\n");
