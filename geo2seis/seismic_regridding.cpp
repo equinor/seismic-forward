@@ -168,28 +168,37 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     size_t              n_threads)
 //-------------------------------------------------------------------------
 {
-  NRLib::StormContGrid                & zgrid            = seismic_parameters.GetZGrid();
-  const NRLib::EclipseGeometry        & geometry         = seismic_parameters.GetEclipseGrid().GetGeometry();
-  const size_t                          top_k            = seismic_parameters.GetTopK();
-  const NRLib::RegularSurface<double> & topeclipse       = seismic_parameters.GetTopEclipse();
-  const NRLib::RegularSurface<double> & boteclipse       = seismic_parameters.GetBottomEclipse();
+  NRLib::StormContGrid                & zgrid                  = seismic_parameters.GetZGrid();
+  const NRLib::EclipseGeometry        & geometry               = seismic_parameters.GetEclipseGrid().GetGeometry();
+  const size_t                          top_k                  = seismic_parameters.GetTopK();
+  const NRLib::RegularSurface<double> & topeclipse             = seismic_parameters.GetTopEclipse();
+  const NRLib::RegularSurface<double> & boteclipse             = seismic_parameters.GetBottomEclipse();
 
-  const bool                            rem_neg_delta    = model_settings->GetRemoveNegativeDeltaZ();
-  const bool                            use_corner_point = model_settings->GetUseCornerpointInterpol();
+  const bool                            rem_neg_delta          = model_settings->GetRemoveNegativeDeltaZ();
+  const bool                            use_corner_point       = model_settings->GetUseCornerpointInterpol();
+  const bool                            vertical_interpolation = model_settings->GetUseVerticalInterpolation();
 
-  const bool                            bilinear         = false;
-  const double                          missing          = -999.0;
+  const bool                            bilinear               = false;
+  const double                          missing                = -999.0;
 
-
-
-  const double                          z_top_shift      = model_settings->GetZWaveletTop();
-  const double                          z_bot_shift      = model_settings->GetZWaveletBot();
 
   NRLib::RegularSurface<double>         orig_top(topeclipse);
   NRLib::RegularSurface<double>         orig_bot(boteclipse);
 
+  //const double                          z_top_shift      = model_settings->GetZWaveletTop();
+  //const double                          z_bot_shift      = model_settings->GetZWaveletBot();
+
   //orig_top.Add(     z_top_shift);
   //orig_bot.Add(-1 * z_bot_shift);
+
+  //
+  // XXXxxxx: NBNB-PAL Dette her er kanskje litt juks????
+  //
+  for (size_t i = 0 ; i < orig_top.GetNI() ; ++i)
+    for (size_t j = 0 ; j < orig_top.GetNJ() ; ++j)
+      if (orig_bot(i,j) < orig_top(i,j))
+        orig_bot(i,j) = orig_top(i,j);
+
 
   geometry.FindRegularGridOfZValues(zgrid,
                                     orig_top,
@@ -198,6 +207,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     n_threads,
                                     use_corner_point,
                                     bilinear,
+                                    vertical_interpolation,
                                     missing);
 
   //

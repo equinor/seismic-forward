@@ -238,6 +238,7 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
 
   std::vector<std::string> legalCommands;
   legalCommands.push_back("cornerpt-interpolation-in-depth");
+  legalCommands.push_back("vertical-interpolation-of-undefined-cells");
   legalCommands.push_back("default-values");
   legalCommands.push_back("eclipse-file");
   legalCommands.push_back("extra-parameters");
@@ -270,6 +271,10 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
     errTxt += "\n          These defects have been fixed for centre point interpolation. Please use that instead\n";
 
     modelSettings_->SetUseCornerpointInterpol(bolval);
+  }
+
+  if (ParseBool(root, "vertical-interpolation-of-undefined-cells", bolval, errTxt)) {
+    modelSettings_->SetUseVerticalInterpolation(bolval);
   }
 
   if (ParseBool(root, "remove-negative-delta-z", bolval, errTxt)) {

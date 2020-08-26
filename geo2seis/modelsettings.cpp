@@ -97,6 +97,7 @@ ModelSettings::ModelSettings(void)
   depth_window_specified_              = false;
 
   use_cornerpoint_interpol_            = false;
+  use_vertical_interpolation_          = false;
   remove_negative_delta_z_             = false;
   elastic_parameters_time_segy_        = false;
   elastic_parameters_depth_segy_       = false;
@@ -197,6 +198,7 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Remove negative thicknesses               : %10s\n"  , GetRemoveNegativeDeltaZ()       ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Minimum thickness for Eclipse grid cells  : %10.1f\n", GetZeroThicknessLimit());
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use corner-point interpolation            : %10s\n"  , GetUseCornerpointInterpol()     ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use vertical interpolation in regridding  : %10s\n"  , GetUseVerticalInterpolation()   ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use default underburden                   : %10s\n"  , GetDefaultUnderburden()         ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Resample parameters to Segy with interpol.: %10s\n"  , GetResamplParamToSegyInterpol() ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Add white noise                           : %10s\n"  , GetWhiteNoise()                 ? "yes" : "no");

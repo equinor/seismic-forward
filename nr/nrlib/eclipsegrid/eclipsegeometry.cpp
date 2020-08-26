@@ -1384,6 +1384,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
                                                const size_t                          n_threads,
                                                const bool                            cornerpoint_interpolation,
                                                const bool                            bilinear_else_triangles,
+                                               const bool                            vertical_interpolation,
                                                const double                          missingValue) const
 //----------------------------------------------------------------------------------------------------------------
 {
@@ -1460,14 +1461,16 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
   }
   MonitorFinish(rest_carets);
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nInterpolating z-values that are undefined using vertical interpolation.\n");
+  if (vertical_interpolation) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nInterpolating z-values that are undefined using vertical interpolation.\n");
 
-  VerticalInterpolation(layer,
-                        zgrid,
-                        topeclipse,
-                        boteclipse,
-                        ni, nj, nk,
-                        missingValue);
+    VerticalInterpolation(layer,
+                          zgrid,
+                          topeclipse,
+                          boteclipse,
+                          ni, nj, nk,
+                          missingValue);
+  }
   //
   // Copy layer to grid
   //

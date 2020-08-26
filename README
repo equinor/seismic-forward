@@ -1,6 +1,18 @@
+0. Prerequisites
+----------------
 
-1. To make an executable using CLion or anothe IDE
---------------------------------------------------
+ Boost     -> version 1.65.1 is included under 3rd-party
+              NB! If another version of Boost is installed in the operating system cmake may become confused and stop working.
+
+ Flens     -> version ??? is included under 3rd-party
+
+ Intel MKL -> Must be installed
+
+              PAAL: Compilers and libraries for version 2016.2.181 installed under /opt/software/intel
+
+
+1. To make an executable using CLion or another IDE
+---------------------------------------------------
 
 Go to the directory containing the Geo2Seis git repository
 
@@ -10,7 +22,7 @@ Go to the directory containing the Geo2Seis git repository
 2. To make an executable using cmake
 ------------------------------------
 
-Go to the directory above the diretory containing the Geo2Seis git repository
+Go to the directory above the directory containing the Geo2Seis git repository
 
   $ cd dir-above-Geo2Seis
 
