@@ -155,11 +155,12 @@ void ExtrapolateGrid2D::ClassifyPoints(std::vector<std::pair<size_t, size_t> > &
               stationary_indices,
               regular_inside_indices,
               control_indices,
-              x0,
-              y0,
-              xinc,
-              yinc);
-              */
+              missing_indices,
+              0.0,  // x0
+              0.0,  // y0
+              25,   // xinc
+              25);  // yinc
+  */
 }
 
 
@@ -169,6 +170,7 @@ void ExtrapolateGrid2D::DumpResults(const std::vector<std::pair<size_t, size_t> 
                                     const std::vector<std::pair<size_t, size_t> > & stationary_indices,
                                     const std::vector<std::pair<size_t, size_t> > & regular_inside_indices,
                                     const std::vector<std::pair<size_t, size_t> > & control_indices,
+                                    const std::vector<std::pair<size_t, size_t> > & missing_indices,
                                     double                                          x0,
                                     double                                          y0,
                                     double                                          xinc,
@@ -190,6 +192,10 @@ void ExtrapolateGrid2D::DumpResults(const std::vector<std::pair<size_t, size_t> 
   // Control points
   outfile =  "extrapolation_points_control.xyz";
   WritePointsToFile(outfile, control_indices, x0, y0, xinc, yinc);
+
+  // Missing points
+  outfile =  "extrapolation_points_missing.xyz";
+  WritePointsToFile(outfile, missing_indices, x0, y0, xinc, yinc);
 }
 
 //-------------------------------------------------------------------------------------------------

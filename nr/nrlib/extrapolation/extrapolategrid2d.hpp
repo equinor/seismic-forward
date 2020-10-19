@@ -29,6 +29,7 @@ namespace NRLib {
                        const std::vector<std::pair<size_t, size_t> > & stationary_indices,
                        const std::vector<std::pair<size_t, size_t> > & regular_inside_indices,
                        const std::vector<std::pair<size_t, size_t> > & control_indices,
+                       const std::vector<std::pair<size_t, size_t> > & missing_indices,
                        double                                          x0,
                        double                                          y0,
                        double                                          xinc,

@@ -299,10 +299,31 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   ExtrapolateLayer(tvalues, mask, etdx, etdy, missing);
   ExtrapolateLayer(bvalues, mask, ebdx, ebdy, missing);
 
+  double avg_top = tvalues.FindAvg(missing);
+  double avg_bot = bvalues.FindAvg(missing);
+
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
-      topeclipse(i, j) = tvalues(i, j);
-      boteclipse(i, j) = bvalues(i, j);
+
+      if (tvalues(i, j) == missing && bvalues(i, j) == missing) {
+        topeclipse(i, j) = avg_top;
+        boteclipse(i, j) = avg_bot;
+      }
+      else if (tvalues(i, j) == missing) {
+        topeclipse(i, j) = bvalues(i, j);
+        boteclipse(i, j) = bvalues(i, j);
+      }
+      else if (bvalues(i, j) == missing) {
+        topeclipse(i, j) = tvalues(i, j);
+        boteclipse(i, j) = tvalues(i, j);
+      }
+      else {
+        topeclipse(i, j) = tvalues(i, j);
+        boteclipse(i, j) = bvalues(i, j);
+      }
+      if (topeclipse(i, j) > boteclipse(i, j)) {
+        topeclipse(i, j) = boteclipse(i, j);
+      }
     }
   }
 
@@ -909,7 +930,7 @@ std::vector<double>  SeismicParameters::GenerateZ0ForNMO()
 {
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate Z0 for NMO.\n");
 
- size_t nz                      = seismic_geometry_->nz();
+  size_t nz                      = seismic_geometry_->nz();
   double zmin                    = seismic_geometry_->z0();
   double dz                      = seismic_geometry_->dz();
   double dt                      = seismic_geometry_->dt();
@@ -1206,9 +1227,6 @@ tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t & n_
         x = 0;
         y = 0;
       }
-//      if (il == 5000 && xl == 4510)//6150)
-//      if (il == 1 && xl == 1)//6150)
-//        std::cout << "il, xl, i, j, x, y " << il << " " << xl << " " << i << " " << j << " " << x << " " << y << "\n";
       Trace * trace = new Trace(job_number, x, y, i, j);
       traces.push(trace);
       ++job_number;
