@@ -69,6 +69,7 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
   if (use_ricker) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nMaking Ricker wavelet with peak frequency %.1f Hz\n", peakF);
     wavelet = new Wavelet(peakF);
+    //wavelet.WriteToFile("Debug_wavelet.",NRLib::Wavelet::JasonAscii);
   }
   else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nReading wavelet from file \'%s\'\n", file_name.c_str());
