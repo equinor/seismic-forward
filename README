@@ -1,17 +1,31 @@
-0. Prerequisites
+0. GitHub
+---------
+
+To be able to check out the repository to your file system, you must have
+generated a personal access token in GitHub. This token is used in place
+of your personal password when accessing the repo
+
+  https://github.com/settings/tokens
+
+To have Git remember the credentials for you, do this
+
+  $ git config --global credential.helper cache                  # (activate memory cache)
+  $ git config --global credential.helper 'cache --timeout=3600' # (timeout in seconds)
+
+
+1. Prerequisites
 ----------------
 
- Boost     -> version 1.65.1 is included under 3rd-party
-              NB! If another version of Boost is installed in the operating system cmake may become confused and stop working.
+  Boost     -> version 1.65.1 is included under 3rd-party
+               NB! If another version of Boost is installed in the operating
+               system cmake may become confused and stop working.
 
- Flens     -> version ??? is included under 3rd-party
+  Intel MKL -> Must be installed
 
- Intel MKL -> Must be installed
-
-              PAAL: Compilers and libraries for version 2016.2.181 installed under /opt/software/intel
+               (PAAL: Compilers and libraries for version 2016.2.181 installed under /opt/software/intel)
 
 
-1. To make an executable using CLion or another IDE
+2. To make an executable using CLion or another IDE
 ---------------------------------------------------
 
 Go to the directory containing the Geo2Seis git repository
@@ -19,7 +33,7 @@ Go to the directory containing the Geo2Seis git repository
   $ clion CMakeLists.txt
 
 
-2. To make an executable using cmake
+3. To make an executable using cmake
 ------------------------------------
 
 Go to the directory above the directory containing the Geo2Seis git repository
@@ -36,7 +50,7 @@ Go to this directory and run run_cmake.sh
   $ ../Geo2Seis/run_cmake.sh
 
 
-3. Run the tests
+4. Run the tests
 ----------------
 
 To run all tests do
