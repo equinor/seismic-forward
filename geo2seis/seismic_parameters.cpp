@@ -27,8 +27,10 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
   wavelet_scale_    = model_settings->GetWaveletScale();
 
   SetupWavelet(wavelet_,
+               true,
                model_settings->GetRicker(),
                model_settings->GetPeakFrequency(),
+               model_settings->GetDt(),
                model_settings->GetWaveletFileName(),
                model_settings->GetWaveletFileFormat());
 
@@ -58,22 +60,35 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
 }
 
 
-//----------------------------------------------------------------------
+//------------------------------------------------------------------------
 void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
-                                     bool                 use_ricker,
-                                     double               peakF,
+                                     const bool           write_wavelet,
+                                     const bool           use_ricker,
+                                     const double         peakF,
+                                     const double         dt,
                                      const std::string  & file_name,
                                      const std::string  & file_format)
 //------------------------------------------------------------------------
 {
   if (use_ricker) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nMaking Ricker wavelet with peak frequency %.1f Hz\n", peakF);
-    wavelet = new Wavelet(peakF);
-    //wavelet.WriteToFile("Debug_wavelet.",NRLib::Wavelet::JasonAscii);
+    wavelet = new Wavelet(peakF,
+                          dt,
+                          write_wavelet);
   }
   else {
+    bool error = false;
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nReading wavelet from file \'%s\'\n", file_name.c_str());
-    wavelet = new Wavelet(file_name, file_format);
+    wavelet = new Wavelet(file_name,
+                          file_format,
+                          dt,
+                          write_wavelet,
+                          error);
+    if (error) {
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nWavelet format \'%s\' is not recognized", file_format.c_str());
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nAborting ...\n");
+      exit(1);
+    }
   }
 }
 
@@ -382,7 +397,7 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   //
   // Finding additional grid size due to wavelet length
   //
-  double twt_wavelet = wavelet->GetTwtWavelet();
+  double twt_wavelet = wavelet->GetTwtLength();
   std::vector<double> constvp = model_settings->GetConstVp();
 
   double z_top_wavelet = twt_wavelet*constvp[0]/2000;
@@ -833,7 +848,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
   double dt                      = seismic_geometry_->dt();
   double t0                      = seismic_geometry_->t0();
   std::vector<double> constvp    = model_settings_->GetConstVp();
-  double twt_wavelet             = wavelet_->GetTwtWavelet();
+  double twt_wavelet             = wavelet_->GetTwtLength();
   size_t nzrefl                  = seismic_geometry_->zreflectorcount();
 
   //find max from twgrid, and index of max twt value
@@ -937,7 +952,7 @@ std::vector<double>  SeismicParameters::GenerateZ0ForNMO()
   double dt                      = seismic_geometry_->dt();
 
   std::vector<double> constvp    = model_settings_->GetConstVp();
-  double twt_wavelet             = wavelet_->GetTwtWavelet();
+  double twt_wavelet             = wavelet_->GetTwtLength();
   double z_top_wavelet           = model_settings_->GetZWaveletTop();
   double z_bot_wavelet           = model_settings_->GetZWaveletBot();
 

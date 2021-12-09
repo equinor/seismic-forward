@@ -436,7 +436,7 @@ void SeismicOutput::WriteTwt(SeismicParameters &seismic_parameters)
 
 void SeismicOutput::WriteSeismicTimeStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timegrid, double offset, bool is_stack)
 {
-  printf("Write seismic in time on Storm format.\n");
+  printf("Write seismic in time on STORM format.\n");
   ModelSettings *model_settings = seismic_parameters.GetModelSettings();
   std::string filename;
   if (is_stack == false) {
@@ -445,6 +445,14 @@ void SeismicOutput::WriteSeismicTimeStorm(SeismicParameters &seismic_parameters,
   else {
     filename = prefix_ + "seismic_time_stack" + suffix_ + ".storm";
   }
+
+  float min, max, avg;
+  float missing = -999.0f;
+  timegrid.GetAvgMinMaxWithMissing(avg, min , max, missing);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  avg: %12.5f\n", avg);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  min: %12.5f\n", min);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  max: %12.5f\n", max);
+
   STORM::WriteStorm(timegrid, filename, top_time_window_, bot_time_window_, time_window_);
 }
 

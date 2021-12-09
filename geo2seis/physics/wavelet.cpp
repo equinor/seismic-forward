@@ -1,117 +1,274 @@
+#include "nrlib/surface/regularsurface.hpp"
+
+#include "nrlib/iotools/logkit.hpp"
+#include "nrlib/iotools/fileio.hpp"
+
+#include "nrlib/fft/fft.hpp"
+
 #include "wavelet.hpp"
 
 #include <iostream>
 #include <fstream>
-#include <list>
 #include <complex>
+#include <list>
 
-#include "nrlib/iotools/logkit.hpp"
-#include "nrlib/iotools/fileio.hpp"
-#include "nrlib/surface/regularsurface.hpp"
-#include "nrlib/fft/fft.hpp"
 
-Wavelet::Wavelet(std::string filename, std::string file_format) : is_ricker_(false)
+//------------------------------------------
+Wavelet::Wavelet(const double peakF,
+                 const double dt,
+                 const bool   write_wavelet)
+//------------------------------------------
+  : wavelet_            ( std::vector<double>(0) ),
+    time_vector_        ( std::vector<double>(0) ),
+    file_format_        ( ""                     ),
+    time_sampling_in_ms_( -999.0                 ),
+    twt_length_         ( -999.0                 ),
+    peak_frequency_     ( peakF                  ),
+    is_ricker_          ( true                   )
 {
+  //
+  // EVERYTHING below is CURRENTLY for wavelet export only. Wavelet is calculated on the fly!
+  //
+  std::string filename           = "Wavelet_" + NRLib::ToString(peakF) + "Hz_as_used.txt";
+  double      dummy_length       = 1000.0/peakF;
+  size_t      n                  = static_cast<size_t>(floor(dummy_length));
+  int         sample_number_peak = n;
 
+  FillWaveletVector(wavelet_,       // This is not the wavelet used in final calculations
+                    dt,
+                    n);
+
+  FindTwtLength(wavelet_,
+                dt,
+                sample_number_peak, // Also find peak position
+                twt_length_);       // Size of a half wavelet
+
+  WriteLandMarkWavelet(wavelet_,
+                       sample_number_peak,
+                       dt,
+                       filename);
+}
+
+//-----------------------------------------------
+Wavelet::Wavelet(const std::string & filename,
+                 const std::string & file_format,
+                 const double        dt,
+                 const bool          write_wavelet,
+                 bool              & error)
+//-----------------------------------------------
+  : wavelet_            ( std::vector<double>(0) ),
+    time_vector_        ( std::vector<double>(0) ),
+    time_sampling_in_ms_( -999.0                 ),
+    twt_length_         ( -999.0                 ),
+    peak_frequency_     ( -999.0                 ),
+    is_ricker_          ( false                  )
+{
   if (NRLib::Uppercase(file_format) == "LANDMARK" || NRLib::Uppercase(file_format) == "LANDMARK ASCII WAVELET") {
-    std::ifstream file;
-    NRLib::OpenRead(file, filename);
-    if (!file.bad()) {
-      double number_of_samples;
-      std::getline(file, file_format_);
-      file >> number_of_samples >> sample_number_for_zero_time_ >> time_sampling_in_ms_;
-      sample_number_for_zero_time_ = sample_number_for_zero_time_ - 1;
-      size_t i = 0;
-      double value;
-      while (i < number_of_samples) {
-        file >> value;
-        wavelet_.push_back(value);
-        ++i;
-      }
-    }
-    FindTwtWavelet();
 
-    std::vector<double> wavelet_out;
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLandmark format assumed for wavelet\n");
+
+    int sample_number_peak = -999;
+
+    ReadLandMarkWavelet(filename,
+                        wavelet_,
+                        time_sampling_in_ms_,
+                        sample_number_peak);
+
+    FindTwtLength(wavelet_,
+                  time_sampling_in_ms_,
+                  sample_number_peak,
+                  twt_length_);         // Size of a half wavelet
+
+    //
+    // Export wavelet as read from file - for debugging
+    //
+    //WriteLandMarkWavelet(wavelet_,
+    //                     sample_number_peak,
+    //                     time_sampling_in_ms_,
+    //                     "WAVELET_from_file_as_read.txt");
+
+    //
+    // Scale wavelet if needed
+    //
     size_t scale_factor = static_cast<size_t>(time_sampling_in_ms_);
     if (scale_factor < time_sampling_in_ms_) {
       scale_factor += 1;
     }
-    ResampleTrace(wavelet_, wavelet_out, scale_factor);
-    wavelet_ = wavelet_out;
     time_sampling_in_ms_ /= scale_factor;
-    sample_number_for_zero_time_ *= static_cast<int>(scale_factor);
+
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nResampling wavelet from %.1f ms to %.1f ms\n",
+                                time_sampling_in_ms_*scale_factor,time_sampling_in_ms_);
 
 
-    time_vector_.reserve(wavelet_.size());
-    double time;
-    for (int j = 0; j < static_cast<int>(wavelet_.size()); ++j) {
-      time = time_sampling_in_ms_ * (j - sample_number_for_zero_time_);
-      time_vector_.push_back(time);
-    }
+    ResampleTrace(wavelet_, scale_factor);
 
-    ////print wavelet
-    //std::ofstream file_out;
-    //filename = "wavelet_.txt";
-    //NRLib::OpenWrite(file_out, filename);
-    //for (size_t i = 0; i < wavelet_.size(); ++i){
-    //  file_out << wavelet_[i];
-    //  file_out << "\n";
+    sample_number_peak *= static_cast<int>(scale_factor);
+
+    //
+    // Export resampled wavelet
+    //
+    std::string filename2 = std::string("Wavelet_resampled_to_") + NRLib::ToString(time_sampling_in_ms_, 1) + "ms.txt";
+    WriteLandMarkWavelet(wavelet_,
+                         sample_number_peak,
+                         time_sampling_in_ms_,
+                         filename2);
+
+    //for (size_t ii = 0 ; ii < wavelet_.size() ; ii++) {
+    //  printf("wavelet: %10.5f    time: %10.5f\n",wavelet_[ii],time_vector_[ii]);
     //}
+
+    //
+    // Fill time vector
+    //
+    time_vector_.clear();
+    time_vector_.resize(wavelet_.size());
+
+    FillTimeVector(time_vector_,
+                   sample_number_peak,
+                   time_sampling_in_ms_);
+  }
+  else {
+    error = true;
   }
 }
 
-Wavelet::Wavelet(double peakF) :
-file_format_(""),
-  sample_number_for_zero_time_(0),
-  time_sampling_in_ms_(0),
-  wavelet_(std::vector<double>(0)),
-  time_vector_(std::vector<double>(0)),
-  is_ricker_(true),
-  peak_frequency_(peakF) {
-
-  twt_wavelet_ = 1000 / peak_frequency_;
+//---------------------
+Wavelet::~Wavelet(void)
+//---------------------
+{
 }
 
-
-Wavelet::~Wavelet() {
+//---------------------------------------------------------------------
+void Wavelet::FillTimeVector(std::vector<double> & time_vector,
+                             const int             sample_number_peak,
+                             const double          dt)
+//---------------------------------------------------------------------
+{
+  double time;
+  for (int i = 0 ; i < time_vector.size() ; ++i) {
+    time = dt * (i - sample_number_peak);
+    time_vector[i] = time;
+  }
 }
 
+//------------------------------------------------------------------------
+void Wavelet::FillWaveletVector(std::vector<double> & wavelet,
+                                const double          time_sampling_in_ms,
+                                const int             n)
+//------------------------------------------------------------------------
+{
+  wavelet_.resize(2*n + 1);
+  wavelet[n] = FindWaveletPoint(0.0);
+  for (size_t i = 1 ; i < n + 1 ; i++) {
+    double t   = static_cast<double>(i)*time_sampling_in_ms;
+    double amp = FindWaveletPoint(t);
+    wavelet[n - i] = amp;
+    wavelet[n + i] = amp;
+  }
+}
 
-double Wavelet::FindAbsMaxOfVector(std::vector<double> vector) {
-  double max_value = 0.0;
-  for (size_t i = 0; i < vector.size(); ++i) {
-    if (max_value < std::abs(vector[i])) {
-      max_value = std::abs(vector[i]);
+//----------------------------------------------------------------------------------
+void Wavelet::ReadLandMarkWavelet(const std::string   & filename,
+                                  std::vector<double> & wavelet,
+                                  double              & time_sampling_in_ms,
+                                  int                 & sample_number_peak)
+//----------------------------------------------------------------------------------
+{
+  std::ifstream file;
+  NRLib::OpenRead(file, filename);
+  if (!file.bad()) {
+    double number_of_samples;
+    std::getline(file, file_format_);
+    file >> number_of_samples >> sample_number_peak >> time_sampling_in_ms;
+    sample_number_peak -= 1;
+    size_t i = 0;
+    double value;
+    while (i < number_of_samples) {
+      file >> value;
+      wavelet.push_back(value);
+      ++i;
     }
   }
-  return max_value;
 }
 
-void Wavelet::FindTwtWavelet()
+//-----------------------------------------------------------------------------------------
+void Wavelet::WriteLandMarkWavelet(const std::vector<double> & wavelet,
+                                   const int                   sample_number_peak,
+                                   const double                time_sampling_in_ms,
+                                   const std::string         & filename) const
+//-----------------------------------------------------------------------------------------
 {
-  size_t start = 0;
-  size_t end = wavelet_.size() - 1;
-  double wavelet_max = FindAbsMaxOfVector(wavelet_);
-  for (size_t i = 0; i < wavelet_.size(); ++i) {
-    if (std::abs(wavelet_[i]) > wavelet_max * 0.01) {
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExporting Landmark ASCII wavelet \'%s\'",filename.c_str());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Wavelet size   : %3d",wavelet.size());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Peak at sample : %3d",sample_number_peak);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Density in ms  : %.1f\n",time_sampling_in_ms);
+
+  std::ofstream file_out;
+  NRLib::OpenWrite(file_out, filename);
+  file_out << "Landmark ASCII Wavelet\n"
+           << wavelet.size()              << "\n"
+           << sample_number_peak << "\n";
+  file_out << std::fixed
+           << std::setprecision(2)
+           << time_sampling_in_ms         << "\n";
+  for (size_t i = 0 ; i < wavelet.size() ; ++i){
+    file_out << std::setprecision(6) << wavelet[i] << "\n";
+  }
+}
+
+//----------------------------------------------------------------------------------
+void Wavelet::FindTwtLength(const std::vector<double> & wavelet,
+                            const double                time_sampling_in_ms,
+                            int                       & sample_number_peak,
+                            double                    & twt_length)
+//----------------------------------------------------------------------------------
+{
+  size_t n = wavelet.size();
+
+  double w_max = 0.0;
+  int    i_max =  -1;
+
+  for (size_t i = 0 ; i < n ; ++i) {
+    if (w_max < std::abs(wavelet[i])) {
+      w_max = std::abs(wavelet[i]);
+      i_max = i;
+    }
+  }
+
+  if (sample_number_peak != -999 && i_max != sample_number_peak) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nWARNING: Sample incorrect sample number for peak amplitude in file?");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Peak sample number in file    : %3d", sample_number_peak);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Peak sample number calculated : %3d", i_max);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Calculated sample number will be used\n");
+    sample_number_peak = i_max;
+  }
+
+  double threshold = w_max*0.01;
+  size_t start     = 0;
+  size_t end       = n - 1;
+
+  for (size_t i = 0 ; i < n ; ++i) {
+    if (std::abs(wavelet[i]) > threshold) {
       start = i;
       break;
     }
   }
-  for (size_t i = wavelet_.size() - 1; i >= 0; --i) {
-    if (std::abs(wavelet_[i]) > wavelet_max * 0.01) {
+  for (int i = n - 1; i >= 0; --i) {
+    if (std::abs(wavelet[i]) > threshold) {
       end = i;
       break;
     }
   }
-  double w1    = (sample_number_for_zero_time_ - start) * time_sampling_in_ms_;
-  double w2    = (end -   sample_number_for_zero_time_) * time_sampling_in_ms_;
-  std::cout << "w1, w2, start_i, end_i, sample_zero = " << w1 << " " << w2 << " " << start << " " << end << " " << sample_number_for_zero_time_ << "\n";
-  twt_wavelet_ = std::max(w1, w2);
+
+  double w1  = (i_max - start) * time_sampling_in_ms;
+  double w2  = (end   - i_max) * time_sampling_in_ms;
+
+ twt_length = std::max(w1, w2);
 }
 
-
+//----------------------------------------
 double Wavelet::FindWaveletPoint(double t)
+//----------------------------------------
 {
   if (is_ricker_) {
     double rickerConst = NRLib::Pi * NRLib::Pi * peak_frequency_ * peak_frequency_ * 1e-6;
@@ -149,8 +306,10 @@ double Wavelet::FindWaveletPoint(double t)
   }
 }
 
-
-void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &wavelet_out, size_t scale_factor)
+//-------------------------------------------------------------
+void Wavelet::ResampleTrace(std::vector<double> & wavelet,
+                            size_t                scale_factor)
+//-------------------------------------------------------------
 {
   //
   // Transform to Fourier domain
@@ -167,7 +326,6 @@ void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &w
   }
 
   //Pad with zeros
-
   for (size_t i = data_fft.size() / 2 + 1; i < data_fft.size() * scale_factor; i++) {
     fine_data_fft[i] = 0;
   }
@@ -175,7 +333,7 @@ void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &w
   //
   // Fine-sampled grid: Fourier --> Time
   //
-  wavelet_out.resize(fine_data_fft.size());
+  std::vector<double> wavelet_out(fine_data_fft.size());
   NRLib::ComputeFFTInv1D(fine_data_fft, wavelet_out, false);
 
   // Scale wavelet out according to change of length
@@ -184,6 +342,6 @@ void Wavelet::ResampleTrace(std::vector<double> &wavelet, std::vector<double> &w
   for (size_t i = 0; i < wavelet_out.size(); ++i) {
     wavelet_out[i] *= scale_factor;
   }
+
+  std::swap(wavelet, wavelet_out);
 }
-
-

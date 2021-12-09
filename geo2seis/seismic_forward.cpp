@@ -332,7 +332,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
 
     double                              wavelet_scale               = param->seismic_parameters.GetWaveletScale();
     Wavelet                           * wavelet                     = param->seismic_parameters.GetWavelet();
-    double                              twt_wavelet                 = wavelet->GetTwtWavelet();
+    double                              twt_wavelet                 = wavelet->GetTwtLength();
     double                              z_wavelet_bot               = param->seismic_parameters.GetModelSettings()->GetZWaveletBot();
     double                              z_extrapol_factor           = param->seismic_parameters.GetModelSettings()->GetZExtrapolFactor();
     bool                                offset_without_stretch      = param->seismic_parameters.GetModelSettings()->GetOffsetWithoutStretch();
@@ -1201,7 +1201,7 @@ void SeismicForward::SeisConvolutionNMO(NRLib::Grid2D<double>               & ti
   double seis, twtx_kk;
   double x, y, z;
   double topt        = 0.0;
-  double rickerLimit = wavelet->GetTwtWavelet();
+  double rickerLimit = wavelet->GetTwtLength();
 
   zgrid.FindCenterOfCell(i, j, 0, x, y, z);
   topt = toptime.GetZ(x, y);
@@ -1260,7 +1260,7 @@ void SeismicForward::SeisConvolution(NRLib::Grid2D<double>               & timeg
   double seis, twt_kk;
   double x, y, z;
   double topt        = 0.0;
-  double rickerLimit = wavelet->GetTwtWavelet();
+  double rickerLimit = wavelet->GetTwtLength();
 
   zgrid.FindCenterOfCell(i, j, 0, x, y, z);
   topt = toptime.GetZ(x, y);

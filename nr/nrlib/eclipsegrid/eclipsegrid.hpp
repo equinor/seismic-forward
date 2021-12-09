@@ -74,6 +74,7 @@ public:
   size_t GetNK() const    { return geometry_.GetNK(); }
   size_t GetN()  const    { return geometry_.GetN();  }
 
+
   inline void   GetIJK(size_t index, size_t& i, size_t& j, size_t& k) const   { geometry_.GetIJK(index, i ,j, k); }
   inline size_t GetIndex(size_t i, size_t j, size_t k) const                  { return geometry_.GetIndex(i, j, k); }
 

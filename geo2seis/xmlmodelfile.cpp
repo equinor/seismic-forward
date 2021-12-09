@@ -620,13 +620,20 @@ bool XmlModelFile::ParseWaveletFromFile(TiXmlNode   * node,
   legalCommands.push_back("file-name");
   legalCommands.push_back("format");
 
-  std::string format, file_name;
-  if (ParseValue(root, "format", format, errTxt) && ParseValue(root, "file-name", file_name, errTxt)) {
+  std::string format;
+  std::string file_name;
+
+  if (ParseValue(root, "format", format, errTxt))
     modelSettings_->SetWaveletFileFormat(format);
+  else
+    modelSettings_->SetWaveletFileFormat("LANDMARK");
+
+
+  if (ParseValue(root, "file-name", file_name, errTxt))
     modelSettings_->SetWaveletFileName(file_name);
-  } else
+  else
     errTxt += "One or more keyword under command <" + root->ValueStr() + ">  on line " + NRLib::ToString(root->Row()) + ", column "
-      + NRLib::ToString(root->Column()) + " is not legal or missing. <format> and <file-name> are required.\n";
+      + NRLib::ToString(root->Column()) + " is not legal or missing. <file-name> is required.\n";
 
   CheckForJunk(root, errTxt, legalCommands);
   return true;

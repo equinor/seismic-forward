@@ -94,8 +94,8 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
     }
   }
   //---add wavelet above and below toptime and bottime-------------
-  toptime.Add(-1 * wavelet->GetTwtWavelet()); // add one wavelet length to bot and subtract from top
-  bottime.Add(     wavelet->GetTwtWavelet());
+  toptime.Add(-1 * wavelet->GetTwtLength()); // add one wavelet length to bot and subtract from top
+  bottime.Add(     wavelet->GetTwtLength());
 
   double tmin = toptime.Min();
   double dt   = seismic_parameters.GetSeismicGeometry()->dt();
