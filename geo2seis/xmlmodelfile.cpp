@@ -563,12 +563,14 @@ bool XmlModelFile::ParseWavelet(TiXmlNode   * node,
   legalCommands.push_back("from-file");
   legalCommands.push_back("ricker");
   legalCommands.push_back("scale");
+  legalCommands.push_back("length");
 
   if (ParseRicker(root, errTxt)) {
     modelSettings_->SetRicker(true);
   } else {
     modelSettings_->SetRicker(false);
   }
+
   double value;
   if (ParseValue(root, "scale", value, errTxt)) {
     modelSettings_->SetWaveletScale(value);
@@ -576,6 +578,10 @@ bool XmlModelFile::ParseWavelet(TiXmlNode   * node,
 
   if (ParseWaveletFromFile(root, errTxt) == false && modelSettings_->GetRicker() == false) {
     errTxt += "No wavelet is given. Should be given as either <ricker> or <from-file>.\n";
+  }
+
+  if (ParseValue(root, "length", value, errTxt)) {
+    modelSettings_->SetWaveletLength(value);
   }
 
   CheckForJunk(root, errTxt, legalCommands);

@@ -83,15 +83,16 @@ ModelSettings::ModelSettings(void)
   xline_step_                          = 1;
 
   wavelet_scale_                       = 1.0;
+  wavelet_length_                      = -999.0;
   z_wavelet_top_                       = 0.0;
   z_wavelet_bot_                       = 0.0;
   z_extrapol_factor_                   = 50.0;
   offset_without_stretch_              = false;
 
-  top_time_window_                     = -9999;
-  bot_time_window_                     = -9999;
-  top_depth_window_                    = -9999;
-  bot_depth_window_                    = -9999;
+  top_time_window_                     = -9999.0;
+  bot_time_window_                     = -9999.0;
+  top_depth_window_                    = -9999.0;
+  bot_depth_window_                    = -9999.0;
 
   time_window_specified_               = false;
   depth_window_specified_              = false;
@@ -249,6 +250,8 @@ void ModelSettings::PrintSettings(void)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Format                                  : %10.1f\n", GetWaveletFileFormat().c_str());
   }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Scale                                   : %10.1f\n", GetWaveletScale());
+  if (GetWaveletLength() != -999.0)
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Length                                  : %10.1f\n", GetWaveletLength());
   if (GetZWaveletTop() != 0.0) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  z-extension above grid                  : %10.1f\n", GetZWaveletTop());
   }

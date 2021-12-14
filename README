@@ -44,10 +44,15 @@ Make directory where you want the project and executable to be build
 
   $ mkdir my-proj-dir
 
-Go to this directory and run run_cmake.sh
+Go to this directory and run run_cmake.sh to set up compiler and library dependencies
 
   $ cd my-proj-dir
   $ ../Geo2Seis/run_cmake.sh
+
+
+Generate the executable
+
+  $ make
 
 
 4. Run the tests

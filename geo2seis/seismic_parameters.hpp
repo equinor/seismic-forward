@@ -198,6 +198,7 @@ private:
                     const bool           write_wavelet,
                     const bool           use_ricker,
                     const double         peakF,
+                    const double         length,
                     const double         dt,
                     const std::string  & file_name,
                     const std::string  & file_format);

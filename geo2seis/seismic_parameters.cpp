@@ -30,6 +30,7 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
                true,
                model_settings->GetRicker(),
                model_settings->GetPeakFrequency(),
+               model_settings->GetWaveletLength(),
                model_settings->GetDt(),
                model_settings->GetWaveletFileName(),
                model_settings->GetWaveletFileFormat());
@@ -65,6 +66,7 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
                                      const bool           write_wavelet,
                                      const bool           use_ricker,
                                      const double         peakF,
+                                     const double         length,
                                      const double         dt,
                                      const std::string  & file_name,
                                      const std::string  & file_format)
@@ -74,6 +76,7 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nMaking Ricker wavelet with peak frequency %.1f Hz\n", peakF);
     wavelet = new Wavelet(peakF,
                           dt,
+                          length,
                           write_wavelet);
   }
   else {
@@ -82,6 +85,7 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
     wavelet = new Wavelet(file_name,
                           file_format,
                           dt,
+                          length,
                           write_wavelet,
                           error);
     if (error) {
@@ -415,7 +419,7 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   model_settings->SetZWaveletTop(z_top_wavelet);
   model_settings->SetZWaveletBot(z_bot_wavelet);
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nWavelet time length is                    : %8.2f\n", twt_wavelet);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nWavelet time length is                    : %8.2f\n", twt_wavelet*2.0);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse top surface lift due to wavelet   : %8.2f"  , z_top_wavelet);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse base surface drop due to wavelet  : %8.2f\n", z_bot_wavelet);
 

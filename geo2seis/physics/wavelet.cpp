@@ -16,6 +16,7 @@
 //------------------------------------------
 Wavelet::Wavelet(const double peakF,
                  const double dt,
+                 const double length,
                  const bool   write_wavelet)
 //------------------------------------------
   : wavelet_            ( std::vector<double>(0) ),
@@ -38,10 +39,15 @@ Wavelet::Wavelet(const double peakF,
                     dt,
                     n);
 
-  FindTwtLength(wavelet_,
-                dt,
-                sample_number_peak, // Also find peak position
-                twt_length_);       // Size of a half wavelet
+  twt_length_ = dummy_length;
+
+  //if (length == -999.0)
+  //  FindTwtLength(wavelet_,
+  //                dt,
+  //                sample_number_peak, // Also find peak position
+  //                twt_length_);       // Size of a half wavelet
+  //else
+  //  twt_length_ = 0.5*length;
 
   WriteLandMarkWavelet(wavelet_,
                        sample_number_peak,
@@ -53,6 +59,7 @@ Wavelet::Wavelet(const double peakF,
 Wavelet::Wavelet(const std::string & filename,
                  const std::string & file_format,
                  const double        dt,
+                 const double        length,
                  const bool          write_wavelet,
                  bool              & error)
 //-----------------------------------------------
@@ -74,10 +81,13 @@ Wavelet::Wavelet(const std::string & filename,
                         time_sampling_in_ms_,
                         sample_number_peak);
 
-    FindTwtLength(wavelet_,
-                  time_sampling_in_ms_,
-                  sample_number_peak,
-                  twt_length_);         // Size of a half wavelet
+    if (length == -999.0)
+      FindTwtLength(wavelet_,
+                    time_sampling_in_ms_,
+                    sample_number_peak,
+                    twt_length_);         // Size of a half wavelet
+    else
+      twt_length_ = 0.5*length;
 
     //
     // Export wavelet as read from file - for debugging
@@ -225,8 +235,9 @@ void Wavelet::FindTwtLength(const std::vector<double> & wavelet,
 {
   size_t n = wavelet.size();
 
-  double w_max = 0.0;
-  int    i_max =  -1;
+  double factor = 0.001;  // Fraction of peak amplitude where wavelet is considered zero
+  double w_max  = 0.0;
+  int    i_max  =  -1;
 
   for (size_t i = 0 ; i < n ; ++i) {
     if (w_max < std::abs(wavelet[i])) {
@@ -237,13 +248,13 @@ void Wavelet::FindTwtLength(const std::vector<double> & wavelet,
 
   if (sample_number_peak != -999 && i_max != sample_number_peak) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nWARNING: Sample incorrect sample number for peak amplitude in file?");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Peak sample number in file    : %3d", sample_number_peak);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Peak sample number calculated : %3d", i_max);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Peak sample number from file   : %3d", sample_number_peak);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Peak sample number calculated  : %3d", i_max);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Calculated sample number will be used\n");
     sample_number_peak = i_max;
   }
 
-  double threshold = w_max*0.01;
+  double threshold = w_max*factor;  // Amplitude that defines length of wavelet
   size_t start     = 0;
   size_t end       = n - 1;
 

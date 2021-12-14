@@ -103,6 +103,7 @@ public:
   std::string               GetWaveletFileFormat()                    { return wavelet_file_format_            ;}
   std::string               GetWaveletFileName()                      { return wavelet_file_name_              ;}
   double                    GetWaveletScale()                         { return wavelet_scale_                  ;}
+  double                    GetWaveletLength()                        { return wavelet_length_                 ;}
   double                    GetZWaveletTop()                          { return z_wavelet_top_                  ;}
   double                    GetZWaveletBot()                          { return z_wavelet_bot_                  ;}
 
@@ -261,6 +262,7 @@ public:
   void SetWaveletFileFormat(std::string value)         { wavelet_file_format_     = value  ;}
   void SetWaveletFileName(std::string value)           { wavelet_file_name_       = value  ;}
   void SetWaveletScale(double scale)                   { wavelet_scale_           = scale  ;}
+  void SetWaveletLength(double length)                 { wavelet_length_          = length ;}
   void SetZWaveletTop(double wave)                     { z_wavelet_top_           = wave   ;}
   void SetZWaveletBot(double wave)                     { z_wavelet_bot_           = wave   ;}
 
@@ -361,6 +363,7 @@ private:
   double                    peak_f_;
   bool                      ricker_;
   double                    wavelet_scale_;
+  double                    wavelet_length_;
   double                    z_wavelet_top_;
   double                    z_wavelet_bot_;
   double                    z_extrapol_factor_;
