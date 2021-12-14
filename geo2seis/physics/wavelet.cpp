@@ -39,15 +39,13 @@ Wavelet::Wavelet(const double peakF,
                     dt,
                     n);
 
-  twt_length_ = dummy_length;
-
-  //if (length == -999.0)
-  //  FindTwtLength(wavelet_,
-  //                dt,
-  //                sample_number_peak, // Also find peak position
-  //                twt_length_);       // Size of a half wavelet
-  //else
-  //  twt_length_ = 0.5*length;
+  if (length == -999.0)
+    FindTwtLength(wavelet_,
+                  dt,
+                  sample_number_peak, // Also find peak position
+                  twt_length_);       // Size of a half wavelet
+  else
+    twt_length_ = 0.5*length;
 
   WriteLandMarkWavelet(wavelet_,
                        sample_number_peak,
