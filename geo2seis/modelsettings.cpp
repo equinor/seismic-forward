@@ -98,7 +98,7 @@ ModelSettings::ModelSettings(void)
   depth_window_specified_              = false;
 
   use_cornerpoint_interpol_            = false;
-  use_vertical_interpolation_          = false;
+  use_vertical_interpolation_          = true;
   remove_negative_delta_z_             = false;
   elastic_parameters_time_segy_        = false;
   elastic_parameters_depth_segy_       = false;
