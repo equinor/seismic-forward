@@ -68,10 +68,10 @@ ModelSettings::ModelSettings(void)
   area_from_surface_                   = "";
   area_from_segy_                      = "";
 
-  il0_loc_                             =   9;
-  xl0_loc_                             =  21;
-  utmx_loc_                            =  73;
-  utmy_loc_                            =  77;
+  il0_loc_                             = 189;
+  xl0_loc_                             = 193;
+  utmx_loc_                            = 181;
+  utmy_loc_                            = 185;
   scalco_loc_                          =  71;
   start_time_loc_                      = 109;
   utm_precision_                       = -10;
