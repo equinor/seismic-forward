@@ -181,19 +181,9 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   const bool                            bilinear               = false;
   const double                          missing                = -999.0;
 
-
   NRLib::RegularSurface<double>         orig_top(topeclipse);
   NRLib::RegularSurface<double>         orig_bot(boteclipse);
 
-  //const double                          z_top_shift      = model_settings->GetZWaveletTop();
-  //const double                          z_bot_shift      = model_settings->GetZWaveletBot();
-
-  //orig_top.Add(     z_top_shift);
-  //orig_bot.Add(-1 * z_bot_shift);
-
-  //
-  // XXXxxxx: NBNB-PAL Dette her er kanskje litt juks????
-  //
   for (size_t i = 0 ; i < orig_top.GetNI() ; ++i)
     for (size_t j = 0 ; j < orig_top.GetNJ() ; ++j)
       if (orig_bot(i,j) < orig_top(i,j))

@@ -1,5 +1,4 @@
-0. GitHub
----------
+## GitHub
 
 To be able to check out the repository to your file system, you must have
 generated a personal access token in GitHub. This token is used in place
@@ -13,8 +12,7 @@ To have Git remember the credentials for you, do this
   $ git config --global credential.helper 'cache --timeout=3600' # (timeout in seconds)
 
 
-1. Prerequisites
-----------------
+## Prerequisites
 
   Boost     -> version 1.65.1 is included under 3rd-party
                NB! If another version of Boost is installed in the operating
@@ -22,46 +20,53 @@ To have Git remember the credentials for you, do this
 
   Intel MKL -> Must be installed
 
-2. To make an executable using CLion or another IDE
----------------------------------------------------
+## To make an executable using CLion or another IDE
 
-Go to the directory containing the Geo2Seis git repository
+Go to the directory containing the SeismicForward git repository
 
-  $ clion CMakeLists.txt
+```
+clion CMakeLists.txt
+```
 
+## To make an executable using cmake
 
-3. To make an executable using cmake
-------------------------------------
+Go to the directory above the directory containing the SeismicForward git repository
 
-Go to the directory above the directory containing the Geo2Seis git repository
-
-  $ cd dir-above-Geo2Seis
-
+```
+cd dir-above-SeismicForward
+```
 Make directory where you want the project and executable to be build
 
-  $ mkdir my-proj-dir
+```
+mkdir my-proj-dir
+```
 
 Go to this directory and run run_cmake.sh to set up compiler and library dependencies
 
-  $ cd my-proj-dir
-  $ ../Geo2Seis/run_cmake.sh
-
+```
+cd my-proj-dir
+../SeismicForward/run_cmake.sh
+```
 
 Generate the executable
 
-  $ make
+```
+make
+```
 
-
-4. Run the tests
-----------------
+## Run the tests
 
 To run all tests do
 
-  $ ../Geo2Seis/TestScript.pl
+```
+../SeismicForward/TestScript.pl
+```
 
 To run a single test do
 
-  $ ../Geo2Seis/TestScript.pl case=1
+```
+../SeismicForward/TestScript.pl case=1
+```
 
 NBNB! If more than one angle is involved, I think that results for the first
 angle only is checked. This is the way NRLib currently works.

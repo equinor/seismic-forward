@@ -150,6 +150,7 @@ public:
                  const double                angle,
                  const bool                  cornerpoint_interpolation,
                  const bool                  bilinear_else_triangles,
+                 const bool                  is_surface,
                  const double                missingValue) const;
 
   void TranslateAndRotate(NRLib::Point       & corners,
@@ -284,6 +285,7 @@ private:
                                           const double            y0,
                                           const double            angle,
                                           const bool              bilinear_else_triangles,
+                                          const bool              is_surface,
                                           const double            missingValue) const;
 
   ///Function used by FindLayerSurface to fill in values to z_grid in the area inside the (NB) four corners (listed clockwise)

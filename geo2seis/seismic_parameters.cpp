@@ -294,13 +294,14 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   topeclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing);
   boteclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing);
 
-  double etdx     = topeclipse.GetDX();
-  double etdy     = topeclipse.GetDY();
-  double ebdx     = boteclipse.GetDX(); // equals etdx
-  double ebdy     = boteclipse.GetDY(); // equals etdy
-  double angle    = 0.0;
-  bool   cornerpt = model_settings->GetUseCornerpointInterpol();
-  bool   bilinear = false;
+  double etdx       = topeclipse.GetDX();
+  double etdy       = topeclipse.GetDY();
+  double ebdx       = boteclipse.GetDX(); // equals etdx
+  double ebdy       = boteclipse.GetDY(); // equals etdy
+  double angle      = 0.0;
+  bool   cornerpt   = model_settings->GetUseCornerpointInterpol();
+  bool   bilinear   = false;
+  bool   is_surface = true;
 
   NRLib::Grid2D<bool> mask(nx, ny, true);
   FindExtrapolationRegion(mask, *seismic_geometry, x0, y0, etdx, etdy);  // Setup extrapolation mask grid
@@ -313,8 +314,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   NRLib::Grid2D<double> tvalues(nx, ny, missing);
   NRLib::Grid2D<double> bvalues(nx, ny, missing);
 
-  eclipse_geometry.FindLayer(tvalues, mask, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, missing);
-  eclipse_geometry.FindLayer(bvalues, mask, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, missing);
+  eclipse_geometry.FindLayer(tvalues, mask, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
+  eclipse_geometry.FindLayer(bvalues, mask, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
 
   ExtrapolateLayer(tvalues, mask, etdx, etdy, missing);
   ExtrapolateLayer(bvalues, mask, ebdx, ebdy, missing);
@@ -322,9 +323,11 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   double avg_top = tvalues.FindAvg(missing);
   double avg_bot = bvalues.FindAvg(missing);
 
+  assert(avg_top != missing);
+  assert(avg_bot != missing);
+
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
-
       if (tvalues(i, j) == missing && bvalues(i, j) == missing) {
         topeclipse(i, j) = avg_top;
         boteclipse(i, j) = avg_bot;
