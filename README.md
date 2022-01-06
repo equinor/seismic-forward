@@ -8,8 +8,9 @@ of your personal password when accessing the repo
 
 To have Git remember the credentials for you, do this
 
-  $ git config --global credential.helper cache                  # (activate memory cache)
-  $ git config --global credential.helper 'cache --timeout=3600' # (timeout in seconds)
+```
+git config --global credential.helper cache                  # (activate memory cache)
+git config --global credential.helper 'cache --timeout=3600' # (timeout in seconds)```
 
 
 ## Prerequisites
@@ -20,6 +21,7 @@ To have Git remember the credentials for you, do this
 
   Intel MKL -> Must be installed
 
+
 ## To make an executable using CLion or another IDE
 
 Go to the directory containing the SeismicForward git repository
@@ -27,6 +29,7 @@ Go to the directory containing the SeismicForward git repository
 ```
 clion CMakeLists.txt
 ```
+
 
 ## To make an executable using cmake
 
@@ -53,6 +56,7 @@ Generate the executable
 ```
 make
 ```
+
 
 ## Run the tests
 
