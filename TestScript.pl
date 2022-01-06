@@ -3,7 +3,7 @@
 # o==========================================================================o
 # | AUTHOR : Pål Dahle, Norsk regnesentral                                   |
 # | VERSION: 2017/09/28                                                      |
-# | PURPOSE: Compare Geo2Seis output result with correct answers. To include |
+# | PURPOSE: Compare Seismic-Forward output result with correct answers. To include |
 # |          new test cases the adopted file and directory structure must be |
 # |          be followed.                                                    |
 # |                                                                          |
@@ -293,7 +293,7 @@ sub CheckSegYCubes( $$$$$$ )
                 }
             }
             else {
-                push @messages, sprintf("   Grid : %43s  =>  ERROR: Got correct answer but no Geo2Seis output to compare with.\n",
+                push @messages, sprintf("   Grid : %43s  =>  ERROR: Got correct answer but no Seismic Forward output to compare with.\n",
                                         $name);
                 $match = 0;
             }
@@ -402,7 +402,7 @@ my ($tmpdir,
     @cases)     = ExtractOptions(@ARGV);
 
 my ($exedir,                                               # This is where the seismic forward and comparison executables are stored
-    $basedir)   = FindBaseAndExeDir($tmpdir, "../Geo2Seis", $debug);
+    $basedir)   = FindBaseAndExeDir($tmpdir, "../seismic-forward", $debug);
 
 my $testdir     = $basedir."/test_suite";                  # Where tests are stored
 my $make        = $basedir."/make_compare_traces.sh";      # Script for making the comparison function
@@ -414,7 +414,7 @@ my $os          = $^O;
 Initialize($exedir,$basedir,$testdir,$make,$geo2seis,$compare,$debug);
 
 print "\n*******************************************************************";
-print "\n*****                 Geo2Seis test suite                     *****";
+print "\n*****            Seismic Forward test suite                   *****";
 print "\n*******************************************************************\n";
 
 print "\nPlatform                    : $os";

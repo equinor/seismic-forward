@@ -69,7 +69,7 @@ function(mex_compile MEX_SOURCE_FILE LINK_LIBRARIES DEPENDENCY)
         if()
             set(MEX_OPT_FLAG "-g")
         endif()
-        
+
         add_custom_target(mex_compile_${MEX_SOURCE_FILE} ALL
                           COMMAND
                                   ${MATLAB_MEX}
@@ -105,14 +105,14 @@ function(mex_compile MEX_SOURCE_FILE LINK_LIBRARIES DEPENDENCY)
 endfunction()
 
 set(MEX_LINK_LIBRARIES
-    $<TARGET_FILE:geo2seis_lib>
+    $<TARGET_FILE:seismic-forward-lib>
     ${FFT_MATLAB_LIBRARIES}
     $<$<CONFIG:Debug>:${TBB_LIBRARIES_DEBUG}>
     $<$<NOT:$<CONFIG:Debug>>:${TBB_LIBRARIES_RELEASE}>
 )
 
-mex_compile(g2s_model "${MEX_LINK_LIBRARIES}" geo2seis_lib)
-mex_compile(surface_container "${MEX_LINK_LIBRARIES}" geo2seis_lib)
+mex_compile(g2s_model "${MEX_LINK_LIBRARIES}" seismic-forward-lib)
+mex_compile(surface_container "${MEX_LINK_LIBRARIES}" seismic-forward-lib)
 
 set(MATLAB_SOURCE_FILES G2SModel.m ElasticParameters.m Angle.m Wavelet.m WhiteNoise.m OutputGrid.m SurfaceContainer.m)
 
@@ -120,5 +120,3 @@ add_custom_target(copy_m_files ALL)
 foreach(MATLAB_SOURCE_FILE ${MATLAB_SOURCE_FILES})
     add_custom_command(TARGET copy_m_files PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/${MATLAB_SOURCE_FILE} .)
 endforeach()
-
-

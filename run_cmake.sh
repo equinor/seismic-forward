@@ -5,7 +5,7 @@
 #
 # $ mkdir hostname-release    (hostname = name of host)
 # $ cd hostname-release
-# $ ../Geo2Seis/run_cmake.sh
+# $ ../seismic-forward/run_cmake.sh
 #
 # Use -d or --debug for debug compilation
 # Use -m or --matlab for MATLAB compilation
@@ -23,5 +23,5 @@ then
     debug=-DCMAKE_BUILD_TYPE=DEBUG
 fi
 
-echo "Running cmake ../Geo2Seis ${matlab} ${debug}"
-cmake -Wno-dev ../Geo2Seis ${matlab} ${debug}
+echo "Running cmake ../seismic-forward ${matlab} ${debug}"
+cmake -Wno-dev ../seismic-forward ${matlab} ${debug}

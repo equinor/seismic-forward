@@ -26,8 +26,8 @@ find_package(Boost 1.35.0 COMPONENTS unit_test_framework REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
 # link_directories(${Boost_LIBRARY_DIRS})
 
-add_executable(test_geo2seis ${SOURCE_FILES})
-target_link_libraries(test_geo2seis geo2seis_lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
+add_executable(test_seismicforward ${SOURCE_FILES})
+target_link_libraries(test_seismicforward seismic-forward-lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
 
 set (DATA_DIR ${CMAKE_SOURCE_DIR}/tests/data)
-add_test(NAME test_geo2seis WORKING_DIRECTORY ${DATA_DIR} COMMAND test_geo2seis)
+add_test(NAME test_seismicforward WORKING_DIRECTORY ${DATA_DIR} COMMAND test_seismicforward)

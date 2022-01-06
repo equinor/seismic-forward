@@ -206,7 +206,7 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
 
   //Textual ebcdic_header:
   NRLib::TextualHeader ebcdic_header = NRLib::TextualHeader();
-  ebcdic_header.SetLine(0, "SEGY OUTPUT FROM Seismic Forward Modeling / Geo2Seis, ver 4.0  2015");
+  ebcdic_header.SetLine(0, "SEGY OUTPUT FROM Seismic Forward Modeling, ver 4.3  2022");
   std::string line = "Name: " + filename_out, line2;
   ebcdic_header.SetLine(1, line);
   line = "  First inline: " + NRLib::ToString(geometry->GetMinIL()) + "      Last inline: " + NRLib::ToString(geometry->GetMaxIL());

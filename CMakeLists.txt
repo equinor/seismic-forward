@@ -95,7 +95,7 @@ endif(MSVC)
 
 add_subdirectory(3rd-party)
 add_subdirectory(nr)
-add_subdirectory(geo2seis)
+add_subdirectory(src)
 
 get_property(SOURCE_FILES GLOBAL PROPERTY SOURCE_FILES)
 get_property(INCLUDE_ROOTS GLOBAL PROPERTY INCLUDE_ROOTS)
@@ -103,7 +103,7 @@ foreach(INCLUDE_ROOT ${INCLUDE_ROOTS})
   include_directories(BEFORE "${INCLUDE_ROOT}")
 endforeach()
 
-add_library(geo2seis_lib STATIC ${SOURCE_FILES})
+add_library(seismic-forward-lib STATIC ${SOURCE_FILES})
 
 foreach(FILE ${SOURCE_FILES})
   get_filename_component(PARENT_DIR "${FILE}" PATH)
@@ -124,12 +124,12 @@ foreach(FILE ${SOURCE_FILES})
   source_group("${GROUP}" FILES "${FILE}")
 endforeach()
 
-add_executable(seismic_forward geo2seis/main.cpp)
+add_executable(seismic_forward src/main.cpp)
 
 #message(STATUS "Boost libraries to be linked with: ${Boost_LIBRARIES}")
 
-#target_link_libraries(seismic_forward geo2seis_lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(seismic_forward geo2seis_lib ${MATH_LIBRARIES})
+#target_link_libraries(seismic_forward seismic-forward-lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(seismic_forward seismic-forward-lib ${MATH_LIBRARIES})
 
 if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)
