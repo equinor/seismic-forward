@@ -21,13 +21,14 @@ if(UNIX)
                    /prog/Intel/studioxe2015
                    /prog/Intel/studioxe2013  # Statoil Linux
                    /nr/prog/intel/Compiler   # NR Linux
+                   /opt/software/intel       # Paals laptop
               DOC "Root directory for Intel MKL."
               )
 elseif(WIN32)
     set(PROG_FILES_ENV "PROGRAMFILES(X86)") # Workaround to handle parenthesis
     find_path(INTEL_STUDIO_ROOT
               NAMES mkl/include/mkl.h
-              PATHS 
+              PATHS
                    "$ENV{${PROG_FILES_ENV}}/IntelSWTools/compilers_and_libraries/windows"
                    "%ProgramFiles%/IntelSWTools/compilers_and_libraries/windows"
                    "$ENV{${PROG_FILES_ENV}}/Intel/Composer XE"
@@ -37,7 +38,7 @@ elseif(WIN32)
 #else()
 #    find_path(MKL_ROOT
 #              NAMES include/mkl.h
-#              PATHS 
+#              PATHS
 #                   ENV MKLROOT
 #              DOC "Root directory for Intel MKL."
 #              )
@@ -75,7 +76,7 @@ if(INTEL_STUDIO_ROOT)
                       PATHS ${MKL_ROOT}/lib)
          set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_COMPUTATIONAL_LIBRARY} pthread m)
       else() # Linux
-         set(MKL_LIB_PATH ${MKL_ROOT}/lib/intel64) 
+         set(MKL_LIB_PATH ${MKL_ROOT}/lib/intel64)
          find_library(MKL_INTERFACE_LIBRARY
                       NAME libmkl_intel_lp64.a
                       PATHS ${MKL_LIB_PATH})
@@ -89,7 +90,7 @@ if(INTEL_STUDIO_ROOT)
          set(MKL_LIBRARIES ${MKL_LINK_GROUP} pthread m dl)
       endif(APPLE)
    elseif(WIN32)
-      set(MKL_LIB_PATH ${MKL_ROOT}/lib/intel64) 
+      set(MKL_LIB_PATH ${MKL_ROOT}/lib/intel64)
       find_library(MKL_INTERFACE_LIBRARY
                    NAME mkl_intel_lp64.lib
                    PATHS ${MKL_LIB_PATH})
@@ -114,7 +115,7 @@ if(INTEL_STUDIO_ROOT)
              PATHS ${TBB_ROOT}/include
              DOC "Intel TBB include directory."
              )
-   
+
    if(UNIX)
      execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
                      OUTPUT_VARIABLE GCC_VERSION)
@@ -149,11 +150,11 @@ if(INTEL_STUDIO_ROOT)
                )
    endif(UNIX)
 
-   find_library(TBB_LIBRARIES_RELEASE 
+   find_library(TBB_LIBRARIES_RELEASE
                 NAMES tbb libtbb
                 HINTS ${TBB_LIB_DIR})
-    
-   find_library(TBB_LIBRARIES_DEBUG 
+
+   find_library(TBB_LIBRARIES_DEBUG
                 NAMES tbb_debug libtbb_debug
                 HINTS ${TBB_LIB_DIR})
 
@@ -170,10 +171,10 @@ endif(INTEL_STUDIO_ROOT)
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(INTEL_STUDIO DEFAULT_MSG MKL_LIBRARIES MKL_INCLUDE_DIRS TBB_INCLUDE_DIRS TBB_LIBRARIES)
 
-mark_as_advanced(MKL_LIBRARIES MKL_INCLUDE_DIRS MKL_FFTW_INCLUDE_DIRS) 
+mark_as_advanced(MKL_LIBRARIES MKL_INCLUDE_DIRS MKL_FFTW_INCLUDE_DIRS)
 mark_as_advanced(MKL_INTERFACE_LIBRARY MKL_THREADING_LIBRARY MKL_COMPUTATIONAL_LIBRARY)
 mark_as_advanced(TBB_LIBRARIES TBB_INCLUDE_DIRS TBB_LIB_DIR)
-mark_as_advanced(TBB_LIBRARIES_RELEASE TBB_LIBRARIES_DEBUG) 
+mark_as_advanced(TBB_LIBRARIES_RELEASE TBB_LIBRARIES_DEBUG)
 
 # message(STATUS "TBB_ROOT = ${TBB_ROOT}")
 # message(STATUS "TBB_INCLUDE_DIRS = ${TBB_INCLUDE_DIRS}")

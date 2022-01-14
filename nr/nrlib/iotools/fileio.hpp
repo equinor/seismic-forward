@@ -1,4 +1,4 @@
-// $Id: fileio.hpp 1254 2014-02-28 13:25:07Z vigsnes $
+// $Id: fileio.hpp 1594 2017-07-06 14:06:55Z perroe $
 
 // Copyright (c)  2011, Norwegian Computing Center
 // All rights reserved.
@@ -22,12 +22,14 @@
 #ifndef NRLIB_FILEIO_HPP
 #define NRLIB_FILEIO_HPP
 
+// #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <boost/endian/conversion.hpp>
 
 #include "stringtools.hpp"
 #include "../exception/exception.hpp"
@@ -80,8 +82,7 @@ namespace NRLib {
 
   /// \brief Find type of file, for 3D grid files.
   /// \todo Move to a suitable place.
-  int FindGridFileType(const std::string& filename,
-                       Endianess file_format = END_BIG_ENDIAN);
+  int FindGridFileType(const std::string& filename);
 
   // ---------------------------------
   // ASCII read and write
@@ -178,17 +179,19 @@ namespace NRLib {
   // ---------------------------------
 
   /// \brief Write a 2-byte integer to a binary file.
-  void WriteBinaryShort(std::ostream& stream,
+  template <typename F>
+  void WriteBinaryShort(F& stream,
                         short s,
                         Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Read a 2-byte integer from a binary file.
-  short ReadBinaryShort(std::istream& stream,
+  template <typename F>
+  short ReadBinaryShort(F& stream,
                         Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Write an array of binary 2-byte integers.
-  template<typename I>
-  void WriteBinaryShortArray(std::ostream& stream,
+  template <typename F, typename I>
+  void WriteBinaryShortArray(F& stream,
                              I begin,
                              I end,
                              Endianess number_representation = END_BIG_ENDIAN);
@@ -196,8 +199,8 @@ namespace NRLib {
   /// \brief Read an array of binary 2-byte integers.
   /// \note  The container must already be big enough to read all n
   ///        elements.
-  template<typename I>
-  I ReadBinaryShortArray(std::istream& stream,
+  template<typename F, typename I>
+  I ReadBinaryShortArray(F& stream,
                          I begin,
                          size_t n,
                          Endianess number_representation = END_BIG_ENDIAN);
@@ -207,17 +210,19 @@ namespace NRLib {
   // ---------------------------------
 
   /// \brief Write a 4-byte integer to a binary file.
-  void WriteBinaryInt(std::ostream& stream,
+  template <typename F>
+  void WriteBinaryInt(F& stream,
                       int i,
                       Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Read a 4-byte integer from a binary file.
-  int ReadBinaryInt(std::istream& stream,
+  template <typename F>
+  int ReadBinaryInt(F& stream,
                     Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Write an array of binary 4-byte integers.
-  template<typename I>
-  void WriteBinaryIntArray(std::ostream& stream,
+  template<typename F, typename I>
+  void WriteBinaryIntArray(F& stream,
                            I begin,
                            I end,
                            Endianess number_representation = END_BIG_ENDIAN);
@@ -225,8 +230,8 @@ namespace NRLib {
   /// \brief Read an array of binary 4-byte integers.
   /// \note  The container must already be big enough to read all n
   ///        elements.
-  template<typename I>
-  I ReadBinaryIntArray(std::istream& stream,
+  template<typename F, typename I>
+  I ReadBinaryIntArray(F& stream,
                        I begin,
                        size_t n,
                        Endianess number_representation = END_BIG_ENDIAN);
@@ -236,17 +241,19 @@ namespace NRLib {
   // ---------------------------------
 
   /// \brief Write a 4-byte float on standard IEEE format.
-  void WriteBinaryFloat(std::ostream& stream,
+  template <typename F>
+  void WriteBinaryFloat(F& stream,
                         float f,
                         Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Read a 4-byte float on standard IEEE format.
-  float ReadBinaryFloat(std::istream& stream,
+  template <typename F>
+  float ReadBinaryFloat(F& stream,
                         Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Write an array of 4-byte floats on standard IEEE format.
-  template<typename I>
-  void WriteBinaryFloatArray(std::ostream& stream,
+  template<typename F, typename I>
+  void WriteBinaryFloatArray(F& stream,
                              I begin,
                              I end,
                              Endianess number_representation = END_BIG_ENDIAN);
@@ -254,8 +261,8 @@ namespace NRLib {
   /// \brief Read an array of 4-byte floats on standard IEEE format.
   /// \note  The container must already be big enough to read all n
   ///        elements.
-  template<typename I>
-  I ReadBinaryFloatArray(std::istream& stream,
+  template<typename F, typename I>
+  I ReadBinaryFloatArray(F& stream,
                          I begin,
                          size_t n,
                          Endianess number_representation = END_BIG_ENDIAN);
@@ -265,17 +272,19 @@ namespace NRLib {
   // ---------------------------------
 
   /// \brief Write a 8-byte float on standard IEEE format.
-  void WriteBinaryDouble(std::ostream& stream,
+  template <typename F>
+  void WriteBinaryDouble(F& stream,
                          double d,
                          Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Read a 8-byte float on standard IEEE format.
-  double ReadBinaryDouble(std::istream& stream,
+  template <typename F>
+  double ReadBinaryDouble(F& stream,
                           Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Write an array of 8-byte floats on standard IEEE format.
-  template<typename I>
-  void WriteBinaryDoubleArray(std::ostream& stream,
+  template<typename F, typename I>
+  void WriteBinaryDoubleArray(F& stream,
                               I begin,
                               I end,
                               Endianess number_representation = END_BIG_ENDIAN);
@@ -283,8 +292,8 @@ namespace NRLib {
   /// \brief Read an array of 8-byte floats on standard IEEE format.
   /// \note  The container must already be big enough to read all n
   ///        elements.
-  template<typename I>
-  I ReadBinaryDoubleArray(std::istream& stream,
+  template<typename F, typename I>
+  I ReadBinaryDoubleArray(F& stream,
                           I begin,
                           size_t n,
                           Endianess number_representation = END_BIG_ENDIAN);
@@ -294,17 +303,19 @@ namespace NRLib {
   // ---------------------------------
 
   /// \brief Write a 4-byte float on standard IEEE format.
-  void WriteBinaryIbmFloat(std::ostream& stream,
+  template <typename F>
+  void WriteBinaryIbmFloat(F& stream,
                            float f,
                            Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Read a 4-byte float on standard IEEE format.
-  float ReadBinaryIbmFloat(std::istream& stream,
+  template <typename F>
+  float ReadBinaryIbmFloat(F& stream,
                            Endianess number_representation = END_BIG_ENDIAN);
 
   /// \brief Write an array of 4-byte floats on standard IEEE format.
-  template<typename I>
-  void WriteBinaryIbmFloatArray(std::ostream& stream,
+  template<typename F, typename I>
+  void WriteBinaryIbmFloatArray(F& stream,
                                 I begin,
                                 I end,
                                 Endianess number_representation = END_BIG_ENDIAN);
@@ -312,8 +323,8 @@ namespace NRLib {
   /// \brief Read an array of 4-byte floats on standard IEEE format.
   /// \note  The container must already be big enough to read all n
   ///        elements.
-  template<typename I>
-  I ReadBinaryIbmFloatArray(std::istream& stream,
+  template<typename F, typename I>
+  I ReadBinaryIbmFloatArray(F& stream,
                             I begin,
                             size_t n,
                             Endianess number_representation = END_BIG_ENDIAN);
@@ -330,17 +341,19 @@ bool IgnoreComment(std::ifstream& file,
   /// Seek to given position in file, works for large files.
   int Seek(FILE * file, long long offset, int origin);
 
+  /// Tell position in file, works for large files.
+  long long Tell(FILE * file);
 
-  // ---------------------------------
-  // Parsing of read data
-  // ---------------------------------
-  // The four ParseBE-functions here are needed by the SegY reader in a special case.
+
+  // -------------------------------------------
+  // Parsing of binary data from char buffer
+  // -------------------------------------------
 
   /// Parse unsigned 32-bit integer from big-endian buffer.
-  inline void ParseInt16BE(const char* buffer, /*uint16_t*/ short& ui);
+  inline void ParseInt16BE(const char* buffer, /*int16_t*/ short& ui);
 
   /// Parse unsigned 32-bit integer from big-endian buffer.
-  inline void ParseInt32BE(const char* buffer, /*uint32_t*/ int& ui);
+  inline void ParseInt32BE(const char* buffer, /*int32_t*/ int& ui);
 
   /// Parse unsigned 32-bit integer from big-endian buffer.
   inline void ParseUInt16BE(const char* buffer, /*uint16_t*/ unsigned short& ui);
@@ -353,6 +366,23 @@ bool IgnoreComment(std::ifstream& file,
 
   /// Parse IEEE double-precision float from big-endian buffer.
   inline void ParseIBMFloatBE(const char* buffer, float& f);
+
+  // -------------------------------------------
+  // Writing binary data to char buffer
+  // -------------------------------------------
+
+  /// Parse unsigned 32-bit integer from big-endian buffer.
+  inline void WriteInt16BE(char* buffer, /*int16_t*/ short ui);
+
+  /// Parse unsigned 32-bit integer from big-endian buffer.
+  inline void WriteInt32BE(char* buffer, /*int32_t*/ int ui);
+
+  /// Write unsigned 32-bit integer to big-endian buffer.
+  inline void WriteUInt16BE(char* buffer, /*uint16_t*/ unsigned short us);
+
+  /// Write unsigned 32-bit integer to big-endian buffer.
+  inline void WriteUInt32BE(char* buffer, /*uint32_t*/ unsigned int ui);
+
 
 namespace NRLibPrivate {
   /// \todo Use stdint.h if available.
@@ -373,17 +403,11 @@ namespace NRLibPrivate {
   /// Parse unsigned 32-bit integer from little-endian buffer.
   inline void ParseUInt16LE(const char* buffer, /*uint16_t*/ unsigned short& ui);
 
-  /// Write unsigned 32-bit integer to big-endian buffer.
-  inline void WriteUInt16BE(char* buffer, /*uint16_t*/ unsigned short us);
-
   /// Write unsigned 32-bit integer to little-endian buffer.
   inline void WriteUInt16LE(char* buffer, /*uint16_t*/ unsigned short us);
 
   /// Parse unsigned 32-bit integer from little-endian buffer.
   inline void ParseUInt32LE(const char* buffer, /*uint32_t*/ unsigned int& ui);
-
-  /// Write unsigned 32-bit integer to big-endian buffer.
-  inline void WriteUInt32BE(char* buffer, /*uint32_t*/ unsigned int ui);
 
   /// Write unsigned 32-bit integer to little-endian buffer.
   inline void WriteUInt32LE(char* buffer, /*uint32_t*/ unsigned int ui);
@@ -417,6 +441,12 @@ namespace NRLibPrivate {
 
   /// Write IEEE double-precision float to little-endian buffer.
   inline void WriteIBMFloatLE(char* buffer, float f);
+
+  /// Inplace translation from IEEE to IBM 4-byte floating point format.
+  inline void Ieee2Ibm(boost::uint32_t& in);
+
+  /// Inplace translation from IEEE to IBM 4-byte floating point format.
+  inline void Ibm2Ieee(boost::uint32_t& in);
 } // namespace NRLibPrivate
 
 } // namespace NRLib
@@ -482,7 +512,6 @@ I NRLib::ReadAsciiArray(std::istream& stream, I begin, size_t n, int& line)
 template <typename I>
 I NRLib::ReadAsciiArrayFast(std::istream& stream, I begin, size_t n)
 {
-  typedef typename std::iterator_traits<I>::value_type T;
   for (size_t i = 0; i < n; ++i) {
     stream >> *begin;
     ++begin;
@@ -504,8 +533,6 @@ I NRLib::ReadAsciiArrayFast(std::istream& stream, I begin, size_t n)
 template <typename I>
 I NRLib::ReadAsciiArrayFastRestOfFile(std::istream& stream, I begin, size_t n)
 {
-  typedef typename std::iterator_traits<I>::value_type T;
-
   std::streampos pos = stream.tellg();
   stream.seekg(0, std::ios_base::end);
   std::streampos end = stream.tellg();
@@ -518,330 +545,530 @@ I NRLib::ReadAsciiArrayFastRestOfFile(std::istream& stream, I begin, size_t n)
 }
 
 
-template <typename I>
-void NRLib::WriteBinaryShortArray(std::ostream& stream,
-                                   I begin,
-                                   I end,
-                                   NRLib::Endianess number_representation)
+template <typename F>
+void NRLib::WriteBinaryShort(F& stream,
+                             short s,
+                             Endianess file_format)
 {
   using namespace NRLib::NRLibPrivate;
 
-  typename I::difference_type n_char = 2*std::distance(begin, end);
-  std::vector<char> buffer(n_char);
+  char buffer[2];
 
-  switch (number_representation) {
+  switch (file_format) {
   case END_BIG_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteUInt16BE(&buffer[2*i], static_cast<unsigned short>(*begin));
-    }
+    WriteUInt16BE(buffer, static_cast<unsigned short>(s));
     break;
   case END_LITTLE_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteUInt16LE(&buffer[2*i], static_cast<unsigned short>(*begin));
-    }
+    NRLibPrivate::WriteUInt16LE(buffer, static_cast<unsigned short>(s));
     break;
   default:
-    throw Exception("Invalid number representation.");
+    assert(false); // Invalid endianess descriptor
   }
 
-  if (!stream.write(&buffer[0], static_cast<std::streamsize>(n_char))) {
+  if (!stream.write(buffer, 2)) {
     throw Exception("Error writing to stream.");
   }
 }
 
 
-template <typename I>
-I NRLib::ReadBinaryShortArray(std::istream& stream,
-                               I begin,
-                               size_t n,
-                               NRLib::Endianess number_representation)
+template <typename F>
+short NRLib::ReadBinaryShort(F& stream,
+                             Endianess file_format)
 {
   using namespace NRLib::NRLibPrivate;
 
-  std::vector<char> buffer(2*n);
   unsigned short us;
+  char buffer[2];
 
-  if (!stream.read(&buffer[0], static_cast<std::streamsize>(2*n))) {
+  if (!stream.read(buffer, 2)) {
+    if (stream.eof())
+      throw EndOfFile();
+    else
+      throw Exception("Error reading from stream (a).");
+  }
+
+  switch (file_format) {
+  case END_BIG_ENDIAN:
+    ParseUInt16BE(buffer, us);
+    break;
+  case END_LITTLE_ENDIAN:
+    ParseUInt16LE(buffer, us);
+    break;
+  default:
+    throw Exception("Invalid file format.");
+  }
+
+  return static_cast<short>(us);
+}
+
+
+template <typename F, typename I>
+void NRLib::WriteBinaryShortArray(F& stream,
+                                  I begin,
+                                  I end,
+                                  NRLib::Endianess number_representation)
+{
+  typename I::difference_type n_in = std::distance(begin, end);
+
+  std::vector<boost::uint16_t> buffer(n_in);
+  memcpy(&buffer[0], &begin[0], 2 * n_in);
+
+  switch (number_representation) {
+  case END_BIG_ENDIAN:
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_big_inplace(buffer[i]);
+    break;
+  case END_LITTLE_ENDIAN:
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_little_inplace(buffer[i]);
+    break;
+  default:
+    assert(false); // Invalid endianess descriptor
+  }
+
+  if (!stream.write(reinterpret_cast<const char*>(&buffer[0]),
+                    static_cast<std::streamsize>(2 * n_in))) {
+    throw Exception("Error writing to stream.");
+  }
+}
+
+
+template <typename F, typename I>
+I NRLib::ReadBinaryShortArray(F& stream,
+                              I begin,
+                              size_t n,
+                              NRLib::Endianess number_representation)
+{
+  std::vector<boost::uint16_t> buffer(n);
+
+  if (!stream.read(reinterpret_cast<char *>(&buffer[0]),
+                   static_cast<std::streamsize>(2 * n))) {
     throw Exception("Error reading from stream (f).");
   }
 
   switch (number_representation) {
   case END_BIG_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseUInt16BE(&buffer[2*i], us);
-      *begin = static_cast<typename std::iterator_traits<I>::value_type>(us);
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::big_to_native_inplace(buffer[i]);
     break;
   case END_LITTLE_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseUInt16LE(&buffer[2*i], us);
-      *begin = static_cast<typename std::iterator_traits<I>::value_type>(us);
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::little_to_native_inplace(buffer[i]);
     break;
   default:
-    throw Exception("Invalid number representation.");
+    assert(false); // Invalid endianess descriptor
   }
+
+  std::memcpy(&begin[0], &buffer[0], 2 * n);
 
   return begin;
 }
 
 
-template <typename I>
-void NRLib::WriteBinaryIntArray(std::ostream& stream,
-                                 I begin,
-                                 I end,
-                                 NRLib::Endianess number_representation)
+template <typename F>
+void NRLib::WriteBinaryInt(F& stream,
+                           int i,
+                           Endianess file_format)
 {
   using namespace NRLib::NRLibPrivate;
 
-  typename I::difference_type n_char = 4*std::distance(begin, end);
-  std::vector<char> buffer(n_char);
+  char buffer[4];
 
-  switch (number_representation) {
+  switch (file_format) {
   case END_BIG_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteUInt32BE(&buffer[4*i], static_cast<unsigned int>(*begin));
-    }
+    WriteUInt32BE(buffer, static_cast<unsigned int>(i));
     break;
   case END_LITTLE_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteUInt32LE(&buffer[4*i], static_cast<unsigned int>(*begin));
-    }
+    WriteUInt32LE(buffer, static_cast<unsigned int>(i));
     break;
   default:
-    throw Exception("Invalid number representation.");
+    throw Exception("Invalid file format.");
   }
 
-  if (!stream.write(&buffer[0], static_cast<std::streamsize>(n_char))) {
+  if (!stream.write(buffer, 4)) {
     throw Exception("Error writing to stream.");
   }
 }
 
 
-template <typename I>
-I NRLib::ReadBinaryIntArray(std::istream& stream,
-                             I begin,
-                             size_t n,
-                             NRLib::Endianess number_representation)
+template <typename F>
+int NRLib::ReadBinaryInt(F& stream,
+                         Endianess file_format)
 {
   using namespace NRLib::NRLibPrivate;
 
-  std::vector<char> buffer(4*n);
   unsigned int ui;
+  char buffer[4];
 
-  if (!stream.read(&buffer[0], static_cast<std::streamsize>(4*n))) {
+  if (!stream.read(buffer, 4)) {
+    if (stream.eof())
+      throw EndOfFile();
+    else
+      throw Exception("Error reading from stream (b).");
+  }
+
+  switch (file_format) {
+  case END_BIG_ENDIAN:
+    ParseUInt32BE(buffer, ui);
+    break;
+  case END_LITTLE_ENDIAN:
+    ParseUInt32LE(buffer, ui);
+    break;
+  default:
+    throw Exception("Invalid file format.");
+  }
+
+  return static_cast<int>(ui);
+}
+
+
+template <typename F, typename I>
+void NRLib::WriteBinaryIntArray(F& stream,
+                                I begin,
+                                I end,
+                                NRLib::Endianess number_representation)
+{
+  typename I::difference_type n_in = std::distance(begin, end);
+
+  std::vector<boost::uint32_t> buffer(n_in);
+  memcpy(&buffer[0], &begin[0], 4 * n_in);
+
+  switch (number_representation) {
+  case END_BIG_ENDIAN:
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_big_inplace(buffer[i]);
+    break;
+  case END_LITTLE_ENDIAN:
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_little_inplace(buffer[i]);
+    break;
+  default:
+    assert(false); // Invalid endianess descriptor
+  }
+
+  if (!stream.write(reinterpret_cast<const char*>(&buffer[0]),
+                    static_cast<std::streamsize>(4 * n_in))) {
+    throw Exception("Error writing to stream.");
+  }
+}
+
+
+template <typename F, typename I>
+I NRLib::ReadBinaryIntArray(F& stream,
+                            I begin,
+                            size_t n,
+                            NRLib::Endianess number_representation)
+{
+  std::vector<boost::uint32_t> buffer(n);
+
+  if (!stream.read(reinterpret_cast<char *>(&buffer[0]),
+                   static_cast<std::streamsize>(4 * n))) {
     throw Exception("Error reading from stream (g).");
   }
 
   switch (number_representation) {
   case END_BIG_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseUInt32BE(&buffer[4*i], ui);
-      *begin = static_cast<typename std::iterator_traits<I>::value_type>(ui);
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::big_to_native_inplace(buffer[i]);
     break;
   case END_LITTLE_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseUInt32LE(&buffer[4*i], ui);
-      *begin = static_cast<typename std::iterator_traits<I>::value_type>(ui);
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::little_to_native_inplace(buffer[i]);
     break;
   default:
-    throw Exception("Invalid number representation.");
+    assert(false); // Invalid endianess descriptor
   }
+
+  std::memcpy(&begin[0], &buffer[0], 4 * n);
 
   return begin;
 }
 
 
-template <typename I>
-void NRLib::WriteBinaryFloatArray(std::ostream& stream,
-                                   I begin,
-                                   I end,
-                                   NRLib::Endianess number_representation)
+template <typename F>
+void NRLib::WriteBinaryFloat(F& stream,
+                             float f,
+                             Endianess file_format)
 {
   using namespace NRLib::NRLibPrivate;
 
-  typename I::difference_type n_char = 4*std::distance(begin, end);
-  std::vector<char> buffer(n_char);
+  char buffer[4];
 
-  switch (number_representation) {
+  switch (file_format) {
   case END_BIG_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteIEEEFloatBE(&buffer[4*i], *begin);
-    }
+    WriteIEEEFloatBE(buffer, f);
     break;
   case END_LITTLE_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteIEEEFloatLE(&buffer[4*i], *begin);
-    }
+    WriteIEEEFloatLE(buffer, f);
     break;
   default:
-    throw Exception("Invalid number representation.");
+    throw Exception("Invalid file format.");
   }
 
-  if (!stream.write(&buffer[0], static_cast<std::streamsize>(n_char))) {
+  if (!stream.write(buffer, 4)) {
     throw Exception("Error writing to stream.");
   }
 }
 
-template <typename I>
-I NRLib::ReadBinaryFloatArray(std::istream& stream,
-                               I begin,
-                               size_t n,
-                               NRLib::Endianess number_representation)
+
+template <typename F>
+float NRLib::ReadBinaryFloat(F& stream,
+                             Endianess file_format)
 {
   using namespace NRLib::NRLibPrivate;
 
-  std::vector<char> buffer(4*n);
   float f;
+  char buffer[4];
 
-  if (!stream.read(&buffer[0], static_cast<std::streamsize>(4*n))) {
+  if (!stream.read(buffer, 4)) {
+    if (stream.eof())
+      throw EndOfFile();
+    else
+      throw Exception("Error reading from stream (c).");
+  }
+
+  switch (file_format) {
+  case END_BIG_ENDIAN:
+    ParseIEEEFloatBE(buffer, f);
+    break;
+  case END_LITTLE_ENDIAN:
+    ParseIEEEFloatLE(buffer, f);
+    break;
+  default:
+    throw Exception("Invalid file format.");
+  }
+
+  return f;
+}
+
+
+template <typename F, typename I>
+void NRLib::WriteBinaryFloatArray(F& stream,
+                                  I begin,
+                                  I end,
+                                  NRLib::Endianess number_representation)
+{
+  typename I::difference_type n_in = std::distance(begin, end);
+
+  std::vector<boost::uint32_t> buffer(n_in);
+
+  memcpy(&buffer[0], &begin[0], 4 * n_in);
+
+  switch (number_representation) {
+  case END_BIG_ENDIAN:
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_big_inplace(buffer[i]);
+    break;
+  case END_LITTLE_ENDIAN:
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_little_inplace(buffer[i]);
+    break;
+  default:
+    assert(false); // Invalid endianess descriptor
+  }
+
+  if (!stream.write(reinterpret_cast<const char*>(&buffer[0]),
+                    static_cast<std::streamsize>(4 * n_in))) {
+    throw Exception("Error writing to stream.");
+  }
+}
+
+
+template <typename F, typename I>
+I NRLib::ReadBinaryFloatArray(F& stream,
+                              I begin,
+                              size_t n,
+                              NRLib::Endianess number_representation)
+{
+  std::vector<boost::uint32_t> buffer(n);
+
+  if (!stream.read(reinterpret_cast<char *>(&buffer[0]), static_cast<std::streamsize>(4*n))) {
     throw Exception("Error reading from stream (h).");
   }
 
   switch (number_representation) {
   case END_BIG_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseIEEEFloatBE(&buffer[4*i], f);
-      *begin = static_cast<typename std::iterator_traits<I>::value_type>(f);
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::big_to_native_inplace(buffer[i]);
     break;
   case END_LITTLE_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseIEEEFloatLE(&buffer[4*i], f);
-      *begin = static_cast<typename std::iterator_traits<I>::value_type>(f);
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::little_to_native_inplace(buffer[i]);
     break;
   default:
-    throw Exception("Invalid number representation.");
+    assert(false); // Invalid endianess descriptor
   }
+
+  std::memcpy(&begin[0], &buffer[0], 4 * n);
 
   return begin;
 }
 
 
-template <typename I>
-void NRLib::WriteBinaryDoubleArray(std::ostream& stream,
-                                    I begin,
-                                    I end,
-                                    NRLib::Endianess number_representation)
+template <typename F>
+void NRLib::WriteBinaryDouble(F& stream,
+                              double d,
+                              Endianess file_format)
 {
   using namespace NRLib::NRLibPrivate;
 
-  typename I::difference_type n_char = 8*std::distance(begin, end);
-  std::vector<char> buffer(n_char);
+  char buffer[8];
 
-  switch (number_representation) {
+  switch (file_format) {
   case END_BIG_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteIEEEDoubleBE(&buffer[8*i], *begin);
-    }
+    WriteIEEEDoubleBE(buffer, d);
     break;
   case END_LITTLE_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteIEEEDoubleLE(&buffer[8*i], *begin);
-    }
+    WriteIEEEDoubleLE(buffer, d);
     break;
   default:
-    throw Exception("Invalid number representation.");
+    throw Exception("Invalid file format.");
   }
 
-  if (!stream.write(&buffer[0], static_cast<std::streamsize>(n_char))) {
+  if (!stream.write(buffer, 8)) {
     throw Exception("Error writing to stream.");
   }
 }
 
 
-template <typename I>
-I NRLib::ReadBinaryDoubleArray(std::istream& stream,
-                                I begin,
-                                size_t n,
-                                NRLib::Endianess number_representation)
+template <typename F>
+double NRLib::ReadBinaryDouble(F& stream,
+                               Endianess file_format)
 {
   using namespace NRLib::NRLibPrivate;
 
-  std::vector<char> buffer(8*n);
   double d;
+  char buffer[8];
 
-  if (!stream.read(&buffer[0], static_cast<std::streamsize>(8*n))) {
+  if (!stream.read(buffer, 8)) {
+    if (stream.eof())
+      throw EndOfFile();
+    else
+      throw Exception("Error reading from stream (d).");
+  }
+
+  switch (file_format) {
+  case END_BIG_ENDIAN:
+    ParseIEEEDoubleBE(buffer, d);
+    break;
+  case END_LITTLE_ENDIAN:
+    ParseIEEEDoubleLE(buffer, d);
+    break;
+  default:
+    throw Exception("Invalid file format.");
+  }
+
+  return d;
+}
+
+
+template <typename F, typename I>
+void NRLib::WriteBinaryDoubleArray(F& stream,
+                                   I begin,
+                                   I end,
+                                   NRLib::Endianess number_representation)
+{
+  typename I::difference_type n_in = std::distance(begin, end);
+  std::vector<boost::uint64_t> buffer(n_in);
+
+  memcpy(&buffer[0], &begin[0], 8 * n_in);
+
+  switch (number_representation) {
+  case END_BIG_ENDIAN:
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_big_inplace(buffer[i]);
+    break;
+  case END_LITTLE_ENDIAN:
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_little_inplace(buffer[i]);
+    break;
+  default:
+    assert(false); // Invalid endianess descriptor
+  }
+
+  if (!stream.write(reinterpret_cast<const char*>(&buffer[0]),
+                    static_cast<std::streamsize>(8 * n_in))) {
+    throw Exception("Error writing to stream.");
+  }
+}
+
+
+template <typename F, typename I>
+I NRLib::ReadBinaryDoubleArray(F& stream,
+                               I begin,
+                               size_t n,
+                               NRLib::Endianess number_representation)
+{
+  std::vector<boost::uint64_t> buffer(n);
+
+  if (!stream.read(reinterpret_cast<char *>(&buffer[0]),
+                   static_cast<std::streamsize>(8 * n))) {
     throw Exception("Error reading from stream (i).");
   }
 
   switch (number_representation) {
   case END_BIG_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseIEEEDoubleBE(&buffer[8*i], d);
-      *begin = static_cast<typename std::iterator_traits<I>::value_type>(d);
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::big_to_native_inplace(buffer[i]);
     break;
   case END_LITTLE_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseIEEEDoubleLE(&buffer[8*i], d);
-      *begin = static_cast<typename std::iterator_traits<I>::value_type>(d);
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::little_to_native_inplace(buffer[i]);
     break;
   default:
-    throw Exception("Invalid number representation.");
+    assert(false); // Invalid endianess descriptor
   }
+
+  std::memcpy(&begin[0], &buffer[0], 8 * n);
 
   return begin;
 }
 
 
-template <typename I>
-void NRLib::WriteBinaryIbmFloatArray(std::ostream& stream,
-                                      I begin,
-                                      I end,
-                                      NRLib::Endianess number_representation)
+template <typename F, typename I>
+void NRLib::WriteBinaryIbmFloatArray(F& stream,
+                                     I begin,
+                                     I end,
+                                     NRLib::Endianess number_representation)
 {
-  using namespace NRLib::NRLibPrivate;
+  typename I::difference_type n_in = std::distance(begin, end);
+  std::vector<boost::uint32_t> buffer(n_in);
 
-  typename I::difference_type n_char = 4*std::distance(begin, end);
-  std::vector<char> buffer(n_char);
+  memcpy(&buffer[0], &begin[0], 4 * n_in);
+
+  for (int i = 0; i < n_in; ++i)
+    NRLibPrivate::Ieee2Ibm(buffer[i]);
 
   switch (number_representation) {
   case END_BIG_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteIBMFloatBE(&buffer[4*i], *begin);
-    }
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_big_inplace(buffer[i]);
     break;
   case END_LITTLE_ENDIAN:
-    for (int i = 0; begin != end; ++begin, ++i) {
-      WriteIBMFloatLE(&buffer[4*i], *begin);
-    }
+    for (int i = 0; i < n_in; ++i)
+      boost::endian::native_to_little_inplace(buffer[i]);
     break;
   default:
-    throw Exception("Invalid number representation.");
+    assert(false); // Invalid endianess descriptor
   }
 
-  if (!stream.write(&buffer[0], static_cast<std::streamsize>(n_char))) {
+  if (!stream.write(reinterpret_cast<const char*>(&buffer[0]),
+                    static_cast<std::streamsize>(4 * n_in))) {
     throw Exception("Error writing to stream.");
   }
 }
 
 
-template <typename I>
-I NRLib::ReadBinaryIbmFloatArray(std::istream& stream,
-                                  I begin,
-                                  size_t n,
-                                  NRLib::Endianess number_representation)
+template <typename F, typename I>
+I NRLib::ReadBinaryIbmFloatArray(F& stream,
+                                 I      begin,
+                                 size_t n,
+                                 NRLib::Endianess number_representation)
 {
-  using namespace NRLib::NRLibPrivate;
-
-  std::vector<char> buffer(4*n);
-  float f;
+  std::vector<boost::uint32_t> buffer(n);
 
   std::string error;
-  if (!stream.read(&buffer[0], static_cast<std::streamsize>(4*n))) {
+  if (!stream.read(reinterpret_cast<char *>(&buffer[0]), static_cast<std::streamsize>(4*n))) {
     if (stream.eof())
       error = "Error reading binary IBM float array. Trying to read 4*" + NRLib::ToString(n) + " elements when end-of-file was reached.\n";
     else {
@@ -851,29 +1078,83 @@ I NRLib::ReadBinaryIbmFloatArray(std::istream& stream,
 
   switch (number_representation) {
   case END_BIG_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseIBMFloatBE(&buffer[4*i], f);
-      *begin = f;
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::big_to_native_inplace(buffer[i]);
     break;
   case END_LITTLE_ENDIAN:
-    for (size_t i = 0; i < n; ++i) {
-      ParseIBMFloatLE(&buffer[4*i], f);
-      *begin = f;
-      ++begin;
-    }
+    for (size_t i = 0; i < n; ++i)
+      boost::endian::little_to_native_inplace(buffer[i]);
     break;
   default:
-    error += "Invalid number representation. Cannot interpret bit stream as numbers";
+    assert(false); // Invalid endianess descriptor
   }
+
+  for (size_t i = 0; i < n; ++i)
+    NRLibPrivate::Ibm2Ieee(buffer[i]);
+
+  memcpy(&begin[0], &buffer[0], 4 * n);
 
   if (error != "") {
     throw Exception(error);
-   }
+  }
 
   return begin;
 }
+
+
+template <typename F>
+void NRLib::WriteBinaryIbmFloat(F& stream,
+                                float f,
+                                Endianess file_format)
+{
+  char buffer[4];
+
+  switch (file_format) {
+  case END_BIG_ENDIAN:
+    NRLibPrivate::WriteIBMFloatBE(buffer, f);
+    break;
+  case END_LITTLE_ENDIAN:
+    NRLibPrivate::WriteIBMFloatLE(buffer, f);
+    break;
+  default:
+    assert(false); // Invalid endianess descriptor
+  }
+
+  if (!stream.write(buffer, 4)) {
+    throw Exception("Error writing to stream.");
+  }
+}
+
+
+template <typename F>
+float NRLib::ReadBinaryIbmFloat(F& stream,
+                                Endianess file_format)
+{
+  float f = 0.0;
+  char buffer[4];
+
+  if (!stream.read(buffer, 4)) {
+    if (stream.eof())
+      throw EndOfFile();
+    else
+      throw Exception("Error reading from stream (e).");
+  }
+
+  switch (file_format) {
+  case END_BIG_ENDIAN:
+    ParseIBMFloatBE(buffer, f);
+    break;
+  case END_LITTLE_ENDIAN:
+    NRLibPrivate::ParseIBMFloatLE(buffer, f);
+    break;
+  default:
+    assert(false); // Invalid endianess descriptor
+  }
+
+  return f;
+}
+
+
 
 
 static const unsigned short smasks[2] = {0x00ff, 0xff00};
@@ -919,8 +1200,8 @@ void NRLib::NRLibPrivate::ParseUInt16LE(const char* buffer,
 }
 
 
-void NRLib::NRLibPrivate::WriteUInt16BE(char* buffer,
-                                    /*uint32_t*/ unsigned short us)
+void NRLib::WriteUInt16BE(char* buffer,
+                          /*uint32_t*/ unsigned short us)
 {
   buffer[0] = static_cast<char>( (us & smasks[1]) >> 8 );
   buffer[1] = static_cast<char>( us & smasks[0] );
@@ -972,9 +1253,21 @@ void NRLib::NRLibPrivate::ParseUInt32LE(const char* buffer,
   }
 }
 
+void NRLib::WriteInt32BE(char* buffer,
+                          /*uint32_t*/ int ui)
+{
+  WriteUInt32BE(buffer, static_cast<unsigned int>(ui));
+}
 
-void NRLib::NRLibPrivate::WriteUInt32BE(char* buffer,
-                                    /*uint32_t*/ unsigned int ui)
+void NRLib::WriteInt16BE(char* buffer,
+                         /*uint32_t*/ short ui)
+{
+  WriteUInt16BE(buffer, static_cast<unsigned short>(ui));
+}
+
+
+void NRLib::WriteUInt32BE(char* buffer,
+                          /*uint32_t*/ unsigned int ui)
 {
   buffer[0] = static_cast<char>( (ui & masks[3]) >> 24);
   buffer[1] = static_cast<char>( (ui & masks[2]) >> 16 );
@@ -1110,8 +1403,8 @@ static unsigned int IEMAXIB  = 0x611FFFFF;
 static unsigned int IEMINIB  = 0x21200000;
 
 
-/// Converts Ieee float (represented as 32-bit int) to IBM float.
-static inline void Ibm2Ieee(/*uint32_t*/ unsigned int& in)
+/// Converts IBM float (represented as 32-bit int) to IEEE float.
+void NRLib::NRLibPrivate::Ibm2Ieee(boost::uint32_t& in)
 {
   static int it[8] = { 0x21800000, 0x21400000, 0x21000000, 0x21000000,
           0x20c00000, 0x20c00000, 0x20c00000, 0x20c00000 };
@@ -1130,8 +1423,8 @@ static inline void Ibm2Ieee(/*uint32_t*/ unsigned int& in)
 }
 
 
-/// Converts Ieee float (represented as 32-bit int) to IBM float.
-static inline void Ieee2Ibm ( /*uint32_t*/ unsigned int& in)
+/// Converts IEEE float (represented as 32-bit int) to IBM float.
+void NRLib::NRLibPrivate::Ieee2Ibm(boost::uint32_t& in)
 {
   static int it[4] = { 0x21200000, 0x21400000, 0x21800000, 0x22100000 };
   static int mt[4] = { 2, 4, 8, 1 };
@@ -1155,7 +1448,7 @@ void NRLib::ParseIBMFloatBE(const char* buffer, float& f)
     tmp.ui |= static_cast<unsigned char>(buffer[i]);
   }
 
-  Ibm2Ieee(tmp.ui);
+  NRLibPrivate::Ibm2Ieee(tmp.ui);
   f = tmp.f;
 }
 
@@ -1170,7 +1463,7 @@ void NRLib::NRLibPrivate::ParseIBMFloatLE(const char* buffer, float& f)
     tmp.ui |= static_cast<unsigned char>(buffer[3-i]);
   }
 
-  Ibm2Ieee(tmp.ui);
+  NRLibPrivate::Ibm2Ieee(tmp.ui);
   f = tmp.f;
 }
 
