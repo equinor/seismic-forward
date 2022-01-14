@@ -11,7 +11,23 @@ To have Git remember the credentials for you, do this
 ```
 git config --global credential.helper cache                  # (activate memory cache)
 git config --global credential.helper 'cache --timeout=3600' # (timeout in seconds)```
+```
 
+## Fork
+
+You should checkout a fork of this project and not this code. When you have
+made a fork, you can set this repository as your upstream:
+
+```
+git remote add upstream https://github.com/equinor/seismic-forward.git
+```
+
+Verify upstream and fetch the branches
+
+```
+git fetch upstream
+git branch -a
+```
 
 ## Prerequisites
 
