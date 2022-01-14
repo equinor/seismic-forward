@@ -11,6 +11,7 @@ To have Git remember the credentials for you, do this
 ```
 git config --global credential.helper cache                  # (activate memory cache)
 git config --global credential.helper 'cache --timeout=3600' # (timeout in seconds)```
+```
 
 
 ## Prerequisites
