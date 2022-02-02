@@ -13,9 +13,9 @@ if [ ${CUR_DIR} = "seismic-forward" ]; then
     exit;
 fi
 
-if  [ -e ${OBJ_DIR}/seismic-forward/compare_traces.o ] ; then
+if [ -e ${OBJ_DIR}/src/compare_traces.o ] ; then
   echo "Removing old object file compare_traces.o"
-  rm ${OBJ_DIR}/seismic-forward/compare_traces.o
+  rm ${OBJ_DIR}/src/compare_traces.o
 fi
 if [ -e ${EXE} ] ; then
   echo "Removing old executable"
@@ -27,11 +27,11 @@ g++ -c -O2 \
     -I${ROOT_DIR} \
     -I${ROOT_DIR}/nr \
     -I${ROOT_DIR}/${BOOST_DIR} \
-    ${ROOT_DIR}/seismic-forward/compare_traces.cpp -o ${OBJ_DIR}/seismic-forward/compare_traces.o
+    ${ROOT_DIR}/src/compare_traces.cpp -o ${OBJ_DIR}/src/compare_traces.o
 
-if  [ -e ${OBJ_DIR}/seismic-forward/compare_traces.o ] ; then
+if  [ -e ${OBJ_DIR}/src/compare_traces.o ] ; then
   echo "Linking compare_traces"
-  g++ ${OBJ_DIR}/seismic-forward/compare_traces.o                  \
+  g++ ${OBJ_DIR}/src/compare_traces.o                   \
       ${OBJ_DIR}/${BOOST_DIR}/libs/filesystem/src/operations.cpp.o \
       ${OBJ_DIR}/${BOOST_DIR}/libs/filesystem/src/path.cpp.o       \
       ${OBJ_DIR}/${BOOST_DIR}/libs/system/src/error_code.cpp.o     \

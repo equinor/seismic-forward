@@ -222,7 +222,8 @@ void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
 
   std::vector<std::vector<double> > negative_dz_pts;
 
-  double dz_min = 0.0;
+  double thresh = 0.01;
+  double dz_min = 0.00;
   int    min_i  = -1;
   int    min_j  = -1;
   int    min_k  = -1;
@@ -241,25 +242,27 @@ void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
         float  z2 = zgrid(i, j, kk + 1);
 
         if (z1 != missing && z2 != missing && z1 > z2) {
+          if (z1 - z2 > thresh) {    // Only log errors larger than threshold
+            double x, y, z;
+            zgrid.FindCenterOfCell(i, j, kk, x, y, z);
+
+            // Logging negative values
+            std::vector<double> neg(5);
+            neg[0] = static_cast<double>(k);
+            neg[1] = x;
+            neg[2] = y;
+            neg[3] = zgrid(i, j, k);
+            neg[4] = z2 - z1;
+            neg_dz_pts.push_back(neg);
+            if (z2 - z1 < dz_min) {
+              dz_min = z2 - z1;
+              min_i  = i;
+              min_j  = j;
+              min_k  = k;
+            }
+          }
           if (rem_neg_delta) {
             zgrid(i, j, kk) = z2;
-          }
-          double x, y, z;
-          zgrid.FindCenterOfCell(i, j, kk, x, y, z);
-
-          // Logging negative values
-          std::vector<double> neg(5);
-          neg[0] = static_cast<double>(k);
-          neg[1] = x;
-          neg[2] = y;
-          neg[3] = zgrid(i, j, k);
-          neg[4] = z2 - z1;
-          neg_dz_pts.push_back(neg);
-          if (z2 - z1 < dz_min) {
-            dz_min = z2 - z1;
-            min_i  = i;
-            min_j  = j;
-            min_k  = k;
           }
         }
       }
