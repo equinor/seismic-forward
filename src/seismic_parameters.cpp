@@ -311,39 +311,16 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   else
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
 
-  NRLib::Grid2D<double> tvalues(nx, ny, missing);
-  NRLib::Grid2D<double> bvalues(nx, ny, missing);
+  NRLib::Grid2D<double> tvalues(nx, ny, 0.0);
+  NRLib::Grid2D<double> bvalues(nx, ny, 0.0);
 
   eclipse_geometry.FindLayer(tvalues, mask, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
   eclipse_geometry.FindLayer(bvalues, mask, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
 
-  ExtrapolateLayer(tvalues, mask, etdx, etdy, missing);
-  ExtrapolateLayer(bvalues, mask, ebdx, ebdy, missing);
-
-  double avg_top = tvalues.FindAvg(missing);
-  double avg_bot = bvalues.FindAvg(missing);
-
-  assert(avg_top != missing);
-  assert(avg_bot != missing);
-
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
-      if (tvalues(i, j) == missing && bvalues(i, j) == missing) {
-        topeclipse(i, j) = avg_top;
-        boteclipse(i, j) = avg_bot;
-      }
-      else if (tvalues(i, j) == missing) {
-        topeclipse(i, j) = bvalues(i, j);
-        boteclipse(i, j) = bvalues(i, j);
-      }
-      else if (bvalues(i, j) == missing) {
-        topeclipse(i, j) = tvalues(i, j);
-        boteclipse(i, j) = tvalues(i, j);
-      }
-      else {
-        topeclipse(i, j) = tvalues(i, j);
-        boteclipse(i, j) = bvalues(i, j);
-      }
+      topeclipse(i, j) = tvalues(i, j);
+      boteclipse(i, j) = bvalues(i, j);
       if (topeclipse(i, j) > boteclipse(i, j)) {
         topeclipse(i, j) = boteclipse(i, j);
       }

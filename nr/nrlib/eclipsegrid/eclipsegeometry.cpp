@@ -1834,8 +1834,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
       prev_lower_corner=corners[3];
     }
   }
-  // skal ikke gjøres her lenger, men i funksjonen utenfor
-  //FillInZValuesByAveraging(z_grid,is_set);
+  FillInZValuesByAveraging(z_grid,is_set);
 }
 
 
@@ -1863,7 +1862,7 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double>   
   for (size_t j = 0 ; j < nj_ - 2 ; j++) { // Loops over each i,j trace in Eclipse grid
     for (size_t i = 0 ; i < ni_ - 2 ; i++) {
       bool active;
-      if (is_surface)
+      if (is_surface)                   // Use different approach for top and bot surfaceses and grid layers
         active =
           IsPillarActive(i  , j  ) &&
           IsPillarActive(i+1, j  ) &&
@@ -1924,6 +1923,10 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double>   
       }
     }
   }
+
+  if (is_surface) {
+    FillInZValuesByAveraging(z_grid, is_set);
+  }
 }
 
 void EclipseGeometry::TranslateAndRotate(NRLib::Point       & Crot,
@@ -1966,10 +1969,6 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
     size_t i    = average_i;
     size_t j    = average_j - 1;
 
-    double zimj = z_grid(i - 1, j    );
-    double zipj = z_grid(i + 1, j    );
-    double zijm = z_grid(i    , j - 1);
-    double zijp = z_grid(i    , j + 1);
 
     for (size_t it_dist = 1 ; it_dist <= distance ; it_dist++) {
       for (size_t r = 1 ; r <= 8*it_dist ; r++) {
@@ -1977,10 +1976,10 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
         if (!is_set(i, j)) {
           double zij   = 0.0;
           size_t count = 0;
-          if (i     > 0 && is_set(i - 1, j    )) { zij += zimj; count++; }
-          if (i + 1 < n && is_set(i + 1, j    )) { zij += zipj; count++; }
-          if (j     > 0 && is_set(i    , j - 1)) { zij += zijm; count++; }
-          if (j + 1 < m && is_set(i    , j + 1)) { zij += zijp; count++; }
+          if (i     > 0 && is_set(i - 1, j    )) { zij += z_grid(i - 1, j    ); count++; }
+          if (i + 1 < n && is_set(i + 1, j    )) { zij += z_grid(i + 1, j    ); count++; }
+          if (j     > 0 && is_set(i    , j - 1)) { zij += z_grid(i    , j - 1); count++; }
+          if (j + 1 < m && is_set(i    , j + 1)) { zij += z_grid(i    , j + 1); count++; }
           z_grid(i, j) = zij/count;
           is_set(i, j) = true;
         }
@@ -2000,10 +1999,10 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
         if (!is_set(i, j)) {
           double zij   = 0.0;
           size_t count = 0;
-          if (i     > 0 && is_set(i - 1, j    )) { zij += zimj; count++; }
-          if (i + 1 < n && is_set(i + 1, j    )) { zij += zipj; count++; }
-          if (j     > 0 && is_set(i    , j - 1)) { zij += zijm; count++; }
-          if (j + 1 < m && is_set(i    , j + 1)) { zij += zijp; count++; }
+          if (i     > 0 && is_set(i - 1, j    )) { zij += z_grid(i - 1, j    ); count++; }
+          if (i + 1 < n && is_set(i + 1, j    )) { zij += z_grid(i + 1, j    ); count++; }
+          if (j     > 0 && is_set(i    , j - 1)) { zij += z_grid(i    , j - 1); count++; }
+          if (j + 1 < m && is_set(i    , j + 1)) { zij += z_grid(i    , j + 1); count++; }
           z_grid(i, j) = zij/count;
           is_set(i, j) = true;
         }
@@ -2016,13 +2015,14 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
     while (j < m) {
       i = average_i - distance;
       while (i <= average_i + distance) {
+
         if (!is_set(i, j)) {
           double zij   = 0.0;
           size_t count = 0;
-          if (i     > 0 && is_set(i - 1,j    )) { zij += zimj; count++; }
-          if (i + 1 < n && is_set(i + 1,j    )) { zij += zipj; count++; }
-          if (j     > 0 && is_set(i    ,j - 1)) { zij += zijm; count++; }
-          if (j + 1 < m && is_set(i    ,j + 1)) { zij += zijp; count++; }
+          if (i     > 0 && is_set(i - 1,j    )) { zij += z_grid(i - 1, j    ); count++; }
+          if (i + 1 < n && is_set(i + 1,j    )) { zij += z_grid(i + 1, j    ); count++; }
+          if (j     > 0 && is_set(i    ,j - 1)) { zij += z_grid(i    , j - 1); count++; }
+          if (j + 1 < m && is_set(i    ,j + 1)) { zij += z_grid(i    , j + 1); count++; }
           z_grid(i,j) = zij/count;
           is_set(i,j) = true;
         }
@@ -2040,10 +2040,10 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
         if (!is_set(i,j)) {
           double zij   = 0.0;
           size_t count = 0;
-          if (i     > 0 && is_set(i - 1, j    )) { zij += zimj; count++; }
-          if (i + 1 < n && is_set(i + 1, j    )) { zij += zipj; count++; }
-          if (j     > 0 && is_set(i    , j - 1)) { zij += zijm; count++; }
-          if (j + 1 < m && is_set(i    , j + 1)) { zij += zijp; count++; }
+          if (i     > 0 && is_set(i - 1, j    )) { zij += z_grid(i - 1, j    ); count++; }
+          if (i + 1 < n && is_set(i + 1, j    )) { zij += z_grid(i + 1, j    ); count++; }
+          if (j     > 0 && is_set(i    , j - 1)) { zij += z_grid(i    , j - 1); count++; }
+          if (j + 1 < m && is_set(i    , j + 1)) { zij += z_grid(i    , j + 1); count++; }
           z_grid(i, j) = zij/count;
           is_set(i,j)  = true;
         }
@@ -2059,10 +2059,10 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
         if (!is_set(i, j)) {
           double zij   = 0.0;
           size_t count = 0;
-          if (i     > 0 && is_set(i - 1, j    )) { zij += zimj; count++; }
-          if (i + 1 < n && is_set(i + 1, j    )) { zij += zipj; count++; }
-          if (j     > 0 && is_set(i    , j - 1)) { zij += zijm; count++; }
-          if (j +1  < m && is_set(i    , j + 1)) { zij += zijp; count++; }
+          if (i     > 0 && is_set(i - 1, j    )) { zij += z_grid(i - 1, j    ); count++; }
+          if (i + 1 < n && is_set(i + 1, j    )) { zij += z_grid(i + 1, j    ); count++; }
+          if (j     > 0 && is_set(i    , j - 1)) { zij += z_grid(i    , j - 1); count++; }
+          if (j +1  < m && is_set(i    , j + 1)) { zij += z_grid(i    , j + 1); count++; }
           z_grid(i, j) = zij/count;
           is_set(i, j) = true;
         }
