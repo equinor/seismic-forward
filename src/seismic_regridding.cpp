@@ -181,14 +181,14 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   const bool                            bilinear               = false;
   const double                          missing                = -999.0;
 
+  const double                          z_top_wavelet          = model_settings->GetZWaveletTop();
+  const double                          z_bot_wavelet          = model_settings->GetZWaveletBot();
+
   NRLib::RegularSurface<double>         orig_top(topeclipse);
   NRLib::RegularSurface<double>         orig_bot(boteclipse);
 
-  for (size_t i = 0 ; i < orig_top.GetNI() ; ++i)
-    for (size_t j = 0 ; j < orig_top.GetNJ() ; ++j)
-      if (orig_bot(i,j) < orig_top(i,j))
-        orig_bot(i,j) = orig_top(i,j);
-
+  orig_top.Add(     z_top_wavelet); // Remove wavelet correction from top and base surfaces
+  orig_bot.Add(-1 * z_bot_wavelet); // Remove wavelet correction from top and base surfaces
 
   geometry.FindRegularGridOfZValues(zgrid,
                                     orig_top,

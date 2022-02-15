@@ -1398,8 +1398,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
   const size_t nj    = zgrid.GetNJ();
   const size_t nk    = zgrid.GetNK();
 
-  NRLib::Grid2D<bool> dummy_mask(ni, nj, false);
-
   bool         is_surface = false; // We generate layers and not top and bot Eclipse grid surfaces in this case
 
   float        monitor_size;
@@ -1425,7 +1423,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using center-point interpolation.\n");
 
   FindLayer(layer[nk - 1],
-            dummy_mask,
             nk - 2 + top_k,
             1,              // Use lower corner
             dx,
@@ -1449,7 +1446,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
 #endif
   for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
     FindLayer(layer[k],
-              dummy_mask, // Dummy
               k + top_k,
               0,          // Use upper corner
               dx,
@@ -1653,7 +1649,6 @@ void EclipseGeometry::MonitorFinish(const std::string & rest_carets) const
 // We can use the method below when we extrapolate top and base surfaces of Eclipsegrid ...
 //
 void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
-                                const NRLib::Grid2D<bool> & mask,
                                 const size_t                k,
                                 const int                   lower_or_upper,
                                 const double                dx,
@@ -1839,17 +1834,17 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
 
 
 // center point interpolation
-void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double>     & z_grid,
-                                                        const size_t                k,
-                                                        const int                   lower_or_upper,
-                                                        const double                dx,
-                                                        const double                dy,
-                                                        const double                x0,
-                                                        const double                y0,
-                                                        const double                angle,
-                                                        const bool                  bilinear_else_triangles,
-                                                        const bool                  is_surface,
-                                                        const double                missingValue) const
+void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & z_grid,
+                                                        const size_t            k,
+                                                        const int               lower_or_upper,
+                                                        const double            dx,
+                                                        const double            dy,
+                                                        const double            x0,
+                                                        const double            y0,
+                                                        const double            angle,
+                                                        const bool              bilinear_else_triangles,
+                                                        const bool              is_surface,
+                                                        const double            missingValue) const
 {
   double                    cosA = cos(angle);
   double                    sinA = sin(angle);
@@ -1859,8 +1854,8 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double>   
   NRLib::Point              C0, C1, C2, C3;
   std::vector<NRLib::Point> Crot(4);
 
-  for (size_t j = 0 ; j < nj_ - 2 ; j++) { // Loops over each i,j trace in Eclipse grid
-    for (size_t i = 0 ; i < ni_ - 2 ; i++) {
+  for (size_t j = 0 ; j < nj_ - 1 ; j++) { // Loops over each i,j trace in Eclipse grid
+    for (size_t i = 0 ; i < ni_ - 1 ; i++) {
       bool active;
       if (is_surface)                   // Use different approach for top and bot surfaceses and grid layers
         active =
@@ -1924,6 +1919,10 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double>   
     }
   }
 
+  //
+  // We do a horizontal extrapolation/interpolation for the top and base surfaces, but not
+  // for grid layers. These will be interpolated vertically to ensure vertical consistency
+  //
   if (is_surface) {
     FillInZValuesByAveraging(z_grid, is_set);
   }
