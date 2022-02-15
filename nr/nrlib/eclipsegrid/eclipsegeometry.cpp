@@ -1398,8 +1398,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
   const size_t nj    = zgrid.GetNJ();
   const size_t nk    = zgrid.GetNK();
 
-  NRLib::Grid2D<bool> dummy_mask(ni, nj, false);
-
   bool         is_surface = false; // We generate layers and not top and bot Eclipse grid surfaces in this case
 
   float        monitor_size;
@@ -1425,7 +1423,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExtracting z-values from Eclipse grid using center-point interpolation.\n");
 
   FindLayer(layer[nk - 1],
-            dummy_mask,
             nk - 2 + top_k,
             1,              // Use lower corner
             dx,
@@ -1449,7 +1446,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
 #endif
   for (int k = static_cast<int>(nk - 2) ; k >= 0 ; --k) {
     FindLayer(layer[k],
-              dummy_mask, // Dummy
               k + top_k,
               0,          // Use upper corner
               dx,
@@ -1653,7 +1649,6 @@ void EclipseGeometry::MonitorFinish(const std::string & rest_carets) const
 // We can use the method below when we extrapolate top and base surfaces of Eclipsegrid ...
 //
 void EclipseGeometry::FindLayer(NRLib::Grid2D<double>     & z_grid,
-                                const NRLib::Grid2D<bool> & mask,
                                 const size_t                k,
                                 const int                   lower_or_upper,
                                 const double                dx,

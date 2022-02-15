@@ -303,9 +303,6 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   bool   bilinear   = false;
   bool   is_surface = true;
 
-  NRLib::Grid2D<bool> mask(nx, ny, true);
-  FindExtrapolationRegion(mask, *seismic_geometry, x0, y0, etdx, etdy);  // Setup extrapolation mask grid
-
   if (cornerpt)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
   else
@@ -314,10 +311,10 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   NRLib::Grid2D<double> tvalues(nx, ny, 0.0);
   NRLib::Grid2D<double> bvalues(nx, ny, 0.0);
 
-  eclipse_geometry.FindLayer(tvalues, mask, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
-  eclipse_geometry.FindLayer(bvalues, mask, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
+  eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
+  eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
 
-  for (size_t i = 0; i < topeclipse.GetNI(); i++) {
+  for (size_t i = 0; i < topeclipse.GetNI(); i++) {    // This fixes small, insignificant defects
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
       topeclipse(i, j) = tvalues(i, j);
       boteclipse(i, j) = bvalues(i, j);
@@ -413,67 +410,6 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid minimum value                        : %8.2f", d1);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid maximum value                        : %8.2f\n", d2);
-}
-
-//-------------------------------------------------------------------------------------
-void SeismicParameters::FindExtrapolationRegion(NRLib::Grid2D<bool> & mask,
-                                                SeismicGeometry     & seismic_geometry,
-                                                double                xmin,
-                                                double                ymin,
-                                                double                etdx,
-                                                double                etdy)
-//-------------------------------------------------------------------------------------
-{
-  double x0      = seismic_geometry.x0();      // Rotation origin - x
-  double y0      = seismic_geometry.y0();      // Rotation origin - y
-  double xlength = seismic_geometry.xlength();
-  double ylength = seismic_geometry.ylength();
-  double xinc    = seismic_geometry.dx();
-  double yinc    = seismic_geometry.dy();
-  double angle   = seismic_geometry.angle();
-
-  double cosA    = cos(angle);
-  double sinA    = sin(angle);
-
-  for (size_t i = 0 ; i < mask.GetNI() ; i++) {
-    for (size_t j = 0 ; j < mask.GetNJ() ; j++) {
-      double x  = xmin + i*xinc;                      // x-coordinates in regular surface grid
-      double y  = ymin + j*yinc;                      // y-coordinates in regular surface grid
-      double xs = (x - x0)*cosA + (y - y0)*sinA;      // x-coordinates in seismic output grid
-      double ys = (y - y0)*cosA - (x - x0)*sinA;      // y-coordinates in seismic output grid
-      //
-      // Add a safety border of dx and dy since surface grids and seismic grids are not aligned.
-      //
-      if (xs + xinc < 0.0 || xs - xinc > xlength || ys + yinc < 0.0 || ys - yinc > ylength)
-        mask(i,j) = false; // Do not extrapolate cell
-      else
-        mask(i,j) = true;  // Extrapolate cell
-    }
-  }
-}
-
-//---------------------------------------------------------------------------------
-void SeismicParameters::ExtrapolateLayer(NRLib::Grid2D<double>     & z_grid,
-                                         const NRLib::Grid2D<bool> & mask,
-                                         const double                dx,
-                                         const double                dy,
-                                         const double                missing) const
-//---------------------------------------------------------------------------------
-{
-  std::vector<std::pair<size_t, size_t> > missing_indices;
-  std::vector<std::pair<size_t, size_t> > data_indices;
-
-  NRLib::ExtrapolateGrid2D::ClassifyPoints(missing_indices,
-                                           data_indices,
-                                           z_grid,
-                                           mask,
-                                           missing);
-
-  NRLib::ExtrapolateGrid2D::InverseDistanceWeightingExtrapolation(z_grid,
-                                                                  missing_indices,
-                                                                  data_indices,
-                                                                  dx,
-                                                                  dy);
 }
 
 //---------------------------------------------------------------------

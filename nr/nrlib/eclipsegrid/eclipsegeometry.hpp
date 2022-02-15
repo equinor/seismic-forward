@@ -140,7 +140,6 @@ public:
   ///\\param lower_or_upper 0 for upper, 1 for lower
   ///\\param bilinear_else_triangles true for calulating z-coordinates inside corners by bilinear interpolation, false for calculating by intersection of plane through triangles
   void FindLayer(NRLib::Grid2D<double>     & z_grid,
-                 const NRLib::Grid2D<bool> & mask,
                  const size_t                k,
                  const int                   lower_or_upper,
                  const double                dx,
