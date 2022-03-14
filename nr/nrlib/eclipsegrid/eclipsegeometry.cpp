@@ -1471,6 +1471,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
                           ni, nj, nk,
                           missingValue);
   }
+
   //
   // Copy layer to grid
   //
@@ -1513,11 +1514,34 @@ void EclipseGeometry::VerticalInterpolation(std::vector<NRLib::Grid2D<double> > 
       assert(ztop != missing);
       assert(zbot != missing);
 
-      if (layer[0](i, j) == missing)
-        layer[0](i, j) = ztop;
+      int notdef = 0;
 
-      if (layer[nk - 1](i, j) == missing)
-        layer[nk - 1](i, j) = zbot;
+      int i1 = -1;
+      int i2 = -1;
+
+      for (size_t k = 0 ; k < nk ; k++) {
+        if (layer[k](i, j) == missing) {
+          notdef++;
+        }
+        else {
+          if (i1 == -1)
+            i1 = k;
+          i2 = k; // Always set this
+        }
+      }
+
+      if (notdef == nk) { // Only undefined values
+        layer[0   ](i, j) = ztop;
+        layer[nk-1](i, j) = zbot;
+      }
+      else {
+        if (layer[0](i, j) == missing) {
+          layer[0](i, j) = layer[i1](i, j);
+        }
+        if (layer[nk-1](i, j) == missing) {
+          layer[nk-1](i, j) = layer[i2](i, j);
+        }
+      }
 
       //
       // Find all unset/missing values
