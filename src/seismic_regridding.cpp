@@ -201,7 +201,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     missing);
 
   //
-  // There should be no more negative dz values anymore, but we check anyway ...
+  // Check for remaining negative values (in very distorted grids)
   //
   RemoveNegativeDz(zgrid,
                    n_threads,
@@ -236,34 +236,38 @@ void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
   for (size_t i = 0; i < ni ; i++) {
     std::vector<std::vector<double> > neg_dz_pts;
     for (size_t j = 0; j < nj; j++) {
-      for (int k = static_cast<int>(nk - 2); k >= 0; --k) {
-        size_t kk = static_cast<size_t>(k);
-        float  z1 = zgrid(i, j, kk    );
-        float  z2 = zgrid(i, j, kk + 1);
-
-        if (z1 != missing && z2 != missing && z1 > z2) {
-          if (z1 - z2 > thresh) {    // Only log errors larger than threshold
-            double x, y, z;
-            zgrid.FindCenterOfCell(i, j, kk, x, y, z);
-
-            // Logging negative values
-            std::vector<double> neg(5);
-            neg[0] = static_cast<double>(k);
-            neg[1] = x;
-            neg[2] = y;
-            neg[3] = zgrid(i, j, k);
-            neg[4] = z2 - z1;
-            neg_dz_pts.push_back(neg);
-            if (z2 - z1 < dz_min) {
-              dz_min = z2 - z1;
-              min_i  = i;
-              min_j  = j;
-              min_k  = k;
-            }
+      //
+      // Log negative values
+      //
+      for (size_t k = 0 ; k < nk - 1 ; ++k) {
+        float  z1 = zgrid(i, j, k    );
+        float  z2 = zgrid(i, j, k + 1);
+        if (z1 != missing && z2 != missing && z1 > z2 > thresh) { // Only log errors larger than threshold
+          double x, y, z;
+          zgrid.FindCenterOfCell(i, j, k, x, y, z);
+          std::vector<double> neg(5);
+          neg[0] = static_cast<double>(k);
+          neg[1] = x;
+          neg[2] = y;
+          neg[3] = zgrid(i, j, k);
+          neg[4] = z2 - z1;
+          neg_dz_pts.push_back(neg);
+          if (z2 - z1 < dz_min) {
+            dz_min = z2 - z1;
+            min_i  = i;
+            min_j  = j;
+            min_k  = k;
           }
-          if (rem_neg_delta) {
-            zgrid(i, j, kk) = z2;
-          }
+        }
+      }
+      //
+      // Remove negative values
+      //
+      for (size_t k = 0 ; k < nk - 1 ; ++k) {
+        float z1 = zgrid(i, j, k    );
+        float z2 = zgrid(i, j, k + 1);
+        if (z1 != missing && z2 != missing && z1 > z2 && rem_neg_delta) {
+          zgrid(i, j, k + 1) = z1;
         }
       }
     }
@@ -289,7 +293,7 @@ void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
     zgrid.FindCenterOfCell(min_i, min_j, min_k, x, y, z);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value                    : %5.2f\n", dz_min);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value location (x,y,z)   : (%.2f, %.2f, %.2f)\n", x, y, z);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value location (i,j,k)   : (%d, %d, %d)\n", min_i, min_j, min_k);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nLargest negative value location (i,j,k)   : (%d, %d, %d)    (indices starting at zero)\n", min_i, min_j, min_k);
   }
   else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNo crossing depth values found!\n");
