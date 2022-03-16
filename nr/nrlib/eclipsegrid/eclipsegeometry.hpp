@@ -303,7 +303,8 @@ private:
 
   ///Function used by FindLayerSurface to fill in (average values of neighbour elements) to z_grid where is_set==false
   void FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
-                                NRLib::Grid2D<int>    & is_set) const;
+                                NRLib::Grid2D<int>    & is_set,
+                                bool                  & iterate) const;
 
 
   // --------------------- MEMBER VARIABLES -------------------------
