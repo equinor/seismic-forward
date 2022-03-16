@@ -1853,7 +1853,8 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
       prev_lower_corner=corners[3];
     }
   }
-  FillInZValuesByAveraging(z_grid,is_set);
+  bool iterate = false;
+  FillInZValuesByAveraging(z_grid,is_set,iterate);
 }
 
 
@@ -1878,8 +1879,12 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
   NRLib::Point              C0, C1, C2, C3;
   std::vector<NRLib::Point> Crot(4);
 
-  for (size_t j = 0 ; j < nj_ - 1 ; j++) { // Loops over each i,j trace in Eclipse grid
-    for (size_t i = 0 ; i < ni_ - 1 ; i++) {
+  size_t edge = 2;
+  if (is_surface)
+    edge = 1;
+
+  for (size_t j = 0 ; j < nj_ - edge ; j++) { // Loops over each i,j trace in Eclipse grid
+    for (size_t i = 0 ; i < ni_ - edge ; i++) {
       bool active;
       if (is_surface)                   // Use different approach for top and bot surfaceses and grid layers
         active =
@@ -1948,7 +1953,10 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
   // for grid layers. These will be interpolated vertically to ensure vertical consistency
   //
   if (is_surface) {
-    FillInZValuesByAveraging(z_grid, is_set);
+    bool iterate = true;
+    while (iterate) {
+      FillInZValuesByAveraging(z_grid, is_set, iterate);
+    }
   }
 }
 
@@ -1967,7 +1975,8 @@ void EclipseGeometry::TranslateAndRotate(NRLib::Point       & Crot,
 
 
 void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
-                                               NRLib::Grid2D<int>    & is_set) const
+                                               NRLib::Grid2D<int>    & is_set,
+                                               bool                  & iterate) const
 {
   size_t m         = z_grid.GetNJ();
   size_t n         = z_grid.GetNI();
@@ -1992,7 +2001,6 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
     size_t i    = average_i;
     size_t j    = average_j - 1;
 
-
     for (size_t it_dist = 1 ; it_dist <= distance ; it_dist++) {
       for (size_t r = 1 ; r <= 8*it_dist ; r++) {
 
@@ -2003,8 +2011,10 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
           if (i + 1 < n && is_set(i + 1, j    )) { zij += z_grid(i + 1, j    ); count++; }
           if (j     > 0 && is_set(i    , j - 1)) { zij += z_grid(i    , j - 1); count++; }
           if (j + 1 < m && is_set(i    , j + 1)) { zij += z_grid(i    , j + 1); count++; }
-          z_grid(i, j) = zij/count;
-          is_set(i, j) = true;
+          if (count > 0) {
+            z_grid(i, j) = zij/count;
+            is_set(i, j) = true;
+          }
         }
         if      (r < 2*it_dist) { i++ ;}
         else if (r < 4*it_dist) { j++ ;}
@@ -2026,8 +2036,10 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
           if (i + 1 < n && is_set(i + 1, j    )) { zij += z_grid(i + 1, j    ); count++; }
           if (j     > 0 && is_set(i    , j - 1)) { zij += z_grid(i    , j - 1); count++; }
           if (j + 1 < m && is_set(i    , j + 1)) { zij += z_grid(i    , j + 1); count++; }
-          z_grid(i, j) = zij/count;
-          is_set(i, j) = true;
+          if (count > 0) {
+            z_grid(i, j) = zij/count;
+            is_set(i, j) = true;
+          }
         }
         i++;
       }
@@ -2046,8 +2058,10 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
           if (i + 1 < n && is_set(i + 1,j    )) { zij += z_grid(i + 1, j    ); count++; }
           if (j     > 0 && is_set(i    ,j - 1)) { zij += z_grid(i    , j - 1); count++; }
           if (j + 1 < m && is_set(i    ,j + 1)) { zij += z_grid(i    , j + 1); count++; }
-          z_grid(i,j) = zij/count;
-          is_set(i,j) = true;
+          if (count > 0) {
+            z_grid(i,j) = zij/count;
+            is_set(i,j) = true;
+          }
         }
         i++;
       }
@@ -2067,8 +2081,10 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
           if (i + 1 < n && is_set(i + 1, j    )) { zij += z_grid(i + 1, j    ); count++; }
           if (j     > 0 && is_set(i    , j - 1)) { zij += z_grid(i    , j - 1); count++; }
           if (j + 1 < m && is_set(i    , j + 1)) { zij += z_grid(i    , j + 1); count++; }
-          z_grid(i, j) = zij/count;
-          is_set(i,j)  = true;
+          if (count > 0) {
+            z_grid(i, j) = zij/count;
+            is_set(i,j)  = true;
+          }
         }
         j++;
       }
@@ -2086,12 +2102,27 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
           if (i + 1 < n && is_set(i + 1, j    )) { zij += z_grid(i + 1, j    ); count++; }
           if (j     > 0 && is_set(i    , j - 1)) { zij += z_grid(i    , j - 1); count++; }
           if (j +1  < m && is_set(i    , j + 1)) { zij += z_grid(i    , j + 1); count++; }
-          z_grid(i, j) = zij/count;
-          is_set(i, j) = true;
+          if (count > 0) {
+            z_grid(i, j) = zij/count;
+            is_set(i, j) = true;
+          }
         }
         j++;
       }
       i++;
+    }
+
+    bool empty_nodes = false;
+    for (size_t j = 0; j < m ; j++) {
+      for (size_t i = 0; i < n ; i++) {
+        if (!is_set(i,j)) {
+          empty_nodes = true;
+          break;
+        }
+      }
+    }
+    if (!empty_nodes) {
+      iterate = false;
     }
   }
 }
