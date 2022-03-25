@@ -1274,6 +1274,7 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
     }
     nn = mm;
   }
+
   if (two_triangles) {
     // Calculate the sum of two opposite angles
     vec1.x = corners[1].x - corners[0].x;
@@ -1338,7 +1339,6 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
 
   for (size_t it1 = n1 ; it1 < n2 ; it1++) {
     for (size_t it2 = m1 ; it2 < m2 ; it2++) {
-
       double count = static_cast<double>(is_set(it1,it2));
       double w1    = count/(count + 1.0);
       double w2    =   1.0/(count + 1.0);
@@ -1514,34 +1514,30 @@ void EclipseGeometry::VerticalInterpolation(std::vector<NRLib::Grid2D<double> > 
       assert(ztop != missing);
       assert(zbot != missing);
 
-      int notdef = 0;
-
       int i1 = -1;
       int i2 = -1;
 
       for (size_t k = 0 ; k < nk ; k++) {
-        if (layer[k](i, j) == missing) {
-          notdef++;
-        }
-        else {
+        if (layer[k](i, j) != missing) {
           if (i1 == -1)
             i1 = k;
           i2 = k; // Always set this
         }
       }
 
-      if (notdef == nk) { // Only undefined values
-        layer[0   ](i, j) = ztop;
-        layer[nk-1](i, j) = zbot;
-      }
-      else {
-        if (layer[0](i, j) == missing) {
+      if (layer[0](i, j) == missing) {
+        if (i1 != -1 && layer[i1](i, j) < ztop)
           layer[0](i, j) = layer[i1](i, j);
-        }
-        if (layer[nk-1](i, j) == missing) {
-          layer[nk-1](i, j) = layer[i2](i, j);
-        }
+        else
+          layer[0](i, j) = ztop;
       }
+      if (layer[nk-1](i, j) == missing) {
+        if (i2 != -1 && layer[i2](i, j) > zbot)
+          layer[nk-1](i, j) = layer[i2](i, j);
+        else
+          layer[nk-1](i, j) = zbot;
+      }
+
 
       //
       // Find all unset/missing values
@@ -1879,35 +1875,17 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
   NRLib::Point              C0, C1, C2, C3;
   std::vector<NRLib::Point> Crot(4);
 
-  size_t edge = 2;
-  if (is_surface)
-    edge = 1;
-
-  for (size_t j = 0 ; j < nj_ - edge ; j++) { // Loops over each i,j trace in Eclipse grid
-    for (size_t i = 0 ; i < ni_ - edge ; i++) {
-      bool active;
-      if (is_surface)                   // Use different approach for top and bot surfaceses and grid layers
-        active =
-          IsPillarActive(i  , j  ) &&
-          IsPillarActive(i+1, j  ) &&
-          IsPillarActive(i  , j+1) &&
-          IsPillarActive(i+1, j+1) &&
-          IsPillarActive(i+2,   j) &&
-          IsPillarActive(i+2, j+1) &&
-          IsPillarActive(i  , j+2) &&
-          IsPillarActive(i+1, j+2) &&
-          IsPillarActive(i+2, j+2);
-      else
-        active =
-          IsColumnActive(i  , j  ) &&   //  o-----o-----o  (i+2, j+2)
-          IsColumnActive(i+1, j  ) &&   //  | C2  | C3  |
-          IsColumnActive(i  , j+1) &&   //  o-----o-----o
-          IsColumnActive(i+1, j+1) &&   //  | C0  | C1  |
-          IsColumnActive(i+2,   j) &&   //  o-----o-----o  (i+2, j)
-          IsColumnActive(i+2, j+1) &&
-          IsColumnActive(i  , j+2) &&
-          IsColumnActive(i+1, j+2) &&
-          IsColumnActive(i+2, j+2);
+  for (size_t j = 0 ; j < nj_ - 2 ; j++) { // Loops over each i,j trace in Eclipse grid
+    for (size_t i = 0 ; i < ni_ - 2 ; i++) {
+      bool active = IsColumnActive(i  , j  ) &&   //  o-----o-----o  (i+2, j+2)
+                    IsColumnActive(i+1, j  ) &&   //  | C2  | C3  |
+                    IsColumnActive(i  , j+1) &&   //  o-----o-----o
+                    IsColumnActive(i+1, j+1) &&   //  | C0  | C1  |
+                    IsColumnActive(i+2,   j) &&   //  o-----o-----o  (i+2, j)
+                    IsColumnActive(i+2, j+1) &&
+                    IsColumnActive(i  , j+2) &&
+                    IsColumnActive(i+1, j+2) &&
+                    IsColumnActive(i+2, j+2);
 
       if (active) {
         //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "i,j =  %d, %d\n",i,j);
@@ -2124,6 +2102,9 @@ void EclipseGeometry::FillInZValuesByAveraging(NRLib::Grid2D<double> & z_grid,
     if (!empty_nodes) {
       iterate = false;
     }
+  }
+  else {
+    iterate = false;
   }
 }
 
