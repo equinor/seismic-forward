@@ -195,7 +195,8 @@ private:
                     const double         length,
                     const double         dt,
                     const std::string  & file_name,
-                    const std::string  & file_format);
+                    const std::string  & file_format,
+                    const std::string  & prefix);
 
   void ReadEclipseGrid(NRLib::EclipseGrid             *& eclipse_grid,
                        const std::string               & filename,

@@ -148,6 +148,7 @@ public:
   bool                      GetOutputSeismicTimeshift()               { return output_seismic_timeshift_       ;}
   bool                      GetOutputDepthSurfaces()                  { return output_depth_surfaces_          ;}
   bool                      GetOutputTimeSurfaces()                   { return output_time_surfaces_           ;}
+  bool                      GetOutputWavelet()                        { return output_wavelet_                 ;}
   bool                      GetOutputTwt()                            { return output_twt_                     ;}
   bool                      GetOutputVrms()                           { return output_vrms_                    ;}
   bool                      GetOutputTwtOffset()                      { return output_twt_offset_              ;}
@@ -281,6 +282,7 @@ public:
   void SetOutputTimeshiftSegy(bool value)              { output_timeshift_segy_    = value  ;}
   void SetOutputDepthSegy(bool value)                  { output_depth_segy_        = value  ;}
   void SetOutputPrenmoTimeSegy(bool value)             { output_prenmo_time_segy_  = value  ;}
+  void SetOutputWavelet(bool value)                    { output_wavelet_           = value  ;}
 
   void SetOutputSeismicStackTimeStorm(bool value)      { seismic_stack_time_storm_       = value ;}
   void SetOutputSeismicStackTimeShiftStorm(bool value) { seismic_stack_time_shift_storm_ = value ;}
@@ -389,6 +391,7 @@ private:
   bool                      output_seismic_timeshift_;
   bool                      output_time_surfaces_;
   bool                      output_depth_surfaces_;
+  bool                      output_wavelet_;
   bool                      output_twt_;
   bool                      output_vrms_;
   bool                      output_twt_offset_;

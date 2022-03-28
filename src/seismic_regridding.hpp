@@ -27,6 +27,7 @@ private:
                           size_t              n_threads);
 
   static void RemoveNegativeDz(NRLib::StormContGrid & zgrid,
+                               const std::string    & filename,
                                const size_t           n_threads,
                                const bool             rem_neg_delta,
                                const double           missing);

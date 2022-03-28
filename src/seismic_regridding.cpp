@@ -177,6 +177,11 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   const bool                            rem_neg_delta          = model_settings->GetRemoveNegativeDeltaZ();
   const bool                            use_corner_point       = model_settings->GetUseCornerpointInterpol();
   const bool                            vertical_interpolation = model_settings->GetUseVerticalInterpolation();
+  const std::string                   & prefix                 = model_settings->GetPrefix();
+  std::string                           filename               = "negative_dz_points.rxat";
+  if (prefix != "") {
+    filename = prefix + "_" + filename;
+  }
 
   const bool                            bilinear               = false;
   const double                          missing                = -999.0;
@@ -204,6 +209,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   // Check for remaining negative values (in very distorted grids)
   //
   RemoveNegativeDz(zgrid,
+                   filename,
                    n_threads,
                    rem_neg_delta,
                    missing);
@@ -211,6 +217,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
 
 //----------------------------------------------------------------------------
 void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
+                                         const std::string    & filename,
                                          const size_t           n_threads,
                                          const bool             rem_neg_delta,
                                          const double           missing)
@@ -303,7 +310,7 @@ void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
   if (n > 0 && debug_neg_dz) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExporting points where there are negative dz values (z-value is the conflicting value)!\n");
     std::fstream fout;
-    NRLib::OpenWrite(fout, "negative_dz_points.rxat");
+    NRLib::OpenWrite(fout, filename);
     fout << "Float Negative dz\n"
          << "Discrete Layer"
          << std::endl;

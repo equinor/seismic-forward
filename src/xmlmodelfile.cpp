@@ -1044,6 +1044,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode   * node,
   legalCommands.push_back("seismic-depth");
   legalCommands.push_back("time-surfaces");
   legalCommands.push_back("depth-surfaces");
+  legalCommands.push_back("wavelet");
   legalCommands.push_back("twt");
   legalCommands.push_back("vrms");
   legalCommands.push_back("twt-offset-segy");
@@ -1094,6 +1095,10 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode   * node,
 
   if (ParseBool(root, "depth-surfaces", value, errTxt)) {
     modelSettings_->SetOutputDepthSurfaces(value);
+  }
+
+  if (ParseBool(root, "wavelet", value, errTxt)) {
+    modelSettings_->SetOutputWavelet(value);
   }
 
   if (ParseBool(root, "twt", value, errTxt)) {
