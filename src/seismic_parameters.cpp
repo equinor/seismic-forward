@@ -27,13 +27,14 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
   wavelet_scale_    = model_settings->GetWaveletScale();
 
   SetupWavelet(wavelet_,
-               true,
+               model_settings->GetOutputWavelet(),
                model_settings->GetRicker(),
                model_settings->GetPeakFrequency(),
                model_settings->GetWaveletLength(),
                model_settings->GetDt(),
                model_settings->GetWaveletFileName(),
-               model_settings->GetWaveletFileFormat());
+               model_settings->GetWaveletFileFormat(),
+               model_settings->GetPrefix());
 
   ReadEclipseGrid(eclipse_grid_,
                   model_settings->GetEclipseFileName(),
@@ -69,7 +70,8 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
                                      const double         length,
                                      const double         dt,
                                      const std::string  & file_name,
-                                     const std::string  & file_format)
+                                     const std::string  & file_format,
+                                     const std::string  & prefix)
 //------------------------------------------------------------------------
 {
   if (use_ricker) {
@@ -77,7 +79,8 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
     wavelet = new Wavelet(peakF,
                           dt,
                           length,
-                          write_wavelet);
+                          write_wavelet,
+                          prefix);
   }
   else {
     bool error = false;
@@ -87,6 +90,7 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
                           dt,
                           length,
                           write_wavelet,
+                          prefix,
                           error);
     if (error) {
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nWavelet format \'%s\' is not recognized", file_format.c_str());

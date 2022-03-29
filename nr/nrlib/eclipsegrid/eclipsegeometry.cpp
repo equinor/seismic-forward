@@ -1875,17 +1875,12 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
   NRLib::Point              C0, C1, C2, C3;
   std::vector<NRLib::Point> Crot(4);
 
-  for (size_t j = 0 ; j < nj_ - 2 ; j++) { // Loops over each i,j trace in Eclipse grid
-    for (size_t i = 0 ; i < ni_ - 2 ; i++) {
-      bool active = IsColumnActive(i  , j  ) &&   //  o-----o-----o  (i+2, j+2)
-                    IsColumnActive(i+1, j  ) &&   //  | C2  | C3  |
-                    IsColumnActive(i  , j+1) &&   //  o-----o-----o
-                    IsColumnActive(i+1, j+1) &&   //  | C0  | C1  |
-                    IsColumnActive(i+2,   j) &&   //  o-----o-----o  (i+2, j)
-                    IsColumnActive(i+2, j+1) &&
-                    IsColumnActive(i  , j+2) &&
-                    IsColumnActive(i+1, j+2) &&
-                    IsColumnActive(i+2, j+2);
+  for (size_t j = 0 ; j < nj_ - 1 ; j++) { // Loops over each i,j trace in Eclipse grid
+    for (size_t i = 0 ; i < ni_ - 1 ; i++) {
+      bool active = IsColumnActive(i  , j  ) &&
+                    IsColumnActive(i+1, j  ) &&
+                    IsColumnActive(i  , j+1) &&
+                    IsColumnActive(i+1, j+1);
 
       if (active) {
         //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "i,j =  %d, %d\n",i,j);

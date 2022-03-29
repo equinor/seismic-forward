@@ -7,16 +7,18 @@
 class Wavelet
 {
 public:
-  Wavelet(const double peakF,
-          const double dt,
-          const double length,
-          const bool   write_wavelet);
+  Wavelet(const double        peakF,
+          const double        dt,
+          const double        length,
+          const bool          write_wavelet,
+          const std::string & prefix);
 
   Wavelet(const std::string & filename,
           const std::string & file_format,
           const double        dt,
           const double        length,
           const bool          write_wavelet,
+          const std::string & prefix,
           bool              & error);
 
   ~Wavelet(void);

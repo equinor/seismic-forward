@@ -124,6 +124,7 @@ ModelSettings::ModelSettings(void)
   output_seismic_timeshift_            = false;
   output_time_surfaces_                = false;
   output_depth_surfaces_               = false;
+  output_wavelet_                      = false;
   output_twt_                          = false;
   output_vrms_                         = false;
   output_twt_offset_                   = false;

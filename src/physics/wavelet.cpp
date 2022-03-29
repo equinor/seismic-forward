@@ -13,12 +13,13 @@
 #include <list>
 
 
-//------------------------------------------
-Wavelet::Wavelet(const double peakF,
-                 const double dt,
-                 const double length,
-                 const bool   write_wavelet)
-//------------------------------------------
+//--------------------------------------------------
+Wavelet::Wavelet(const double         peakF,
+                 const double         dt,
+                 const double         length,
+                 const bool           write_wavelet,
+                 const std::string  & prefix)
+//--------------------------------------------------
   : wavelet_            ( std::vector<double>(0) ),
     time_vector_        ( std::vector<double>(0) ),
     file_format_        ( ""                     ),
@@ -30,10 +31,13 @@ Wavelet::Wavelet(const double peakF,
   //
   // EVERYTHING below is CURRENTLY for wavelet export only. Wavelet is calculated on the fly!
   //
-  std::string filename           = "Wavelet_" + NRLib::ToString(peakF) + "Hz_as_used.txt";
   double      dummy_length       = 1000.0/peakF;
   size_t      n                  = static_cast<size_t>(floor(dummy_length));
   int         sample_number_peak = n;
+  std::string filename           = "Wavelet_" + NRLib::ToString(peakF) + "Hz_as_used.txt";
+  if (prefix != "") {
+    filename = prefix + "_" + filename;
+  }
 
   FillWaveletVector(wavelet_,       // This is not the wavelet used in final calculations
                     dt,
@@ -47,10 +51,12 @@ Wavelet::Wavelet(const double peakF,
   else
     twt_length_ = 0.5*length;
 
-  WriteLandMarkWavelet(wavelet_,
-                       sample_number_peak,
-                       dt,
-                       filename);
+  if (write_wavelet) {
+    WriteLandMarkWavelet(wavelet_,
+                         sample_number_peak,
+                         dt,
+                         filename);
+  }
 }
 
 //-----------------------------------------------
@@ -59,6 +65,7 @@ Wavelet::Wavelet(const std::string & filename,
                  const double        dt,
                  const double        length,
                  const bool          write_wavelet,
+                 const std::string & prefix,
                  bool              & error)
 //-----------------------------------------------
   : wavelet_            ( std::vector<double>(0) ),
@@ -115,11 +122,16 @@ Wavelet::Wavelet(const std::string & filename,
     //
     // Export resampled wavelet
     //
-    std::string filename2 = std::string("Wavelet_resampled_to_") + NRLib::ToString(time_sampling_in_ms_, 1) + "ms.txt";
-    WriteLandMarkWavelet(wavelet_,
-                         sample_number_peak,
-                         time_sampling_in_ms_,
-                         filename2);
+    if (write_wavelet) {
+      std::string filename2 = std::string("Wavelet_resampled_to_") + NRLib::ToString(time_sampling_in_ms_, 1) + "ms.txt";
+      if (prefix != "") {
+        filename2 = prefix + "_" + filename2;
+      }
+      WriteLandMarkWavelet(wavelet_,
+                           sample_number_peak,
+                           time_sampling_in_ms_,
+                           filename2);
+    }
 
     //for (size_t ii = 0 ; ii < wavelet_.size() ; ii++) {
     //  printf("wavelet: %10.5f    time: %10.5f\n",wavelet_[ii],time_vector_[ii]);
