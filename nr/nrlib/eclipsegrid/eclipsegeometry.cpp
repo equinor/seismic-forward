@@ -1256,7 +1256,8 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
                                                     NRLib::Grid2D<int>              & is_set,
                                                     const std::vector<NRLib::Point> & corners_in,
                                                     const double                      dx,
-                                                    const double                      dy) const
+                                                    const double                      dy,
+                                                    const bool                        surface_edge) const
 {
   std::vector<NRLib::Point> corners       = corners_in;
   bool                      two_triangles = true;
@@ -1320,16 +1321,26 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
     else if (corners[four].y > max_y)  { max_y = corners[four].y ;}
   }
 
+  double mean_z = 0.25*(corners[0].z + corners[1].z + corners[2].z + corners[3].z);
+
   // For loop over all points in z_grid inside the rectangle given by the mins and max' calulated above
   // min_x = dx/2 + dx*n1, if n1 not integer, let it be the smallest integer greater than solution. Zero if negative number
   // max_x = dx/2 + dx*(n2-1), if n2 not integer, let it be the greatest integer smaller than solution. Zero if negative number
 
-  size_t n1 = static_cast<size_t>(max((min_x/dx - 0.5), 0.0));
-  size_t n2 = static_cast<size_t>(max((max_x/dx + 1.0), 0.0));
-  size_t m1 = static_cast<size_t>(max((min_y/dy - 0.5), 0.0));
-  size_t m2 = static_cast<size_t>(max((max_y/dy + 1.0), 0.0));
-  size_t m  = z_grid.GetNJ();
-  size_t n  = z_grid.GetNI();
+  double dx_ecl  = max_x - min_x; // Use full length of cell as shift!
+  double dy_ecl  = max_y - min_y;
+
+  double delta_x = std::max(dx, dx_ecl);
+  double delta_y = std::max(dy, dy_ecl);
+
+  size_t n1      = static_cast<size_t>(std::max((min_x - delta_x)/dx, 0.0));
+  size_t n2      = static_cast<size_t>(std::max((max_x + delta_x)/dx, 0.0));
+  size_t m1      = static_cast<size_t>(std::max((min_y - delta_y)/dy, 0.0));
+  size_t m2      = static_cast<size_t>(std::max((max_y + delta_y)/dy, 0.0));
+
+  size_t n       = z_grid.GetNI();
+  size_t m       = z_grid.GetNJ();
+
   if (n2 > n) n2 = n; //Should stop before grid ends
   if (m2 > m) m2 = m;
 
@@ -1358,6 +1369,10 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
           z_grid(it1,it2) = intersec.z;
           is_set(it1,it2) = 1;
         }
+        if (surface_edge && is_set(it1,it2) == 0) { // Only do this if cell is unset
+          z_grid(it1,it2) = mean_z;
+          is_set(it1,it2) = 1;
+        }
       }
       else if (two_triangles) {
         if (triangle2.FindIntersection(line_xy, intersec, true)) {
@@ -1370,6 +1385,10 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
             z_grid(it1,it2) = intersec.z;
             is_set(it1,it2) = 1;
           }
+        }
+        if (surface_edge && is_set(it1,it2) == 0) { // Only do this if cell is unset
+          z_grid(it1,it2) = mean_z;
+          is_set(it1,it2) = 1;
         }
       }
     }
@@ -1463,7 +1482,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
 
   if (vertical_interpolation) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nInterpolating z-values that are undefined using vertical interpolation.\n");
-
     VerticalInterpolation(layer,
                           zgrid,
                           topeclipse,
@@ -1731,6 +1749,10 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
   NRLib::Grid2D<int> is_set(n,m,0);
   for(size_t j = 0; j < nj_; j++) { //Loops over each cell in the given layer
     for(size_t i = 0; i < ni_; i++){
+
+      //bool surface_edge = is_surface && (i == 0 || j == 0 || i == ni_ - 1 || j == nj_ - 1);
+      bool surface_edge = (i == 0 || j == 0 || i == ni_ - 1 || j == nj_ - 1);
+
       // Find rotated coordinates for the corners of the cell
       nonrotated_corner=FindCornerPoint(i,j,k,0,0,lower_or_upper);
       corners[0].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
@@ -1753,7 +1775,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
           BilinearFillInZValuesInArea(z_grid,is_set,corners,dx,dy);
         }
         else {
-          TriangularFillInZValuesInArea(z_grid,is_set,corners,dx,dy);
+          TriangularFillInZValuesInArea(z_grid,is_set,corners,dx,dy,surface_edge);
         }
       }
       if (j>0) {
@@ -1802,7 +1824,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
           if (bilinear_else_triangles)
             BilinearFillInZValuesInArea(z_grid,is_set,fault_corners,dx,dy);
           else
-            TriangularFillInZValuesInArea(z_grid,is_set,fault_corners,dx,dy);
+            TriangularFillInZValuesInArea(z_grid,is_set,fault_corners,dx,dy,surface_edge);
         }
       }
       if (i>0) {
@@ -1842,7 +1864,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
           if (bilinear_else_triangles)
             BilinearFillInZValuesInArea(z_grid,is_set,fault_corners,dx,dy);
           else
-            TriangularFillInZValuesInArea(z_grid,is_set,fault_corners,dx,dy);
+            TriangularFillInZValuesInArea(z_grid,is_set,fault_corners,dx,dy,surface_edge);
         }
       }
       prev_upper_corner=corners[2];
@@ -1883,6 +1905,9 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
                     IsColumnActive(i+1, j+1);
 
       if (active) {
+
+        bool surface_edge = is_surface && (i == 0 || j == 0 || i == ni_ - 2 || j == nj_ - 2);
+
         //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "i,j =  %d, %d\n",i,j);
 
         C0 = FindPointCellSurface(i  , j  , k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i  , j  )
@@ -1915,7 +1940,7 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
           if (bilinear_else_triangles)
             BilinearFillInZValuesInArea(z_grid, is_set, Crot, dx, dy);
           else
-            TriangularFillInZValuesInArea(z_grid, is_set, Crot, dx, dy);
+            TriangularFillInZValuesInArea(z_grid, is_set, Crot, dx, dy, surface_edge);
         }
       }
     }
