@@ -1989,10 +1989,10 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
         C2 = FindPointCellSurface(i+1, j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i+1, j+1)
         C3 = FindPointCellSurface(i  , j+1, k, lower_or_upper, 0.5, 0.5); // Find centre of eclipse grid cell (i  , j+1)
 
-        NRLib::Triangle triangle1(C3, C0, C1);
-        NRLib::Triangle triangle2(C1, C2, C3);
-        triangle1.WriteToFile("triangle1.irap");
-        triangle2.WriteToFile("triangle2.irap");
+        //NRLib::Triangle triangle1(C3, C0, C1);
+        //NRLib::Triangle triangle2(C1, C2, C3);
+        //triangle1.WriteToFile("triangle1.irap");
+        //triangle2.WriteToFile("triangle2.irap");
 
         TranslateAndRotate(Crot[0], C0, x0, y0, cosA, sinA);
         TranslateAndRotate(Crot[1], C1, x0, y0, cosA, sinA);
