@@ -1320,8 +1320,6 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
     else if (corners[four].y > max_y)  { max_y = corners[four].y ;}
   }
 
-  double mean_z = 0.25*(corners[0].z + corners[1].z + corners[2].z + corners[3].z);
-
   // For loop over all points in z_grid inside the rectangle given by the mins and max' calulated above
   // min_x = dx/2 + dx*n1, if n1 not integer, let it be the smallest integer greater than solution. Zero if negative number
   // max_x = dx/2 + dx*(n2-1), if n2 not integer, let it be the greatest integer smaller than solution. Zero if negative number
@@ -1812,85 +1810,78 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
                                                         const bool                  bilinear_else_triangles,
                                                         const double                missingValue) const
 {
-  size_t m=z_grid.GetNJ();
-  size_t n=z_grid.GetNI();
-  double rot_x0=cos(angle)*x0+sin(angle)*y0;
-  double rot_y0=cos(angle)*y0-sin(angle)*x0;
-  double test_if_equal;
-  bool fault;
-  NRLib::Point nonrotated_corner;
-  NRLib::Point prev_upper_corner,prev_lower_corner, cell_under_right_corner, cell_under_left_corner;
-  std::vector<NRLib::Point> corners(4);
+  double                    cosA = cos(angle);
+  double                    sinA = sin(angle);
+  size_t                    m    = z_grid.GetNJ();
+  size_t                    n    = z_grid.GetNI();
+  double                    thr  = 0.00000001;
+  NRLib::Point              C0, C1, C2, C3;
+  NRLib::Point              prev_upper_corner,prev_lower_corner, cell_under_right_corner, cell_under_left_corner;
   std::vector<NRLib::Point> fault_corners(4);
-  NRLib::Grid2D<int> is_set(n,m,0);
-  for(size_t j = 0; j < nj_; j++) { //Loops over each cell in the given layer
-    for(size_t i = 0; i < ni_; i++){
-      // Find rotated coordinates for the corners of the cell
-      nonrotated_corner=FindCornerPoint(i,j,k,0,0,lower_or_upper);
-      corners[0].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-      corners[0].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-      corners[0].z=nonrotated_corner.z;
-      nonrotated_corner=FindCornerPoint(i,j,k,0,1,lower_or_upper);
-      corners[1].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-      corners[1].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-      corners[1].z=nonrotated_corner.z;
-      nonrotated_corner=FindCornerPoint(i,j,k,1,1,lower_or_upper);
-      corners[2].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-      corners[2].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-      corners[2].z=nonrotated_corner.z;
-      nonrotated_corner=FindCornerPoint(i,j,k,1,0,lower_or_upper);
-      corners[3].x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-      corners[3].y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-      corners[3].z=nonrotated_corner.z;
-      if (FindTopCell(i,j)!=nk_) {
-        if (bilinear_else_triangles) {
-          BilinearFillInZValuesInArea(z_grid,is_set,corners,dx,dy);
-        }
-        else {
-          TriangularFillInZValuesInArea(z_grid,is_set,corners,dx,dy);
-        }
+  NRLib::Grid2D<int>        is_set(n,m,0);
+  std::vector<NRLib::Point> Crot(4);
+
+  double                    test_if_equal;
+  bool                      fault;
+
+  for (size_t j = 0 ; j < nj_ ; j++) { //Loops over each cell in the given layer
+    for (size_t i = 0 ; i < ni_ ; i++){
+
+      C0 = FindCornerPoint(i ,j ,k , 0, 0, lower_or_upper); // Find rotated coordinates for the corners of the cell
+      C1 = FindCornerPoint(i ,j ,k , 0, 1, lower_or_upper);
+      C2 = FindCornerPoint(i ,j ,k , 1, 1, lower_or_upper);
+      C3 = FindCornerPoint(i ,j ,k , 1, 0, lower_or_upper);
+
+      TranslateAndRotate(Crot[0], C0, x0, y0, cosA, sinA);
+      TranslateAndRotate(Crot[1], C1, x0, y0, cosA, sinA);
+      TranslateAndRotate(Crot[2], C2, x0, y0, cosA, sinA);
+      TranslateAndRotate(Crot[3], C3, x0, y0, cosA, sinA);
+
+      if (FindTopCell(i,j) != nk_) {
+        if (bilinear_else_triangles)
+          BilinearFillInZValuesInArea(z_grid,is_set,Crot,dx,dy);
+        else
+          TriangularFillInZValuesInArea(z_grid,is_set,Crot,dx,dy);
       }
-      if (j>0) {
-        //Find rotated coordinates for the corners of the cell under
-        nonrotated_corner=FindCornerPoint(i,j-1,k,0,1,lower_or_upper);
-        cell_under_left_corner.x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-        cell_under_left_corner.y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-        cell_under_left_corner.z=nonrotated_corner.z;
-        nonrotated_corner=FindCornerPoint(i,j-1,k,1,1,lower_or_upper);
-        cell_under_right_corner.x=cos(angle)*nonrotated_corner.x+sin(angle)*nonrotated_corner.y;
-        cell_under_right_corner.y=cos(angle)*nonrotated_corner.y-sin(angle)*nonrotated_corner.x;
-        cell_under_right_corner.z=nonrotated_corner.z;
-        fault=false;
-        test_if_equal=(cell_under_left_corner.y/corners[0].y)-1.0;
-        if (abs(test_if_equal)>0.00000001)
-          fault=true;
+
+      if (j > 0) {
+        C0 = FindCornerPoint(i,j-1,k,0,1,lower_or_upper); //Find rotated coordinates for the corners of the cell under
+        C1 = FindCornerPoint(i,j-1,k,1,1,lower_or_upper);
+
+        TranslateAndRotate(cell_under_left_corner , C0, x0, y0, cosA, sinA);
+        TranslateAndRotate(cell_under_right_corner, C1, x0, y0, cosA, sinA);
+
+        test_if_equal=(cell_under_left_corner.y/Crot[0].y) - 1.0;
+        if (abs(test_if_equal) > thr)
+          fault = true;
         else {
-          test_if_equal=(cell_under_right_corner.y/corners[3].y)-1.0;
-          if (abs(test_if_equal)>0.00000001)
-            fault=true;
+          test_if_equal=(cell_under_right_corner.y/Crot[3].y) - 1.0;
+          if (abs(test_if_equal) > thr)
+            fault = true;
           else {
-            test_if_equal=(cell_under_right_corner.x/corners[3].x)-1.0;
-            if (abs(test_if_equal)>0.00000001)
-              fault=true;
+            test_if_equal=(cell_under_right_corner.x/Crot[3].x) - 1.0;
+            if (abs(test_if_equal) > thr)
+              fault = true;
             else {
-              test_if_equal=(cell_under_left_corner.x/corners[0].x)-1.0;
-              if (abs(test_if_equal)>0.00000001)
-                fault=true;
+              test_if_equal=(cell_under_left_corner.x/Crot[0].x) - 1.0;
+              if (abs(test_if_equal) > thr)
+                fault = true;
             }
           }
         }
+
         if (fault){
           //Fault along the i-coordinate
-          fault_corners[0]=cell_under_left_corner;
-          fault_corners[1]=corners[0];
-          fault_corners[2]=corners[3];
-          fault_corners[3]=cell_under_right_corner;
-          if(corners[0].y<cell_under_left_corner.y && corners[3].y < cell_under_right_corner.y){
+          fault_corners[0] = cell_under_left_corner;
+          fault_corners[1] = Crot[0];
+          fault_corners[2] = Crot[3];
+          fault_corners[3] = cell_under_right_corner;
+          if(Crot[0].y < cell_under_left_corner.y && Crot[3].y < cell_under_right_corner.y){
            // double meanz = 0.125*(corners[0].z+cell_under_left_corner.z+cell_under_right_corner.z+corners[3].z);
-            fault_corners[0].z = corners[0].z;
+            fault_corners[0].z = Crot[0].z;
             fault_corners[1].z = cell_under_left_corner.z;
             fault_corners[2].z = cell_under_right_corner.z;
-            fault_corners[3].z = corners[3].z;
+            fault_corners[3].z = Crot[3].z;
           }
 
           if (bilinear_else_triangles)
@@ -1901,19 +1892,19 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
       }
       if (i>0) {
         fault=false;
-        test_if_equal=(prev_upper_corner.x/corners[1].x)-1.0;
+        test_if_equal=(prev_upper_corner.x/Crot[1].x)-1.0;
         if (abs(test_if_equal)>0.00000001)
           fault=true;
         else {
-          test_if_equal=(prev_lower_corner.x/corners[0].x)-1.0;
+          test_if_equal=(prev_lower_corner.x/Crot[0].x)-1.0;
           if (abs(test_if_equal)>0.00000001)
             fault=true;
           else {
-            test_if_equal=(prev_upper_corner.y/corners[1].y)-1.0;
+            test_if_equal=(prev_upper_corner.y/Crot[1].y)-1.0;
             if (abs(test_if_equal)>0.00000001)
               fault=true;
             else {
-              test_if_equal=(prev_lower_corner.y/corners[0].y)-1.0;
+              test_if_equal=(prev_lower_corner.y/Crot[0].y)-1.0;
               if (abs(test_if_equal)>0.00000001)
                 fault=true;
             }
@@ -1921,14 +1912,14 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
         }
         if (fault) {
           //Fault along the j-coordinate
-          fault_corners[0]=prev_lower_corner;
-          fault_corners[1]=prev_upper_corner;
-          fault_corners[2]=corners[1];
-          fault_corners[3]=corners[0];
-          if(corners[1].x < prev_upper_corner.x && corners[0].x < prev_lower_corner.x){
+          fault_corners[0] = prev_lower_corner;
+          fault_corners[1] = prev_upper_corner;
+          fault_corners[2] = Crot[1];
+          fault_corners[3] = Crot[0];
+          if(Crot[1].x < prev_upper_corner.x && Crot[0].x < prev_lower_corner.x){
             //double meanz = 0.125*(corners[1].z+corners[0].z+prev_upper_corner.z+prev_lower_corner.z);
-            fault_corners[0].z = corners[1].z;
-            fault_corners[1].z = corners[0].z;
+            fault_corners[0].z = Crot[1].z;
+            fault_corners[1].z = Crot[0].z;
             fault_corners[2].z = prev_upper_corner.z;
             fault_corners[3].z = prev_lower_corner.z;
 
@@ -1939,8 +1930,8 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double>   
             TriangularFillInZValuesInArea(z_grid,is_set,fault_corners,dx,dy);
         }
       }
-      prev_upper_corner=corners[2];
-      prev_lower_corner=corners[3];
+      prev_upper_corner = Crot[2];
+      prev_lower_corner = Crot[3];
     }
   }
   bool iterate = false;
@@ -1976,10 +1967,7 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
                     IsColumnActive(i  , j+1) &&
                     IsColumnActive(i+1, j+1);
 
-      //xxxxx
       if (active) {
-      //if (active && i == 0 && (j == nj_ - 2 || j == nj_ - 3)) {
-
         bool surface_edge = is_surface && (i == 0 || j == 0 || i == ni_ - 2 || j == nj_ - 2);
 
         //NRLib::LogKit::LogFormatted(NRLib:a:LogKit::Low, "i,j =  %d, %d\n",i,j);
@@ -2026,9 +2014,6 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
       }
     }
   }
-
-  //xxxx
-  //std::exit(1);
 
   //
   // We do a horizontal extrapolation/interpolation for the top and base surfaces, but not
