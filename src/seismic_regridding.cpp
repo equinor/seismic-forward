@@ -12,6 +12,7 @@
 
 //#include <fstream>
 
+#include <numeric>
 #include <ctime>
 
 #ifdef WITH_OMP
@@ -373,9 +374,23 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
     eclipse_extra_params.push_back(one_parameter_grid);
   }
 
+  double vp_avg , vp_min , vp_max;
+  double vs_avg , vs_min , vs_max;
+  double rho_avg, rho_min, rho_max;
+  //void GetAvgMinMaxWithMissing(A& avg, A& min, A& max, A missing) const; // Possibly use this instead!
+  eclipse_vp .GetAvgMinMax(vp_avg , vp_min , vp_max );
+  eclipse_vs .GetAvgMinMax(vs_avg , vs_min , vs_max );
+  eclipse_rho.GetAvgMinMax(rho_avg, rho_min, rho_max);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter statistics for Eclipse grid before filling of inactive cells.\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter         Avg       Min       Max");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vp           %8.2f  %8.2f  %8.2f\n",vp_avg , vp_min , vp_max);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vs           %8.2f  %8.2f  %8.2f\n",vs_avg , vs_min , vs_max);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Rho          %8.2f  %8.2f  %8.2f\n",rho_avg, rho_min, rho_max);
+
   size_t nijk = egrid.GetNI()*egrid.GetNJ()*egrid.GetNK();
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive cells in Eclipse grid above and in reservoir.\n");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nTotal number of grid cells: %d x %d x %d = %d\n",egrid.GetNI(),egrid.GetNJ(),egrid.GetNK(), nijk);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nTotal number of Eclipse grid cells: %d x %d x %d = %d\n",egrid.GetNI(),egrid.GetNJ(),egrid.GetNK(), nijk);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOB1 = Using default value for overburden above first layer.");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOB2 = Using default value for overburden in and below first layer.");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nRES = Using default value for reservoir in reservoir.");
@@ -390,6 +405,17 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   for (size_t ii = 0; ii < n_extra_params; ++ii) {
     FillInGridValues(extra_parameter_names[ii], eclipse_geometry, eclipse_extra_params[ii], extra_parameter_defaults[ii], extra_parameter_defaults[ii], zlimit, topk, botk);
   }
+
+  eclipse_vp .GetAvgMinMax(vp_avg , vp_min , vp_max );
+  eclipse_vs .GetAvgMinMax(vs_avg , vs_min , vs_max );
+  eclipse_rho.GetAvgMinMax(rho_avg, rho_min, rho_max);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter statistics for Eclipse grid after filling of inactive cells.\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter         Avg       Min       Max");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vp           %8.2f  %8.2f  %8.2f\n",vp_avg , vp_min , vp_max);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vs           %8.2f  %8.2f  %8.2f\n",vs_avg , vs_min , vs_max);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Rho          %8.2f  %8.2f  %8.2f\n",rho_avg, rho_min, rho_max);
+
 
   //default value in top
   for (size_t i = 0; i < vpgrid.GetNI(); i++) {
@@ -433,12 +459,12 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
 #endif
   for (size_t b = 0 ; b < nb ; ++b) {
 
-    size_t ibx  = b % nbx;
-    size_t iby  = static_cast<size_t>(std::floor(static_cast<double>(b) / static_cast<double>(nbx)));
-    size_t imin = std::max(ibx*nxb, static_cast<size_t>(0)); // find min and max of block
-    size_t jmin = std::max(iby*nyb, static_cast<size_t>(0));
-    size_t imax = nx;
-    size_t jmax = ny;
+    size_t ibx   = b % nbx;
+    size_t iby   = static_cast<size_t>(std::floor(static_cast<double>(b) / static_cast<double>(nbx)));
+    size_t imin  = std::max(ibx*nxb, static_cast<size_t>(0)); // find min and max of block
+    size_t jmin  = std::max(iby*nyb, static_cast<size_t>(0));
+    size_t imax  = nx;
+    size_t jmax  = ny;
 
     if (ibx != (nbx - 1))
       imax = std::min((ibx + 1)*nxb, nx);
@@ -698,6 +724,20 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
                 eclipse_extra_params,
                 i, j, k, pt_vp);
   }
+
+  float vpavg , vpmin , vpmax;
+  float vsavg , vsmin , vsmax;
+  float rhoavg, rhomin, rhomax;
+  vpgrid .GetAvgMinMax(vpavg , vpmin , vpmax );
+  vsgrid .GetAvgMinMax(vsavg , vsmin , vsmax );
+  rhogrid.GetAvgMinMax(rhoavg, rhomin, rhomax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter statistics for regular grid after resampling.\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter         Avg       Min       Max");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vp           %8.2f  %8.2f  %8.2f\n",vpavg , vpmin , vpmax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vs           %8.2f  %8.2f  %8.2f\n",vsavg , vsmin , vsmax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Rho          %8.2f  %8.2f  %8.2f\n",rhoavg, rhomin, rhomax);
+
 }
 
 //-------------------------------------------------------------------------------------
