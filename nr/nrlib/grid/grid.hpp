@@ -279,10 +279,3 @@ void Grid<A>::LogTransform(A missing)
 
 }
 #endif
-
-
-
-
-
-
-
