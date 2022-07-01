@@ -1447,7 +1447,7 @@ void EclipseGeometry::TriangularFillInZValuesAtEdges(NRLib::Grid2D<double>      
 
           //xxxx
           //printf("%4lu  corners[i]. (x,y,z)  = %7.2f, %7.2f,   %7.2f\n",i, corners[i].x, corners[i].y, corners[i].z);
-          //printf("            it1*dx it2*dy  = %7.2f  %7.2f\n",it1*dx, it2*dy);
+         //printf("            it1*dx it2*dy  = %7.2f  %7.2f\n",it1*dx, it2*dy);
           //printf("               sqrt(dist2) = %7.2f\n", std::sqrt(dist2));
 
           if (dist2 < min_dist) {
@@ -1476,6 +1476,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
                                                const size_t                          top_k,
                                                const size_t                          n_threads,
                                                const bool                            cornerpoint_interpolation,
+                                               const bool                            interpolation_at_faults,
                                                const bool                            bilinear_else_triangles,
                                                const bool                            vertical_interpolation,
                                                const double                          missingValue) const
@@ -1524,6 +1525,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
             ymin,
             angle,
             cornerpoint_interpolation,
+            interpolation_at_faults,   // For corner point interpolation only
             bilinear_else_triangles,
             is_surface,
             missingValue);
@@ -1547,6 +1549,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
               ymin,
               angle,
               cornerpoint_interpolation,
+              interpolation_at_faults,   // For corner point interpolation only
               bilinear_else_triangles,
               is_surface,
               missingValue);
@@ -1772,6 +1775,7 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_grid,
                                 const double            y0,
                                 const double            angle,
                                 const bool              cornerpoint_interpolation,
+                                const bool              interpolation_at_faults,
                                 const bool              bilinear_else_triangles,
                                 const bool              is_surface,
                                 const double            missingValue) const
@@ -1785,6 +1789,7 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_grid,
                                       x0,
                                       y0,
                                       angle,
+                                      interpolation_at_faults,
                                       bilinear_else_triangles,
                                       is_surface,
                                       missingValue); // Currently not in use
@@ -1811,6 +1816,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & 
                                                         const double            x0,
                                                         const double            y0,
                                                         const double            angle,
+                                                        const bool              interpolation_at_faults,
                                                         const bool              bilinear_else_triangles,
                                                         const bool              is_surface,
                                                         const double            missingValue) const
@@ -1843,58 +1849,60 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & 
         FillInZValuesInArea(z_grid, is_set, Crot, dx, dy, bilinear_else_triangles, surface_edge, true);
       }
 
-      if (j > 0) {
-        C0 = FindCornerPoint(i, j - 1, k, 0, 1, lower_or_upper); // Find rotated coordinates for the corners of the cell under
-        C1 = FindCornerPoint(i, j - 1, k, 1, 1, lower_or_upper);
+      if (interpolation_at_faults) {
+        if (j > 0) {
+          C0 = FindCornerPoint(i, j - 1, k, 0, 1, lower_or_upper); // Find rotated coordinates for the corners of the cell under
+          C1 = FindCornerPoint(i, j - 1, k, 1, 1, lower_or_upper);
 
-        TranslateAndRotate(cell_under_left_corner , C0, x0, y0, cosA, sinA);
-        TranslateAndRotate(cell_under_right_corner, C1, x0, y0, cosA, sinA);
+          TranslateAndRotate(cell_under_left_corner , C0, x0, y0, cosA, sinA);
+          TranslateAndRotate(cell_under_right_corner, C1, x0, y0, cosA, sinA);
 
-        bool diff1 = abs(cell_under_left_corner.y /Crot[0].y - 1.0) > thr;
-        bool diff2 = abs(cell_under_right_corner.y/Crot[3].y - 1.0) > thr;
-        bool diff3 = abs(cell_under_right_corner.x/Crot[3].x - 1.0) > thr;
-        bool diff4 = abs(cell_under_left_corner.x /Crot[0].x - 1.0) > thr;
+          bool diff1 = abs(cell_under_left_corner.y /Crot[0].y - 1.0) > thr;
+          bool diff2 = abs(cell_under_right_corner.y/Crot[3].y - 1.0) > thr;
+          bool diff3 = abs(cell_under_right_corner.x/Crot[3].x - 1.0) > thr;
+          bool diff4 = abs(cell_under_left_corner.x /Crot[0].x - 1.0) > thr;
 
-        if (diff1 || diff2 || diff3 || diff4) {  // Fault along the i-coordinate
-          fault_corners[0] = cell_under_left_corner;
-          fault_corners[1] = Crot[0];
-          fault_corners[2] = Crot[3];
-          fault_corners[3] = cell_under_right_corner;
+          if (diff1 || diff2 || diff3 || diff4) {  // Fault along the i-coordinate
+            fault_corners[0] = cell_under_left_corner;
+            fault_corners[1] = Crot[0];
+            fault_corners[2] = Crot[3];
+            fault_corners[3] = cell_under_right_corner;
 
-          if (Crot[0].y < cell_under_left_corner.y && Crot[3].y < cell_under_right_corner.y){
-            fault_corners[0].z = Crot[0].z;
-            fault_corners[1].z = cell_under_left_corner.z;
-            fault_corners[2].z = cell_under_right_corner.z;
-            fault_corners[3].z = Crot[3].z;
+            if (Crot[0].y < cell_under_left_corner.y && Crot[3].y < cell_under_right_corner.y){
+              fault_corners[0].z = Crot[0].z;
+              fault_corners[1].z = cell_under_left_corner.z;
+              fault_corners[2].z = cell_under_right_corner.z;
+              fault_corners[3].z = Crot[3].z;
+            }
+            FillInZValuesInArea(z_grid, is_set, fault_corners, dx, dy, bilinear_else_triangles, surface_edge, false);
           }
-          FillInZValuesInArea(z_grid, is_set, fault_corners, dx, dy, bilinear_else_triangles, surface_edge, false);
         }
-      }
-      if (i > 0) {
 
-        bool diff1 = abs(prev_upper_corner.x/Crot[1].x - 1.0) > thr;
-        bool diff2 = abs(prev_lower_corner.x/Crot[0].x - 1.0) > thr;
-        bool diff3 = abs(prev_upper_corner.y/Crot[1].y - 1.0) > thr;
-        bool diff4 = abs(prev_lower_corner.y/Crot[0].y - 1.0) > thr;
+        if (i > 0) {
+          bool diff1 = abs(prev_upper_corner.x/Crot[1].x - 1.0) > thr;
+          bool diff2 = abs(prev_lower_corner.x/Crot[0].x - 1.0) > thr;
+          bool diff3 = abs(prev_upper_corner.y/Crot[1].y - 1.0) > thr;
+          bool diff4 = abs(prev_lower_corner.y/Crot[0].y - 1.0) > thr;
 
-        if (diff1 || diff2 || diff3 || diff4) { // Fault along the j-coordinate
-          fault_corners[0] = prev_lower_corner;
-          fault_corners[1] = prev_upper_corner;
-          fault_corners[2] = Crot[1];
-          fault_corners[3] = Crot[0];
+          if (diff1 || diff2 || diff3 || diff4) { // Fault along the j-coordinate
+            fault_corners[0] = prev_lower_corner;
+            fault_corners[1] = prev_upper_corner;
+            fault_corners[2] = Crot[1];
+            fault_corners[3] = Crot[0];
 
-          if (Crot[1].x < prev_upper_corner.x && Crot[0].x < prev_lower_corner.x) {
-            fault_corners[0].z = Crot[1].z;
-            fault_corners[1].z = Crot[0].z;
-            fault_corners[2].z = prev_upper_corner.z;
-            fault_corners[3].z = prev_lower_corner.z;
+            if (Crot[1].x < prev_upper_corner.x && Crot[0].x < prev_lower_corner.x) {
+              fault_corners[0].z = Crot[1].z;
+              fault_corners[1].z = Crot[0].z;
+              fault_corners[2].z = prev_upper_corner.z;
+              fault_corners[3].z = prev_lower_corner.z;
 
+            }
+            FillInZValuesInArea(z_grid, is_set, fault_corners, dx, dy, bilinear_else_triangles, surface_edge, false);
           }
-          FillInZValuesInArea(z_grid, is_set, fault_corners, dx, dy, bilinear_else_triangles, surface_edge, false);
         }
+        prev_upper_corner = Crot[2];
+        prev_lower_corner = Crot[3];
       }
-      prev_upper_corner = Crot[2];
-      prev_lower_corner = Crot[3];
     }
   }
   //

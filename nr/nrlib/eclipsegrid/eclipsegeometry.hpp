@@ -123,6 +123,7 @@ public:
                                 const size_t                          top_k,
                                 const size_t                          n_threads,
                                 const bool                            cornerpoint_interpolation,
+                                const bool                            interpolation_at_faults,
                                 const bool                            bilinear_else_triangles,
                                 const bool                            vertical_interpolation,
                                 const double                          missingValue) const;
@@ -148,6 +149,7 @@ public:
                  const double                y0,
                  const double                angle,
                  const bool                  cornerpoint_interpolation,
+                 const bool                  interpolation_at_faults,
                  const bool                  bilinear_else_triangles,
                  const bool                  is_surface,
                  const double                missingValue) const;
@@ -272,6 +274,7 @@ private:
                                          const double            x0,
                                          const double            y0,
                                          const double            angle,
+                                         const bool              interpolation_at_faults,
                                          const bool              bilinear_else_triangles,
                                          const bool              is_surface,
                                          const double            missingValue) const;

@@ -238,6 +238,7 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
 
   std::vector<std::string> legalCommands;
   legalCommands.push_back("cornerpt-interpolation-in-depth");
+  legalCommands.push_back("cornerpt-interpolation-at-faults");
   legalCommands.push_back("vertical-interpolation-of-undefined-cells");
   legalCommands.push_back("default-values");
   legalCommands.push_back("eclipse-file");
@@ -264,16 +265,11 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
 
   bool bolval;
   if (ParseBool(root, "cornerpt-interpolation-in-depth", bolval, errTxt)) {
-    /*
-    if (bolval) {
-      //
-      // WARNING about center point interpolation (ref. GEOS-29)
-      //
-      errTxt += "\nWARNING:: Corner point interpolation currently have defects and has currently been decativated";
-      errTxt += "\n          These defects have been fixed for centre point interpolation. Please use that instead\n";
-    }
-    */
     modelSettings_->SetUseCornerpointInterpol(bolval);
+  }
+
+  if (ParseBool(root, "cornerpt-interpolation-at-faults", bolval, errTxt)) {
+    modelSettings_->SetCornerpointInterpolationAtFaults(bolval);
   }
 
   if (ParseBool(root, "vertical-interpolation-of-undefined-cells", bolval, errTxt)) {
