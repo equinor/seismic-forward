@@ -169,26 +169,27 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     size_t              n_threads)
 //-------------------------------------------------------------------------
 {
-  NRLib::StormContGrid                & zgrid                  = seismic_parameters.GetZGrid();
-  const NRLib::EclipseGeometry        & geometry               = seismic_parameters.GetEclipseGrid().GetGeometry();
-  const size_t                          top_k                  = seismic_parameters.GetTopK();
-  const NRLib::RegularSurface<double> & topeclipse             = seismic_parameters.GetTopEclipse();
-  const NRLib::RegularSurface<double> & boteclipse             = seismic_parameters.GetBottomEclipse();
+  NRLib::StormContGrid                & zgrid                   = seismic_parameters.GetZGrid();
+  const NRLib::EclipseGeometry        & geometry                = seismic_parameters.GetEclipseGrid().GetGeometry();
+  const size_t                          top_k                   = seismic_parameters.GetTopK();
+  const NRLib::RegularSurface<double> & topeclipse              = seismic_parameters.GetTopEclipse();
+  const NRLib::RegularSurface<double> & boteclipse              = seismic_parameters.GetBottomEclipse();
 
-  const bool                            rem_neg_delta          = model_settings->GetRemoveNegativeDeltaZ();
-  const bool                            use_corner_point       = model_settings->GetUseCornerpointInterpol();
-  const bool                            vertical_interpolation = model_settings->GetUseVerticalInterpolation();
-  const std::string                   & prefix                 = model_settings->GetPrefix();
-  std::string                           filename               = "negative_dz_points.rxat";
+  const bool                            rem_neg_delta           = model_settings->GetRemoveNegativeDeltaZ();
+  const bool                            use_corner_point        = model_settings->GetUseCornerpointInterpol();
+  const bool                            interpolation_at_faults = model_settings->GetCornerpointInterpolationAtFaults();
+  const bool                            vertical_interpolation  = model_settings->GetUseVerticalInterpolation();
+  const std::string                   & prefix                  = model_settings->GetPrefix();
+  std::string                           filename                = "negative_dz_points.rxat";
   if (prefix != "") {
     filename = prefix + "_" + filename;
   }
 
-  const bool                            bilinear               = false;
-  const double                          missing                = -999.0;
+  const bool                            bilinear                = false;
+  const double                          missing                 = -999.0;
 
-  const double                          z_top_wavelet          = model_settings->GetZWaveletTop();
-  const double                          z_bot_wavelet          = model_settings->GetZWaveletBot();
+  const double                          z_top_wavelet           = model_settings->GetZWaveletTop();
+  const double                          z_bot_wavelet           = model_settings->GetZWaveletBot();
 
   NRLib::RegularSurface<double>         orig_top(topeclipse);
   NRLib::RegularSurface<double>         orig_bot(boteclipse);
@@ -202,6 +203,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     top_k,
                                     n_threads,
                                     use_corner_point,
+                                    interpolation_at_faults,
                                     bilinear,
                                     vertical_interpolation,
                                     missing);

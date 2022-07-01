@@ -304,6 +304,7 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   double ebdy       = boteclipse.GetDY(); // equals etdy
   double angle      = 0.0;
   bool   cornerpt   = model_settings->GetUseCornerpointInterpol();
+  bool   faults     = model_settings->GetCornerpointInterpolationAtFaults();
   bool   bilinear   = false;
   bool   is_surface = true;
 
@@ -315,8 +316,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   NRLib::Grid2D<double> tvalues(nx, ny, 0.0);
   NRLib::Grid2D<double> bvalues(nx, ny, 0.0);
 
-  eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
-  eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, bilinear, is_surface, missing);
+  eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, faults, bilinear, is_surface, missing);
+  eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, faults, bilinear, is_surface, missing);
 
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {    // This fixes small, insignificant defects
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
