@@ -42,6 +42,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
                  model_settings,
                  n_threads);
 
+
   PostProcess(seismic_parameters,
               model_settings);
   //seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
@@ -727,12 +728,13 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
                 i, j, k, pt_vp);
   }
 
+  float undef = vpgrid.GetMissingCode();
   float vpavg , vpmin , vpmax;
   float vsavg , vsmin , vsmax;
   float rhoavg, rhomin, rhomax;
-  vpgrid .GetAvgMinMax(vpavg , vpmin , vpmax );
-  vsgrid .GetAvgMinMax(vsavg , vsmin , vsmax );
-  rhogrid.GetAvgMinMax(rhoavg, rhomin, rhomax);
+  vpgrid .GetAvgMinMaxWithMissing(vpavg , vpmin , vpmax , undef);
+  vsgrid .GetAvgMinMaxWithMissing(vsavg , vsmin , vsmax , undef);
+  rhogrid.GetAvgMinMaxWithMissing(rhoavg, rhomin, rhomax, undef);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter statistics for regular grid after resampling.\n");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter         Avg       Min       Max");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------\n");
