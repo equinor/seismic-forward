@@ -56,6 +56,7 @@ public:
   double                    GetZeroThicknessLimit()                   { return zero_thickness_limit_           ;}
   bool                      GetRemoveNegativeDeltaZ()                 { return remove_negative_delta_z_        ;}
   bool                      GetUseCornerpointInterpol()               { return use_cornerpoint_interpol_       ;}
+  bool                      GetCornerpointInterpolationAtFaults()     { return cornerpoint_interpol_at_faults_ ;}
   bool                      GetUseVerticalInterpolation()             { return use_vertical_interpolation_     ;}
 
   int                       GetIL0Loc()                               { return il0_loc_                        ;}
@@ -193,6 +194,7 @@ public:
 
   void SetWhiteNoise(void)                             { white_noise_                         = true    ;}
   void SetUseCornerpointInterpol(bool value)           { use_cornerpoint_interpol_            = value   ;}
+  void SetCornerpointInterpolationAtFaults(bool value) { cornerpoint_interpol_at_faults_      = value   ;}
   void SetUseVerticalInterpolation(bool value)         { use_vertical_interpolation_          = value   ;}
   void SetRemoveNegativeDeltaZ(bool value)             { remove_negative_delta_z_             = value   ;}
   void SetPSSeismic(bool ps)                           { ps_seismic_                          = ps      ;}
@@ -397,6 +399,7 @@ private:
   bool                      output_twt_offset_;
 
   bool                      use_cornerpoint_interpol_;
+  bool                      cornerpoint_interpol_at_faults_;
   bool                      use_vertical_interpolation_;
   bool                      remove_negative_delta_z_;
 
