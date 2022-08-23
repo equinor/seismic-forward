@@ -123,6 +123,7 @@ public:
                                 const size_t                          top_k,
                                 const size_t                          n_threads,
                                 const bool                            cornerpoint_interpolation,
+                                const bool                            interpolation_at_faults,
                                 const bool                            bilinear_else_triangles,
                                 const bool                            vertical_interpolation,
                                 const double                          missingValue) const;
@@ -148,6 +149,7 @@ public:
                  const double                y0,
                  const double                angle,
                  const bool                  cornerpoint_interpolation,
+                 const bool                  interpolation_at_faults,
                  const bool                  bilinear_else_triangles,
                  const bool                  is_surface,
                  const double                missingValue) const;
@@ -272,7 +274,9 @@ private:
                                          const double            x0,
                                          const double            y0,
                                          const double            angle,
+                                         const bool              interpolation_at_faults,
                                          const bool              bilinear_else_triangles,
+                                         const bool              is_surface,
                                          const double            missingValue) const;
 
    void FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & z_grid,
@@ -287,12 +291,27 @@ private:
                                           const bool              is_surface,
                                           const double            missingValue) const;
 
+  void FillInZValuesInArea(NRLib::Grid2D<double>           & z_grid,
+                           NRLib::Grid2D<int>              & is_set,
+                           const std::vector<NRLib::Point> & corners,
+                           const double                      dx,
+                           const double                      dy,
+                           const bool                        bilinear_else_triangles,
+                           const bool                        surface_edge,
+                           const bool                        write_warning) const;
+
   ///Function used by FindLayerSurface to fill in values to z_grid in the area inside the (NB) four corners (listed clockwise)
   void TriangularFillInZValuesInArea(NRLib::Grid2D<double>           & z_grid,
                                      NRLib::Grid2D<int>              & is_set,
                                      const std::vector<NRLib::Point> & corners,
                                      const double                      dx,
                                      const double                      dy) const;
+
+  void TriangularFillInZValuesAtEdges(NRLib::Grid2D<double>           & z_grid,
+                                      NRLib::Grid2D<int>              & is_set,
+                                      const std::vector<NRLib::Point> & corners,
+                                      const double                      dx,
+                                      const double                      dy) const;
 
   ///Function used by FindLayerSurface to fill in values to z_grid in the area inside the (NB) four corners (listed clockwise)
   void BilinearFillInZValuesInArea(NRLib::Grid2D<double>           & z_grid,
