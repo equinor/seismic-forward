@@ -249,8 +249,6 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   size_t nx       = nxsurfec + 2;
   size_t ny       = nysurfec + 2;
 
-  double missing  = -999.0;
-
   //
   // Finding top and base time surfaces
   //
@@ -295,8 +293,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   //
   // Finding top and base Eclipse surfaces in depth (regular and non-rotated)
   //
-  topeclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing);
-  boteclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing);
+  topeclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing_);
+  boteclipse = NRLib::RegularSurface<double>(x0, y0, lx, ly, nx, ny, missing_);
 
   double etdx       = topeclipse.GetDX();
   double etdy       = topeclipse.GetDY();
@@ -316,8 +314,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   NRLib::Grid2D<double> tvalues(nx, ny, 0.0);
   NRLib::Grid2D<double> bvalues(nx, ny, 0.0);
 
-  eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, faults, bilinear, is_surface, missing);
-  eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, faults, bilinear, is_surface, missing);
+  eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, faults, bilinear, is_surface, missing_);
+  eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, faults, bilinear, is_surface, missing_);
 
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {    // This fixes small, insignificant defects
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {

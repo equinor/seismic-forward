@@ -220,14 +220,14 @@ void Grid<A>::Swap(NRLib::Grid<A> &other)
 template<class A>
 void Grid<A>::GetAvgMinMax(A& avg, A& min, A& max) const
 {
-  A sum = 0.0;
-  A value = 0.0;
+  double sum   = 0.0;
+  A      value = 0.0;
   max = -std::numeric_limits<A>::infinity();
   min = +std::numeric_limits<A>::infinity();
 
   for (size_t i = 0; i < data_.size(); ++i) {
     value = data_[i];
-    sum += value;
+    sum += static_cast<double>(value);
 
     if (value > max)
       max = value;
@@ -235,33 +235,30 @@ void Grid<A>::GetAvgMinMax(A& avg, A& min, A& max) const
     if (value < min)
       min = value;
   }
-
-  avg = sum /= GetN();
+  avg = static_cast<A>(sum/static_cast<double>(GetN()));
 }
 
 template<class A>
 void Grid<A>::GetAvgMinMaxWithMissing(A& avg, A& min, A& max, A missing) const
 {
-  A sum = 0.0;
-  A value = 0.0;
+  double sum   = 0.0;
+  A      value = 0.0;
   max = -std::numeric_limits<A>::infinity();
   min = +std::numeric_limits<A>::infinity();
 
-  int n = 0;
+  size_t n = 0;
   for (size_t i = 0; i < data_.size(); ++i) {
     value = data_[i];
     if (value != missing) {
-      sum += value;
+      sum += static_cast<double>(value);
       n++;
       if (value > max)
         max = value;
-
       if (value < min)
         min = value;
     }
   }
-
-  avg = sum / static_cast<A>(n);
+  avg = static_cast<A>(sum/static_cast<double>(n));
 }
 
 template<class A>
