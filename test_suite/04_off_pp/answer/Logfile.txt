@@ -1,9 +1,9 @@
 
 ****************************************************************************************************
 *****                                                                                          *****
-*****                      Seismic Forward Modeling / Geo2Seis                                 *****
-*****                                 version 4.2 beta                                         *****
-*****                  Copyright (c) 2017 by Norsk Regnesentral / Statoil                      *****
+*****                          Seismic Forward Modeling                                        *****
+*****                                 version 4.3 beta                                         *****
+*****                         Copyright (c) 2019 by Equinor                                    *****
 *****                                                                                          *****
 ****************************************************************************************************
 
@@ -21,7 +21,7 @@ Log level                                 :          7
 Prefix                                    :           
 Suffix                                    :           
 
-Seed                                      : 1509644618
+Seed                                      : 1662738639
 
 Seismic data type                         :         PP
 NMO correction                            :        yes
@@ -29,6 +29,8 @@ Offset without stretch                    :        yes
 Remove negative thicknesses               :         no
 Minimum thickness for Eclipse grid cells  :        0.1
 Use corner-point interpolation            :         no
+Interpolate at faults when corner-point   :         no
+Use vertical interpolation in regridding  :        yes
 Use default underburden                   :         no
 Resample parameters to Segy with interpol.:         no
 Add white noise                           :         no
@@ -82,6 +84,7 @@ Seismic data output:
   Time shift                              :         no
   Depth                                   :         no
 Seismic stack time/depth in SEGY format:
+  Format name                             :  SeisWorks
   Time                                    :         no
   Time shift                              :         no
   Depth                                   :         no
@@ -130,16 +133,16 @@ Number of layers needed in z-grid         :   24
 
 Finding Eclipse top and base surfaces (not corner point interpolation).
 
-Eclipse grid minimum value                :  1626.48
-Eclipse grid maximum value                :  1823.22
+Eclipse grid minimum value                :  1723.28
+Eclipse grid maximum value                :  1814.26
 
-Wavelet time length is                    :    33.33
+Wavelet time length is                    :    64.00
 
-Eclipse top surface lift due to wavelet   :    40.00
-Eclipse base surface drop due to wavelet  :    37.33
+Eclipse top surface lift due to wavelet   :    38.40
+Eclipse base surface drop due to wavelet  :    35.84
 
-Grid minimum value                        :  1586.48
-Grid maximum value                        :  1860.56
+Grid minimum value                        :  1684.88
+Grid maximum value                        :  1850.10
 
 Making regular grids:
   z, TWT                  2 x    2 x   24 :         96
@@ -151,7 +154,11 @@ Making regular grids:
 *****                                    Find depth values                                     *****
 ****************************************************************************************************
 
-Extracting z-values from Eclipse grid.
+Extracting z-values from Eclipse grid using center-point interpolation.
+
+Interpolating z-values that are undefined using vertical interpolation.
+
+  No interpolation needed.
 
 No crossing depth values found!
 
@@ -159,9 +166,17 @@ No crossing depth values found!
 *****                                   Fill parameter grids                                   *****
 ****************************************************************************************************
 
+Parameter statistics for Eclipse grid before filling of inactive cells.
+
+Parameter         Avg       Min       Max
+-----------------------------------------
+Vp             763.95      0.00   3035.62
+Vs             363.74      0.00   1620.68
+Rho            631.64      0.00   2250.27
+
 Filling inactive cells in Eclipse grid above and in reservoir.
 
-Total number of grid cells: 100 x 217 x 23 = 499100
+Total number of Eclipse grid cells: 11 x 11 x 23 = 2783
 
 OB1 = Using default value for overburden above first layer.
 OB2 = Using default value for overburden in and below first layer.
@@ -170,17 +185,33 @@ ZRO = Using cell value from cell above for zero thickness cells.
 
 GridName            OB1     OB2     RES     ZRO
 -----------------------------------------------
-Vp                11149   27286    3615  313548
-Vs                11149   27286    3615  313548
-Rho               11149   27286    3615  313548
+Vp                   41     291      43    1597
+Vs                   41     291      43    1597
+Rho                  41     291      43    1597
+
+Parameter statistics for Eclipse grid after filling of inactive cells.
+
+Parameter         Avg       Min       Max
+-----------------------------------------
+Vp            2420.14   2218.02   3035.62
+Vs            1081.72    885.25   1620.68
+Rho           2233.82   2093.31   2300.00
 
 Resampling parameters in Eclipse grid into regular grids.
 
+Parameter statistics for regular grid after resampling.
+
+Parameter         Avg       Min       Max
+-----------------------------------------
+Vp            2431.95   2235.27   3035.00
+Vs            1071.50    888.36   1620.07
+Rho           2202.63   2093.34   2300.00
+
 Filling remaining cells in regular grids.
 
-Setting undefined cells in trace equal to default reservoir value    :       0
-Setting cells in bottom layer equal to default reservoir value       :       0
-Setting cells in trace equal to layer below                          :       0
+Setting undefined cells in trace equal to default reservoir value    :          0
+Setting cells in bottom layer equal to default reservoir value       :          0
+Setting cells in trace equal to layer below                          :          0
 
 Deleting Eclipse grid to free memory.
 
@@ -215,17 +246,17 @@ Cross-line           0        1       1
 
 Required precision of UTM coordinates is verified.
 
-Initializing Segy file 'seismic_time.segy' using format SEISWORKS (currently hard coded)
+Initializing Segy file 'seismic_time.segy' using format SeisWorks
 
-Initializing Segy file 'seismic_depth.segy' using format SEISWORKS (currently hard coded)
+Initializing Segy file 'seismic_depth.segy' using format SeisWorks
 
-Initializing Segy file 'seismic_timeshift.segy' using format SEISWORKS (currently hard coded)
+Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 4 traces to be generated.
 
 1 of 8 available threads are used.
 
-Generating synthetic PP-seismic for offsets: 0.0 1000.0 2000.0 3000.0 
+Generating synthetic NMO PP-seismic for offsets: 0.0 1000.0 2000.0 3000.0 
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

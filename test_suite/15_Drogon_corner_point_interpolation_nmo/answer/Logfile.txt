@@ -1,0 +1,271 @@
+
+****************************************************************************************************
+*****                                                                                          *****
+*****                          Seismic Forward Modeling                                        *****
+*****                                 version 4.3 beta                                         *****
+*****                         Copyright (c) 2019 by Equinor                                    *****
+*****                                                                                          *****
+****************************************************************************************************
+
+Threads in use                            :     1 /   8
+
+****************************************************************************************************
+*****                                      Model settings                                      *****
+****************************************************************************************************
+
+Max threads                               :          1
+Traces in memory                          :     100000
+
+Log level                                 :          7
+
+Prefix                                    :           
+Suffix                                    :           
+
+Seed                                      : 1662739175
+
+Seismic data type                         :         PP
+NMO correction                            :        yes
+Offset without stretch                    :         no
+Remove negative thicknesses               :         no
+Minimum thickness for Eclipse grid cells  :        0.1
+Use corner-point interpolation            :        yes
+Interpolate at faults when corner-point   :         no
+Use vertical interpolation in regridding  :        yes
+Use default underburden                   :         no
+Resample parameters to Segy with interpol.:         no
+Add white noise                           :         no
+  Standard deviation                      :        1.0
+
+NMO correction settings
+  Sea floor depth                         :      150.0
+  Vp velocity in water                    :     1500.0
+  Offsets                                 :   0.0 -> 200.0
+
+Wavelet
+  Ricker with peak frequency              :       30.0
+  Scale                                   :        1.0
+
+Parameters names:
+  Vp                                      :         VP
+  Vs                                      :         VS
+  Rho                                     :       DENS
+
+Default values for overburden, reservoir and underburden: 
+  Vp                                      : 2000.0 -> 2240.0 -> 3000.0
+  Vs                                      : 1100.0 ->  890.0 ->  890.0
+  Rho                                     : 2300.0 -> 2240.0 -> 2240.0
+
+Extra parameters                          :         no
+
+Output area is specified in model file:
+  x-start                                 :   461513.4
+  y-start                                 :  5926548.9
+  x-length                                :    10900.0
+  y-length                                :     6900.0
+  angle                                   :     29.998
+
+Cell size:
+  dx                                      :       50.0
+  dy                                      :       50.0
+  dt                                      :        4.0
+  dz                                      :        4.0
+
+Top time surface                          : ../../14_Drogon_center_point_interpolation_nmo/input/TopVolantis.txt
+Specified time window:
+  Top:                                    :     1500.0
+  Base:                                   :     2000.0
+
+Specified depth window:
+  Top:                                    :     1500.0
+  Base:                                   :     2000.0
+
+Seismic data output:
+  Time                                    :         no
+  Time shift                              :         no
+  Depth                                   :         no
+Seismic stack time/depth in SEGY format:
+  Format name                             :  SeisWorks
+  Time                                    :        yes
+  Time shift                              :         no
+  Depth                                   :         no
+Seismic stack time/depth in STORM format:
+  Time                                    :         no
+  Time shift                              :         no
+  Depth                                   :         no
+Elastic parameters output:
+  Time                                    :         no
+  Depth                                   :         no
+Extra parameters output:
+  Time                                    :         no
+  Depth                                   :         no
+Other output:
+  TWT                                     :         no
+  TWT offset                              :         no
+  Vrms                                    :         no
+  Vp                                      :         no
+  Reflections                             :         no
+  Time surfaces                           :         no
+  Depth surfaces                          :         no
+  Time                                    :         no
+  Time pre NMO                            :         no
+  Time shift                              :         no
+  Depth                                   :         no
+
+****************************************************************************************************
+*****                                     Setting up grid                                      *****
+****************************************************************************************************
+
+Making Ricker wavelet with peak frequency 30.0 Hz
+
+Reading Eclipse grid from file '../../14_Drogon_center_point_interpolation_nmo/input/pem_20180101.grdecl'
+
+                                     x            y           lx         ly     angle
+-------------------------------------------------------------------------------------
+Area from model file         461513.38   5926548.91     10900.00    6900.00     30.00
+
+Taking top time surface from file '../../14_Drogon_center_point_interpolation_nmo/input/TopVolantis.txt'
+Setting base time surface to maximum of top time : 1883.14
+
+Top layer of Eclipse grid                 :    0
+Base layer of Eclipse grid                :   30
+
+Number of layers needed in z-grid         :   32
+
+Finding Eclipse top and base surfaces using cornerpoint interpolation.
+
+Eclipse grid minimum value                :  1554.16
+Eclipse grid maximum value                :  2001.59
+
+Wavelet time length is                    :    64.00
+
+Eclipse top surface lift due to wavelet   :    32.00
+Eclipse base surface drop due to wavelet  :    48.00
+
+Grid minimum value                        :  1522.16
+Grid maximum value                        :  2049.59
+
+Making regular grids:
+  z, TWT                218 x  138 x   32 :     962688
+  Vp, Vs, Rho           218 x  138 x   33 :     992772
+
+
+****************************************************************************************************
+*****                                    Find depth values                                     *****
+****************************************************************************************************
+
+Extracting z-values from Eclipse grid using corner-point interpolation.
+
+Interpolating z-values that are undefined using vertical interpolation.
+
+  35.55% of the cells were interpolated.
+
+Number of negative dz found               :     2
+Largest negative value                    : -15.02
+
+Largest negative value location (x,y,z)   : (462236.87, 5933346.18, 1530.35)
+
+Largest negative value location (i,j,k)   : (80, 110, 0)    (indices starting at zero)
+
+Exporting points where there are negative dz values (z-value is the conflicting value)!
+
+****************************************************************************************************
+*****                                   Fill parameter grids                                   *****
+****************************************************************************************************
+
+Parameter statistics for Eclipse grid before filling of inactive cells.
+
+Parameter         Avg       Min       Max
+-----------------------------------------
+Vp            2194.75      0.00   4814.97
+Vs            1200.11      0.00   3050.88
+Rho           1607.16      0.00   2641.37
+
+Filling inactive cells in Eclipse grid above and in reservoir.
+
+Total number of Eclipse grid cells: 46 x 73 x 31 = 104098
+
+OB1 = Using default value for overburden above first layer.
+OB2 = Using default value for overburden in and below first layer.
+RES = Using default value for reservoir in reservoir.
+ZRO = Using cell value from cell above for zero thickness cells.
+
+GridName            OB1     OB2     RES     ZRO
+-----------------------------------------------
+Vp                   62      10    1614   31506
+Vs                   62      10    1614   31506
+Rho                  62      10    1614   31506
+
+Parameter statistics for Eclipse grid after filling of inactive cells.
+
+Parameter         Avg       Min       Max
+-----------------------------------------
+Vp            3192.23   2000.00   4814.97
+Vs            1731.92    890.00   3050.88
+Rho           2357.85   1924.08   2641.37
+
+Resampling parameters in Eclipse grid into regular grids.
+
+Parameter statistics for regular grid after resampling.
+
+Parameter         Avg       Min       Max
+-----------------------------------------
+Vp            3083.15   2000.00   4788.45
+Vs            1653.38    890.00   2988.62
+Rho           2328.61   2052.29   2633.91
+
+Filling remaining cells in regular grids.
+
+Setting undefined cells in trace equal to default reservoir value    :     364320
+Setting cells in bottom layer equal to default reservoir value       :          0
+Setting cells in trace equal to layer below                          :      11040
+
+Deleting Eclipse grid to free memory.
+
+****************************************************************************************************
+*****                                      Make TWT grid                                       *****
+****************************************************************************************************
+
+Assuming NMO.
+
+****************************************************************************************************
+*****                                       Export grids                                       *****
+****************************************************************************************************
+
+Write z-values on STORM format to file : zgrid.storm
+****************************************************************************************************
+*****                                    Forward modelling                                     *****
+****************************************************************************************************
+
+Generate Twt0 for NMO assuming PP seismic.
+
+Generate Z0 for NMO.
+
+Segy geometry:
+
+             ReferencePoint      Length Increment
+-------------------------------------------------
+X-coordinate      461513.38    10900.00  50.00000
+Y-coordinate     5926548.91     6900.00  50.00000
+Azimuth             330.002
+
+                 Start      End    Step
+---------------------------------------
+In-line              0      137       1
+Cross-line           0      217       1
+
+Required precision of UTM coordinates is verified.
+
+Initializing Segy file 'seismic_time_stack.segy' using format SeisWorks
+
+30084 traces to be generated.
+
+1 of 8 available threads are used.
+
+Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 200.0 
+
+****************************************************************************************************
+*****                                     Suggested tasks                                      *****
+****************************************************************************************************
+
+ 1. Check section 3: Negative dz values found when building z-grid
+

@@ -715,14 +715,15 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
 }
 
 //-----------------------------------------------------------------------------------
-void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> & twt_0,
+void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
+                                          std::vector<double> & twt_0,
                                           std::vector<double> & z_0,
                                           std::vector<double> & twts_0,
                                           size_t              & time_samples_stretch,
                                           bool                  ps_seis)
 //-----------------------------------------------------------------------------------
 {
-  if (model_settings_->GetNMOCorr() && !model_settings_->GetOffsetWithoutStretch()){
+  if (model_settings->GetNMOCorr() && !model_settings->GetOffsetWithoutStretch()){
     twt_0 = GenerateTwt0ForNMO(time_samples_stretch, ps_seis);
     z_0   = GenerateZ0ForNMO();
     if (model_settings_->GetTwtFileName() != "") {

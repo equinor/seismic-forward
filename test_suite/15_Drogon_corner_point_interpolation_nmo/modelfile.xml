@@ -1,0 +1,107 @@
+<seismic-forward>
+
+  <project-settings>
+    <max-threads> 1 </max-threads>
+  </project-settings>
+
+  <elastic-param>
+    <eclipse-file> ../../14_Drogon_center_point_interpolation_nmo/input/pem_20180101.grdecl</eclipse-file>
+
+    <default-values>
+      <vp-top>       2000 </vp-top>
+      <vp-mid>       2240 </vp-mid>
+      <vp-bot>       3000 </vp-bot>
+      <vs-top>       1100 </vs-top>
+      <vs-mid>        890 </vs-mid>
+      <vs-bot>        890 </vs-bot>
+      <rho-top>      2300 </rho-top>
+      <rho-mid>      2240 </rho-mid>
+      <rho-bot>      2240 </rho-bot>
+    </default-values>
+
+    <parameter-names>
+      <vp>             VP </vp>
+      <vs>             VS </vs>
+      <rho>          DENS </rho>
+    </parameter-names>
+    <cornerpt-interpolation-in-depth>           yes </cornerpt-interpolation-in-depth>
+    <cornerpt-interpolation-at-faults>          no  </cornerpt-interpolation-at-faults>
+    <vertical-interpolation-of-undefined-cells> yes </vertical-interpolation-of-undefined-cells>
+    <zero-thickness-limit>                      0.1 </zero-thickness-limit>
+    <remove-negative-delta-z>                    no </remove-negative-delta-z>
+  </elastic-param>
+
+  <angle>
+    <theta-0>           0 </theta-0>
+    <dtheta>            0 </dtheta>
+    <theta-max>         0 </theta-max>
+  </angle>
+
+  <nmo-stretch>
+    <seafloor-depth>  150 </seafloor-depth>
+    <velocity-water> 1500 </velocity-water>
+    <offset>
+      <offset-0>        0 </offset-0>
+      <doffset>       200 </doffset>
+      <offset-max>    200 </offset-max>
+    </offset>
+  </nmo-stretch>
+
+  <wavelet>
+    <ricker>
+     <peak-frequency>  30 </peak-frequency>
+    </ricker>
+    <scale>1</scale>
+  </wavelet>
+
+  <output-grid>
+    <segy-file-format> seisworks </segy-file-format>
+
+    <top-time>
+       <top-time-surface> ../../14_Drogon_center_point_interpolation_nmo/input/TopVolantis.txt </top-time-surface>
+    </top-time>
+
+    <area>
+      <x0>        461513.38 </x0>
+      <y0>       5926548.91 </y0>
+      <lx>         10900    </lx>
+      <ly>          6900    </ly>
+      <angle>        29.998 </angle>
+    </area>
+
+#    <area-from-segy>
+#       <filename> ../input/seismiclayout.segy </filename>
+#    </area-from-segy>
+
+    <cell-size>
+      <dx>           50.0 </dx>
+      <dy>           50.0 </dy>
+      <dz>            4.0 </dz>
+      <dt>            4.0 </dt>
+    </cell-size>
+
+    <depth-window>
+      <top>          1500 </top>
+      <bot>          2000 </bot>
+    </depth-window>
+
+    <time-window>
+      <top>          1500 </top>
+      <bot>          2000 </bot>
+    </time-window>
+
+    <utm-precision>  0.01 </utm-precision>
+  </output-grid>
+
+  <output-parameters>
+    <zvalues>         yes </zvalues>
+    <twt>             no  </twt>
+    <twt-offset-segy> no  </twt-offset-segy>
+    <vrms>            no  </vrms>
+    <seismic-stack>
+      <depth-segy>    no  </depth-segy>
+      <time-segy>     yes </time-segy>
+    </seismic-stack>
+  </output-parameters>
+
+</seismic-forward>

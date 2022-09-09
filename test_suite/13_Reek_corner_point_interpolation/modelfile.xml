@@ -1,0 +1,107 @@
+<seismic-forward>
+
+  <project-settings>
+    <max-threads> 1 </max-threads>
+  </project-settings>
+
+  <elastic-param>
+    <eclipse-file > ../../12_Reek_center_point_interpolation/input/Reek.grdecl </eclipse-file>
+
+    <default-values>
+      <vp-top>              2400 </vp-top>  # Balder (not included in geomodel)
+      <vp-mid>              2240 </vp-mid>  # Lista shale
+      <vp-bot>              2240 </vp-bot>  # Lower Lista (not included in geomodel)
+      <vs-top>              1100 </vs-top>  # Balder (not included in geomodel)
+      <vs-mid>               890 </vs-mid>  # Lista shale
+      <vs-bot>               890 </vs-bot>  # Lower Lista (not included in geomodel)
+      <rho-top>             2300 </rho-top> # Balder (not included in geomodel)
+      <rho-mid>             2240 </rho-mid> # Lista shale
+      <rho-bot>             2240 </rho-bot> # Lower Lista (not included in geomodel)
+    </default-values>
+
+    <parameter-names>
+      <vp>          VP2000_01_01 </vp>
+      <vs>          VS2000_01_01 </vs>
+      <rho>       DENS2000_01_01 </rho>
+    </parameter-names>
+
+    <cornerpt-interpolation-in-depth>           yes </cornerpt-interpolation-in-depth>
+    <vertical-interpolation-of-undefined-cells> yes </vertical-interpolation-of-undefined-cells>
+
+  </elastic-param>
+
+  <angle>
+    <theta-0>                0.0 </theta-0>
+    <dtheta>                 0.0 </dtheta>
+    <theta-max>              0.0 </theta-max>
+  </angle>
+
+  <wavelet>
+    <ricker>
+      <peak-frequency>        30 </peak-frequency>
+    </ricker>
+    <scale>                  1.0 </scale>
+  </wavelet>
+
+  <!--
+  <nmo-stretch>
+    <seafloor-depth>        1000 </seafloor-depth>
+    <velocity-water>        1500 </velocity-water>
+    <offset>
+      <offset-0>               0 </offset-0>
+      <doffset>               25 </doffset>
+      <offset-max>            50 </offset-max>
+    </offset>
+  </nmo-stretch>
+
+  <white-noise>
+    <standard-deviation>     1.0 </standard-deviation>
+    <seed>                   123 </seed>
+  </white-noise>
+  -->
+
+  <output-grid>
+    <segy-file-format> seisworks </segy-file-format>
+
+    <!--
+    <top-time>
+      <top-time-constant>   1500 </top-time-constant>
+    </top-time>
+    -->
+
+    <cell-size>
+      <dx>                  50.0 </dx>
+      <dy>                  50.0 </dy>
+      <dz>                   4.0 </dz>
+      <dt>                   4.0 </dt>
+    </cell-size>
+
+    <depth-window>
+      <top>                 1500 </top>
+      <bot>                 1950 </bot>
+    </depth-window>
+
+    <time-window>
+      <top>                 1396 </top>
+      <bot>                 2096 </bot>
+    </time-window>
+
+    <utm-precision>         0.01 </utm-precision>
+  </output-grid>
+
+  <output-parameters>
+    <zvalues>               yes  </zvalues>
+    <twt>                   no   </twt>
+    <vrms>                  no   </vrms>
+    <elastic-parameters>    no   </elastic-parameters>
+    <reflections>           no   </reflections>
+    <seismic-time>          no   </seismic-time>
+    <seismic-time-segy>     no   </seismic-time-segy>
+    <seismic-depth>         no   </seismic-depth>
+    <seismic-depth-segy>    no   </seismic-depth-segy>
+    <seismic-stack>
+      <time-segy>           no   </time-segy>
+      <depth-segy>          yes  </depth-segy>
+    </seismic-stack>
+  </output-parameters>
+</seismic-forward>
