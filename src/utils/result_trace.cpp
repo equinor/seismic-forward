@@ -28,19 +28,18 @@ ResultTrace::ResultTrace(SeismicParameters         & seismic_parameters,
   }
   timegrid_pos_.Resize(time_samples_stretch, offset_vec.size());
 
-  if (seismic_parameters.GetStackOutput() || seismic_parameters.GetStormOutput()) {
+  if (seismic_parameters.GetModelSettings()->GetStackOutput() || seismic_parameters.GetModelSettings()->GetStormOutput()) {
     timegrid_stack_pos_.Resize(time_samples_stretch, 1);
   }
-  if (seismic_parameters.GetTimeshiftOutput()) {
+  if (seismic_parameters.GetModelSettings()->GetTimeshiftOutput()) {
     timeshiftgrid_pos_.      Resize(twts_0.size(), offset_vec.size());
     timeshiftgrid_stack_pos_.Resize(twts_0.size(), 1);
   }
-  if (seismic_parameters.GetDepthOutput()){
+  if (seismic_parameters.GetModelSettings()->GetDepthOutput()){
     depthgrid_pos_.      Resize(z_0.size(), offset_vec.size());
     depthgrid_stack_pos_.Resize(z_0.size(), 1);
   }
 }
-
 
 void ResultTrace::SetJobID(Trace *trace)
 {

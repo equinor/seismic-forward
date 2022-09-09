@@ -64,16 +64,6 @@ class SeismicParameters
     inline std::vector<double>                & GetOffsetVec()                  { return  offset_vec_          ;}
     inline float                                GetMissingVal()           const { return  missing_             ;}
 
-    inline bool                                 GetTimeOutput()           const;
-    inline bool                                 GetDepthOutput()          const;
-    inline bool                                 GetTimeshiftOutput()      const;
-    inline bool                                 GetStackOutput()          const;
-    inline bool                                 GetSegyOutput()           const;
-    inline bool                                 GetTimeStormOutput()      const;
-    inline bool                                 GetDepthStormOutput()     const;
-    inline bool                                 GetTimeshiftStormOutput() const;
-    inline bool                                 GetStormOutput()          const;
-
     void SetSegyGeometry(const NRLib::SegyGeometry * geometry);
 
     void FindLoopIndeces(int  & n_xl,
@@ -89,7 +79,8 @@ class SeismicParameters
                          size_t & j_max,
                          double & max_value);
 
-    void GenerateTwt0AndZ0(std::vector<double> & twt_0,
+    void GenerateTwt0AndZ0(ModelSettings       * model_settings,
+                           std::vector<double> & twt_0,
                            std::vector<double> & z_0,
                            std::vector<double> & twts_0,
                            size_t              & time_samples_stretch,
@@ -260,61 +251,5 @@ private:
 
   float                                   missing_;
 };
-
-bool SeismicParameters::GetTimeOutput() const {
-  return (model_settings_->GetOutputTimeSegy()
-          || model_settings_->GetOutputSeismicStackTimeSegy()
-          || model_settings_->GetOutputSeismicTime()
-          || model_settings_->GetOutputSeismicStackTimeStorm()
-          || model_settings_->GetOutputPrenmoTimeSegy());
-}
-
-bool SeismicParameters::GetDepthOutput() const {
-  return (model_settings_->GetOutputDepthSegy()
-          || model_settings_->GetOutputSeismicStackDepthSegy()
-          || model_settings_->GetOutputSeismicDepth()
-          || model_settings_->GetOutputSeismicStackDepthStorm());
-}
-
-bool SeismicParameters::GetTimeshiftOutput() const {
-  return (model_settings_->GetOutputTimeshiftSegy()
-          || model_settings_->GetOutputSeismicStackTimeShiftSegy()
-          || model_settings_->GetOutputSeismicTimeshift()
-          || model_settings_->GetOutputSeismicStackTimeShiftStorm());
-}
-bool SeismicParameters::GetStackOutput() const {
-  return (model_settings_->GetOutputSeismicStackTimeSegy()
-          || model_settings_->GetOutputSeismicStackDepthSegy()
-          || model_settings_->GetOutputSeismicStackTimeShiftSegy()
-          || model_settings_->GetOutputSeismicStackTimeStorm()
-          || model_settings_->GetOutputSeismicStackDepthStorm()
-          || model_settings_->GetOutputSeismicStackTimeShiftStorm());
-}
-bool SeismicParameters::GetSegyOutput() const {
-  return (model_settings_->GetOutputTimeSegy()
-          || model_settings_->GetOutputSeismicStackTimeSegy()
-          || model_settings_->GetOutputDepthSegy()
-          || model_settings_->GetOutputSeismicStackDepthSegy()
-          || model_settings_->GetOutputTimeshiftSegy()
-          || model_settings_->GetOutputSeismicStackTimeShiftSegy()
-          || model_settings_->GetOutputPrenmoTimeSegy());
-}
-
-bool SeismicParameters::GetTimeStormOutput() const {
-  return (model_settings_->GetOutputSeismicStackTimeStorm() || model_settings_->GetOutputSeismicTime());
-}
-
-bool SeismicParameters::GetDepthStormOutput() const {
-  return (model_settings_->GetOutputSeismicStackDepthStorm() || model_settings_->GetOutputSeismicDepth());
-}
-
-bool SeismicParameters::GetTimeshiftStormOutput() const {
-  return (model_settings_->GetOutputSeismicStackTimeShiftStorm() || model_settings_->GetOutputSeismicTimeshift());
-}
-
-bool SeismicParameters::GetStormOutput() const {
-  return (GetTimeStormOutput() || GetDepthStormOutput() || GetTimeshiftStormOutput());
-}
-
 
 #endif

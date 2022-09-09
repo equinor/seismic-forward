@@ -8,3 +8,5 @@ output*
 geo2seis/cmake-build-debug
 
 segy_amplitude_difference.txt
+
+storm_volume_difference.txt

@@ -40,6 +40,7 @@ public:
 
   ~ModelSettings(void);
 
+  void                      CheckConsistency(void);
   void                      SetDerivedVariables(void);
 
   void                      PrintSettings(void);
@@ -202,72 +203,72 @@ public:
   void SetResamplParamToSegyInterpol(bool value)       { resampl_param_to_segy_with_interpol_ = value   ;}
   void SetNMOCorr(bool nmo)                            { nmo_corr_                            = nmo     ;}
 
-  void SetVpTop(double vptop)                          { constvp_[0]  = vptop  ;}
-  void SetVpMid(double vpmid)                          { constvp_[1]  = vpmid  ;}
-  void SetVpBot(double vpbot)                          { constvp_[2]  = vpbot  ;}
+  void SetVpTop(double vptop)                          { constvp_[0]               = vptop  ;}
+  void SetVpMid(double vpmid)                          { constvp_[1]               = vpmid  ;}
+  void SetVpBot(double vpbot)                          { constvp_[2]               = vpbot  ;}
 
-  void SetVsTop(double vstop)                          { constvs_[0]  = vstop  ;}
-  void SetVsMid(double vsmid)                          { constvs_[1]  = vsmid  ;}
-  void SetVsBot(double vsbot)                          { constvs_[2]  = vsbot  ;}
+  void SetVsTop(double vstop)                          { constvs_[0]               = vstop  ;}
+  void SetVsMid(double vsmid)                          { constvs_[1]               = vsmid  ;}
+  void SetVsBot(double vsbot)                          { constvs_[2]               = vsbot  ;}
 
-  void SetRhoTop(double rhotop)                        { constrho_[0] = rhotop ;}
-  void SetRhoMid(double rhomid)                        { constrho_[1] = rhomid ;}
-  void SetRhoBot(double rhobot)                        { constrho_[2] = rhobot ;}
+  void SetRhoTop(double rhotop)                        { constrho_[0]              = rhotop ;}
+  void SetRhoMid(double rhomid)                        { constrho_[1]              = rhomid ;}
+  void SetRhoBot(double rhobot)                        { constrho_[2]              = rhobot ;}
 
-  void SetVpName(std::string & name)                   { parameter_names_[0] = name ;}
-  void SetVsName(std::string & name)                   { parameter_names_[1] = name ;}
-  void SetRhoName(std::string & name)                  { parameter_names_[2] = name ;}
+  void SetVpName(std::string & name)                   { parameter_names_[0]       = name ;}
+  void SetVsName(std::string & name)                   { parameter_names_[1]       = name ;}
+  void SetRhoName(std::string & name)                  { parameter_names_[2]       = name ;}
 
-  void SetTheta0(double theta)                         { theta_0_           = NRLib::Degree * theta ;}    // in radians
-  void SetDTheta(double theta)                         { dtheta_            = NRLib::Degree * theta ;}
-  void SetThetaMax(double theta)                       { theta_max_         = NRLib::Degree * theta ;}
-  void SetAreaAngle(double angle)                      { angle_             = NRLib::Degree * angle ;}    // in radians
-  void SetAreaGiven(bool areagiven)                    { area_given_        = areagiven             ;}
-  void SetAreaFromSurface(std::string val)             { area_from_surface_ = val                   ;}
-  void SetAreaFromSegy(std::string val)                { area_from_segy_    = val                   ;}
-  void SetUtmPrecision(short value)                    { utm_precision_     = value                 ;}
+  void SetTheta0(double theta)                         { theta_0_                  = NRLib::Degree * theta ;}    // in radians
+  void SetDTheta(double theta)                         { dtheta_                   = NRLib::Degree * theta ;}
+  void SetThetaMax(double theta)                       { theta_max_                = NRLib::Degree * theta ;}
+  void SetAreaAngle(double angle)                      { angle_                    = NRLib::Degree * angle ;}    // in radians
+  void SetAreaGiven(bool areagiven)                    { area_given_               = areagiven             ;}
+  void SetAreaFromSurface(std::string val)             { area_from_surface_        = val                   ;}
+  void SetAreaFromSegy(std::string val)                { area_from_segy_           = val                   ;}
+  void SetUtmPrecision(short value)                    { utm_precision_            = value                 ;}
 
-  void SetTopTimeSurface(std::string toptime)          { top_time_surface_       = toptime ;}
-  void SetTopTimeConstant(double value)                { top_time_constant_      = value   ;}
-  void SetTopTimeWindow(double value)                  { top_time_window_        = value   ;}
-  void SetBotTimeWindow(double value)                  { bot_time_window_        = value   ;}
-  void SetTopDepthWindow(double value)                 { top_depth_window_       = value   ;}
-  void SetBotDepthWindow(double value)                 { bot_depth_window_       = value   ;}
-  void SetTimeWindowSpecified(bool value)              { time_window_specified_  = value   ;}
-  void SetDepthWindowSpecified(bool value)             { depth_window_specified_ = value   ;}
+  void SetTopTimeSurface(std::string toptime)          { top_time_surface_         = toptime ;}
+  void SetTopTimeConstant(double value)                { top_time_constant_        = value   ;}
+  void SetTopTimeWindow(double value)                  { top_time_window_          = value   ;}
+  void SetBotTimeWindow(double value)                  { bot_time_window_          = value   ;}
+  void SetTopDepthWindow(double value)                 { top_depth_window_         = value   ;}
+  void SetBotDepthWindow(double value)                 { bot_depth_window_         = value   ;}
+  void SetTimeWindowSpecified(bool value)              { time_window_specified_    = value   ;}
+  void SetDepthWindowSpecified(bool value)             { depth_window_specified_   = value   ;}
 
-  void SetX0(double x0)                                { x0_ = x0 ;}
-  void SetY0(double y0)                                { y0_ = y0 ;}
-  void SetLx(double lx)                                { lx_ = lx ;}
-  void SetLy(double ly)                                { ly_ = ly ;}
+  void SetX0(double x0)                                { x0_                       = x0 ;}
+  void SetY0(double y0)                                { y0_                       = y0 ;}
+  void SetLx(double lx)                                { lx_                       = lx ;}
+  void SetLy(double ly)                                { ly_                       = ly ;}
 
-  void SetDx(double dx)                                { dx_ = dx ;}
-  void SetDy(double dy)                                { dy_ = dy ;}
-  void SetDz(double dz)                                { dz_ = dz ;}
-  void SetDt(double dt)                                { dt_ = dt ;}
+  void SetDx(double dx)                                { dx_                       = dx ;}
+  void SetDy(double dy)                                { dy_                       = dy ;}
+  void SetDz(double dz)                                { dz_                       = dz ;}
+  void SetDt(double dt)                                { dt_                       = dt ;}
 
-  void SetIL0Loc(int value)                            { il0_loc_          = value ;}
-  void SetXL0Loc(int value)                            { xl0_loc_          = value ;}
-  void SetUtmxLoc(int value)                           { utmx_loc_         = value ;}
-  void SetUtmyLoc(int value)                           { utmy_loc_         = value ;}
-  void SetScalcoLoc(int value)                         { scalco_loc_       = value ;}
-  void SetStartTimeLoc(int value)                      { start_time_loc_   = value ;}
+  void SetIL0Loc(int value)                            { il0_loc_                  = value  ;}
+  void SetXL0Loc(int value)                            { xl0_loc_                  = value  ;}
+  void SetUtmxLoc(int value)                           { utmx_loc_                 = value  ;}
+  void SetUtmyLoc(int value)                           { utmy_loc_                 = value  ;}
+  void SetScalcoLoc(int value)                         { scalco_loc_               = value  ;}
+  void SetStartTimeLoc(int value)                      { start_time_loc_           = value  ;}
 
-  void SetSegyInlineStart(int value)                   { inline_start_     = value ;}
-  void SetSegyXlineStart(int value)                    { xline_start_      = value ;}
-  void SetSegyInlineDirection(std::string value)       { inline_direction_ = value ;}
-  void SetSegyInlineStep(int value)                    { inline_step_      = value ;}
-  void SetSegyXlineStep(int value)                     { xline_step_       = value ;}
+  void SetSegyInlineStart(int value)                   { inline_start_             = value  ;}
+  void SetSegyXlineStart(int value)                    { xline_start_              = value  ;}
+  void SetSegyInlineDirection(std::string value)       { inline_direction_         = value  ;}
+  void SetSegyInlineStep(int value)                    { inline_step_              = value  ;}
+  void SetSegyXlineStep(int value)                     { xline_step_               = value  ;}
 
-  void SetRicker(bool ricker)                          { ricker_                  = ricker ;}
-  void SetPeakF(double peakf)                          { peak_f_                  = peakf  ;}
+  void SetRicker(bool ricker)                          { ricker_                   = ricker ;}
+  void SetPeakF(double peakf)                          { peak_f_                   = peakf  ;}
 
-  void SetWaveletFileFormat(std::string value)         { wavelet_file_format_     = value  ;}
-  void SetWaveletFileName(std::string value)           { wavelet_file_name_       = value  ;}
-  void SetWaveletScale(double scale)                   { wavelet_scale_           = scale  ;}
-  void SetWaveletLength(double length)                 { wavelet_length_          = length ;}
-  void SetZWaveletTop(double wave)                     { z_wavelet_top_           = wave   ;}
-  void SetZWaveletBot(double wave)                     { z_wavelet_bot_           = wave   ;}
+  void SetWaveletFileFormat(std::string value)         { wavelet_file_format_      = value  ;}
+  void SetWaveletFileName(std::string value)           { wavelet_file_name_        = value  ;}
+  void SetWaveletScale(double scale)                   { wavelet_scale_            = scale  ;}
+  void SetWaveletLength(double length)                 { wavelet_length_           = length ;}
+  void SetZWaveletTop(double wave)                     { z_wavelet_top_            = wave   ;}
+  void SetZWaveletBot(double wave)                     { z_wavelet_bot_            = wave   ;}
 
   void SetOutputVp(bool value)                         { output_vp_                = value  ;}
   void SetOutputReflections(bool value)                { output_reflections_       = value  ;}
@@ -302,6 +303,16 @@ public:
 
   void AddExtraParameterName(std::string name)         { extra_parameter_names_.push_back(name);}
   void AddExtraParameterDefaultValue(double value)     { extra_parameter_default_values_.push_back(value);}
+
+  bool GetTimeOutput()           ;
+  bool GetDepthOutput()          ;
+  bool GetTimeshiftOutput()      ;
+  bool GetStackOutput()          ;
+  bool GetSegyOutput()           ;
+  bool GetTimeStormOutput()      ;
+  bool GetDepthStormOutput()     ;
+  bool GetTimeshiftStormOutput() ;
+  bool GetStormOutput()          ;
 
 private:
 
@@ -428,7 +439,8 @@ private:
 
   bool                      time_window_specified_;
   bool                      depth_window_specified_;
-
 };
+
+
 
 #endif
