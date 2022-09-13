@@ -21,7 +21,7 @@ Log level                                 :          7
 Prefix                                    :           
 Suffix                                    :           
 
-Seed                                      : 1662739175
+Seed                                      : 1663074425
 
 Seismic data type                         :         PP
 NMO correction                            :        yes
@@ -262,6 +262,12 @@ Initializing Segy file 'seismic_time_stack.segy' using format SeisWorks
 1 of 8 available threads are used.
 
 Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 200.0 
+
+Statistics for generated seismic data.
+
+Type               Avg         Min         Max
+----------------------------------------------
+Time            0.0000     -0.3272      0.3666
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

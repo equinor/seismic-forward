@@ -10,19 +10,22 @@ Output::Output(SeismicParameters   & seismic_parameters,
                std::vector<double>   twts_0,
                std::vector<double>   offset_vec,
                size_t                time_samples_stretch)
-  : segy_ok_                ( false     ),
-    time_segy_ok_           ( false     ),
-    prenmo_time_segy_ok_    ( false     ),
-    time_stack_segy_ok_     ( false     ),
-    depth_segy_ok_          ( false     ),
-    depth_stack_segy_ok_    ( false     ),
-    timeshift_segy_ok_      ( false     ),
-    timeshift_stack_segy_ok_( false     ),
-    twtx_segy_ok_           ( false     ),
-    twt_0_                  ( twt_0     ),
-    z_0_                    ( z_0       ),
-    twts_0_                 ( twts_0    ),
-    offset_vec_             ( offset_vec)
+  : segy_ok_                ( false      ),
+    time_segy_ok_           ( false      ),
+    prenmo_time_segy_ok_    ( false      ),
+    time_stack_segy_ok_     ( false      ),
+    depth_segy_ok_          ( false      ),
+    depth_stack_segy_ok_    ( false      ),
+    timeshift_segy_ok_      ( false      ),
+    timeshift_stack_segy_ok_( false      ),
+    twtx_segy_ok_           ( false      ),
+    twt_0_                  ( twt_0      ),
+    z_0_                    ( z_0        ),
+    twts_0_                 ( twts_0     ),
+    offset_vec_             ( offset_vec ),
+    timegrid_               ( NULL       ),
+    timeshiftgrid_          ( NULL       ),
+    depthgrid_              ( NULL       )
 {
   ModelSettings   * model_settings   = seismic_parameters.GetModelSettings();
   SeismicGeometry * seismic_geometry = seismic_parameters.GetSeismicGeometry();
@@ -62,7 +65,8 @@ Output::Output(SeismicParameters   & seismic_parameters,
   }
 
   //prepare grid if output of seismic in storm is requested
-  if (model_settings->GetTimeStormOutput()) {
+
+  if (model_settings->GetTimeOutput()) {
     if (nmo) {
       NRLib::Volume volume_t_nmo = NRLib::Volume(x0, y0, twt_0_[0] - dt/2, xlength, ylength, time_samples_stretch * dt, angle);
       timegrid_ = new NRLib::StormContGrid(volume_t_nmo, nx, ny, time_samples_stretch);
@@ -72,12 +76,12 @@ Output::Output(SeismicParameters   & seismic_parameters,
     }
   }
 
-  if (model_settings->GetTimeshiftStormOutput()) {
+  if (model_settings->GetTimeshiftOutput()) {
     NRLib::Volume volume_ts_nmo = NRLib::Volume(x0, y0, twts_0_[0] - dt/2, xlength, ylength, (twts_0_.size() * dt), angle);
     timeshiftgrid_ = new NRLib::StormContGrid(volume_ts_nmo, nx, ny, twts_0_.size());
   }
 
-  if (model_settings->GetDepthStormOutput()) {
+  if (model_settings->GetDepthOutput()) {
     if (nmo) {
       NRLib::Volume volume_nmo = NRLib::Volume(x0, y0, (z_0_[0] - dz/2), xlength, ylength, z_0_.size()*dz, angle);
       depthgrid_ = new NRLib::StormContGrid(volume_nmo, nx, ny, z_0_.size());
@@ -86,6 +90,20 @@ Output::Output(SeismicParameters   & seismic_parameters,
       depthgrid_ = new NRLib::StormContGrid(volume    , nx, ny, nz);
     }
   }
+}
+
+//--------------------
+Output::~Output(void)
+//--------------------
+{
+  if (timegrid_ != NULL)
+    delete timegrid_;
+
+  if (timeshiftgrid_ != NULL)
+    delete timeshiftgrid_;
+
+  if (depthgrid_ != NULL)
+    delete depthgrid_;
 }
 
 //---------------------------------------------------
@@ -125,7 +143,7 @@ void Output::AddTrace(ResultTrace   * result_trace,
   //
   // Save to storm grid for output, print storm when finish loop
   //
-  if (model_settings->GetTimeStormOutput()) {
+  if (model_settings->GetTimeOutput()) {
     for (size_t k = 0 ; k < timegrid_->GetNK() ; ++k) {
       if (result_trace->GetIsEmpty() || !time_stack_segy_ok_)
         (*timegrid_)(i, j, k) = 0.0f;
@@ -133,7 +151,15 @@ void Output::AddTrace(ResultTrace   * result_trace,
         (*timegrid_)(i, j, k) = float(result_trace->GetTimeStackTrace()(k,0));
     }
   }
-  if (model_settings->GetDepthStormOutput()) {
+  if (model_settings->GetTimeshiftOutput()) {
+    for (size_t k = 0 ; k < timeshiftgrid_->GetNK() ; ++k) {
+      if (result_trace->GetIsEmpty() || !timeshift_stack_segy_ok_)
+        (*timeshiftgrid_)(i, j, k) = 0.0f;
+      else
+        (*timeshiftgrid_)(i, j, k) = float(result_trace->GetTimeShiftStackTrace()(k,0));
+    }
+  }
+  if (model_settings->GetDepthOutput()) {
     for (size_t k = 0 ; k < depthgrid_->GetNK() ; ++k) {
       if (result_trace->GetIsEmpty() || !depth_stack_segy_ok_)
         (*depthgrid_)(i, j, k) = 0.0f;
@@ -141,40 +167,27 @@ void Output::AddTrace(ResultTrace   * result_trace,
         (*depthgrid_)(i, j, k) = float(result_trace->GetDepthStackTrace()(k,0));
     }
   }
-  if (model_settings->GetTimeshiftStormOutput()) {
-    for (size_t k = 0 ; k < timeshiftgrid_->GetNK() ; ++k) {
-      if (result_trace->GetIsEmpty() || !timeshift_stack_segy_ok_)
-        (*timeshiftgrid_)(i, j, k) = 0.0f;
-      else
-        (*timeshiftgrid_)(i, j, k) = float(result_trace->GetTimeShiftStackTrace()(k,0));
-
-    }
-  }
 }
 
 void Output::WriteStatisticsForSeismic(ModelSettings * model_settings)
 {
+  if (model_settings->GetTimeOutput() || model_settings->GetTimeshiftOutput() || model_settings->GetDepthOutput()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nStatistics for generated seismic data.\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nType               Avg         Min         Max");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n----------------------------------------------\n");
+  }
   float min, max, avg;
-  if (model_settings->GetTimeStormOutput()) {
+  if (model_settings->GetTimeOutput()) {
     timegrid_->GetAvgMinMaxWithMissing(avg, min , max, timegrid_->GetMissingCode());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Statistics for seismic in time\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  avg: %12.5f\n", avg);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  min: %12.5f\n", min);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  max: %12.5f\n", max);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Time       %11.4f %11.4f %11.4f\n", avg, min, max);
   }
-  if (model_settings->GetTimeshiftStormOutput()) {
+  if (model_settings->GetTimeshiftOutput()) {
     timeshiftgrid_->GetAvgMinMaxWithMissing(avg, min , max, timeshiftgrid_->GetMissingCode());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Statistics for seismic time shift time\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  avg: %12.5f\n", avg);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  min: %12.5f\n", min);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  max: %12.5f\n", max);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Time shift %11.4f %11.4f %11.4f\n", avg, min, max);
   }
-  if (model_settings->GetDepthStormOutput()) {
+  if (model_settings->GetDepthOutput()) {
     depthgrid_->GetAvgMinMaxWithMissing(avg, min , max, depthgrid_->GetMissingCode());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Statistics for seismic in depth\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  avg: %12.5f\n", avg);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  min: %12.5f\n", min);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  max: %12.5f\n", max);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Depth      %11.4f %11.4f %11.4f\n", avg, min, max);
   }
 }
 
