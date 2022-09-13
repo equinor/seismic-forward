@@ -21,7 +21,7 @@ Log level                                 :          7
 Prefix                                    :           
 Suffix                                    :           
 
-Seed                                      : 1662738639
+Seed                                      : 1663074416
 
 Seismic data type                         :         PS
 NMO correction                            :        yes
@@ -1124,6 +1124,14 @@ Find sin(theta) PS with Newtons method.
 Find sin(theta) PS with Newtons method.
 
 Find sin(theta) PS with Newtons method.
+
+Statistics for generated seismic data.
+
+Type               Avg         Min         Max
+----------------------------------------------
+Time            0.0000      0.0000      0.0000
+Time shift      0.0000      0.0000      0.0000
+Depth           0.0000      0.0000      0.0000
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

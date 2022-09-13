@@ -16,6 +16,8 @@ public:
          std::vector<double>   offset_vec,
          size_t                time_samples_stretch);
 
+  ~Output(void);
+
   void AddTrace(ResultTrace   * result_trace,
                 ModelSettings * model_settings,
                 SeismicOutput * seismic_output);

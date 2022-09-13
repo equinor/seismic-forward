@@ -259,6 +259,14 @@ Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 Generating synthetic PS-seismic for angles: 0.0 15.0 30.0 45.0 
 
+Statistics for generated seismic data.
+
+Type               Avg         Min         Max
+----------------------------------------------
+Time            0.0000      0.0000      0.0000
+Time shift      0.0000      0.0000      0.0000
+Depth           0.0000      0.0000      0.0000
+
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****
 ****************************************************************************************************

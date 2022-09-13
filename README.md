@@ -10,8 +10,8 @@ git config --global credential.helper 'cache --timeout=3600' # (timeout in secon
 ## Fork
 
 If you intend to modify the repository, you should checkout a fork of this
-project rather than this checking out this repository directly. When you have
-made a fork, you can set this repository as your upstream using:
+project rather than checking out the upstream repository directly. When you
+have made a fork, you can set this repository as your upstream using:
 
 ```
 git remote add upstream https://github.com/equinor/seismic-forward.git

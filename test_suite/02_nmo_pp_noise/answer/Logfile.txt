@@ -264,6 +264,14 @@ Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 1000.0 2000.0 3000.0 
 
+Statistics for generated seismic data.
+
+Type               Avg         Min         Max
+----------------------------------------------
+Time            0.0000      0.0000      0.0000
+Time shift      0.0000      0.0000      0.0000
+Depth           0.0000      0.0000      0.0000
+
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****
 ****************************************************************************************************

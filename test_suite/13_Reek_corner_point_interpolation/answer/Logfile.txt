@@ -21,7 +21,7 @@ Log level                                 :          7
 Prefix                                    :           
 Suffix                                    :           
 
-Seed                                      : 1662726815
+Seed                                      : 1663074422
 
 Seismic data type                         :         PP
 NMO correction                            :         no
@@ -256,6 +256,12 @@ Initializing Segy file 'seismic_depth_stack.segy' using format SeisWorks
 1 of 8 available threads are used.
 
 Generating synthetic PP-seismic for angles: 0.0 
+
+Statistics for generated seismic data.
+
+Type               Avg         Min         Max
+----------------------------------------------
+Depth           0.0003     -0.2939      0.3454
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

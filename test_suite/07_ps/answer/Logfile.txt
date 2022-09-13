@@ -21,7 +21,7 @@ Log level                                 :          7
 Prefix                                    :           
 Suffix                                    :           
 
-Seed                                      : 1662738640
+Seed                                      : 1663074417
 
 Seismic data type                         :         PS
 NMO correction                            :         no
@@ -258,6 +258,14 @@ Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 8 of 8 available threads are used, and queue capacity is 4 traces.
 
 Generating synthetic PS-seismic for angles: 0.0 15.0 30.0 45.0 
+
+Statistics for generated seismic data.
+
+Type               Avg         Min         Max
+----------------------------------------------
+Time            0.0000      0.0000      0.0000
+Time shift      0.0000      0.0000      0.0000
+Depth           0.0000      0.0000      0.0000
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

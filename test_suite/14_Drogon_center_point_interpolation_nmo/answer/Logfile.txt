@@ -21,7 +21,7 @@ Log level                                 :          7
 Prefix                                    :           
 Suffix                                    :           
 
-Seed                                      : 1662738646
+Seed                                      : 1663074423
 
 Seismic data type                         :         PP
 NMO correction                            :        yes
@@ -147,7 +147,7 @@ Grid maximum value                        :  2049.59
 Making regular grids:
   z, TWT                218 x  138 x   32 :     962688
   Vp, Vs, Rho           218 x  138 x   33 :     992772
-  Vrms                218 x  138 x   32 :     962688
+  Vrms                  218 x  138 x   32 :     962688
 
 
 ****************************************************************************************************
@@ -261,6 +261,13 @@ Initializing Segy file 'seismic_depth_stack.segy' using format SeisWorks
 1 of 8 available threads are used.
 
 Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 200.0 
+
+Statistics for generated seismic data.
+
+Type               Avg         Min         Max
+----------------------------------------------
+Time            0.0000     -0.3671      0.3661
+Depth           0.0001     -0.3673      0.3857
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

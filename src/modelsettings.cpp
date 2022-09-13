@@ -215,7 +215,7 @@ bool ModelSettings::GetTimeshiftOutput() {
   return (GetOutputTimeshiftSegy()
           || GetOutputSeismicStackTimeShiftSegy()
           || GetOutputSeismicTimeshift()
-            || GetOutputSeismicStackTimeShiftStorm());
+          || GetOutputSeismicStackTimeShiftStorm());
 }
 bool ModelSettings::GetStackOutput() {
   return (GetOutputSeismicStackTimeSegy()

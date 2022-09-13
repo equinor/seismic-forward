@@ -140,8 +140,8 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters)
     seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 
     //write storm grid if requested
-    //output.WriteStatisticsForSeismic();
-    output.WriteSeismicStorm(seismic_parameters.GetModelSettings(),
+    output.WriteStatisticsForSeismic(model_settings);
+    output.WriteSeismicStorm(model_settings,
                              seismic_parameters.GetSeismicOutput(),
                              seismic_parameters.GetRGrids());
 
@@ -264,8 +264,8 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seispar)
     seispar.PrintElapsedTime(t1, "generating seismic");
 
     //write storm grid if requested
-    //nmo_output.WriteStatisticsForSeismic();
-    output.WriteSeismicStorm(seispar.GetModelSettings(),
+    output.WriteStatisticsForSeismic(model_settings);
+    output.WriteSeismicStorm(model_settings,
                              seispar.GetSeismicOutput(),
                              seispar.GetRGrids());
 
