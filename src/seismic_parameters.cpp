@@ -455,7 +455,7 @@ void SeismicParameters::CreateGrids(SeismicGeometry * seismic_geometry,
 
   if (nmo_corr && output_vrms) {
     vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0); //dimensions??
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vrms               %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vrms                 %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
   }
   else
     vrmsgrid_ = NULL;
@@ -463,11 +463,11 @@ void SeismicParameters::CreateGrids(SeismicGeometry * seismic_geometry,
   if (output_refl) {
     if (white_noise) {
       rgridvec_ = new std::vector<NRLib::StormContGrid>(2);
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  White noise        %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  White noise          %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
     }
     else {
       rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Refl. coef.        %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Refl. coef.          %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
     }
     NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl, 0.0);
 
@@ -715,14 +715,15 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
 }
 
 //-----------------------------------------------------------------------------------
-void SeismicParameters::GenerateTwt0AndZ0(std::vector<double> & twt_0,
+void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
+                                          std::vector<double> & twt_0,
                                           std::vector<double> & z_0,
                                           std::vector<double> & twts_0,
                                           size_t              & time_samples_stretch,
                                           bool                  ps_seis)
 //-----------------------------------------------------------------------------------
 {
-  if (model_settings_->GetNMOCorr() && !model_settings_->GetOffsetWithoutStretch()){
+  if (model_settings->GetNMOCorr() && !model_settings->GetOffsetWithoutStretch()){
     twt_0 = GenerateTwt0ForNMO(time_samples_stretch, ps_seis);
     z_0   = GenerateZ0ForNMO();
     if (model_settings_->GetTwtFileName() != "") {

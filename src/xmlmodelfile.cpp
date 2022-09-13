@@ -87,6 +87,7 @@ XmlModelFile::XmlModelFile(const std::string  & fileName)
       failed_ = true;
     }
     else {
+      modelSettings_->CheckConsistency();
       modelSettings_->SetDerivedVariables();
     };
   }
@@ -678,19 +679,22 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode   * node,
   }
 
   if (modelSettings_->GetAreaGiven() && modelSettings_->GetAreaFromSurface() != "" && modelSettings_->GetAreaFromSegy() != "") {
-    printf("WARNING:: Area defined in three different ways. The area specified by the <area-from-segy> command is used.\n");
-    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Area defined in three different ways. The area specified by the <area-from-segy> command is used.\n");
+    TaskList::AddTask("Inconsistent XML model file specified. See beginning of log file.");
+  }
   else if ((modelSettings_->GetAreaFromSurface() != "" && modelSettings_->GetAreaFromSegy() != "") ||
            (modelSettings_->GetAreaGiven()             && modelSettings_->GetAreaFromSegy() != "")) {
-    printf("WARNING:: Area defined in two different ways. The area specified by the <area-from-segy> command is used.\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Area defined in two different ways. The area specified by the <area-from-segy> command is used.\n");
+    TaskList::AddTask("Inconsistent XML model file specified. See beginning of log file.");
   }
   else if (modelSettings_->GetAreaGiven() && modelSettings_->GetAreaFromSurface() != "") {
-    printf("WARNING:: Area defined in two different ways. The area specified by the <area> command is used.\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Area defined in two different ways. The area specified by the <area> command is used.\n");
+    TaskList::AddTask("Inconsistent XML model file specified. See beginning of log file.");
   }
 
   if (ParseTopTime(root, errTxt, "top-time") == false) {
     if (ParseTopTime(root, errTxt, "depth")) {
-      printf("WARNING:: The command <depth> has changed its name to <top-time>. Your xml-file should be updated.\n");
+      TaskList::AddTask("The command <depth> has changed its name to <top-time>. Your xml-file should be updated.");
     }
   }
   else {
@@ -920,7 +924,8 @@ bool XmlModelFile::ParseCellSize(TiXmlNode   * node,
   double value;
   if (ParseValue(root, "dx", value, errTxt)) {
     if (area_from_segy) {
-      printf("WARNING:: Both <dx> and <area-from-segy> is specified, and dx will be taken from segy file. \n");
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Both <dx> and <area-from-segy> is specified, and dx will be taken from segy file.\n");
+      TaskList::AddTask("Inconsistent XML model file specified. See beginning of log file.");
     }
     else {
       modelSettings_->SetDx(value);
@@ -931,8 +936,9 @@ bool XmlModelFile::ParseCellSize(TiXmlNode   * node,
 
   if (ParseValue(root, "dy", value, errTxt)) {
     if (area_from_segy) {
-      printf("WARNING:: Both <dy> and <area-from-segy> is specified, and dy will be taken from segy file. \n");
-    }
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Both <dy> and <area-from-segy> is specified, and dy will be taken from segy file.\n");
+      TaskList::AddTask("Inconsistent XML model file specified. See beginning of log file.");
+   }
     else {
       modelSettings_->SetDy(value);
     }
@@ -981,10 +987,13 @@ bool XmlModelFile::ParseTimeWindow(TiXmlNode   * node,
     modelSettings_->SetBotTimeWindow(value);
     modelSettings_->SetTimeWindowSpecified(true);
     if (top_value == false) {
-      printf("WARNING:: Value for <top> under <time-window> is not given. Is set to top reservoir.\n");
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Value for <top> under <time-window> is not given. Is set to top reservoir.\n");
+      TaskList::AddTask("<time-window> not properly specified. See beginning of log file");
     }
-  } else if (top_value) {
-    printf("WARNING:: Value for <bot> under <time-window> is not given. Is set to bottom reservoir.\n");
+  }
+  else if (top_value) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Value for <bot> under <time-window> is not given. Is set to bottom reservoir.\n");
+    TaskList::AddTask("<time-window> not properly specified. See beginning of log file");
   }
 
   CheckForJunk(root, errTxt, legalCommands);
@@ -1014,10 +1023,13 @@ bool XmlModelFile::ParseDepthWindow(TiXmlNode   * node,
     modelSettings_->SetBotDepthWindow(value);
     modelSettings_->SetDepthWindowSpecified(true);
     if (top_value == false) {
-      printf("WARNING:: Value for <top> under <depth-window> is not given. Is set to top reservoir.\n");
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Value for <top> under <depth-window> is not given. Is set to top reservoir.\n");
+      TaskList::AddTask("<depth-window> not properly specified. See beginning of log file");
     }
-  } else if (top_value) {
-    printf("WARNING:: Value for <bot> under <depth-window> is not given. Is set to bottom reservoir.\n");
+  }
+  else if (top_value) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Value for <bot> under <depth-window> is not given. Is set to bottom reservoir.\n");
+    TaskList::AddTask("<depth-window> not properly specified. See beginning of log file");
   }
   CheckForJunk(root, errTxt, legalCommands);
   return true;
@@ -1156,7 +1168,7 @@ bool XmlModelFile::ParseOutputParameters(TiXmlNode   * node,
     modelSettings_->SetOutputPrenmoTimeSegy(value);
     if (modelSettings_->GetOffsetWithoutStretch() && value) {
       modelSettings_->SetOutputPrenmoTimeSegy(false);
-      printf("WARNING:: <seismic-time-prenmo-segy> under <output-parameters> is specified. For seismic specified with <nmo-stretch> and <offset-withouth-stretch>, pre-nmo seismic will not be given.\n");
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: <seismic-time-prenmo-segy> under <output-parameters> is specified. For seismic specified with <nmo-stretch> and <offset-withouth-stretch>, pre-nmo seismic will not be given.\n");
     }
   }
 
@@ -1208,7 +1220,8 @@ bool XmlModelFile::ParseSegyIndexes(TiXmlNode   * node,
   }
 
   if (area_from_segy)  {
-    printf("WARNING:: Both <segy-indexes> <area-from-segy> and are given. Indexes are taken from segy file, and values given in <segy-indexes> are not used.\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: Both <segy-indexes> <area-from-segy> and are given. Indexes are taken from segy file, and values given in <segy-indexes> are not used.\n");
+    TaskList::AddTask("Inconsistent model file specified. See beginning of log file.");
   }
 
   CheckForJunk(root, errTxt, legalCommands);

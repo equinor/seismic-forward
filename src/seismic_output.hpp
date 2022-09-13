@@ -66,10 +66,10 @@ public:
   void WriteTwt(SeismicParameters &seismic_parameters);
   void WriteVrms(SeismicParameters &seismic_parameters, std::string name_pp_or_ps = "");
 
-  void WriteSeismicTimeStorm(SeismicParameters &seismic_parameters,      NRLib::StormContGrid &timegrid, double offset, bool is_stack = false);
-  void WriteSeismicDepthStorm(SeismicParameters &seismic_parameters,     NRLib::StormContGrid &depthgrid, double offset, bool is_stack = false);
-  void WriteSeismicTimeshiftStorm(SeismicParameters &seismic_parameters, NRLib::StormContGrid &timeshiftgrid, double offset, bool is_stack = false);
-  void WriteReflections(SeismicParameters &seismic_parameters,           double angle_or_offset);
+  void WriteSeismicTimeStorm     (NRLib::StormContGrid & timegrid     , double offset, bool is_stack = false);
+  void WriteSeismicDepthStorm    (NRLib::StormContGrid & depthgrid    , double offset, bool is_stack = false);
+  void WriteSeismicTimeshiftStorm(NRLib::StormContGrid & timeshiftgrid, double offset, bool is_stack = false);
+  void WriteReflections(std::vector<NRLib::StormContGrid> & rgridvec, double angle_or_offset);
 
   void PrintVector(std::vector<double> vec, std::string filename);
   void PrintVectorSizeT(std::vector<size_t> vec, std::string filename);

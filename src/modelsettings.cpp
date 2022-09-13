@@ -23,6 +23,8 @@
 #include "nrlib/iotools/logkit.hpp"
 
 #include "modelsettings.hpp"
+#include "tasklist.hpp"
+
 #include <iostream>
 #include <cstdlib>
 
@@ -139,6 +141,22 @@ ModelSettings::~ModelSettings(void)
 {
 }
 
+//----------------------------------------
+void ModelSettings::CheckConsistency(void)
+//----------------------------------------
+{
+  if (GetOutputPrenmoTimeSegy() && !GetNMOCorr()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: You cannot ask for pre NMO time output without specifying NMO correction. Output has been turned off.\n");
+    TaskList::AddTask("Inconsistent XML model file specified. See beginning of log file.");
+    SetOutputPrenmoTimeSegy(false);
+  }
+  if (GetOutputTwtOffset() && !GetNMOCorr()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: You cannot ask for TWT offset output without specifying NMO correction. Output has been turned off.\n");
+    TaskList::AddTask("Inconsistent XML model file specified. See beginning of log file.");
+    SetOutputTwtOffset(false);
+  }
+}
+
 void ModelSettings::SetDerivedVariables(void)
 {
 
@@ -176,6 +194,66 @@ void ModelSettings::SetDerivedVariables(void)
       theta_vec_[i] = theta_0_ + i*dtheta_;
     }
   }
+}
+
+bool ModelSettings::GetTimeOutput() {
+  return (GetOutputTimeSegy()
+          || GetOutputSeismicStackTimeSegy()
+          || GetOutputSeismicTime()
+          || GetOutputSeismicStackTimeStorm()
+          || GetOutputPrenmoTimeSegy());
+}
+
+bool ModelSettings::GetDepthOutput() {
+  return (GetOutputDepthSegy()
+          || GetOutputSeismicStackDepthSegy()
+          || GetOutputSeismicDepth()
+          || GetOutputSeismicStackDepthStorm());
+}
+
+bool ModelSettings::GetTimeshiftOutput() {
+  return (GetOutputTimeshiftSegy()
+          || GetOutputSeismicStackTimeShiftSegy()
+          || GetOutputSeismicTimeshift()
+          || GetOutputSeismicStackTimeShiftStorm());
+}
+bool ModelSettings::GetStackOutput() {
+  return (GetOutputSeismicStackTimeSegy()
+          || GetOutputSeismicStackDepthSegy()
+          || GetOutputSeismicStackTimeShiftSegy()
+          || GetOutputSeismicStackTimeStorm()
+          || GetOutputSeismicStackDepthStorm()
+          || GetOutputSeismicStackTimeShiftStorm());
+}
+bool ModelSettings::GetSegyOutput() {
+  return (GetOutputTimeSegy()
+          || GetOutputSeismicStackTimeSegy()
+          || GetOutputDepthSegy()
+          || GetOutputSeismicStackDepthSegy()
+          || GetOutputTimeshiftSegy()
+          || GetOutputSeismicStackTimeShiftSegy()
+          || GetOutputPrenmoTimeSegy());
+}
+
+bool ModelSettings::GetTimeStormOutput() {
+  return (GetOutputSeismicStackTimeStorm()
+          || GetOutputSeismicTime());
+}
+
+bool ModelSettings::GetDepthStormOutput() {
+  return (GetOutputSeismicStackDepthStorm()
+          || GetOutputSeismicDepth());
+}
+
+bool ModelSettings::GetTimeshiftStormOutput() {
+  return (GetOutputSeismicStackTimeShiftStorm()
+          || GetOutputSeismicTimeshift());
+}
+
+bool ModelSettings::GetStormOutput() {
+  return (GetTimeStormOutput()
+          || GetDepthStormOutput()
+          || GetTimeshiftStormOutput());
 }
 
 void ModelSettings::PrintSettings(void)

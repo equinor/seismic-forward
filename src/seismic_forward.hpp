@@ -34,16 +34,13 @@ class SeismicForward {
                                 size_t              j);
 
     static void WriteSeismicTraces(GenSeisTraceParams * param,
-                                   Output             * seis_output);
+                                   ModelSettings      * model_settings,
+                                   Output             * output);
 
-    static void WriteTrace(ResultTrace       * result_trace,
-                           SeismicParameters & seismic_parameters,
-                           Output            * seis_output);
-
-    static void GenerateSeismicTracesQueue(Output             * seis_output,
+    static void GenerateSeismicTracesQueue(Output             * output,
                                            GenSeisTraceParams * param);
 
-    static void GenerateSeismicTraces(Output             * seis_output,
+    static void GenerateSeismicTraces(Output             * output,
                                       GenSeisTraceParams * param,
                                       Trace              * trace);
 
