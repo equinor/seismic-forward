@@ -1,3 +1,5 @@
+#include "nrlib/iotools/logkit.hpp"
+
 #include "storm_writer.hpp"
 
 #include <cmath>
@@ -14,12 +16,10 @@ void STORM::WriteStorm(NRLib::StormContGrid &grid,
     grid.WriteToFile(filename);
   } else {
     double z_min = grid.GetZMin();
-    //printf("zmin = %d \n", static_cast<int>(z_min));
     double z_max = grid.GetZMax();
-    //printf("zmax = %d \n", static_cast<int>(z_max));
     if (std::abs(top_window - z_min) < 0.01 && std::abs(bot_window - z_max) < 0.01) {
       grid.WriteToFile(filename);
-    } 
+    }
     else {
       size_t i_top, j_top, i_bot, j_bot, k_bot, k_end, k_top_temp;
       int k_top;
@@ -37,9 +37,11 @@ void STORM::WriteStorm(NRLib::StormContGrid &grid,
         } else {
           k_top = (top_window - z_min) / dz;
         }
-      } 
+      }
       else {
-        printf("Top window is below grid. No Storm grid written.\n");
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nTop window is below grid. No Storm grid written.\n");
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Top window : %9.2f.\n", top_window);
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Grid base  : %9.2f.\n\n", z_max);
         return;
       }
       if (bot_window > z_min) {
@@ -48,8 +50,11 @@ void STORM::WriteStorm(NRLib::StormContGrid &grid,
         } else {
           k_bot = nk + (bot_window - z_max) / dz;
         }
-      } else {
-        printf("Bottom window is above grid. No Storm grid written.\n");
+      }
+      else {
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nBottom window is above grid. No Storm grid written.\\n");
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Base window : %9.2f.\n", bot_window);
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Grid top    : %9.2f.\n\n", z_min);
         return;
       }
 

@@ -61,17 +61,19 @@ sub JoinPaths( $$ )
     return $path;
 }
 
-#------------------------
-sub Initialize( $$$$$$$ )
-#------------------------
+#--------------------------
+sub Initialize( $$$$$$$$$ )
+#--------------------------
 {
-    my $exedir   = shift;
-    my $basedir  = shift;
-    my $testdir  = shift;
-    my $make     = shift;
-    my $geo2seis = shift;
-    my $compare  = shift;
-    my $debug    = shift;
+    my $exedir        = shift;
+    my $basedir       = shift;
+    my $testdir       = shift;
+    my $make_segy     = shift;
+    my $make_storm    = shift;
+    my $geo2seis      = shift;
+    my $compare_segy  = shift;
+    my $compare_storm = shift;
+    my $debug         = shift;
 
     if (! -e $geo2seis) {
         print "\nThe executable \'$geo2seis\' does not exist\n";
@@ -79,27 +81,52 @@ sub Initialize( $$$$$$$ )
         exit;
     }
 
-    if (! -e $compare) {
+    if (! -e $compare_segy) {
         if (! -e $basedir) {
             print "\nCannot find source code directory \'$basedir\'\n";
             print "\nQuitting...\n\n";
             exit;
         }
-        if (! -e $make) {
-            print "\nCannot find shell script for making SegY cube comparison function \'$make\'\n";
+        if (! -e $make_segy) {
+            print "\nCannot find shell script for making SegY cube comparison function \'$make_segy\'\n";
             print "\nQuitting...\n\n";
             exit;
         }
 
         Cwd::chdir($exedir);
-        print "\nMaking Segy comparison executable \'$compare\'\n";
-        open (MAKE, "$make |");
+        print "\nMaking Segy comparison executable \'$compare_segy\'\n";
+        open (MAKE, "$make_segy |");
         while ( <MAKE> ) { print $_; }
         close(MAKE);
     }
 
-    if (! -e $compare) {
-        print "\nThe shell script \'$make\' did not produce the executable \'$compare\'";
+    if (! -e $compare_segy) {
+        print "\nThe shell script \'$make_segy\' did not produce the executable \'$compare_segy\'";
+        print "\nQuitting...\n\n";
+        exit;
+    }
+
+    if (! -e $compare_storm) {
+        if (! -e $basedir) {
+            print "\nCannot find source code directory \'$basedir\'\n";
+            print "\nQuitting...\n\n";
+            exit;
+        }
+        if (! -e $make_storm) {
+            print "\nCannot find shell script for making SegY cube comparison function \'$make_storm\'\n";
+            print "\nQuitting...\n\n";
+            exit;
+        }
+
+        Cwd::chdir($exedir);
+        print "\nMaking STORM comparison executable \'$compare_storm\'\n";
+        open (MAKE, "$make_storm |");
+        while ( <MAKE> ) { print $_; }
+        close(MAKE);
+    }
+
+    if (! -e $compare_storm) {
+        print "\nThe shell script \'$make_storm\' did not produce the executable \'$compare_storm\'";
         print "\nQuitting...\n\n";
         exit;
     }
@@ -202,7 +229,7 @@ sub RunGeo2Seis( $$$$$ )
     chmod 0755, $executable;
 
     if (!$debug) {
-        print "   Running Geo2Seis ...\n";
+        print "   Running Seismic Forward ...\n";
     }
     open (GEO2SEIS, "./$executable $modelfile |");
     while ( <GEO2SEIS> ) {
@@ -215,7 +242,7 @@ sub RunGeo2Seis( $$$$$ )
 }
 
 #---------------------------
-sub CheckSegYCubes( $$$$$$ )
+sub CheckSegYGrids( $$$$$$ )
 #---------------------------
 {
     my $modeldir   = shift;
@@ -251,14 +278,13 @@ sub CheckSegYCubes( $$$$$$ )
         my $exists2 = -e $file2;
 
         if ($exists2) { # Require answer volume before looking for output
-
             my ($grid_defs_are_equal,
                 $max_amp,
                 $max_diff,
                 $avg_diff,
                 $bias,
                 $max_trace,
-                $max_sample) = CompareGrids($executable, $file1,$file2,$debug);
+                $max_sample) = CompareSegYGrids($executable, $file1,$file2,$debug);
 
             if ($exists1) {
                 if ($grid_defs_are_equal == -1) {
@@ -267,13 +293,11 @@ sub CheckSegYCubes( $$$$$$ )
                 }
                 else {
                     if ($grid_defs_are_equal == 1) {
-
                         if ($max_amp == 0) {
                             push @messages, sprintf("   Grid : %43s  =>  ERROR: Maximum amplitude of answer cube is zero\n",$name);
                             $match = 0;
                         }
                         else {
-
                             my $relative_diff = $max_diff/$max_amp;
                             if ($relative_diff < $threshold) {
                                 push @messages, sprintf("   Grid : %43s  =>  MATCH\n",$name);
@@ -311,9 +335,9 @@ sub CheckSegYCubes( $$$$$$ )
     return $match;
 }
 
-#-----------------------
-sub CompareGrids( $$$$ )
-#-----------------------
+#---------------------------
+sub CompareSegYGrids( $$$$ )
+#---------------------------
 {
     my $executable = shift;
     my $file1      = shift;
@@ -361,6 +385,135 @@ sub CompareGrids( $$$$ )
             $max_sample);
 }
 
+#----------------------------
+sub CheckStormGrids( $$$$$$ )
+#----------------------------
+{
+    my $modeldir   = shift;
+    my $executable = shift;
+    my $r_params   = shift;
+    my $threshold  = shift;
+    my $debug      = shift;
+    my $showall    = shift;
+
+    my $outputdir  = "$modeldir/output";
+    my $answerdir  = "$modeldir/answer";
+
+    my @parameters = @$r_params;
+
+    #
+    # What kind of SegY grids to look for
+    #
+    my @filenames = ();
+    for my $i (0 .. $#parameters) {
+        push @filenames, $parameters[$i].".storm";
+    }
+
+    my @messages    = ();
+    my $active_test = 0;
+
+    my $match = 1;
+
+    for my $i (0 .. $#filenames) {
+        my $name    = $filenames[$i];
+        my $file1   = "$outputdir/$name";
+        my $file2   = "$answerdir/$name";
+        my $exists1 = -e $file1;
+        my $exists2 = -e $file2;
+
+        if ($exists2) { # Require answer volume before looking for output
+            my ($grid_defs_are_equal,
+                $largest_difference,
+                $mean_abs_difference,
+                $mean_val_difference,
+                $mean_val_both_cubes) = CompareStormGrids($executable, $file1,$file2,$debug);
+
+            if ($exists1) {
+                if ($grid_defs_are_equal == 1) {
+                    my $scale_factor        = 1.0;
+                    my $relative_difference = $largest_difference/$mean_val_both_cubes;
+                    if ($relative_difference < 0.0) {
+                        $relative_difference *= -1.0;
+                    }
+                    if ($relative_difference < $threshold*$scale_factor || $largest_difference < $threshold*$scale_factor) {
+                        push @messages, sprintf("   Grid : %43s  =>  MATCH\n",$name);
+                    }
+                    else {
+                        push @messages, sprintf("   Grid : %43s  =>  MaxDiff=%.6f  MeanAbsDiff=%.6f  Bias=%.6f\n",
+                                                $name,$largest_difference,$mean_abs_difference,$mean_val_difference);
+                        $match = 0;
+                    }
+                }
+                else {
+                    push @messages, sprintf("   Grid : %43s  =>  ERROR: Grid definitions are not equal\n",$name);
+                    $match = 0;
+                }
+            }
+            else {
+                push @messages, sprintf("   Grid : %43s  =>  ERROR: Got correct answer but no Seismic Forward output to compare with.\n",
+                                        $name);
+                $match = 0;
+            }
+            $active_test = 1;
+        }
+    }
+    if ($match && $active_test && !$showall) {
+        printf "   Grids :                                        All  =>  MATCH\n";
+    }
+    else {
+        foreach ( @messages ) {
+            print;
+        }
+    }
+    return $match;
+}
+
+#----------------------------
+sub CompareStormGrids( $$$$ )
+#----------------------------
+{
+    my $executable = shift;
+    my $file1      = shift;
+    my $file2      = shift;
+    my $debug      = shift;
+
+    if (!-e $executable) {
+        print "Could not find STORM comparison executable \'$executable\'\n";
+        print "Current directory is \'".Cwd::getcwd()."\'\n";
+        exit;
+    }
+    if ($debug) {
+        print "Comparing STORM volumes \'$file1\' and \'$file2\'\n";
+    }
+    open (COMPARE, "$executable $file1 $file2 |");
+    while ( <COMPARE> ) {
+        if ($debug) {
+            print $_;
+        }
+    }
+    close(COMPARE);
+
+    my $diff_file = "storm_volume_difference.txt";
+
+    open(IN, $diff_file) or die "$!\nCould not find file \'$diff_file\'\n";
+    my $values = <IN>;
+    close(IN);
+
+    my @values = split(' ', $values);
+
+    my $grid_defs_are_equal = $values[0];
+    my $largest_difference  = $values[1];
+    my $mean_abs_difference = $values[2];
+    my $mean_val_difference = $values[3];
+    my $mean_val_both_cubes = $values[4];
+
+    return ($grid_defs_are_equal,
+            $largest_difference,
+            $mean_abs_difference,
+            $mean_val_difference,
+            $mean_val_both_cubes);
+}
+
 
 #----------------------------------------------------------------
 #                       EDIT section
@@ -376,14 +529,26 @@ my @modeldir    =  (
                     "07_ps",
                     "08_ps_noise",
                     "09_remove_negative_dz",
-                    "10_keep_negative_dz"
-#                    "11_corner_point"
+                    "10_keep_negative_dz",
+                    "11_corner_point",
+                    "12_Reek_center_point_interpolation",
+                    "13_Reek_corner_point_interpolation",
+                    "14_Drogon_center_point_interpolation_nmo",
+                    "15_Drogon_corner_point_interpolation_nmo"
                     );
 
 my @parameters  =  ("seismic_depth",
+                    "seismic_depth_stack",
                     "seismic_time",
+                    "seismic_time_stack",
                     "seismic_timeshift",
-                    "seismic_time_prenmo");
+                    "seismic_time_prenmo",
+                    "vp",
+                    "vs",
+                    "rho",
+                    "twt",
+                    "zgrid",
+                    "reflections_0");
 
 my $threshold   =  1.0e-08;                                # Match if diff < threshold
 #my $threshold   =  3.0e-05;                                # Match if diff < threshold
@@ -399,19 +564,19 @@ my $time0   = time();
 
 my ($tmpdir,
     $passive,
-    @cases)     = ExtractOptions(@ARGV);
+    @cases)       = ExtractOptions(@ARGV);
 
 my ($exedir,                                               # This is where the seismic forward and comparison executables are stored
-    $basedir)   = FindBaseAndExeDir($tmpdir, "../seismic-forward", $debug);
+    $basedir)     = FindBaseAndExeDir($tmpdir, "../seismic-forward", $debug);
 
-my $testdir     = $basedir."/test_suite";                  # Where tests are stored
-my $make        = $basedir."/make_compare_traces.sh";      # Script for making the comparison function
-my $geo2seis    = $exedir."/seismic_forward";              # The geo2seis executable
-my $compare     = $exedir."/compare_traces";               # Script for making the comparison function
-my $modelfile   = "modelfile.xml";
-my $os          = $^O;
-
-Initialize($exedir,$basedir,$testdir,$make,$geo2seis,$compare,$debug);
+my $testdir       = $basedir."/test_suite";                  # Where tests are stored
+my $make_segy     = $basedir."/make_compare_traces.sh";      # Script for making the comparison function
+my $make_storm    = $basedir."/make_compare_storm_grids.sh"; # Script for making the comparison function
+my $geo2seis      = $exedir."/seismic_forward";              # The geo2seis executable
+my $compare_segy  = $exedir."/compare_traces";               # The Segy comparison executable
+my $compare_storm = $exedir."/compare_storm_grids";          # The STORM comparison executable
+my $modelfile     = "modelfile.xml";
+my $os            = $^O;
 
 print "\n*******************************************************************";
 print "\n*****            Seismic Forward test suite                   *****";
@@ -419,12 +584,16 @@ print "\n*******************************************************************\n";
 
 print "\nPlatform                    : $os";
 print "\nGeo2Seis executable         : $geo2seis";
-print "\nSegY comparison executable  : $compare";
+print "\nSegY comparison executable  : $compare_segy";
+print "\nSTORM comparison executable : $compare_storm";
 print "\nTest directory              : $testdir\n";
 print "\nPassive mode                : $passive\n";
 print "\nThreshold                   : $threshold\n";
 
+Initialize($exedir,$basedir,$testdir,$make_segy,$make_storm,$geo2seis,$compare_segy,$compare_storm,$debug);
+
 my $ok1;
+my $ok2;
 my $test_ok;
 my $all_ok = 1;
 my @ok = ();
@@ -465,9 +634,14 @@ for my $i (0 .. $#modeldir) {
         # Check seismic cubes
         # -------------------
 
-        $ok1 = CheckSegYCubes($modeldir,$compare,\@parameters,$threshold,$debug,$showall);
+        $ok1 = CheckSegYGrids($modeldir,$compare_segy,\@parameters,$threshold,$debug,$showall);
 
-        $test_ok = $ok1;
+        # Check storm volumes
+        # -------------------
+
+        $ok2 = CheckStormGrids($modeldir,$compare_storm,\@parameters,$threshold,$debug,$showall);
+
+        $test_ok = $ok1 && $ok2;
         $all_ok  = $all_ok && $test_ok;
         $ok[$i]  = $test_ok;
     }

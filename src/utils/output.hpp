@@ -3,8 +3,11 @@
 
 #include "seismic_parameters.hpp"
 
+class ResultTrace;
+
 class Output
 {
+
 public:
   Output(SeismicParameters   & seismic_parameters,
          std::vector<double>   twt_0,
@@ -13,27 +16,17 @@ public:
          std::vector<double>   offset_vec,
          size_t                time_samples_stretch);
 
-  void AddTrace(SeismicParameters     & seismic_parameters,
-                NRLib::Grid2D<double> & timegrid_pos,
-                NRLib::Grid2D<double> & pre_nmo_timegrid_pos,
-                NRLib::Grid2D<double> & timegrid_stack_pos,
-                NRLib::Grid2D<double> & depthgrid_pos,
-                NRLib::Grid2D<double> & depthgrid_stack_pos,
-                NRLib::Grid2D<double> & timeshiftgrid_pos,
-                NRLib::Grid2D<double> & timeshiftgrid_stack_pos,
-                NRLib::Grid2D<double> & twtx_reg,
-                double                  x,
-                double                  y,
-                size_t                  i,
-                size_t                  j);
+  ~Output(void);
 
-  void AddZeroTrace(SeismicParameters & seismic_parameters,
-                    double              x,
-                    double              y,
-                    size_t              i,
-                    size_t              j);
+  void AddTrace(ResultTrace   * result_trace,
+                ModelSettings * model_settings,
+                SeismicOutput * seismic_output);
 
-  void WriteSeismicStorm(SeismicParameters & seismic_parameters);
+  void WriteStatisticsForSeismic(ModelSettings * model_settings);
+
+  void WriteSeismicStorm(ModelSettings                     * model_settings,
+                         SeismicOutput                     * seismic_output,
+                         std::vector<NRLib::StormContGrid> & rgrids);
 
   const bool GetDepthSegyOk(void)          { return depth_segy_ok_          ;}
   const bool GetDepthStackSegyOk(void)     { return depth_stack_segy_ok_    ;}
