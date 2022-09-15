@@ -57,9 +57,9 @@ class SeismicForward {
                                 size_t              i,
                                 size_t              j);
 
-    static void AddNoiseToReflectionsPos(unsigned long           seed,
-                                         double                  std_dev,
-                                         NRLib::Grid2D<double> & refl);
+    static void GenerateWhiteNoise(unsigned long           seed,
+                                   double                  std_dev,
+                                   NRLib::Grid2D<double> & noise);
 
     static void WriteSeismicTraces(GenSeisTraceParams * param,
                                    ModelSettings      * model_settings,

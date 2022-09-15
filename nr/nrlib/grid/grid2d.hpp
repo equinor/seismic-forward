@@ -55,6 +55,8 @@ public:
   inline const_reference operator()(size_t i, size_t j) const;
   inline const_reference operator()(size_t index) const;
 
+  inline void            operator+=(const Grid2D & grid);
+
   iterator               begin()       { return data_.begin(); }
   iterator               end()         { return data_.end(); }
 
@@ -155,6 +157,17 @@ typename Grid2D<A>::const_reference Grid2D<A>::operator()(size_t index) const
   assert(index < GetN());
 
   return(data_[index]);
+}
+
+
+template<class A>
+void Grid2D<A>::operator+=(const Grid2D & grid)
+{
+  for (size_t i = 0; i < this->GetNI(); ++i) {
+    for (size_t j = 0; j < this->GetNJ(); ++j) {
+      (*this)(i, j) += static_cast<float>(grid(i, j));
+    }
+  }
 }
 
 

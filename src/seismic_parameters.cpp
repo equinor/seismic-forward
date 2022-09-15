@@ -621,14 +621,17 @@ void SeismicParameters::FindVrms(std::vector<double>       &vrms_vec,
   }
 }
 
-void SeismicParameters::FindReflections(NRLib::Grid2D<double>       &r_vec,
-                                        const std::vector<double>   &theta_vec,
-                                        size_t                       i,
-                                        size_t                       j)
-{
-  bool                ps_seis  = model_settings_->GetPSSeismic();
 
-  Zoeppritz *zoeppritz = NULL;
+//----------------------------------------------------------------------------
+void SeismicParameters::FindReflections(NRLib::Grid2D<double>     & r_vec,
+                                        const std::vector<double> & theta_vec,
+                                        size_t                      i,
+                                        size_t                      j)
+//----------------------------------------------------------------------------
+{
+  bool        ps_seis  = model_settings_->GetPSSeismic();
+  Zoeppritz * zoeppritz = NULL;
+
   if (ps_seis) {
     zoeppritz = new ZoeppritzPS();
   } else {
@@ -636,37 +639,44 @@ void SeismicParameters::FindReflections(NRLib::Grid2D<double>       &r_vec,
   }
 
   double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
-  std::vector<double> vp_vec(bottom_k_-top_k_+3), vs_vec(bottom_k_-top_k_+3), rho_vec(bottom_k_-top_k_+3);
+
+  std::vector<double> vp_vec (bottom_k_ - top_k_ + 3);
+  std::vector<double> vs_vec (bottom_k_ - top_k_ + 3);
+  std::vector<double> rho_vec(bottom_k_ - top_k_ + 3);
 
   for (size_t theta = 0; theta < theta_vec.size(); ++theta) {
     for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {
-      vp_vec[k - top_k_]  = (*vpgrid_)(i, j, (k - top_k_));
-      vs_vec[k - top_k_]  = (*vsgrid_)(i, j, (k - top_k_));
+      vp_vec [k - top_k_] = (*vpgrid_ )(i, j, (k - top_k_));
+      vs_vec [k - top_k_] = (*vsgrid_ )(i, j, (k - top_k_));
       rho_vec[k - top_k_] = (*rhogrid_)(i, j, (k - top_k_));
     }
     zoeppritz->ComputeConstants(theta_vec[theta]);
     for (size_t k = top_k_; k <= bottom_k_ + 1; k++) {
-        diffvp = vp_vec[k - top_k_ + 1] - vp_vec[k - top_k_];
-        meanvp = 0.5 *  (vp_vec[k - top_k_ + 1] + vp_vec[k - top_k_]);
-        diffvs = vs_vec[k - top_k_ + 1] - vs_vec[k - top_k_];
-        meanvs = 0.5 *  (vs_vec[k - top_k_ + 1] + vs_vec[k - top_k_]);
-        diffrho = rho_vec[k - top_k_ + 1] - rho_vec[k - top_k_];
-        meanrho = 0.5 * (rho_vec[k - top_k_ + 1] + rho_vec[k - top_k_]);
-        r_vec(k - top_k_, theta) = static_cast<float>(zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
+        diffvp  =      vp_vec [k - top_k_ + 1] - vp_vec [k - top_k_];
+        meanvp  = 0.5*(vp_vec [k - top_k_ + 1] + vp_vec [k - top_k_]);
+        diffvs  =      vs_vec [k - top_k_ + 1] - vs_vec [k - top_k_];
+        meanvs  = 0.5*(vs_vec [k - top_k_ + 1] + vs_vec [k - top_k_]);
+        diffrho =      rho_vec[k - top_k_ + 1] - rho_vec[k - top_k_];
+        meanrho = 0.5*(rho_vec[k - top_k_ + 1] + rho_vec[k - top_k_]);
+
+        double refl = zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs);
+
+        r_vec(k - top_k_, theta) = static_cast<float>(refl);
     }
   }
   delete zoeppritz;
 }
 
-
+//----------------------------------------------------------------------------
 void SeismicParameters::FindNMOReflections(NRLib::Grid2D<double>       &r_vec,
                                            const NRLib::Grid2D<double> &theta,
                                            size_t                       i,
                                            size_t                       j)
+//----------------------------------------------------------------------------
 {
-  bool                ps_seis  = model_settings_->GetPSSeismic();
+  bool        ps_seis   = model_settings_->GetPSSeismic();
+  Zoeppritz * zoeppritz = NULL;
 
-  Zoeppritz *zoeppritz = NULL;
   if (ps_seis) {
     zoeppritz = new ZoeppritzPS();
   } else {
@@ -674,25 +684,32 @@ void SeismicParameters::FindNMOReflections(NRLib::Grid2D<double>       &r_vec,
   }
 
   double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
-  std::vector<double> vp_vec(bottom_k_-top_k_+3), vs_vec(bottom_k_-top_k_+3), rho_vec(bottom_k_-top_k_+3);
+
+  std::vector<double> vp_vec (bottom_k_ - top_k_ + 3);
+  std::vector<double> vs_vec (bottom_k_ - top_k_ + 3);
+  std::vector<double> rho_vec(bottom_k_ - top_k_ + 3);
 
   for (size_t off = 0; off < theta.GetNJ(); ++off) {
     for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {
-      vp_vec[k - top_k_]  = (*vpgrid_)(i, j, (k - top_k_));
-      vs_vec[k - top_k_]  = (*vsgrid_)(i, j, (k - top_k_));
+      vp_vec [k - top_k_] = (*vpgrid_ )(i, j, (k - top_k_));
+      vs_vec [k - top_k_] = (*vsgrid_ )(i, j, (k - top_k_));
       rho_vec[k - top_k_] = (*rhogrid_)(i, j, (k - top_k_));
-      }
+    }
     for (size_t k = top_k_; k <= bottom_k_ + 1; k++) {
-        diffvp  =        vp_vec [k - top_k_ + 1] - vp_vec [k - top_k_];
-        meanvp  = 0.5 * (vp_vec [k - top_k_ + 1] + vp_vec [k - top_k_]);
-        diffvs  =        vs_vec [k - top_k_ + 1] - vs_vec [k - top_k_];
-        meanvs  = 0.5 * (vs_vec [k - top_k_ + 1] + vs_vec [k - top_k_]);
-        diffrho =        rho_vec[k - top_k_ + 1] - rho_vec[k - top_k_];
-        meanrho = 0.5 * (rho_vec[k - top_k_ + 1] + rho_vec[k - top_k_]);
-        zoeppritz->ComputeConstants(theta(k - top_k_, off));
-        r_vec(k - top_k_, off) = static_cast<float>(zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs));
-        }
-      }
+      diffvp  =      vp_vec [k - top_k_ + 1] - vp_vec [k - top_k_];
+      meanvp  = 0.5*(vp_vec [k - top_k_ + 1] + vp_vec [k - top_k_]);
+      diffvs  =      vs_vec [k - top_k_ + 1] - vs_vec [k - top_k_];
+      meanvs  = 0.5*(vs_vec [k - top_k_ + 1] + vs_vec [k - top_k_]);
+      diffrho =      rho_vec[k - top_k_ + 1] - rho_vec[k - top_k_];
+      meanrho = 0.5*(rho_vec[k - top_k_ + 1] + rho_vec[k - top_k_]);
+
+      zoeppritz->ComputeConstants(theta(k - top_k_, off));
+
+      double refl = zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs);
+
+      r_vec(k - top_k_, off) = static_cast<float>(refl);
+    }
+  }
   delete zoeppritz;
 }
 
