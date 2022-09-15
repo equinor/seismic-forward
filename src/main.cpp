@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                          Seismic Forward Modeling                                        *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                 version 4.3 beta                                         *****");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                         Copyright (c) 2019 by Equinor                                    *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                         Copyright (c) 2022 by Equinor                                    *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n****************************************************************************************************\n\n");
 
@@ -83,7 +83,8 @@ int main(int argc, char *argv[]) {
                                              n_threads);
     seismic_parameters.PrintElapsedTime(t1, "for preprocesses");
     NRLib::LogKit::WriteHeader("Forward modelling");
-    SeismicForward::DoSeismicForward(seismic_parameters);
+    SeismicForward::DoSeismicForward(seismic_parameters,
+                                     model_settings);
     //seismic_parameters.PrintElapsedTime(t1, "for total program");
 
     TaskList::ViewAllTasks();

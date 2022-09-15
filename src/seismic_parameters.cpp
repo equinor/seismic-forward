@@ -1,8 +1,7 @@
 #include "nrlib/extrapolation/extrapolategrid2d.hpp"
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
+
 #include "nrlib/geometry/interpolation.hpp"
-#include "nrlib/random/randomgenerator.hpp"
-#include "nrlib/random/normal.hpp"
 
 #include "tbb/compat/thread"
 
@@ -1174,23 +1173,6 @@ tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t & n_
   }
   n_traces = job_number;
   return traces;
-}
-
-//-------------------------------------------------------------------------------
-void SeismicParameters::AddNoiseToReflectionsPos(unsigned long           seed,
-                                                 double                  std_dev,
-                                                 NRLib::Grid2D<double> & refl)
-//-------------------------------------------------------------------------------
-{
-  NRLib::RandomGenerator rg;
-  rg.Initialize(seed);
-  NRLib::Normal normal_distibrution(0, std_dev);
-
-  for (size_t i = 0; i < refl.GetNI(); ++i) {
-    for (size_t j = 0; j < refl.GetNJ(); ++j) {
-      refl(i, j) += static_cast<float>(normal_distibrution.Draw(rg));
-    }
-  }
 }
 
 //--------------------------------------------------------------

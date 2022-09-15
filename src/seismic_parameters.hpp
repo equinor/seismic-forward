@@ -4,9 +4,10 @@
 #include "nrlib/surface/regularsurface.hpp"
 #include "nrlib/volume/volume.hpp"
 
-#include "modelsettings.hpp"
-#include "seismic_output.hpp"
 #include "utils/trace.hpp"
+
+#include "seismic_output.hpp"
+#include "modelsettings.hpp"
 
 #include <tbb/concurrent_queue.h>
 
@@ -138,10 +139,6 @@ class SeismicParameters
 
     tbb::concurrent_queue<Trace*> FindTracesInForward(size_t & n_traces);
 
-
-    static void AddNoiseToReflectionsPos(unsigned long           seed,
-                                         double                  std_dev,
-                                         NRLib::Grid2D<double> & refl);
 
     static void MonitorInitialize(size_t   n_traces,
                                   float  & monitor_size,

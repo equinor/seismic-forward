@@ -40,7 +40,7 @@ public:
 
   ~ModelSettings(void);
 
-  void                      CheckConsistency(void);
+  void                      CheckConsistency(std::string & errTxt);
   void                      SetDerivedVariables(void);
 
   void                      PrintSettings(void);

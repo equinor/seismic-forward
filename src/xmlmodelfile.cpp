@@ -79,17 +79,24 @@ XmlModelFile::XmlModelFile(const std::string  & fileName)
       errTxt = "'" + std::string(fileName) + "' is not a SeismicForward model file (lacks the <seismic-forward> keyword.)\n";
     }
 
-    if (errTxt != "") {
+    if (errTxt == "") {
+      modelSettings_->CheckConsistency(errTxt);
+      if (errTxt == "") {
+        modelSettings_->SetDerivedVariables();
+      }
+      else {
+        NRLib::LogKit::LogMessage(NRLib::LogKit::Error, errTxt);
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nAborting\n");
+        failed_ = true;
+      }
+    }
+    else {
       NRLib::LogKit::WriteHeader("Invalid model file");
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\n%s is not a valid model file:\n", fileName.c_str());
       NRLib::LogKit::LogMessage(NRLib::LogKit::Error, errTxt);
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nAborting\n");
       failed_ = true;
     }
-    else {
-      modelSettings_->CheckConsistency();
-      modelSettings_->SetDerivedVariables();
-    };
   }
 }
 

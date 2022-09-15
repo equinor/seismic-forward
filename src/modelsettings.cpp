@@ -141,9 +141,9 @@ ModelSettings::~ModelSettings(void)
 {
 }
 
-//----------------------------------------
-void ModelSettings::CheckConsistency(void)
-//----------------------------------------
+//--------------------------------------------------------
+void ModelSettings::CheckConsistency(std::string & errTxt)
+//--------------------------------------------------------
 {
   if (GetOutputPrenmoTimeSegy() && !GetNMOCorr()) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: You cannot ask for pre NMO time output without specifying NMO correction. Output has been turned off.\n");
@@ -154,6 +154,9 @@ void ModelSettings::CheckConsistency(void)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Warning, "WARNING: You cannot ask for TWT offset output without specifying NMO correction. Output has been turned off.\n");
     TaskList::AddTask("Inconsistent XML model file specified. See beginning of log file.");
     SetOutputTwtOffset(false);
+  }
+  if (!(GetTimeOutput() || GetDepthOutput() || GetTimeshiftOutput())) {
+    errTxt += "No seisimc output has been asked for. ";
   }
 }
 

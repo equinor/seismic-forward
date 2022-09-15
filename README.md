@@ -72,7 +72,8 @@ make
 The executable can be run directly once an XML model file/job file has been created. The only input data needed is an Eclipse-grid with Vp, Vs and Rho.
 
 ```
-./PATH-TO-EXECUTABLE/seismic_forward my_job_file.xml
+cd directory-with-Eclipse-grid
+path-to-executable/seismic_forward my_job_file.xml
 ```
 
 
