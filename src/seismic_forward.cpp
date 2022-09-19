@@ -24,7 +24,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                                       ModelSettings     * model_settings)
 //---------------------------------------------------------------------------
 {
-  if (seismic_parameters.GetModelSettings()->GetNMOCorr()) {
+  if (model_settings->GetNMOCorr()) {
     MakeNMOSeismic(seismic_parameters,
                    model_settings);
   }
@@ -54,6 +54,7 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
                                        ps_seis);
 
   Output output(seismic_parameters,
+                model_settings,
                 twt_0,
                 z_0,
                 twts_0,
@@ -172,6 +173,7 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seispar,
                             ps_seis);
 
   Output output(seispar,
+                model_settings,
                 twt_0,
                 z_0,
                 twts_0,
@@ -293,6 +295,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
 
   if (!param->empty_queue.try_pop(result_trace)){
     result_trace = new ResultTrace(seismic_parameters,
+                                   model_settings,
                                    param->twt_0,
                                    param->z_0,
                                    param->twts_0,
@@ -597,7 +600,13 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
   ResultTrace       * result_trace;
 
   if (!param->empty_queue.try_pop(result_trace)){
-    result_trace = new ResultTrace(seismic_parameters, param->twt_0, param->z_0, param->twts_0, param->twt_0.size(), param->theta_vec);
+    result_trace = new ResultTrace(seismic_parameters,
+                                   model_settings,
+                                   param->twt_0,
+                                   param->z_0,
+                                   param->twts_0,
+                                   param->twt_0.size(),
+                                   param->theta_vec);
   }
 
   result_trace->SetJobID(trace);

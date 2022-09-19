@@ -192,7 +192,7 @@ void SeismicParameters::FindGeometry(SeismicGeometry              *& seismic_geo
     ly    = model_settings->GetLy();
     angle = model_settings->GetAngle();
   }
-  else if (model_settings_->GetAreaFromSurface() != "") {
+  else if (model_settings->GetAreaFromSurface() != "") {
     text = "surface";
     NRLib::RegularSurfaceRotated<double> toptime_rot = NRLib::RegularSurfaceRotated<double>(model_settings->GetAreaFromSurface());
     x0    = toptime_rot.GetXRef();
@@ -554,16 +554,16 @@ void SeismicParameters::FindLoopIndeces(int  & n_xl,
   }
 }
 
-void SeismicParameters::FindVrms(std::vector<double>       &vrms_vec,
-                                 std::vector<double>       &vrms_vec_reg,
-                                 const std::vector<double> &twt_vec,
-                                 const std::vector<double> &twt_vec_reg,
-                                 const std::vector<double> &v_vec,
-                                 double                     const_v,
-                                 double                     twt_wavelet_exstrapol,
-                                 size_t                     i,
-                                 size_t                     j,
-                                 bool                       include_regular) const
+void SeismicParameters::FindVrms(std::vector<double>       & vrms_vec,
+                                 std::vector<double>       & vrms_vec_reg,
+                                 const std::vector<double> & twt_vec,
+                                 const std::vector<double> & twt_vec_reg,
+                                 const std::vector<double> & v_vec,
+                                 double                      const_v,
+                                 double                      twt_wavelet_exstrapol,
+                                 size_t                      i,
+                                 size_t                      j,
+                                 bool                        include_regular) const
 {
   double v_w = model_settings_->GetVw();
   double z_w = model_settings_->GetZw();
