@@ -137,7 +137,10 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   ParseProjectSettings(root, errTxt);
 
   if (ParseWhiteNoise(root, errTxt)) {
-    modelSettings_->SetWhiteNoise();
+    modelSettings_->SetAddWhiteNoise();
+  }
+  if (ParseReflCoefNoise(root, errTxt)) {
+    modelSettings_->SetAddNoiseToReflCoef();
   }
 
   std::string file_name;
@@ -1292,8 +1295,10 @@ bool XmlModelFile::ParseSeismicStack(TiXmlNode   * node,
   return true;
 }
 
+//-------------------------------------------------------
 bool XmlModelFile::ParseWhiteNoise(TiXmlNode   * node,
                                    std::string & errTxt)
+//-------------------------------------------------------
 {
   TiXmlNode *root = node->FirstChildElement("white-noise");
   if (root == 0) {
@@ -1306,25 +1311,55 @@ bool XmlModelFile::ParseWhiteNoise(TiXmlNode   * node,
 
   double std_dev;
   if (ParseValue(root, "standard-deviation", std_dev, errTxt)) {
-    modelSettings_->SetStandardDeviation(std_dev);
+    modelSettings_->SetStandardDeviation1(std_dev);
   }
 
   double seed;
   if (ParseValue(root, "seed", seed, errTxt)) {
-    modelSettings_->SetSeed(seed);
+    modelSettings_->SetSeed1(seed);
   }
-
 
   CheckForJunk(root, errTxt, legalCommands);
 
   return true;
 }
 
+//---------------------------------------------------------
+bool XmlModelFile::ParseReflCoefNoise(TiXmlNode   * node,
+                                      std::string & errTxt)
+//---------------------------------------------------------
+{
+  TiXmlNode *root = node->FirstChildElement("add-noise-to-refl-coef");
+  if (root == 0) {
+    return (false);
+  }
+
+  std::vector<std::string> legalCommands;
+  legalCommands.push_back("standard-deviation");
+  legalCommands.push_back("seed");
+
+  double std_dev;
+  if (ParseValue(root, "standard-deviation", std_dev, errTxt)) {
+    modelSettings_->SetStandardDeviation2(std_dev);
+  }
+
+  double seed;
+  if (ParseValue(root, "seed", seed, errTxt)) {
+    modelSettings_->SetSeed2(seed);
+  }
+
+  CheckForJunk(root, errTxt, legalCommands);
+
+  return true;
+}
+
+//---------------------------------------------------------------
 bool XmlModelFile::ParseBool(TiXmlNode         * node,
                              const std::string & keyword,
                              bool              & value,
                              std::string       & errTxt,
                              bool                allowDuplicates)
+//---------------------------------------------------------------
 {
   std::string tmpVal;
   std::string tmpErr = "";

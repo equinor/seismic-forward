@@ -341,7 +341,6 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
 
     std::vector<double>                 constvp                     = model_settings->GetConstVp();
     std::vector<double>                 constvs                     = model_settings->GetConstVs();
-    unsigned long                       seed                        = model_settings->GetSeed();
     bool                                ps_seis                     = model_settings->GetPSSeismic();
     double                              z_wavelet_bot               = model_settings->GetZWaveletBot();
     double                              z_extrapol_factor           = model_settings->GetZExtrapolFactor();
@@ -360,16 +359,16 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
 
     if (ps_seis) { //------------PS seismic------------
       //setup and get vectors and grid for calculation
-      std::vector<double> twt_ss_vec(nzrefl);
-      std::vector<double> twt_pp_vec(nzrefl);
-      std::vector<double> twt_ss_vec_reg(param->twt_0.size());
-      std::vector<double> twt_pp_vec_reg(param->twt_0.size());
-      std::vector<double> vs_vec(nzrefl);
+      std::vector<double>     twt_ss_vec(nzrefl);
+      std::vector<double>     twt_pp_vec(nzrefl);
+      std::vector<double>     twt_ss_vec_reg(param->twt_0.size());
+      std::vector<double>     twt_pp_vec_reg(param->twt_0.size());
+      std::vector<double>     vs_vec(nzrefl);
 
-      std::vector<double> vrms_pp_vec(nzrefl);
-      std::vector<double> vrms_pp_vec_reg(param->twt_0.size());
-      std::vector<double> vrms_ss_vec(nzrefl);
-      std::vector<double> vrms_ss_vec_reg(param->twt_0.size());
+      std::vector<double>     vrms_pp_vec(nzrefl);
+      std::vector<double>     vrms_pp_vec_reg(param->twt_0.size());
+      std::vector<double>     vrms_ss_vec(nzrefl);
+      std::vector<double>     vrms_ss_vec_reg(param->twt_0.size());
 
       NRLib::Grid2D<double> & offset_pp     = result_trace->GetOffsetPP();
       NRLib::Grid2D<double> & offset_ss     = result_trace->GetOffsetSS();
@@ -442,45 +441,35 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       double twt_wavelet_extrapol = twt_wavelet * z_extrapol_factor;
       seismic_parameters.FindVrms(vrms_vec, vrms_vec_reg, twt_vec, param->twt_0, vp_vec, constvp[2], twt_wavelet_extrapol, i, j, true);
 
-      //find theta - for each layer for each offset:
-      FindNMOTheta(theta_pos, twt_vec, vrms_vec, param->offset_vec);
-
-      //find twtx for each layer for each offset, and regularly in time:
-      FindTWTx(twtx,     twt_vec,      vrms_vec,     param->offset_vec, offset_without_stretch);
+      FindNMOTheta(theta_pos, twt_vec, vrms_vec    , param->offset_vec);                         // Find theta - for each layer for each offset:
+      FindTWTx(twtx,     twt_vec,      vrms_vec    , param->offset_vec, offset_without_stretch); // Find twtx for each layer for each offset, and regularly in time:
       FindTWTx(twtx_reg, param->twt_0, vrms_vec_reg, param->offset_vec, offset_without_stretch);
-
-      //find limits for where to generate seismic, for each offset
-      FindSeisLimits(twtx, param->twt_0, n_min, n_max, twt_wavelet);
+      FindSeisLimits(twtx, param->twt_0, n_min, n_max, twt_wavelet);                             // Find limits for where to generate seismic, for each offset
     }//------------------------
 
-    //find reflection coeff - for each layer for each offset:
-    seismic_parameters.FindNMOReflections(refl_pos, theta_pos, i, j);
+    seismic_parameters.FindNMOReflections(refl_pos, theta_pos, i, j); // Find reflection coeff - for each layer for each offset:
 
-    //keep reflections for zero offset if output on storm
-    if (model_settings->GetOutputReflections()){
+    if (model_settings->GetOutputReflections()){                      // Keep reflections for zero offset if output on storm
       for (size_t k = 0; k < nzrefl; ++k) {
         rgridvec[0](i,j,k) = float(refl_pos(k,0));
       }
     }
-
-    //add noise to reflections
-    if (model_settings->GetWhiteNoise()) {
-
+    if (model_settings->GetAddNoiseToReflCoef()) {
       NRLib::Grid2D<double> noise(refl_pos.GetNI(), refl_pos.GetNJ());
-      double deviation = model_settings->GetStandardDeviation();
-      GenerateWhiteNoise(seed + long(i + nx*j), deviation, noise);
+      double        std  = model_settings->GetStandardDeviation2();
+      unsigned long seed = model_settings->GetSeed2();
+      GenerateWhiteNoise(seed + long(i + nx*j), std, noise);
+
       refl_pos += noise;
 
-      //keep reflections for zero offset if output on storm and white noise
-      if (model_settings->GetOutputReflections()) {
+      if (model_settings->GetOutputReflections()) { // Keep reflections for zero offset if output on storm and white noise
         for (size_t k = 0; k < nzrefl; ++k) {
           rgridvec[1](i,j,k) = float(refl_pos(k,0));
         }
       }
     }
 
-    //generate seismic
-    SeisConvolutionNMO(timegrid_pos,
+    SeisConvolutionNMO(timegrid_pos, // Generate seismic
                        refl_pos,
                        twtx,
                        zgrid,
@@ -494,6 +483,15 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
                        j,
                        n_min,
                        n_max);
+
+
+    if (model_settings->GetAddWhiteNoise()) { // Add noise to seismic signal
+      NRLib::Grid2D<double> noise(timegrid_pos.GetNI(), timegrid_pos.GetNJ());
+      double        std  = model_settings->GetStandardDeviation1();
+      unsigned long seed = model_settings->GetSeed1();
+      GenerateWhiteNoise(seed + long(i + nx*j), std, noise);
+      timegrid_pos += noise;
+    }
 
     //NMO correction:
     size_t max_sample;
@@ -617,37 +615,36 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
   double y = trace->GetY();
 
   if (GenerateTraceOk(seismic_parameters, model_settings, i, j)) {
-    NRLib::Grid2D<double> & timegrid_pos            = result_trace->GetTimeTrace();
-    NRLib::Grid2D<double> & timegrid_stack_pos      = result_trace->GetTimeStackTrace();
-    NRLib::Grid2D<double> & depthgrid_pos           = result_trace->GetDepthTrace();
-    NRLib::Grid2D<double> & depthgrid_stack_pos     = result_trace->GetDepthStackTrace();
-    NRLib::Grid2D<double> & timeshiftgrid_pos       = result_trace->GetTimeShiftTrace();
-    NRLib::Grid2D<double> & timeshiftgrid_stack_pos = result_trace->GetTimeShiftStackTrace();
+    NRLib::Grid2D<double>             & timegrid_pos            = result_trace->GetTimeTrace();
+    NRLib::Grid2D<double>             & timegrid_stack_pos      = result_trace->GetTimeStackTrace();
+    NRLib::Grid2D<double>             & depthgrid_pos           = result_trace->GetDepthTrace();
+    NRLib::Grid2D<double>             & depthgrid_stack_pos     = result_trace->GetDepthStackTrace();
+    NRLib::Grid2D<double>             & timeshiftgrid_pos       = result_trace->GetTimeShiftTrace();
+    NRLib::Grid2D<double>             & timeshiftgrid_stack_pos = result_trace->GetTimeShiftStackTrace();
 
-    std::vector<NRLib::StormContGrid> &rgridvec   = seismic_parameters.GetRGrids();
-    size_t nx                   = seismic_parameters.GetSeismicGeometry()->nx();
-    size_t nt                   = seismic_parameters.GetSeismicGeometry()->nt();
-    double dt                   = seismic_parameters.GetSeismicGeometry()->dt();
-    double tmin                 = param->twt_0[0];
-    size_t nzrefl               = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
-    std::vector<double> constvp = model_settings->GetConstVp();
-    std::vector<double> constvs = model_settings->GetConstVs();
-    unsigned long seed          = model_settings->GetSeed();
-    bool ps_seis                = model_settings->GetPSSeismic();
+    std::vector<NRLib::StormContGrid> & rgridvec       = seismic_parameters.GetRGrids();
+    size_t                              nx             = seismic_parameters.GetSeismicGeometry()->nx();
+    size_t                              nt             = seismic_parameters.GetSeismicGeometry()->nt();
+    double                              dt             = seismic_parameters.GetSeismicGeometry()->dt();
+    double                              tmin           = param->twt_0[0];
+    size_t                              nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
+    std::vector<double>                 constvp        = model_settings->GetConstVp();
+    std::vector<double>                 constvs        = model_settings->GetConstVs();
+    bool                                ps_seis        = model_settings->GetPSSeismic();
 
-    size_t n_min = 0;
-    size_t n_max = nt;
+    size_t                              n_min          = 0;
+    size_t                              n_max          = nt;
 
-    NRLib::Grid2D<double> refl_pos(nzrefl, param->theta_vec.size());
-    std::vector<double>   twt_vec (nzrefl);
+    NRLib::Grid2D<double>               refl_pos(nzrefl, param->theta_vec.size());
+    std::vector<double>                 twt_vec(nzrefl);
 
-    double wavelet_scale        = seismic_parameters.GetWaveletScale();
-    Wavelet * wavelet           = seismic_parameters.GetWavelet();
-    double z_wavelet_bot        = model_settings->GetZWaveletBot();
+    double                              wavelet_scale  = seismic_parameters.GetWaveletScale();
+    Wavelet                           * wavelet        = seismic_parameters.GetWavelet();
+    double                              z_wavelet_bot  = model_settings->GetZWaveletBot();
 
-    NRLib::RegularSurface<double> &toptime        = seismic_parameters.GetTopTime();
-    NRLib::StormContGrid          &zgrid          = seismic_parameters.GetZGrid();
-    NRLib::StormContGrid          &twtgrid        = seismic_parameters.GetTwtGrid();
+    NRLib::RegularSurface<double>     & toptime        = seismic_parameters.GetTopTime();
+    NRLib::StormContGrid              & zgrid          = seismic_parameters.GetZGrid();
+    NRLib::StormContGrid              & twtgrid        = seismic_parameters.GetTwtGrid();
 
     //get twt at all layers from twtgrid
     for (size_t k = 0; k < nzrefl; ++k) {
@@ -655,30 +652,29 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
     }
     seismic_parameters.FindReflections(refl_pos, param->theta_vec, i, j);
 
-    //keep reflections for zero offset if output on storm
-    if (model_settings->GetOutputReflections()){
+    if (model_settings->GetOutputReflections()) { // Keep reflections for zero offset if output on storm
       for (size_t k = 0; k < nzrefl; ++k) {
         rgridvec[0](i,j,k) = float(refl_pos(k,0));
       }
     }
 
-    //add noise to reflections
-    if (model_settings->GetWhiteNoise()) {
+
+    if (model_settings->GetAddNoiseToReflCoef()) {
       NRLib::Grid2D<double> noise(refl_pos.GetNI(), refl_pos.GetNJ());
-      double deviation = model_settings->GetStandardDeviation();
-      GenerateWhiteNoise(seed + long(i + nx*j), deviation, noise);
+      double        std  = model_settings->GetStandardDeviation2();
+      unsigned long seed = model_settings->GetSeed2();
+      GenerateWhiteNoise(seed + long(i + nx*j), std, noise);
+
       refl_pos += noise;
 
-      //keep reflections for zero offset if output on storm and white noise
-      if (model_settings->GetOutputReflections()) {
+      if (model_settings->GetOutputReflections()) { // Keep reflections for zero offset if output on storm and white noise
         for (size_t k = 0; k < nzrefl; ++k) {
           rgridvec[1](i,j,k) = float(refl_pos(k,0));
         }
       }
     }
 
-    //generate seismic
-    SeisConvolution(timegrid_pos,
+    SeisConvolution(timegrid_pos, // Generate seismic
                     refl_pos,
                     twt_vec,
                     zgrid,
@@ -692,6 +688,14 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
                     j,
                     n_min,
                     n_max);
+
+    if (model_settings->GetAddWhiteNoise()) { // Add noise to seismic signal
+      NRLib::Grid2D<double> noise(timegrid_pos.GetNI(), timegrid_pos.GetNJ());
+      double        std  = model_settings->GetStandardDeviation1();
+      unsigned long seed = model_settings->GetSeed1();
+      GenerateWhiteNoise(seed + long(i + nx*j), std, noise);
+      timegrid_pos += noise;
+    }
 
     //stacking of angles:
     if (model_settings->GetStackOutput() || model_settings->GetStormOutput()) {
@@ -1241,24 +1245,24 @@ void SeismicForward::SeisConvolutionNMO(NRLib::Grid2D<double>               & ti
                                         const std::vector<size_t>           & n_max)
 //-----------------------------------------------------------------------------------------
 {
-  size_t nt = timegrid_pos.GetNI();
-  size_t nc = refl_pos.GetNI();
-  double seis, twtx_kk;
-  double x, y, z;
-  double topt        = 0.0;
   double rickerLimit = wavelet->GetTwtLength();
+  size_t nt          = timegrid_pos.GetNI();
+  size_t nc          = refl_pos.GetNI();
 
+  double x, y, z;
   zgrid.FindCenterOfCell(i, j, 0, x, y, z);
-  topt = toptime.GetZ(x, y);
+  double topt = toptime.GetZ(x, y);
+
   if (toptime.IsMissing(topt) == false) {
+
     for (size_t off = 0; off < offset.size(); off++) {
       double t = t0;
 
       for (size_t k = 0; k < nt; k++) {
         if ((k > n_min[off] || k == n_min[off]) && k < (n_max[off] + 1)) {
-          seis = 0.0;
+          double seis = 0.0;
           for (size_t kk = 0; kk < nc; kk++) {
-            twtx_kk = twtx(kk, off);
+            double twtx_kk = twtx(kk, off);
             if (fabs(twtx_kk - t) < rickerLimit) {
               double ricker = waveletScale * wavelet->FindWaveletPoint(twtx_kk - t);
               seis += refl_pos(kk, off) * ricker;
@@ -1299,25 +1303,25 @@ void SeismicForward::SeisConvolution(NRLib::Grid2D<double>               & timeg
                                      size_t                                n_max)
 //--------------------------------------------------------------------------------------
 {
-
-  size_t nt = timegrid_pos.GetNI();
-  size_t nc = refl_pos.GetNI();
-  double seis, twt_kk;
-  double x, y, z;
-  double topt        = 0.0;
   double rickerLimit = wavelet->GetTwtLength();
+  size_t nt          = timegrid_pos.GetNI();
+  size_t nc          = refl_pos.GetNI();
 
+  double x, y, z;
   zgrid.FindCenterOfCell(i, j, 0, x, y, z);
-  topt = toptime.GetZ(x, y);
+
+  double topt = toptime.GetZ(x, y);
+
   if (toptime.IsMissing(topt) == false) {
+
     for (size_t theta = 0; theta < theta_vec.size(); theta++) {
       double t = t0;
 
       for (size_t k = 0; k < nt; k++) {
         if (k > n_min && k < n_max) {
-          seis = 0.0;
+          double seis = 0.0;
           for (size_t kk = 0; kk < nc; kk++) {
-            twt_kk = twt[kk];
+            double twt_kk = twt[kk];
             if (fabs(twt_kk - t) < rickerLimit) {
               double ricker = waveletScale * wavelet->FindWaveletPoint(twt_kk - t);
               seis += refl_pos(kk, theta) * ricker;

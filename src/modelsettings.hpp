@@ -45,8 +45,6 @@ public:
 
   void                      PrintSettings(void);
 
-  unsigned long             GetSeed()                                 { return seed_                           ;}
-
   size_t                    GetTracesInMemory(void)                   { return traces_in_memory_               ;}
   size_t                    GetMaxThreads(void)                       { return max_threads_                    ;}
 
@@ -74,8 +72,12 @@ public:
   int                       GetSegyInlineStep()                       { return inline_step_                    ;}
   int                       GetSegyXlineStep()                        { return xline_step_                     ;}
 
-  bool                      GetWhiteNoise()                           { return white_noise_                    ;}
-  double                    GetStandardDeviation()                    { return standard_deviation_             ;}
+  bool                      GetAddWhiteNoise()                        { return add_white_noise_                ;}
+  bool                      GetAddNoiseToReflCoef()                   { return add_noise_to_refl_coef_         ;}
+  double                    GetStandardDeviation1()                   { return standard_deviation_1_           ;}
+  double                    GetStandardDeviation2()                   { return standard_deviation_2_           ;}
+  unsigned long             GetSeed1()                                { return seed_1_                         ;}
+  unsigned long             GetSeed2()                                { return seed_2_                         ;}
 
   std::string               GetEclipseFileName()                      { return eclipse_file_name_              ;}
 
@@ -180,9 +182,7 @@ public:
   void SetTracesInMemory(size_t value)                 { traces_in_memory_                    = value    ;}
   void SetMaxThreads(size_t value)                     { max_threads_                         = value    ;}
 
-  void SetSeed(double value)                           { seed_                                = static_cast<unsigned long>(value);}
   void SetZeroThicknessLimit(double val)               { zero_thickness_limit_                = val     ;}
-  void SetStandardDeviation(double value)              { standard_deviation_                  = value   ;}
 
   void SetVw(double value)                             { v_w_                                 = value   ;}
   void SetZw(double value)                             { z_w_                                 = value   ;}
@@ -193,7 +193,13 @@ public:
   void SetOffsetMax(double value)                      { offset_max_                          = value   ;}
   void SetOffsetWithoutStretch(bool value)             { offset_without_stretch_              = value   ;}
 
-  void SetWhiteNoise(void)                             { white_noise_                         = true    ;}
+  void SetAddWhiteNoise(void)                          { add_white_noise_                     = true    ;}
+  void SetAddNoiseToReflCoef(void)                     { add_noise_to_refl_coef_              = true    ;}
+  void SetStandardDeviation1(double value)             { standard_deviation_1_                = value   ;}
+  void SetStandardDeviation2(double value)             { standard_deviation_2_                = value   ;}
+  void SetSeed1(unsigned long value)                   { seed_1_                              = value   ;}
+  void SetSeed2(unsigned long value)                   { seed_2_                              = value   ;}
+
   void SetUseCornerpointInterpol(bool value)           { use_cornerpoint_interpol_            = value   ;}
   void SetCornerpointInterpolationAtFaults(bool value) { cornerpoint_interpol_at_faults_      = value   ;}
   void SetUseVerticalInterpolation(bool value)         { use_vertical_interpolation_          = value   ;}
@@ -321,13 +327,18 @@ private:
   std::string               log_file_name_;
   int                       log_level_;
 
-  unsigned long             seed_;
   short                     utm_precision_;
   size_t                    traces_in_memory_;
   size_t                    max_threads_;
-  double                    standard_deviation_;
   double                    zero_thickness_limit_;
-  bool                      white_noise_;
+
+  bool                      add_white_noise_;
+  bool                      add_noise_to_refl_coef_;
+  double                    standard_deviation_1_;
+  double                    standard_deviation_2_;
+  unsigned long             seed_1_;
+  unsigned long             seed_2_;
+
   bool                      default_underburden_;
   bool                      ps_seismic_;
   bool                      nmo_corr_;

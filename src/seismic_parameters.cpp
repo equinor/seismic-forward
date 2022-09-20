@@ -426,7 +426,7 @@ void SeismicParameters::CreateGrids(SeismicGeometry * seismic_geometry,
 
   bool                             nmo_corr           = model_settings->GetNMOCorr();
   bool                             ps_seismic         = model_settings->GetPSSeismic();
-  bool                             white_noise        = model_settings->GetWhiteNoise();
+  bool                             noise              = model_settings->GetAddNoiseToReflCoef();
   bool                             output_vrms        = model_settings->GetOutputVrms();
   bool                             output_refl        = model_settings->GetOutputReflections();
   const std::vector<std::string> & xtr_par_names      = model_settings->GetExtraParameterNames();
@@ -453,16 +453,16 @@ void SeismicParameters::CreateGrids(SeismicGeometry * seismic_geometry,
   }
 
   if (nmo_corr && output_vrms) {
-    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0); //dimensions??
+    vrmsgrid_ = new NRLib::StormContGrid(volume, nx, ny, nzrefl, 0.0);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vrms                 %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
   }
   else
     vrmsgrid_ = NULL;
 
   if (output_refl) {
-    if (white_noise) {
+    if (noise) {
       rgridvec_ = new std::vector<NRLib::StormContGrid>(2);
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  White noise          %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl);
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Refl.coef/Noise 2 x %4d x %4d x %4d : %10d", nx, ny, nzrefl, nx*ny*nzrefl*2);
     }
     else {
       rgridvec_ = new std::vector<NRLib::StormContGrid>(1);
@@ -471,7 +471,7 @@ void SeismicParameters::CreateGrids(SeismicGeometry * seismic_geometry,
     NRLib::StormContGrid rgrid(volume, nx, ny, nzrefl, 0.0);
 
     (*rgridvec_)[0] = rgrid;
-    if (white_noise) {
+    if (noise) {
       (*rgridvec_)[1] = rgrid;
     }
   }

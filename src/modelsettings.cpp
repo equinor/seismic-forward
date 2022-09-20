@@ -41,13 +41,18 @@ ModelSettings::ModelSettings(void)
   prefix_                              = "";
   suffix_                              = "";
 
-  seed_                                = static_cast<unsigned long>(std::time(0));
-  standard_deviation_                  = 1.0;
   zero_thickness_limit_                = 0.1;
   twt_file_name_                       = "";
   traces_in_memory_                    = 100000;
   max_threads_                         = 100;
-  white_noise_                         = false;
+
+  add_white_noise_                     = false;
+  add_noise_to_refl_coef_              = false;
+  standard_deviation_1_                = 1.0;
+  standard_deviation_2_                = 1.0;
+  seed_1_                              = static_cast<unsigned long>(std::time(0)    );
+  seed_2_                              = static_cast<unsigned long>(std::time(0) + 1);
+
   default_underburden_                 = false;
   ps_seismic_                          = false;
   nmo_corr_                            = false;
@@ -273,9 +278,6 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Suffix                                    : %10s\n", GetSuffix().c_str());
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seed                                      : %10d\n", GetSeed());
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
-
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic data type                         : %10s\n"  , GetPSSeismic()                        ? "PS"  : "PP");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "NMO correction                            : %10s\n"  , GetNMOCorr()                          ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Offset without stretch                    : %10s\n"  , GetOffsetWithoutStretch()             ? "yes" : "no");
@@ -286,8 +288,16 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use vertical interpolation in regridding  : %10s\n"  , GetUseVerticalInterpolation()         ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use default underburden                   : %10s\n"  , GetDefaultUnderburden()               ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Resample parameters to Segy with interpol.: %10s\n"  , GetResamplParamToSegyInterpol()       ? "yes" : "no");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Add white noise                           : %10s\n"  , GetWhiteNoise()                       ? "yes" : "no");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Standard deviation                      : %10.1f\n", GetStandardDeviation());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Add white noise                           : %10s\n"  , GetAddWhiteNoise()                    ? "yes" : "no");
+  if (GetAddWhiteNoise()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Standard deviation                      : %10.1f\n", GetStandardDeviation1());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Seed                                    : %10lu\n" , GetSeed1());
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Add noise to reflection coefficients      : %10s\n"  , GetAddNoiseToReflCoef()               ? "yes" : "no");
+  if (GetAddNoiseToReflCoef()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Standard deviation                      : %10.1f\n", GetStandardDeviation2());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Seed                                    : %10lu\n" , GetSeed2());
+  }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
   //

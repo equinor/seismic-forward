@@ -95,6 +95,9 @@ private:
   bool ParseWhiteNoise(TiXmlNode   * node,
                        std::string & errTxt);
 
+  bool ParseReflCoefNoise(TiXmlNode   * node,
+                               std::string & errTxt);
+
   bool ParseSeismicStack(TiXmlNode   * node,
                          std::string & errTxt);
 
