@@ -2,9 +2,6 @@
 #include "nrlib/geometry/interpolation.hpp"
 #include "nrlib/math/constants.hpp"
 
-#include "physics/zoeppritz.hpp"
-#include "physics/zoeppritz_ps.hpp"
-#include "physics/zoeppritz_pp.hpp"
 #include "physics/wavelet.hpp"
 
 #include "utils/output.hpp"

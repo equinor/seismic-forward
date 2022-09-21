@@ -1,13 +1,11 @@
 #include "nrlib/extrapolation/extrapolategrid2d.hpp"
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
-
 #include "nrlib/geometry/interpolation.hpp"
+
+#include "physics/wavelet.hpp"
 
 #include "tbb/compat/thread"
 
-#include "physics/zoeppritz_ps.hpp"
-#include "physics/zoeppritz_pp.hpp"
-#include "physics/wavelet.hpp"
 
 #include "seismic_parameters.hpp"
 
@@ -621,30 +619,20 @@ void SeismicParameters::FindVrms(std::vector<double>       & vrms_vec,
   }
 }
 
-
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------
 void SeismicParameters::FindReflections(NRLib::Grid2D<double>          & r_vec,
-                                           const NRLib::Grid2D<double> & theta,
+                                           const NRLib::Grid2D<double> & theta_vec,
                                            size_t                        i,
                                            size_t                        j)
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------
 {
-  bool        ps_seis   = model_settings_->GetPSSeismic();
-  Zoeppritz * zoeppritz = NULL;
-
-  if (ps_seis) {
-    zoeppritz = new ZoeppritzPS();
-  } else {
-    zoeppritz = new ZoeppritzPP();
-  }
-
-  double diffvp, meanvp, diffvs, meanvs, diffrho, meanrho;
+  bool ps_seis   = model_settings_->GetPSSeismic();
 
   std::vector<double> vp_vec (bottom_k_ - top_k_ + 3);
   std::vector<double> vs_vec (bottom_k_ - top_k_ + 3);
   std::vector<double> rho_vec(bottom_k_ - top_k_ + 3);
 
-  for (size_t off = 0; off < theta.GetNJ(); ++off) {
+  for (size_t off = 0; off < theta_vec.GetNJ(); ++off) {
     for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {
       size_t kk = k - top_k_;
       vp_vec [kk] = (*vpgrid_ )(i, j, kk);
@@ -652,20 +640,37 @@ void SeismicParameters::FindReflections(NRLib::Grid2D<double>          & r_vec,
       rho_vec[kk] = (*rhogrid_)(i, j, kk);
     }
     for (size_t k = top_k_; k <= bottom_k_ + 1; k++) {
-      size_t kk = k - top_k_;
-      diffvp  =      vp_vec [kk + 1] - vp_vec [kk];
-      meanvp  = 0.5*(vp_vec [kk + 1] + vp_vec [kk]);
-      diffvs  =      vs_vec [kk + 1] - vs_vec [kk];
-      meanvs  = 0.5*(vs_vec [kk + 1] + vs_vec [kk]);
-      diffrho =      rho_vec[kk + 1] - rho_vec[kk];
-      meanrho = 0.5*(rho_vec[kk + 1] + rho_vec[kk]);
+      size_t kk        = k - top_k_;
+      double diffvp    =      vp_vec [kk + 1] - vp_vec [kk];
+      double meanvp    = 0.5*(vp_vec [kk + 1] + vp_vec [kk]);
+      double diffvs    =      vs_vec [kk + 1] - vs_vec [kk];
+      double meanvs    = 0.5*(vs_vec [kk + 1] + vs_vec [kk]);
+      double diffrho   =      rho_vec[kk + 1] - rho_vec[kk];
+      double meanrho   = 0.5*(rho_vec[kk + 1] + rho_vec[kk]);
+      double refl;
+      double theta     = theta_vec(kk, off);
+      double vpvs      = meanvs/meanvp;
+      double sin2theta = sin(theta)*sin(theta);
 
-      double refl = zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs, theta(kk, off));
+      if (ps_seis) {
+        double sin_theta = sin(theta);
+        double cos_theta = cos(theta);
+        double cos_phi   = cos(asin(sin_theta*vpvs));
+        double a2        = 2*sin_theta*vpvs*(vpvs*sin2theta/cos_phi - cos_theta);
+        double a3        = sin_theta*(-0.5 + sin2theta*vpvs*vpvs - cos_theta*cos_phi*vpvs)/cos_phi;
+        refl             = a2*diffvs/meanvs + a3*diffrho/meanrho;
 
+      }
+      else {
+        double tan2theta = tan(theta)*tan(theta);
+        double a1        =  0.5*(1.0 + tan2theta);
+        double a2        = -4.0*sin2theta*vpvs*vpvs;
+        double a3        =  0.5*(1.0 + a2);
+        refl             = a1*diffvp/meanvp + a2*diffvs/meanvs + a3*diffrho/meanrho;
+      }
       r_vec(kk, off) = static_cast<float>(refl);
     }
   }
-  delete zoeppritz;
 }
 
 //----------------------------------------------------------

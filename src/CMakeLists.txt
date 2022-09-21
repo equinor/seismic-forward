@@ -11,9 +11,6 @@ set(CPP_FILES
     tasklist.cpp
 
     physics/wavelet.cpp
-    physics/zoeppritz.cpp
-    physics/zoeppritz_pp.cpp
-    physics/zoeppritz_ps.cpp
 
     utils/storm_writer.cpp
 	utils/output.cpp
@@ -36,9 +33,6 @@ set(H_FILES
     tasklist.hpp
 
     physics/wavelet.hpp
-    physics/zoeppritz.hpp
-    physics/zoeppritz_pp.hpp
-    physics/zoeppritz_ps.hpp
 
     utils/storm_writer.hpp
 	utils/output.hpp
