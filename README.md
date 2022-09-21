@@ -7,19 +7,16 @@ git config --global credential.helper cache                  # (activate memory 
 git config --global credential.helper 'cache --timeout=3600' # (timeout in seconds)```
 ```
 
-## Fork
+## Fork and checkout a branch
 
 If you intend to modify the repository, you should checkout a fork of this
 project rather than checking out the upstream repository directly. When you
 have made a fork, you can set this repository as your upstream using:
 
-## Choose a branch
-
-At the time being, it is adviced that you use branch release-4.1
-
 ```
 git checkout --track origin/release-4.1
 ```
+(At the time being, it is adviced that you use branch release-4.1)
 
 
 ## Prerequisites
