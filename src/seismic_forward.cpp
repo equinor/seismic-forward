@@ -447,30 +447,6 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       FindSeisLimits(twtx, param->twt_0, n_min, n_max, twt_wavelet);                             // Find limits for where to generate seismic, for each offset
     }//------------------------
 
-    /*
-    seismic_parameters.FindReflections(refl_pos, theta_pos, i, j); // Find reflection coeff - for each layer for each offset:
-
-    if (model_settings->GetOutputReflections()){                      // Keep reflections for zero offset if output on storm
-      for (size_t k = 0; k < nzrefl; ++k) {
-        rgridvec[0](i,j,k) = float(refl_pos(k,0));
-      }
-    }
-    if (model_settings->GetAddNoiseToReflCoef()) {
-      NRLib::Grid2D<double> noise(refl_pos.GetNI(), refl_pos.GetNJ());
-      double        std  = model_settings->GetStandardDeviation2();
-      unsigned long seed = model_settings->GetSeed2();
-      GenerateWhiteNoise(seed + long(i + nx*j), std, noise);
-
-      refl_pos += noise;
-
-      if (model_settings->GetOutputReflections()) { // Keep reflections for zero offset if output on storm and white noise
-        for (size_t k = 0; k < nzrefl; ++k) {
-          rgridvec[1](i,j,k) = float(refl_pos(k,0));
-        }
-      }
-    }
-    */
-
     MakeReflections(refl_pos,
                     rgridvec,
                     seismic_parameters,

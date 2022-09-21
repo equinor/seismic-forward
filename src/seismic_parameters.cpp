@@ -660,9 +660,7 @@ void SeismicParameters::FindReflections(NRLib::Grid2D<double>          & r_vec,
       diffrho =      rho_vec[kk + 1] - rho_vec[kk];
       meanrho = 0.5*(rho_vec[kk + 1] + rho_vec[kk]);
 
-      zoeppritz->ComputeConstants(theta(kk, off));
-
-      double refl = zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs);
+      double refl = zoeppritz->GetReflection(diffvp, meanvp, diffrho, meanrho, diffvs, meanvs, theta(kk, off));
 
       r_vec(kk, off) = static_cast<float>(refl);
     }
