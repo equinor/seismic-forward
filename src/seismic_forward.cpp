@@ -2,16 +2,14 @@
 #include "nrlib/geometry/interpolation.hpp"
 #include "nrlib/math/constants.hpp"
 
-#include "physics/wavelet.hpp"
-
 #include "utils/output.hpp"
+
+#include "tbb/compat/thread"
 
 #include "seismic_geometry.hpp"
 #include "seismic_output.hpp"
 #include "seismic_forward.hpp"
-
-
-#include "tbb/compat/thread"
+#include "wavelet.hpp"
 
 #include <ctime>
 #include <map>

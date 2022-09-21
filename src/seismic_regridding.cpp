@@ -1,17 +1,16 @@
 
+#include "nrlib/surface/regularsurfacerotated.hpp"
+#include "nrlib/surface/regularsurface.hpp"
+#include "nrlib/surface/surfaceio.hpp"
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
-//#include "nrlib/iotools/fileio.hpp"
-
-#include "physics/wavelet.hpp"
 
 #include "tbb/compat/thread"
 
 #include "seismic_regridding.hpp"
 #include "tasklist.hpp"
-
-//#include <fstream>
+#include "wavelet.hpp"
 
 #include <numeric>
 #include <ctime>
@@ -20,9 +19,6 @@
 #include <omp.h>
 #endif
 
-#include "nrlib/surface/regularsurfacerotated.hpp"
-#include "nrlib/surface/regularsurface.hpp"
-#include "nrlib/surface/surfaceio.hpp"
 
 //-----------------------------------------------------------------------------------
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parameters,
