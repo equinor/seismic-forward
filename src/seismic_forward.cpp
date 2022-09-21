@@ -447,7 +447,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       FindSeisLimits(twtx, param->twt_0, n_min, n_max, twt_wavelet);                             // Find limits for where to generate seismic, for each offset
     }//------------------------
 
-    seismic_parameters.FindNMOReflections(refl_pos, theta_pos, i, j); // Find reflection coeff - for each layer for each offset:
+    seismic_parameters.FindReflections(refl_pos, theta_pos, i, j); // Find reflection coeff - for each layer for each offset:
 
     if (model_settings->GetOutputReflections()){                      // Keep reflections for zero offset if output on storm
       for (size_t k = 0; k < nzrefl; ++k) {
@@ -650,7 +650,18 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
     for (size_t k = 0; k < nzrefl; ++k) {
       twt_vec[k]   = twtgrid(i,j,k);
     }
-    seismic_parameters.FindReflections(refl_pos, param->theta_vec, i, j);
+
+    size_t kdim = seismic_parameters.GetBottomK() - seismic_parameters.GetTopK() + 2;
+    const std::vector<double> theta_vec = param->theta_vec;
+    NRLib::Grid2D<double> theta(kdim, theta_vec.size());
+    for (size_t k = 0 ; k < kdim ; ++k) {
+      for (size_t t = 0 ; t < theta_vec.size() ; ++t) {
+        theta(k, t) = theta_vec[t];
+      }
+    }
+
+    seismic_parameters.FindReflections(refl_pos, theta, i, j);
+    //seismic_parameters.FindReflections(refl_pos, theta, i, j);
 
     if (model_settings->GetOutputReflections()) { // Keep reflections for zero offset if output on storm
       for (size_t k = 0; k < nzrefl; ++k) {

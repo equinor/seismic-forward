@@ -123,13 +123,8 @@ class SeismicParameters
                   size_t                      j,
                   bool                        include_regular) const;
 
-    void  FindNMOReflections(NRLib::Grid2D<double>       & r_vec,
-                             const NRLib::Grid2D<double> & theta_vec,
-                             size_t                        i,
-                             size_t                        j);
-
     void  FindReflections(NRLib::Grid2D<double>       & r_vec,
-                          const std::vector<double>   & theta_vec,
+                          const NRLib::Grid2D<double> & theta_vec,
                           size_t                        i,
                           size_t                        j);
 
