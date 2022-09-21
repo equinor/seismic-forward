@@ -28,6 +28,15 @@ class SeismicForward {
 
   private:
 
+    static void MakeReflections(NRLib::Grid2D<double>             & refl_pos,
+                                std::vector<NRLib::StormContGrid> & rgridvec,
+                                SeismicParameters                 & seismic_parameters,
+                                ModelSettings                     * model_settings,
+                                NRLib::Grid2D<double>             & theta,
+                                size_t                              nx,
+                                size_t                              i,
+                                size_t                              j);
+
     static void MakeNMOSeismic(SeismicParameters & seismic_parameters,
                                ModelSettings     * model_settings);
 

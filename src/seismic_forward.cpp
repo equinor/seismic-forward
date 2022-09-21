@@ -447,6 +447,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       FindSeisLimits(twtx, param->twt_0, n_min, n_max, twt_wavelet);                             // Find limits for where to generate seismic, for each offset
     }//------------------------
 
+    /*
     seismic_parameters.FindReflections(refl_pos, theta_pos, i, j); // Find reflection coeff - for each layer for each offset:
 
     if (model_settings->GetOutputReflections()){                      // Keep reflections for zero offset if output on storm
@@ -468,6 +469,16 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
         }
       }
     }
+    */
+
+    MakeReflections(refl_pos,
+                    rgridvec,
+                    seismic_parameters,
+                    model_settings,
+                    theta_pos,
+                    nx,
+                    i,
+                    j);
 
     SeisConvolutionNMO(timegrid_pos, // Generate seismic
                        refl_pos,
@@ -651,39 +662,23 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
       twt_vec[k]   = twtgrid(i,j,k);
     }
 
-    size_t kdim = seismic_parameters.GetBottomK() - seismic_parameters.GetTopK() + 2;
+    //size_t kdim = seismic_parameters.GetBottomK() - seismic_parameters.GetTopK() + 3;
     const std::vector<double> theta_vec = param->theta_vec;
-    NRLib::Grid2D<double> theta(kdim, theta_vec.size());
-    for (size_t k = 0 ; k < kdim ; ++k) {
+    NRLib::Grid2D<double> theta(nzrefl, theta_vec.size());
+    for (size_t k = 0 ; k < nzrefl ; ++k) {
       for (size_t t = 0 ; t < theta_vec.size() ; ++t) {
         theta(k, t) = theta_vec[t];
       }
     }
 
-    seismic_parameters.FindReflections(refl_pos, theta, i, j);
-    //seismic_parameters.FindReflections(refl_pos, theta, i, j);
-
-    if (model_settings->GetOutputReflections()) { // Keep reflections for zero offset if output on storm
-      for (size_t k = 0; k < nzrefl; ++k) {
-        rgridvec[0](i,j,k) = float(refl_pos(k,0));
-      }
-    }
-
-
-    if (model_settings->GetAddNoiseToReflCoef()) {
-      NRLib::Grid2D<double> noise(refl_pos.GetNI(), refl_pos.GetNJ());
-      double        std  = model_settings->GetStandardDeviation2();
-      unsigned long seed = model_settings->GetSeed2();
-      GenerateWhiteNoise(seed + long(i + nx*j), std, noise);
-
-      refl_pos += noise;
-
-      if (model_settings->GetOutputReflections()) { // Keep reflections for zero offset if output on storm and white noise
-        for (size_t k = 0; k < nzrefl; ++k) {
-          rgridvec[1](i,j,k) = float(refl_pos(k,0));
-        }
-      }
-    }
+    MakeReflections(refl_pos,
+                    rgridvec,
+                    seismic_parameters,
+                    model_settings,
+                    theta,
+                    nx,
+                    i,
+                    j);
 
     SeisConvolution(timegrid_pos, // Generate seismic
                     refl_pos,
@@ -755,6 +750,45 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
   else {
     result_trace->SetIsEmpty(true);
     param->result_queue.push(result_trace);
+  }
+}
+
+//-----------------------------------------------------------------------------------
+void SeismicForward::MakeReflections(NRLib::Grid2D<double>             & refl,
+                                     std::vector<NRLib::StormContGrid> & rgridvec,
+                                     SeismicParameters                 & seismic_parameters,
+                                     ModelSettings                     * model_settings,
+                                     NRLib::Grid2D<double>             & theta,
+                                     size_t                              nx,
+                                     size_t                              i,
+                                     size_t                              j)
+//-----------------------------------------------------------------------------------
+{
+  seismic_parameters.FindReflections(refl, theta, i, j);
+
+  bool          output_refl = model_settings->GetOutputReflections();
+  bool          add_noise   = model_settings->GetAddNoiseToReflCoef();
+  double        std         = model_settings->GetStandardDeviation2();
+  unsigned long seed        = model_settings->GetSeed2();
+  size_t        m           = refl.GetNI();
+  size_t        n           = refl.GetNJ();
+
+  if (output_refl) { // Keep reflections for zero offset if output on storm
+    for (size_t k = 0 ; k < m ; ++k) {
+      rgridvec[0](i, j, k) = static_cast<float>(refl(k, 0));
+    }
+  }
+  if (add_noise) {
+    NRLib::Grid2D<double> noise(m, n);
+    GenerateWhiteNoise(seed + static_cast<long>(i + nx*j), std, noise);
+
+    refl += noise;
+
+    if (output_refl) { // Keep reflections for zero offset if output on storm and white noise
+      for (size_t k = 0 ; k < m ; ++k) {
+        rgridvec[1](i, j, k) = static_cast<float>(refl(k, 0));
+      }
+    }
   }
 }
 
