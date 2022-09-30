@@ -479,12 +479,19 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
                        n_max);
 
     if (add_white_noise) {                // Add noise to seismic signal
-      AddWhiteNoise(timegrid_pos,
-                    param->offset_vec,
-                    sd1,
-                    seed1 + long(i + nx*j),
-                    n_min,
-                    n_max);
+      size_t nt   = timegrid_pos.GetNI();
+      size_t noff = timegrid_pos.GetNJ();
+
+      NRLib::Grid2D<double> noise(nt, noff);
+      GenerateWhiteNoise(seed1, sd1, noise);
+
+      for (size_t off = 0 ; off < noff ; off++) {
+        for (size_t k = 0 ; k < nt ; k++) {
+          if (k >= n_min[off] && k <= n_max[off]) {
+            timegrid_pos(k, off) += noise(k, off);
+          }
+        }
+      }
     }
 
     //NMO correction:
@@ -696,7 +703,7 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
                     i,
                     j);
 
-    SeisConvolution(timegrid_pos, // Generate seismic
+    SeisConvolution(timegrid_pos,         // Generate seismic
                     refl_pos,
                     twt_vec,
                     zgrid,
@@ -712,10 +719,19 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
                     n_max);
 
     if (add_white_noise) {                // Add noise to seismic signal
+      size_t nt     = timegrid_pos.GetNI();
+      size_t ntheta = timegrid_pos.GetNJ();
 
-      NRLib::Grid2D<double> noise(timegrid_pos.GetNI(), timegrid_pos.GetNJ());
+      NRLib::Grid2D<double> noise(nt, ntheta);
       GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise);
-      timegrid_pos += noise;
+
+      for (size_t it = 0 ; it < ntheta ; it++) {
+        for (size_t k = 0 ; k < nt ; k++) {
+          if (k >= n_min && k <= n_max) {
+            timegrid_pos(k, it) += noise(k, it);
+          }
+        }
+      }
     }
 
     //stacking of angles:
@@ -1429,38 +1445,6 @@ void SeismicForward::SeisConvolution(NRLib::Grid2D<double>               & timeg
       }
     }
   }
-}
-
-
-//--------------------------------------------------------------------------
-void SeismicForward::AddWhiteNoise(NRLib::Grid2D<double>     & timegrid_pos,
-                                   const std::vector<double> & offset,
-                                   double                      sd,
-                                   unsigned long               seed,
-                                   const std::vector<size_t> & n_min,
-                                   const std::vector<size_t> & n_max)
-//--------------------------------------------------------------------------
-{
-  size_t nt   = timegrid_pos.GetNI();
-  size_t noff = offset.size();
-
-  // I do not thing the below code is needed ...
-  //double x, y, z;
-  //zgrid.FindCenterOfCell(i, j, 0, x, y, z);
-  //double topt = toptime.GetZ(x, y);
-
-  //if (toptime.IsMissing(topt) == false) {
-  NRLib::Grid2D<double> noise(nt, noff);
-  GenerateWhiteNoise(seed, sd, noise);
-
-  for (size_t off = 0 ; off < noff ; off++) {
-    for (size_t k = 0 ; k < nt ; k++) {
-      if (k >= n_min[off] && k <= n_max[off]) {
-        timegrid_pos(k, off) += noise(k, off);
-      }
-    }
-  }
-  //}
 }
 
 //--------------------------------------------------------------------------

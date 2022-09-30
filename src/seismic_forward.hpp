@@ -92,13 +92,6 @@ class SeismicForward {
                                    const std::vector<size_t>           & n_min,
                                    const std::vector<size_t>           & n_max);
 
-  static void   AddWhiteNoise(NRLib::Grid2D<double>     & timegrid_pos,
-                              const std::vector<double> & offset,
-                              double                      sd,
-                              unsigned long               seed,
-                              const std::vector<size_t> & n_min,
-                              const std::vector<size_t> & n_max);
-
     static void SeisConvolution(NRLib::Grid2D<double>               & timegrid_pos,
                                 NRLib::Grid2D<double>               & refl_pos,
                                 const std::vector<double>           & twt,
