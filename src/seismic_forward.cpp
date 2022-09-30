@@ -341,6 +341,14 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
     double                              z_extrapol_factor           = model_settings->GetZExtrapolFactor();
     bool                                offset_without_stretch      = model_settings->GetOffsetWithoutStretch();
 
+    double                              z_w                         = model_settings->GetZw();
+    double                              v_w                         = model_settings->GetVw();
+
+    bool                                add_white_noise             = model_settings->GetAddWhiteNoise();
+    double                              sd1                         = model_settings->GetStandardDeviation1();
+    unsigned long                       seed1                       = model_settings->GetSeed1();
+
+
     std::vector<size_t> n_min(param->offset_vec.size());
     std::vector<size_t> n_max(param->offset_vec.size());
     std::vector<double> twt_vec(nzrefl);
@@ -390,8 +398,6 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       double twt_pp_below    = twt_pp_vec[nzrefl - 1] + twt_pp_extrapol;
       double twt_ss_below    = twt_ss_vec[nzrefl - 1] + twt_ss_extrapol;
 
-      double z_w             = model_settings->GetZw();
-      double v_w             = model_settings->GetVw();
       double twt_w           = 2000 * z_w /v_w; //twt_above pp, ps, ss
 
       //resample twt_pp and twt_ss
@@ -442,7 +448,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       FindSeisLimits(twtx, param->twt_0, n_min, n_max, twt_wavelet);                             // Find limits for where to generate seismic, for each offset
     }      //----------------------------------
 
-    MakeReflections(refl_pos,
+    MakeReflections(refl_pos,             // Also add noise if requested
                     rgridvec,
                     seismic_parameters,
                     model_settings,
@@ -451,7 +457,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
                     i,
                     j);
 
-    SeisConvolutionNMO(timegrid_pos, // Generate seismic
+    SeisConvolutionNMO(timegrid_pos,      // Generate seismic
                        refl_pos,
                        twtx,
                        zgrid,
@@ -466,13 +472,13 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
                        n_min,
                        n_max);
 
-
-    if (model_settings->GetAddWhiteNoise()) { // Add noise to seismic signal
-      NRLib::Grid2D<double> noise(timegrid_pos.GetNI(), timegrid_pos.GetNJ());
-      double        std  = model_settings->GetStandardDeviation1();
-      unsigned long seed = model_settings->GetSeed1();
-      GenerateWhiteNoise(seed + long(i + nx*j), std, noise);
-      timegrid_pos += noise;
+    if (add_white_noise) {                // Add noise to seismic signal
+      AddWhiteNoise(timegrid_pos,
+                    param->offset_vec,
+                    sd1,
+                    seed1 + long(i + nx*j),
+                    n_min,
+                    n_max);
     }
 
     //NMO correction:
@@ -1312,6 +1318,7 @@ void SeismicForward::SeisConvolutionNMO(NRLib::Grid2D<double>               & ti
   double rickerLimit = wavelet->GetTwtLength();
   size_t nt          = timegrid_pos.GetNI();
   size_t nc          = refl_pos.GetNI();
+  size_t noff        = offset.size();
 
   double x, y, z;
   zgrid.FindCenterOfCell(i, j, 0, x, y, z);
@@ -1319,11 +1326,11 @@ void SeismicForward::SeisConvolutionNMO(NRLib::Grid2D<double>               & ti
 
   if (toptime.IsMissing(topt) == false) {
 
-    for (size_t off = 0; off < offset.size(); off++) {
+    for (size_t off = 0 ; off < noff ; off++) {
       double t = t0;
 
-      for (size_t k = 0; k < nt; k++) {
-        if ((k > n_min[off] || k == n_min[off]) && k < (n_max[off] + 1)) {
+      for (size_t k = 0 ; k < nt ; k++) {
+        if (k >= n_min[off] && k <= n_max[off]) {
           double seis = 0.0;
           for (size_t kk = 0; kk < nc; kk++) {
             double twtx_kk = twtx(kk, off);
@@ -1342,8 +1349,8 @@ void SeismicForward::SeisConvolutionNMO(NRLib::Grid2D<double>               & ti
     }
   }
   else {
-    for (size_t k = 0; k < nt; k++){
-      for (size_t off = 0; off < offset.size(); off++) {
+    for (size_t k = 0 ; k < nt ; k++){
+      for (size_t off = 0 ; off < noff ; off++) {
         timegrid_pos(k, off) = 0.0;
       }
     }
@@ -1407,6 +1414,38 @@ void SeismicForward::SeisConvolution(NRLib::Grid2D<double>               & timeg
       }
     }
   }
+}
+
+
+//--------------------------------------------------------------------------
+void SeismicForward::AddWhiteNoise(NRLib::Grid2D<double>     & timegrid_pos,
+                                   const std::vector<double> & offset,
+                                   double                      sd,
+                                   unsigned long               seed,
+                                   const std::vector<size_t> & n_min,
+                                   const std::vector<size_t> & n_max)
+//--------------------------------------------------------------------------
+{
+  size_t nt   = timegrid_pos.GetNI();
+  size_t noff = offset.size();
+
+  // I do not thing the below code is needed ...
+  //double x, y, z;
+  //zgrid.FindCenterOfCell(i, j, 0, x, y, z);
+  //double topt = toptime.GetZ(x, y);
+
+  //if (toptime.IsMissing(topt) == false) {
+  NRLib::Grid2D<double> noise(nt, noff);
+  GenerateWhiteNoise(seed, sd, noise);
+
+  for (size_t off = 0 ; off < noff ; off++) {
+    for (size_t k = 0 ; k < nt ; k++) {
+      if (k >= n_min[off] && k <= n_max[off]) {
+        timegrid_pos(k, off) += noise(k, off);
+      }
+    }
+  }
+  //}
 }
 
 //--------------------------------------------------------------------------
