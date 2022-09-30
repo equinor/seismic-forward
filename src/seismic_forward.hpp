@@ -31,8 +31,11 @@ class SeismicForward {
     static void MakeReflections(NRLib::Grid2D<double>             & refl_pos,
                                 std::vector<NRLib::StormContGrid> & rgridvec,
                                 SeismicParameters                 & seismic_parameters,
-                                ModelSettings                     * model_settings,
                                 NRLib::Grid2D<double>             & theta,
+                                bool                                output_refl,
+                                bool                                add_noise,
+                                double                              std,
+                                unsigned long                       seed,
                                 size_t                              nx,
                                 size_t                              i,
                                 size_t                              j);

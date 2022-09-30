@@ -344,10 +344,13 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
     double                              z_w                         = model_settings->GetZw();
     double                              v_w                         = model_settings->GetVw();
 
+    bool                                output_refl                 = model_settings->GetOutputReflections();
+    bool                                add_noise                   = model_settings->GetAddNoiseToReflCoef();
     bool                                add_white_noise             = model_settings->GetAddWhiteNoise();
     double                              sd1                         = model_settings->GetStandardDeviation1();
+    double                              sd2                         = model_settings->GetStandardDeviation2();
     unsigned long                       seed1                       = model_settings->GetSeed1();
-
+    unsigned long                       seed2                       = model_settings->GetSeed2();
 
     std::vector<size_t> n_min(param->offset_vec.size());
     std::vector<size_t> n_max(param->offset_vec.size());
@@ -451,8 +454,11 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
     MakeReflections(refl_pos,             // Also add noise if requested
                     rgridvec,
                     seismic_parameters,
-                    model_settings,
                     theta_pos,
+                    output_refl,
+                    add_noise,
+                    sd2,
+                    seed2,
                     nx,
                     i,
                     j);
@@ -656,6 +662,14 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
     size_t                              n_min                   = 0;
     size_t                              n_max                   = nt;
 
+    bool                                output_refl             = model_settings->GetOutputReflections();
+    bool                                add_noise               = model_settings->GetAddNoiseToReflCoef();
+    bool                                add_white_noise         = model_settings->GetAddWhiteNoise();
+    double                              sd1                     = model_settings->GetStandardDeviation1();
+    double                              sd2                     = model_settings->GetStandardDeviation2();
+    unsigned long                       seed1                   = model_settings->GetSeed1();
+    unsigned long                       seed2                   = model_settings->GetSeed2();
+
     //get twt at all layers from twtgrid
     for (size_t k = 0; k < nzrefl; ++k) {
       twt_vec[k]   = twtgrid(i,j,k);
@@ -670,11 +684,14 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
       }
     }
 
-    MakeReflections(refl_pos,
+    MakeReflections(refl_pos,             // Also add noise if requested
                     rgridvec,
                     seismic_parameters,
-                    model_settings,
                     theta,
+                    output_refl,
+                    add_noise,
+                    sd2,
+                    seed2,
                     nx,
                     i,
                     j);
@@ -694,11 +711,10 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
                     n_min,
                     n_max);
 
-    if (model_settings->GetAddWhiteNoise()) { // Add noise to seismic signal
+    if (add_white_noise) {                // Add noise to seismic signal
+
       NRLib::Grid2D<double> noise(timegrid_pos.GetNI(), timegrid_pos.GetNJ());
-      double        std  = model_settings->GetStandardDeviation1();
-      unsigned long seed = model_settings->GetSeed1();
-      GenerateWhiteNoise(seed + static_cast<long>(i + nx*j), std, noise);
+      GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise);
       timegrid_pos += noise;
     }
 
@@ -778,8 +794,11 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
 void SeismicForward::MakeReflections(NRLib::Grid2D<double>             & refl,
                                      std::vector<NRLib::StormContGrid> & rgridvec,
                                      SeismicParameters                 & seismic_parameters,
-                                     ModelSettings                     * model_settings,
                                      NRLib::Grid2D<double>             & theta,
+                                     bool                                output_refl,
+                                     bool                                add_noise,
+                                     double                              std,
+                                     unsigned long                       seed,
                                      size_t                              nx,
                                      size_t                              i,
                                      size_t                              j)
@@ -787,12 +806,8 @@ void SeismicForward::MakeReflections(NRLib::Grid2D<double>             & refl,
 {
   seismic_parameters.FindReflections(refl, theta, i, j);
 
-  bool          output_refl = model_settings->GetOutputReflections();
-  bool          add_noise   = model_settings->GetAddNoiseToReflCoef();
-  double        std         = model_settings->GetStandardDeviation2();
-  unsigned long seed        = model_settings->GetSeed2();
-  size_t        m           = refl.GetNI();
-  size_t        n           = refl.GetNJ();
+  size_t m = refl.GetNI();
+  size_t n = refl.GetNJ();
 
   if (output_refl) { // Keep reflections for zero offset if output on storm
     for (size_t k = 0 ; k < m ; ++k) {
