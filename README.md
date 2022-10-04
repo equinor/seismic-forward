@@ -7,30 +7,16 @@ git config --global credential.helper cache                  # (activate memory 
 git config --global credential.helper 'cache --timeout=3600' # (timeout in seconds)```
 ```
 
-## Fork
+## Fork and checkout a branch
 
 If you intend to modify the repository, you should checkout a fork of this
 project rather than checking out the upstream repository directly. When you
 have made a fork, you can set this repository as your upstream using:
 
 ```
-git remote add upstream https://github.com/equinor/seismic-forward.git
-```
-
-Verify upstream and fetch the branches
-
-```
-git fetch upstream
-git branch -a
-```
-
-## Choose a branch
-
-At the time being, it is adviced that you use branch release-4.1:
-
-```
 git checkout --track origin/release-4.1
 ```
+(At the time being, it is adviced that you use branch release-4.1)
 
 
 ## Prerequisites
@@ -83,7 +69,8 @@ make
 The executable can be run directly once an XML model file/job file has been created. The only input data needed is an Eclipse-grid with Vp, Vs and Rho.
 
 ```
-seismic_forward my_job_file.xml
+cd directory-with-Eclipse-grid
+path-to-executable/seismic_forward my_job_file.xml
 ```
 
 

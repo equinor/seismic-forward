@@ -1,55 +1,81 @@
 #ifndef SEISMIC_FORWARD_HPP
 #define SEISMIC_FORWARD_HPP
 
+#include "nrlib/stormgrid/stormcontgrid.hpp"
+#include "nrlib/surface/regularsurface.hpp"
+#include "nrlib/random/randomgenerator.hpp"
+#include "nrlib/random/normal.hpp"
+
+#include "utils/gen_seis_trace_params.hpp"
+#include "utils/output.hpp"
+#include "utils/trace.hpp"
+
+#include "seismic_parameters.hpp"
+#include "modelsettings.hpp"
+
+#include <tbb/concurrent_queue.h>
+
+#include <algorithm>
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include "modelsettings.hpp"
-#include <seismic_parameters.hpp>
-#include <algorithm>
-
-#include <utils/output.hpp>
-#include <utils/trace.hpp>
-#include <utils/gen_seis_trace_params.hpp>
-#include <tbb/concurrent_queue.h>
-
-#include <nrlib/stormgrid/stormcontgrid.hpp>
-#include <nrlib/surface/regularsurface.hpp>
-//#include "nrlib/geometry/interpolation.hpp"
-
 
 class SeismicForward {
   public:
 
-    static void DoSeismicForward(SeismicParameters & seismic_parameters);
+    static void DoSeismicForward(SeismicParameters & seismic_parameters,
+                                 ModelSettings     * model_settings);
 
   private:
 
-    static void MakeNMOSeismic(SeismicParameters & seismic_parameters);
+    static void MakeReflections(NRLib::Grid2D<double>             & refl_pos,
+                                std::vector<NRLib::StormContGrid> & rgridvec,
+                                SeismicParameters                 & seismic_parameters,
+                                NRLib::Grid2D<double>             & theta,
+                                bool                                output_refl,
+                                bool                                add_noise,
+                                double                              std,
+                                unsigned long                       seed,
+                                size_t                              nx,
+                                size_t                              i,
+                                size_t                              j);
 
-    static void MakeSeismic(SeismicParameters & seismic_parameters);
+    static void MakeNMOSeismic(SeismicParameters & seismic_parameters,
+                               ModelSettings     * model_settings);
+
+    static void MakeSeismic(SeismicParameters & seismic_parameters,
+                            ModelSettings     * model_settings);
+
+    static void GenerateSeismicTracesQueue(Output             * output,
+                                           GenSeisTraceParams * param,
+                                           ModelSettings      * model_settings);
+
+    static void GenerateSeismicTraces(Output             * output,
+                                      GenSeisTraceParams * param,
+                                      ModelSettings      * model_settings,
+                                      Trace              * trace);
+
+    static void GenerateNMOSeismicTracesQueue(Output             * nmo_output,
+                                              GenSeisTraceParams * param,
+                                              ModelSettings      * model_settings);
+
+    static void GenerateNMOSeismicTraces(Output             * nmo_output,
+                                         GenSeisTraceParams * param,
+                                         ModelSettings      * model_settings,
+                                         Trace              * trace);
 
     static bool GenerateTraceOk(SeismicParameters & seismic_parameters,
+                                ModelSettings     * model_settings,
                                 size_t              i,
                                 size_t              j);
+
+    static void GenerateWhiteNoise(unsigned long           seed,
+                                   double                  std_dev,
+                                   NRLib::Grid2D<double> & noise);
 
     static void WriteSeismicTraces(GenSeisTraceParams * param,
                                    ModelSettings      * model_settings,
                                    Output             * output);
-
-    static void GenerateSeismicTracesQueue(Output             * output,
-                                           GenSeisTraceParams * param);
-
-    static void GenerateSeismicTraces(Output             * output,
-                                      GenSeisTraceParams * param,
-                                      Trace              * trace);
-
-    static void GenerateNMOSeismicTracesQueue(Output             * nmo_output,
-                                              GenSeisTraceParams * param);
-
-    static void GenerateNMOSeismicTraces(Output             * nmo_output,
-                                         GenSeisTraceParams * param,
-                                         Trace              * trace);
 
     static void SeisConvolutionNMO(NRLib::Grid2D<double>               & timegrid_pos,
                                    NRLib::Grid2D<double>               & refl_pos,
