@@ -1,5 +1,10 @@
 <seismic-forward>
 
+<project-settings>
+  <traces-in-memory> 4 </traces-in-memory>
+  <max-threads>      1 </max-threads>
+</project-settings>
+
 <elastic-param>
   <eclipse-file > ../../01_nmo_pp/input/Input_grid.grdecl </eclipse-file>
 
@@ -37,10 +42,10 @@
   <scale> -1 </scale>
 </wavelet>
 
-<white-noise>
+<add-noise-to-refl-coef>
   <standard-deviation> 0.15 </standard-deviation>
   <seed> 123456 </seed>
-</white-noise>
+</add-noise-to-refl-coef>
 
 <output-grid>
   <segy-file-format> seisworks </segy-file-format>
@@ -94,7 +99,5 @@
 
 <ps-seismic> yes </ps-seismic>
 <timeshift-twt> ../../01_nmo_pp/input/Input_timeshift_minus50_twt_PS.storm </timeshift-twt>
-<traces-in-memory> 4 </traces-in-memory>
-<max-threads> 1 </max-threads>
 
 </seismic-forward>

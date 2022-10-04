@@ -10,6 +10,7 @@ class Output
 
 public:
   Output(SeismicParameters   & seismic_parameters,
+         ModelSettings       * model_settings,
          std::vector<double>   twt_0,
          std::vector<double>   z_0,
          std::vector<double>   twts_0,

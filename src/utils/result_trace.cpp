@@ -1,17 +1,19 @@
 #include "result_trace.hpp"
 #include <seismic_geometry.hpp>
 
-
+//------------------------------------------------------------------------
 ResultTrace::ResultTrace(SeismicParameters         & seismic_parameters,
+                         ModelSettings             * model_settings,
                          std::vector<double>         twt_0,
                          std::vector<double>         z_0,
                          std::vector<double>         twts_0,
                          size_t                      time_samples_stretch,
                          const std::vector<double> & offset_vec)
+//------------------------------------------------------------------------
   : empty_(false)
 {
   size_t nzrefl = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
-  if (seismic_parameters.GetModelSettings()->GetNMOCorr()) {
+  if (model_settings->GetNMOCorr()) {
 
     twtx_reg_.           Resize(twt_0.size(), offset_vec.size());
     twtx_.               Resize(nzrefl,       offset_vec.size());
@@ -19,7 +21,7 @@ ResultTrace::ResultTrace(SeismicParameters         & seismic_parameters,
     refl_.               Resize(nzrefl,       offset_vec.size());
     prenmo_timegrid_pos_.Resize(twt_0.size(), offset_vec.size());
 
-    if (seismic_parameters.GetModelSettings()->GetPSSeismic()) {
+    if (model_settings->GetPSSeismic()) {
       offset_pp_.    Resize(nzrefl, offset_vec.size());
       offset_ss_.    Resize(nzrefl, offset_vec.size());
       offset_pp_reg_.Resize(twt_0.size(), offset_vec.size());
@@ -28,14 +30,14 @@ ResultTrace::ResultTrace(SeismicParameters         & seismic_parameters,
   }
   timegrid_pos_.Resize(time_samples_stretch, offset_vec.size());
 
-  if (seismic_parameters.GetModelSettings()->GetStackOutput() || seismic_parameters.GetModelSettings()->GetStormOutput()) {
+  if (model_settings->GetStackOutput() || model_settings->GetStormOutput()) {
     timegrid_stack_pos_.Resize(time_samples_stretch, 1);
   }
-  if (seismic_parameters.GetModelSettings()->GetTimeshiftOutput()) {
+  if (model_settings->GetTimeshiftOutput()) {
     timeshiftgrid_pos_.      Resize(twts_0.size(), offset_vec.size());
     timeshiftgrid_stack_pos_.Resize(twts_0.size(), 1);
   }
-  if (seismic_parameters.GetModelSettings()->GetDepthOutput()){
+  if (model_settings->GetDepthOutput()){
     depthgrid_pos_.      Resize(z_0.size(), offset_vec.size());
     depthgrid_stack_pos_.Resize(z_0.size(), 1);
   }
