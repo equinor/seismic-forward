@@ -74,6 +74,7 @@ private:
                             size_t                         j);
 
   static void FindEdges(SeismicParameters                   & seismic_parameters,
+                        ModelSettings                       * model_settings,
                         const NRLib::EclipseGeometry        & geometry,
                         const NRLib::Grid<double>           & vp_grid,
                         const NRLib::Grid<double>           & vs_grid,
@@ -103,6 +104,7 @@ private:
                                    size_t                         botk);
 
   static void FindCorners(SeismicParameters                   & seismic_parameters,
+                          ModelSettings                       * model_settings,
                           const NRLib::EclipseGeometry        & geometry,
                           const NRLib::Grid<double>           & vp_grid,
                           const NRLib::Grid<double>           & vs_grid,
@@ -132,37 +134,50 @@ private:
 
 
   static void WriteElasticParametersSegy(SeismicParameters & seismic_parameters,
+                                         bool                interpolate,
+                                         size_t              queue_capacity,
                                          size_t              n_threads,
                                          bool                time);
 
-  static void WriteExtraParametersSegy(SeismicParameters & seismic_parameters,
-                                       size_t              n_threads,
-                                       bool                time);
+  static void WriteExtraParametersSegy(SeismicParameters        & seismic_parameters,
+                                       std::vector<std::string> & filenames,
+                                       bool                       interpolate,
+                                       size_t                     queue_capacity,
+                                       size_t                     n_threads,
+                                       bool                       time);
 
   static void WriteParametersTimeSegy(SeismicParameters                  & seismic_parameters,
+                                      bool                                 interpolate,
+                                      size_t                               queue_capacity,
                                       size_t                               n_threads,
                                       std::vector<NRLib::StormContGrid*>   input_grid,
                                       std::vector<std::string>             filenames);
 
   static void WriteParametersDepthSegy(SeismicParameters                  & seismic_parameters,
+                                       bool                                 interpolate,
+                                       size_t                               queue_capacity,
                                        size_t                               n_threads,
                                        std::vector<NRLib::StormContGrid*>   input_grid,
                                        std::vector<std::string>             filenames);
 
-  static void WriteParametersSegyInParallel(SeismicParameters                 & seismic_parameters,
-                                            size_t                              n_threads,
-                                            std::vector<NRLib::StormContGrid*>  input_grid,
-                                            std::vector<std::string>            filenames,
-                                            std::vector<double>               & time_or_depth_vec_reg,
-                                            NRLib::StormContGrid              & time_or_depth_grid,
-                                            bool                                time);
+  static void WriteParametersSegyInParallel(SeismicParameters                  & seismic_parameters,
+                                            bool                                 interpolate,
+                                            size_t                               queue_capacity,
+                                            size_t                               n_threads,
+                                            std::vector<NRLib::StormContGrid*>   input_grid,
+                                            std::vector<std::string>             filenames,
+                                            std::vector<double>                & time_or_depth_vec_reg,
+                                            NRLib::StormContGrid               & time_or_depth_grid,
+                                            bool                                 time);
+
+  static void GenerateParameterGridForOutputQueue(GenResamplParam * params,
+                                                  ResamplOutput   * resampl_output,
+                                                  bool              interpolate);
 
   static void GenerateParameterGridForOutput(GenResamplParam * params,
                                              Trace           * trace,
-                                             ResamplOutput   * resampl_output);
-
-  static void GenerateParameterGridForOutputQueue(GenResamplParam * params,
-                                                  ResamplOutput   * resampl_output);
+                                             ResamplOutput   * resampl_output,
+                                             bool              interpolate);
 
   static void WriteResampledParameter(GenResamplParam * params,
                                       ResamplOutput   * resampl_output);

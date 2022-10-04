@@ -41,10 +41,17 @@
   <scale> -1 </scale>
 </wavelet>
 
+<!--
 <white-noise>
   <standard-deviation> 0.1 </standard-deviation>
   <seed> 123456 </seed>
 </white-noise>
+-->
+
+<add-noise-to-refl-coef>
+  <standard-deviation> 0.1 </standard-deviation>
+  <seed> 123456 </seed>
+</add-noise-to-refl-coef>
 
 <output-grid>
   <segy-file-format> seisworks </segy-file-format>
@@ -97,7 +104,5 @@
 </output-parameters>
 
 <timeshift-twt> ../../01_nmo_pp/input/Input_timeshift_minus50_twt.storm </timeshift-twt>
-
-<traces-in-memory> 4 </traces-in-memory>
 
 </seismic-forward>

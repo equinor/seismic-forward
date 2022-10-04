@@ -79,17 +79,24 @@ XmlModelFile::XmlModelFile(const std::string  & fileName)
       errTxt = "'" + std::string(fileName) + "' is not a SeismicForward model file (lacks the <seismic-forward> keyword.)\n";
     }
 
-    if (errTxt != "") {
+    if (errTxt == "") {
+      modelSettings_->CheckConsistency(errTxt);
+      if (errTxt == "") {
+        modelSettings_->SetDerivedVariables();
+      }
+      else {
+        NRLib::LogKit::LogMessage(NRLib::LogKit::Error, errTxt);
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nAborting\n");
+        failed_ = true;
+      }
+    }
+    else {
       NRLib::LogKit::WriteHeader("Invalid model file");
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\n%s is not a valid model file:\n", fileName.c_str());
       NRLib::LogKit::LogMessage(NRLib::LogKit::Error, errTxt);
       NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nAborting\n");
       failed_ = true;
     }
-    else {
-      modelSettings_->CheckConsistency();
-      modelSettings_->SetDerivedVariables();
-    };
   }
 }
 
@@ -130,7 +137,10 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   ParseProjectSettings(root, errTxt);
 
   if (ParseWhiteNoise(root, errTxt)) {
-    modelSettings_->SetWhiteNoise();
+    modelSettings_->SetAddWhiteNoise();
+  }
+  if (ParseReflCoefNoise(root, errTxt)) {
+    modelSettings_->SetAddNoiseToReflCoef();
   }
 
   std::string file_name;
@@ -1285,8 +1295,10 @@ bool XmlModelFile::ParseSeismicStack(TiXmlNode   * node,
   return true;
 }
 
+//-------------------------------------------------------
 bool XmlModelFile::ParseWhiteNoise(TiXmlNode   * node,
                                    std::string & errTxt)
+//-------------------------------------------------------
 {
   TiXmlNode *root = node->FirstChildElement("white-noise");
   if (root == 0) {
@@ -1299,25 +1311,55 @@ bool XmlModelFile::ParseWhiteNoise(TiXmlNode   * node,
 
   double std_dev;
   if (ParseValue(root, "standard-deviation", std_dev, errTxt)) {
-    modelSettings_->SetStandardDeviation(std_dev);
+    modelSettings_->SetStandardDeviation1(std_dev);
   }
 
   double seed;
   if (ParseValue(root, "seed", seed, errTxt)) {
-    modelSettings_->SetSeed(seed);
+    modelSettings_->SetSeed1(seed);
   }
-
 
   CheckForJunk(root, errTxt, legalCommands);
 
   return true;
 }
 
+//---------------------------------------------------------
+bool XmlModelFile::ParseReflCoefNoise(TiXmlNode   * node,
+                                      std::string & errTxt)
+//---------------------------------------------------------
+{
+  TiXmlNode *root = node->FirstChildElement("add-noise-to-refl-coef");
+  if (root == 0) {
+    return (false);
+  }
+
+  std::vector<std::string> legalCommands;
+  legalCommands.push_back("standard-deviation");
+  legalCommands.push_back("seed");
+
+  double std_dev;
+  if (ParseValue(root, "standard-deviation", std_dev, errTxt)) {
+    modelSettings_->SetStandardDeviation2(std_dev);
+  }
+
+  double seed;
+  if (ParseValue(root, "seed", seed, errTxt)) {
+    modelSettings_->SetSeed2(seed);
+  }
+
+  CheckForJunk(root, errTxt, legalCommands);
+
+  return true;
+}
+
+//---------------------------------------------------------------
 bool XmlModelFile::ParseBool(TiXmlNode         * node,
                              const std::string & keyword,
                              bool              & value,
                              std::string       & errTxt,
                              bool                allowDuplicates)
+//---------------------------------------------------------------
 {
   std::string tmpVal;
   std::string tmpErr = "";

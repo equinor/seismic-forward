@@ -5,6 +5,7 @@
 #include "output.hpp"
 
 Output::Output(SeismicParameters   & seismic_parameters,
+               ModelSettings       * model_settings,
                std::vector<double>   twt_0,
                std::vector<double>   z_0,
                std::vector<double>   twts_0,
@@ -27,7 +28,6 @@ Output::Output(SeismicParameters   & seismic_parameters,
     timeshiftgrid_          ( NULL       ),
     depthgrid_              ( NULL       )
 {
-  ModelSettings   * model_settings   = seismic_parameters.GetModelSettings();
   SeismicGeometry * seismic_geometry = seismic_parameters.GetSeismicGeometry();
   SeismicOutput   * seismic_output   = seismic_parameters.GetSeismicOutput();
 
