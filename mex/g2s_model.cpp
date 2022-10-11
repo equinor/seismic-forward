@@ -21,30 +21,32 @@ G2SModel::G2SModel(std::string path) {
     this->_model_settings = modelFile.getModelSettings();
 
     this->_bool_functions["useCornerPointInterpolationInDepth"] = &ModelSettings::GetUseCornerpointInterpol;
-    this->_bool_functions["isRicker"] = &ModelSettings::GetRicker;
+    this->_bool_functions["isRicker"                          ] = &ModelSettings::GetRicker;
 
-    this->_double_functions["getZeroThicknessLimit"] = &ModelSettings::GetZeroThicknessLimit;
-    this->_double_functions["getTheta0"] = &ModelSettings::GetTheta0;
-    this->_double_functions["getDTheta"] = &ModelSettings::GetDTheta;
-    this->_double_functions["getThetaMax"] = &ModelSettings::GetThetaMax;
-    this->_double_functions["getPeakFrequency"] = &ModelSettings::GetPeakFrequency;
-    this->_double_functions["getWaveletScale"] = &ModelSettings::GetWaveletScale;
-    this->_double_functions["getStandardDeviation"] = &ModelSettings::GetStandardDeviation;
+    this->_double_functions["getZeroThicknessLimit" ] = &ModelSettings::GetZeroThicknessLimit;
+    this->_double_functions["getTheta0"             ] = &ModelSettings::GetTheta0;
+    this->_double_functions["getDTheta"             ] = &ModelSettings::GetDTheta;
+    this->_double_functions["getThetaMax"           ] = &ModelSettings::GetThetaMax;
+    this->_double_functions["getPeakFrequency"      ] = &ModelSettings::GetPeakFrequency;
+    this->_double_functions["getWaveletScale"       ] = &ModelSettings::GetWaveletScale;
+    this->_double_functions["getStandardDeviation"  ] = &ModelSettings::GetStandardDeviation1;   // White noise SD
+    //this->_double_functions["getStandardDeviation"  ] = &ModelSettings::GetStandardDeviation1; // Reflection coefficient SD
 
-    this->_double_vector_functions["getVsConstants"] = &ModelSettings::GetConstVs;
-    this->_double_vector_functions["getVpConstants"] = &ModelSettings::GetConstVp;
-    this->_double_vector_functions["getRhoConstants"] = &ModelSettings::GetConstRho;
+    this->_double_vector_functions["getVsConstants" ]                = &ModelSettings::GetConstVs;
+    this->_double_vector_functions["getVpConstants" ]                = &ModelSettings::GetConstVp;
+    this->_double_vector_functions["getRhoConstants"]                = &ModelSettings::GetConstRho;
     this->_double_vector_functions["getExtraParametersDefaultValue"] = &ModelSettings::GetExtraParameterDefaultValues;
 
-    this->_string_functions["getEclipseFilename"] = &ModelSettings::GetEclipseFileName;
+    this->_string_functions["getEclipseFilename"  ] = &ModelSettings::GetEclipseFileName;
     this->_string_functions["getWaveletFileFormat"] = &ModelSettings::GetWaveletFileFormat;
-    this->_string_functions["getWaveletFileName"] = &ModelSettings::GetWaveletFileName;
-    this->_string_functions["getAreaFromSurface"] = &ModelSettings::GetAreaFromSurface;
+    this->_string_functions["getWaveletFileName"  ] = &ModelSettings::GetWaveletFileName;
+    this->_string_functions["getAreaFromSurface"  ] = &ModelSettings::GetAreaFromSurface;
 
-    this->_string_vector_functions["getParameterName"] = &ModelSettings::GetParameterNames;
+    this->_string_vector_functions["getParameterName"  ] = &ModelSettings::GetParameterNames;
     this->_string_vector_functions["getExtraParameters"] = &ModelSettings::GetExtraParameterNames;
 
-    this->_unsigned_long_functions["getSeed"] = &ModelSettings::GetSeed;
+    this->_unsigned_long_functions["getSeed"] = &ModelSettings::GetSeed1; // White noise seed
+    //this->_unsigned_long_functions["getSeed"] = &ModelSettings::GetSeed2; // Reflection coefficient seed
 
 }
 
