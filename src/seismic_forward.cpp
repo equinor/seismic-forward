@@ -482,7 +482,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       size_t noff = timegrid_pos.GetNJ();
 
       NRLib::Grid2D<double> noise(nt, noff);
-      GenerateWhiteNoise(seed1, sd1, noise);
+      GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise);
 
       for (size_t off = 0 ; off < noff ; off++) {
         for (size_t k = 0 ; k < nt ; k++) {
