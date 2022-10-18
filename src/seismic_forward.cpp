@@ -484,17 +484,16 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       NRLib::Grid2D<double> noise(nt, noff);
       GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise);
 
-      /*
-       * Limit the noise addition to data range
-       *
       for (size_t off = 0 ; off < noff ; off++) {
         for (size_t k = 0 ; k < nt ; k++) {
-          if (k >= n_min[off] && k <= n_max[off]) {
-            timegrid_pos(k, off) += noise(k, off);
-          }
+          //
+          // Limit the noise addition to data range
+          //
+          //if (k >= n_min[off] && k <= n_max[off]) {
+          timegrid_pos(k, off) += noise(k, off);
+          //}
         }
       }
-      */
     }
 
     //NMO correction:
@@ -727,17 +726,16 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
       NRLib::Grid2D<double> noise(nt, ntheta);
       GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise);
 
-      /*
-       * Limit the noise addition to data range
-       *
       for (size_t it = 0 ; it < ntheta ; it++) {
         for (size_t k = 0 ; k < nt ; k++) {
-          if (k >= n_min && k <= n_max) {
-            timegrid_pos(k, it) += noise(k, it);
-          }
+          //
+          // Limit the noise addition to data range
+          //
+          //if (k >= n_min && k <= n_max) {
+          timegrid_pos(k, it) += noise(k, it);
+          //}
         }
       }
-      */
     }
 
     //stacking of angles:
