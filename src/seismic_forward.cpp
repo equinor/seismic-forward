@@ -477,25 +477,6 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
                        n_min,
                        n_max);
 
-    if (add_white_noise) {                // Add noise to seismic signal
-      size_t nt   = timegrid_pos.GetNI();
-      size_t noff = timegrid_pos.GetNJ();
-
-      NRLib::Grid2D<double> noise(nt, noff);
-      GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise);
-
-      for (size_t off = 0 ; off < noff ; off++) {
-        for (size_t k = 0 ; k < nt ; k++) {
-          //
-          // Limit the noise addition to data range
-          //
-          //if (k >= n_min[off] && k <= n_max[off]) {
-          timegrid_pos(k, off) += noise(k, off);
-          //}
-        }
-      }
-    }
-
     //NMO correction:
     size_t max_sample;
     if (offset_without_stretch) {
@@ -505,6 +486,17 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
     else {
       NMOCorrect(param->twt_0, timegrid_pos, twtx_reg, nmo_timegrid_pos, n_min, n_max, max_sample);
     }
+
+    if (add_white_noise) {                // Add noise to seismic signal
+      size_t nt   = timegrid_pos.GetNI();
+      size_t noff = timegrid_pos.GetNJ();
+
+      NRLib::Grid2D<double> noise(nt, noff);
+      GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise);
+
+      nmo_timegrid_pos += noise;
+    }
+
 
     //stacking of offsets:
     if (model_settings->GetStackOutput() || model_settings->GetStormOutput()) {
@@ -726,16 +718,7 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
       NRLib::Grid2D<double> noise(nt, ntheta);
       GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise);
 
-      for (size_t it = 0 ; it < ntheta ; it++) {
-        for (size_t k = 0 ; k < nt ; k++) {
-          //
-          // Limit the noise addition to data range
-          //
-          //if (k >= n_min && k <= n_max) {
-          timegrid_pos(k, it) += noise(k, it);
-          //}
-        }
-      }
+      timegrid_pos += noise;
     }
 
     //stacking of angles:
