@@ -171,13 +171,11 @@ private:
                                             bool                                 time);
 
   static void GenerateParameterGridForOutputQueue(GenResamplParam * params,
-                                                  ResamplOutput   * resampl_output,
-                                                  bool              interpolate);
+                                                  ResamplOutput   * resampl_output);
 
   static void GenerateParameterGridForOutput(GenResamplParam * params,
                                              Trace           * trace,
-                                             ResamplOutput   * resampl_output,
-                                             bool              interpolate);
+                                             ResamplOutput   * resampl_output);
 
   static void WriteResampledParameter(GenResamplParam * params,
                                       ResamplOutput   * resampl_output);

@@ -1771,7 +1771,7 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
 
   if (n_threads > 1) {
     for (size_t i = 0; i < n_threads - 1; ++i) {
-      worker_thread.push_back(new std::thread(GenerateParameterGridForOutputQueue, &parameters, &resampl_output, interpolate));
+      worker_thread.push_back(new std::thread(GenerateParameterGridForOutputQueue, &parameters, &resampl_output));
     }
     std::thread write_thread(WriteResampledParameter, &parameters, &resampl_output);
 
@@ -1787,7 +1787,7 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
     for (size_t i = 0; i < n_traces; ++i) {
       Trace *trace;
       parameters.traces.try_pop(trace);
-      GenerateParameterGridForOutput(&parameters, trace, &resampl_output, interpolate);
+      GenerateParameterGridForOutput(&parameters, trace, &resampl_output);
       ResamplTrace *resampl_trace;
       parameters.result_queue.try_pop(resampl_trace);
       resampl_output.AddTrace(seismic_parameters, parameters.time_or_depth_vec_reg, resampl_trace->GetTraces(), resampl_trace->GetX(), resampl_trace->GetY());
@@ -1803,19 +1803,17 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
 }
 
 void SeismicRegridding::GenerateParameterGridForOutputQueue(GenResamplParam * params,
-                                                            ResamplOutput   * resampl_output,
-                                                            bool              interpolate)
+                                                            ResamplOutput   * resampl_output)
 {
   Trace *trace;
   while (params->traces.try_pop(trace)) {
-    GenerateParameterGridForOutput(params, trace, resampl_output, interpolate);
+    GenerateParameterGridForOutput(params, trace, resampl_output);
   }
 }
 
 void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam * params,
                                                        Trace           * trace,
-                                                       ResamplOutput   * resampl_output,
-                                                       bool              interpolate)
+                                                       ResamplOutput   * resampl_output)
 {
   ResamplTrace *resampl_trace;
   if (!params->empty_queue.try_pop(resampl_trace)) {
@@ -1834,8 +1832,9 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam * params,
   std::vector<double> linear_interp, input_vec(input_grid[0]->GetNK() - 1), input_t(params->time_or_depth_grid->GetNK());
 
   NRLib::StormContGrid &time_or_depth_grid_ref = *(params->time_or_depth_grid);
-
   std::vector<NRLib::Grid2D<double> > &output_vec = resampl_trace->GetTraces();
+  bool interpolate = params->seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
+
   if (!toptime_missing) { //check whether there are values in input_grid in this pillar - if not, cells in output_grid will be zero
     if (interpolate) {
       for (size_t k = 0; k < params->time_or_depth_grid->GetNK(); ++k) {

@@ -34,6 +34,8 @@ class SeismicParameters
 
     ~SeismicParameters() {};
 
+    inline ModelSettings                      * GetModelSettings()        const { return model_settings_       ;}
+
     inline NRLib::StormContGrid               & GetVpGrid()               const { return *vpgrid_              ;}
     inline NRLib::StormContGrid               & GetVsGrid()               const { return *vsgrid_              ;}
     inline NRLib::StormContGrid               & GetRhoGrid()              const { return *rhogrid_             ;}

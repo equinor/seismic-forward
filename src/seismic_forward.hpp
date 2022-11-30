@@ -47,21 +47,17 @@ class SeismicForward {
                             ModelSettings     * model_settings);
 
     static void GenerateSeismicTracesQueue(Output             * output,
-                                           GenSeisTraceParams * param,
-                                           ModelSettings      * model_settings);
+                                           GenSeisTraceParams * param);
 
     static void GenerateSeismicTraces(Output             * output,
                                       GenSeisTraceParams * param,
-                                      ModelSettings      * model_settings,
                                       Trace              * trace);
 
     static void GenerateNMOSeismicTracesQueue(Output             * nmo_output,
-                                              GenSeisTraceParams * param,
-                                              ModelSettings      * model_settings);
+                                              GenSeisTraceParams * param);
 
     static void GenerateNMOSeismicTraces(Output             * nmo_output,
                                          GenSeisTraceParams * param,
-                                         ModelSettings      * model_settings,
                                          Trace              * trace);
 
     static bool GenerateTraceOk(SeismicParameters & seismic_parameters,
@@ -74,7 +70,6 @@ class SeismicForward {
                                    NRLib::Grid2D<double> & noise);
 
     static void WriteSeismicTraces(GenSeisTraceParams * param,
-                                   ModelSettings      * model_settings,
                                    Output             * output);
 
     static void SeisConvolutionNMO(NRLib::Grid2D<double>               & timegrid_pos,
