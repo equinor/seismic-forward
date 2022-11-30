@@ -1,3 +1,7 @@
+## Documentation
+
+User manuals are located in the 'doc' directory.
+
 ## GitHub
 
 To have Git remember the credentials for you, do this
