@@ -115,15 +115,17 @@ class SeismicParameters
                                                   size_t & n_it);
 
     void FindVrms(std::vector<double>       & vrms_vec,
-                  std::vector<double>       & vrms_vec_reg,
                   const std::vector<double> & twt_vec,
-                  const std::vector<double> & twt_vec_reg,
                   const std::vector<double> & v_vec,
-                  double                      const_v,
-                  double                      twt_wavelet_exstrapol,
-                  size_t                      i,
-                  size_t                      j,
-                  bool                        include_regular) const;
+                  double                      z_res) const;
+
+    void FindVrmsRegular(const std::vector<double> & vrms_vec,
+                         std::vector<double>       & vrms_vec_reg,
+                         const std::vector<double> & twt_vec,
+                         const std::vector<double> & twt_vec_reg,
+                         const std::vector<double> & v_vec,
+                         double                      const_v,
+                         double                      twt_wavelet_exstrapol) const;
 
     void  FindReflections(NRLib::Grid2D<double>       & r_vec,
                           const NRLib::Grid2D<double> & theta_vec,
