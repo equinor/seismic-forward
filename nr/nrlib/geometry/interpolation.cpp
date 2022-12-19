@@ -11,10 +11,10 @@ using namespace NRLib;
 
 
 
-std::vector<double> Interpolation::Interpolate1D(const std::vector<double> &x_in,
-                                                 const std::vector<double> &y_in,
-                                                 const std::vector<double> &x_out,
-                                                 const std::string         &method)
+std::vector<double> Interpolation::Interpolate1D(const std::vector<double> & x_in,
+                                                 const std::vector<double> & y_in,
+                                                 const std::vector<double> & x_out,
+                                                 const std::string         & method)
 {
   if(method == "linear")
   {
@@ -32,11 +32,11 @@ std::vector<double> Interpolation::Interpolate1D(const std::vector<double> &x_in
 }
 
 
-std::vector<double> Interpolation::Interpolate1D(const std::vector<double> &x_in,
-                                                 const std::vector<double> &y_in,
-                                                 const std::vector<double> &x_out,
-                                                 const std::string         &method,
-                                                 const double               extrap_value)
+std::vector<double> Interpolation::Interpolate1D(const std::vector<double> & x_in,
+                                                 const std::vector<double> & y_in,
+                                                 const std::vector<double> & x_out,
+                                                 const std::string         & method,
+                                                 const double                extrap_value)
 {
   if(method == "spline")
   {
@@ -53,16 +53,18 @@ std::vector<double> Interpolation::Interpolate1D(const std::vector<double> &x_in
   }
 }
 
-std::vector<double> Interpolation::Linear1D(const std::vector<double> &x_in,
-                                            const std::vector<double> &y_in,
-                                            const std::vector<double> &x_out){
+std::vector<double> Interpolation::Linear1D(const std::vector<double> & x_in,
+                                            const std::vector<double> & y_in,
+                                            const std::vector<double> & x_out){
 
   assert(x_in.size()  == y_in.size());
 
-  std::vector<double> dx(x_in.size()), dy(x_in.size()), slope(x_in.size()), intercept(x_in.size());
+  size_t nx = x_in.size();
+
+  std::vector<double> dx(nx), dy(nx), slope(nx), intercept(nx);
   std::vector<double> y_out(x_out.size());
 
-  for (size_t i = 0; i < x_in.size() - 1; i++) {
+  for (size_t i = 0; i < nx - 1; i++) {
     if (x_in[i+1] == x_in[i] && y_in[i+1] == y_in[i] && i > 0) {
       dx[i] = dx[i-1];
       dy[i] = dy[i-1];
@@ -74,10 +76,10 @@ std::vector<double> Interpolation::Linear1D(const std::vector<double> &x_in,
     slope[i] = dy[i] / dx[i];
     intercept[i] = y_in[i] - x_in[i] * slope[i];
   }
-  dx[x_in.size()-1]        = dx[x_in.size()-2];
-  dy[x_in.size()-1]        = dy[x_in.size()-2];
-  slope[x_in.size()-1]     = slope[x_in.size()-2];
-  intercept[x_in.size()-1] = intercept[x_in.size()-2];
+  dx[nx - 1]        = dx[nx - 2];
+  dy[nx - 1]        = dy[nx - 2];
+  slope[nx - 1]     = slope[nx - 2];
+  intercept[nx - 1] = intercept[nx - 2];
   for (size_t i = 0; i < y_out.size(); i++) {
     int idx = FindNearestNeighborIndex(x_out[i], x_in);
     if (idx == -1)
@@ -167,9 +169,10 @@ std::vector<double> Interpolation::Spline1D(const std::vector<double> &x_in,
   return y_out;
 }
 
-//--------------------------------------------------------------
-int Interpolation::FindNearestNeighborIndex(const double x, const std::vector<double> &x_in)
-//--------------------------------------------------------------
+//---------------------------------------------------------------------------
+int Interpolation::FindNearestNeighborIndex(const double                x,
+                                            const std::vector<double> & x_in)
+//---------------------------------------------------------------------------
 {
   // Returning int as it might be -1.
   double dist = 1e10;
@@ -186,4 +189,3 @@ int Interpolation::FindNearestNeighborIndex(const double x, const std::vector<do
   }
   return idx;
 }
-

@@ -172,8 +172,11 @@ void Output::AddTrace(ResultTrace   * result_trace,
 void Output::WriteStatisticsForSeismic(ModelSettings * model_settings)
 {
   if (model_settings->GetTimeOutput() || model_settings->GetTimeshiftOutput() || model_settings->GetDepthOutput()) {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nStatistics for generated seismic data.\n");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nType               Avg         Min         Max");
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nStatistics for generated seismic data.\n");
+      if (!model_settings->GetUseVerticalInterpolation()) {
+        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNB! Odd values like not-a-number (nan) may occur since vertical\ninterpolation has been turned off for depth grid generation\n");
+      }
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nType               Avg         Min         Max");
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n----------------------------------------------\n");
   }
   float min, max, avg;
@@ -189,6 +192,7 @@ void Output::WriteStatisticsForSeismic(ModelSettings * model_settings)
     depthgrid_->GetAvgMinMaxWithMissing(avg, min , max, depthgrid_->GetMissingCode());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Depth      %11.4f %11.4f %11.4f\n", avg, min, max);
   }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 }
 
 void Output::WriteSeismicStorm(ModelSettings                     * model_settings,
