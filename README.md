@@ -2,6 +2,15 @@
 
 User manuals are located in the 'doc' directory.
 
+## Prerequisites
+
+  Boost     -> version 1.65.1 is included under 3rd-party
+               NB! If another version of Boost is installed in the operating
+               system cmake may become confused and stop working.
+
+  Intel MKL -> Must be installed
+
+
 ## GitHub
 
 To have Git remember the credentials for you, do this
@@ -21,15 +30,6 @@ a fork, you can set this repository as your origin using:
 git checkout --track origin/release-4.3
 ```
 (At the time being, it is adviced that you use branch release-4.3)
-
-
-## Prerequisites
-
-  Boost     -> version 1.65.1 is included under 3rd-party
-               NB! If another version of Boost is installed in the operating
-               system cmake may become confused and stop working.
-
-  Intel MKL -> Must be installed
 
 
 ## To make an executable using CLion or another IDE
