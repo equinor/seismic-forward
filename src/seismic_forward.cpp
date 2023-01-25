@@ -406,8 +406,10 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       ResampleTwtPS(twt_pp_vec_reg, twt_ss_vec_reg, twt_pp_vec, twt_ss_vec, twt_vec, param->twt_0, twt_w, twt_w, twt_w, twt_pp_below, twt_ss_below, twt_below);
 
       //find vrms for pp and ss -  for each layer and regularly sampled
-      seismic_parameters.FindVrms(vrms_pp_vec, vrms_pp_vec_reg, twt_pp_vec, twt_pp_vec_reg, vp_vec, constvp[2], twt_pp_extrapol, i, j, true);
-      seismic_parameters.FindVrms(vrms_ss_vec, vrms_ss_vec_reg, twt_ss_vec, twt_ss_vec_reg, vs_vec, constvs[2], twt_ss_extrapol, i, j, true);
+      seismic_parameters.FindVrms       (vrms_pp_vec, twt_pp_vec, vp_vec, zgrid(i, j, 0));
+      seismic_parameters.FindVrms       (vrms_ss_vec, twt_ss_vec, vs_vec, zgrid(i, j, 0));
+      seismic_parameters.FindVrmsRegular(vrms_pp_vec, vrms_pp_vec_reg, twt_pp_vec, twt_pp_vec_reg, vp_vec, constvp[2], twt_pp_extrapol);
+      seismic_parameters.FindVrmsRegular(vrms_ss_vec, vrms_ss_vec_reg, twt_ss_vec, twt_ss_vec_reg, vs_vec, constvs[2], twt_ss_extrapol);
 
       //find theta and offset - for each layer for each offset:
       seismic_parameters.FindPSNMOThetaAndOffset(theta_pos, offset_pp, offset_ss, twt_pp_vec, twt_ss_vec, vrms_pp_vec, vrms_ss_vec, param->offset_vec);
@@ -442,12 +444,13 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       std::vector<double> vrms_vec(nzrefl);
       std::vector<double> vrms_vec_reg(param->twt_0);
       double twt_wavelet_extrapol = twt_wavelet * z_extrapol_factor;
-      seismic_parameters.FindVrms(vrms_vec, vrms_vec_reg, twt_vec, param->twt_0, vp_vec, constvp[2], twt_wavelet_extrapol, i, j, true);
+      seismic_parameters.FindVrms       (vrms_vec, twt_vec, vp_vec, zgrid(i, j, 0));
+      seismic_parameters.FindVrmsRegular(vrms_vec, vrms_vec_reg, twt_vec, param->twt_0, vp_vec, constvp[2], twt_wavelet_extrapol);
 
-      FindNMOTheta(theta_pos, twt_vec, vrms_vec    , param->offset_vec);                         // Find theta - for each layer for each offset:
-      FindTWTx(twtx,     twt_vec,      vrms_vec    , param->offset_vec, offset_without_stretch); // Find twtx for each layer for each offset, and regularly in time:
-      FindTWTx(twtx_reg, param->twt_0, vrms_vec_reg, param->offset_vec, offset_without_stretch);
-      FindSeisLimits(twtx, param->twt_0, n_min, n_max, twt_wavelet);                             // Find limits for where to generate seismic, for each offset
+      FindNMOTheta  (theta_pos, twt_vec     , vrms_vec    , param->offset_vec);                         // Find theta - for each layer for each offset:
+      FindTWTx      (twtx     , twt_vec     , vrms_vec    , param->offset_vec, offset_without_stretch); // Find twtx for each layer for each offset, and regularly in time:
+      FindTWTx      (twtx_reg , param->twt_0, vrms_vec_reg, param->offset_vec, offset_without_stretch);
+      FindSeisLimits(twtx     , param->twt_0, n_min, n_max, twt_wavelet);                             // Find limits for where to generate seismic, for each offset
     }      //----------------------------------
 
     MakeReflections(refl_pos,             // Also add noise if requested
@@ -1306,7 +1309,8 @@ void SeismicForward::FindTWTx(NRLib::Grid2D<double>     & twtx_grid,
   for (size_t off = 0; off < offset.size(); ++off) {
     for (size_t k = 0; k < twt_vec.size(); ++k) {
       if (offset_without_stretch == false) {
-        twtx = twt_vec[k] * twt_vec[k] + 1000 * 1000 * (offset[off] * offset[off] / (vrms_vec[k] * vrms_vec[k]));
+        double t_off = 1000.0*offset[off]/vrms_vec[k];
+        twtx = twt_vec[k] * twt_vec[k] + t_off*t_off;
         twtx_grid(k, off) = std::sqrt(twtx);
       }
       else {

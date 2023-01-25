@@ -551,71 +551,79 @@ void SeismicParameters::FindLoopIndeces(int  & n_xl,
   }
 }
 
+//-------------------------------------------------------------------------
 void SeismicParameters::FindVrms(std::vector<double>       & vrms_vec,
-                                 std::vector<double>       & vrms_vec_reg,
                                  const std::vector<double> & twt_vec,
-                                 const std::vector<double> & twt_vec_reg,
                                  const std::vector<double> & v_vec,
-                                 double                      const_v,
-                                 double                      twt_wavelet_exstrapol,
-                                 size_t                      i,
-                                 size_t                      j,
-                                 bool                        include_regular) const
+                                 double                      z_res) const
+//-------------------------------------------------------------------------
 {
-  double v_w = model_settings_->GetVw();
-  double z_w = model_settings_->GetZw();
-
-  double v_over;
-  double twt_w = 2000 * z_w / v_w;
-  double tmp, tmp0;
-  size_t nk = twt_vec.size();
+  double undef  = -999.0;
+  double v_w    = model_settings_->GetVw(); // Velocity of water
+  double z_w    = model_settings_->GetZw(); // Depth to seabed
+  double twt_w  = 2000 * z_w / v_w;
+  size_t nk     = twt_vec.size();
 
   //generate vrms_vec - only for each layer in reservoir
-  if (twt_vec[0] == -999.0) {
+  if (twt_vec[0] == undef) {
     for (size_t k = 0; k < nk; ++k) {
-      vrms_vec[k] = -999.0;
+      vrms_vec[k] = undef;
     }
   }
   else {
-    v_over = 2000 * ((*zgrid_)(i, j, 0) - z_w) / (twt_vec[0] - 2000 * z_w / v_w);
-    tmp0 = v_w*v_w*twt_w + v_over*v_over*(twt_vec[0] - twt_w);
+    double v_over = 2000 * (z_res - z_w) / (twt_vec[0] - twt_w);
+    double tmp0   = v_w*v_w*twt_w + v_over*v_over*(twt_vec[0] - twt_w);
     for (size_t k = 0; k < nk; ++k) {
-      tmp = tmp0;
+      double tmp = tmp0;
       for (size_t l = 1; l <= k; ++l) {
         tmp += v_vec[l]* v_vec[l]*(twt_vec[l] - twt_vec[l-1]);
       }
       vrms_vec[k] = std::sqrt(tmp / twt_vec[k]);
     }
   }
+}
 
-  if (include_regular) {
-    //generate vrms_vec_reg - including overburden and underburden
+//---------------------------------------------------------------------------------------------
+void SeismicParameters::FindVrmsRegular(const std::vector<double> & vrms_vec,
+                                        std::vector<double>       & vrms_vec_reg,
+                                        const std::vector<double> & twt_vec,
+                                        const std::vector<double> & twt_vec_reg,
+                                        const std::vector<double> & v_vec,
+                                        double                      const_v,
+                                        double                      twt_wavelet_extrapol) const
+//---------------------------------------------------------------------------------------------
+{
+  //generate vrms_vec_reg - including overburden and underburden
 
-    double vrms_under  = vrms_vec[nk - 1]*vrms_vec[nk - 1]*twt_vec[nk - 1] + const_v * const_v * twt_wavelet_exstrapol;
-    vrms_under *= (1 / (twt_vec[nk - 1] + twt_wavelet_exstrapol));
-    vrms_under  = std::sqrt(vrms_under);
+  size_t nk          = twt_vec.size();
+  double v_w         = model_settings_->GetVw(); // Velocity of water
+  double z_w         = model_settings_->GetZw(); // Depth to seabed
+  double twt_w       = 2000 * z_w / v_w;
+  double vrms_under  = vrms_vec[nk - 1]*vrms_vec[nk - 1]*twt_vec[nk - 1] + const_v * const_v * twt_wavelet_extrapol;
+  vrms_under        *= (1 / (twt_vec[nk - 1] + twt_wavelet_extrapol));
+  vrms_under         = std::sqrt(vrms_under);
 
-    //sample vrms regularly:
-    std::vector<double> twt_vec_in(nk + 2), vrms_vec_in(nk + 2);
-    twt_vec_in [0] = twt_w;
-    vrms_vec_in[0] = v_w;
-    twt_vec_in [1] = twt_vec[0];
-    vrms_vec_in[1] = vrms_vec[0];
-    size_t index = 2;
-    for (size_t k = 0; k < nk; ++k) {
-      if (twt_vec[k] != twt_vec_in[index - 1]) {
-        twt_vec_in [index] = twt_vec[k];
-        vrms_vec_in[index] = vrms_vec[k];
-        ++index;
-      }
+  //sample vrms regularly:
+  std::vector<double> twt_vec_in(nk + 2);
+  std::vector<double> vrms_vec_in(nk + 2);
+  twt_vec_in[0]  = twt_w;
+  twt_vec_in[1]  = twt_vec[0];
+  vrms_vec_in[0] = v_w;
+  vrms_vec_in[1] = vrms_vec[0];
+  size_t index = 2;
+  for (size_t k = 0; k < nk; ++k) {
+    if (twt_vec[k] != twt_vec_in[index - 1]) {
+      twt_vec_in [index] = twt_vec[k];
+      vrms_vec_in[index] = vrms_vec[k];
+      ++index;
     }
-    twt_vec_in.resize(index + 1);
-    vrms_vec_in.resize(index + 1);
-    twt_vec_in [index] = twt_vec_in[index - 1] + twt_wavelet_exstrapol;
-    vrms_vec_in[index] = vrms_under;
-
-    vrms_vec_reg = NRLib::Interpolation::Interpolate1D(twt_vec_in, vrms_vec_in, twt_vec_reg, "linear");
   }
+  twt_vec_in.resize(index + 1);
+  vrms_vec_in.resize(index + 1);
+  twt_vec_in [index] = twt_vec_in[index - 1] + twt_wavelet_extrapol;
+  vrms_vec_in[index] = vrms_under;
+
+  vrms_vec_reg = NRLib::Interpolation::Interpolate1D(twt_vec_in, vrms_vec_in, twt_vec_reg, "linear");
 }
 
 //---------------------------------------------------------------------------------
@@ -761,7 +769,7 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
   //find max TWTX for highest offset in order to find the highest TWT value to sample seismic
   if (ps_seis) { //------------PS seismic------------
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate Twt0 for NMO assuming PS seismic\n");
-    std::vector<double> vrms_pp_vec(nzrefl), vrms_ss_vec(nzrefl), dummy;
+    std::vector<double> vrms_pp_vec(nzrefl), vrms_ss_vec(nzrefl);
     std::vector<double> vp_vec(nzrefl), vs_vec(nzrefl), twt_pp_vec(nzrefl), twt_ss_vec(nzrefl);
 
     for (size_t k = 0; k < nzrefl; ++k) {
@@ -771,8 +779,8 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
       vs_vec[k]     = (*vsgrid_)(i_max, j_max, k);
     }
 
-    FindVrms(vrms_pp_vec, dummy, twt_pp_vec, dummy, vp_vec, 1.0, 1.0, i_max, j_max, false);
-    FindVrms(vrms_ss_vec, dummy, twt_ss_vec, dummy, vs_vec, 1.0, 1.0, i_max, j_max, false);
+    FindVrms(vrms_pp_vec, twt_pp_vec, vp_vec, (*zgrid_)(i_max, j_max, 0));
+    FindVrms(vrms_ss_vec, twt_ss_vec, vs_vec, (*zgrid_)(i_max, j_max, 0));
 
     double vrms_pp     = vrms_pp_vec[nzrefl - 1];
     double vrms_ss     = vrms_ss_vec[nzrefl - 1];
@@ -805,12 +813,12 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
   else {  //------------PP seismic------------
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate Twt0 for NMO assuming PP seismic.\n");
     //find max vrms in index
-    std::vector<double> vrms_vec(nzrefl), vp_vec(nzrefl), twt_vec(nzrefl), dummy;
+    std::vector<double> vrms_vec(nzrefl), vp_vec(nzrefl), twt_vec(nzrefl);
     for (size_t k = 0; k < nzrefl; ++k) {
       twt_vec[k] = (*twtgrid_)(i_max, j_max, k);
       vp_vec[k]  = (*vpgrid_) (i_max, j_max, k);
     }
-    FindVrms(vrms_vec, dummy, twt_vec, dummy, vp_vec, 1.0, 1.0, i_max, j_max, false);
+    FindVrms(vrms_vec, twt_vec, vp_vec, (*zgrid_)(i_max, j_max, 0));
     double vrms_max_t = vrms_vec[vrms_vec.size() - 1];
     twtx_max = std::sqrt(twt_max*twt_max + 1000 * 1000 * offset_max*offset_max / (vrms_max_t*vrms_max_t));
   } //---------------------------
