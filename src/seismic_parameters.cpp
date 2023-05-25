@@ -708,28 +708,42 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
                                           bool                  ps_seis)
 //-----------------------------------------------------------------------------------
 {
+  size_t nt             = seismic_geometry_->nt();
+  double dt             = seismic_geometry_->dt();
+  double t0             = seismic_geometry_->t0();
+  size_t nzrefl         = seismic_geometry_->zreflectorcount();
+  size_t nz             = seismic_geometry_->nz();
+  double twt_wavelet    = wavelet_->GetTwtLength();              // Half a wavelet
+  double stretch_factor = -999.0;
+
   if (model_settings->GetNMOCorr() && !model_settings->GetOffsetWithoutStretch()){
-    twt_0 = GenerateTwt0ForNMO(time_samples_stretch, ps_seis);
-    z_0   = GenerateZ0ForNMO();
+    GenerateTwt0ForNMO(twt_0,
+                       time_samples_stretch,
+                       stretch_factor,
+                       ps_seis,
+                       twt_wavelet,
+                       nt,
+                       dt,
+                       t0,
+                       nzrefl);
+
+    GenerateZ0ForNMO(z_0,
+                     stretch_factor);
+
     if (model_settings_->GetTwtFileName() != "") {
       twts_0 = GenerateTWT0Shift(twt_0[0], time_samples_stretch);
     }
   }
   else {
-    double tmin = seismic_geometry_->t0();
-    double dt   = seismic_geometry_->dt();
-    size_t nz   = seismic_geometry_->nz();
-    size_t nt   = seismic_geometry_->nt();
     twt_0.resize(nt);
     for (size_t i = 0; i < nt; ++i){
-      twt_0[i] = tmin + i*dt;
+      twt_0[i] = t0 + i*dt;
     }
-    double zmin = seismic_geometry_->z0();
-    double dz   = seismic_geometry_->dz();
-    z_0.resize(nz);
-    //find min z in a sample
-    size_t nzmin = static_cast<size_t>(floor(zmin) / dz + 0.5);
+    double zmin       = seismic_geometry_->z0();
+    double dz         = seismic_geometry_->dz();
+    size_t nzmin      = static_cast<size_t>(floor(zmin) / dz + 0.5); // Find min z in a sample
     double zmin_sampl = nzmin *dz;
+    z_0.resize(nz);
 
     for (size_t i = 0; i < nz; ++i){
       z_0[i] = zmin_sampl + i*dz;
@@ -741,36 +755,45 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
   }
 }
 
-//-----------------------------------------------------------------------------
-std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
-                                                          bool     ps_seis)
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void SeismicParameters::GenerateTwt0ForNMO(std::vector<double> & twt_0,
+                                           size_t              & nt_stretch,
+                                           double              & stretch_factor,
+                                           const bool            ps_seis,
+                                           const double          twt_wavelet,
+                                           const size_t          nt,
+                                           const double          dt,
+                                           const double          t0,
+                                           const size_t          nzrefl)
+//------------------------------------------------------------------------------
 {
-  //Account for stretch by making twt0 sufficiently long. Stretch upwards is also taken into account
-  //through "xtra_samples_top".
-  //Max twt value and location is found from twtgrid and twtx is calculated for the largest offset.
-  //"Time samples stretch" is number of samples in nmo-corrected seismic trace.
+  // Account for stretch by making twt0 sufficiently long. Stretch upwards is also taken into account
+  // through "xtra_samples_top".
+  // Max twt value and location is found from twtgrid and twtx is calculated for the largest offset.
+  // "Time samples stretch" is number of samples in nmo-corrected seismic trace.
 
-  size_t i_max, j_max;
-  double twt_max, twtx_max;
-  size_t nt                      = seismic_geometry_->nt();
-  double dt                      = seismic_geometry_->dt();
-  double t0                      = seismic_geometry_->t0();
-  std::vector<double> constvp    = model_settings_->GetConstVp();
-  double twt_wavelet             = wavelet_->GetTwtLength();
-  size_t nzrefl                  = seismic_geometry_->zreflectorcount();
-
-  //find max from twgrid, and index of max twt value
-  FindMaxTwtIndex(i_max, j_max, twt_max);
-
+  size_t i_max;
+  size_t j_max;
+  double twt_max;
+  double twtx_max;
   size_t noffset    = offset_vec_.size();
   double offset_max = offset_vec_[noffset - 1];
 
-  //find max TWTX for highest offset in order to find the highest TWT value to sample seismic
-  if (ps_seis) { //------------PS seismic------------
+  FindMaxTwtIndex(i_max, j_max, twt_max);   // Find max from twgrid, and index of max twt value
+
+  // Find max TWTX for highest offset in order to find the highest TWT value to sample seismic
+
+  //
+  //------------PS seismic------------
+  //
+  if (ps_seis) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate Twt0 for NMO assuming PS seismic\n");
-    std::vector<double> vrms_pp_vec(nzrefl), vrms_ss_vec(nzrefl);
-    std::vector<double> vp_vec(nzrefl), vs_vec(nzrefl), twt_pp_vec(nzrefl), twt_ss_vec(nzrefl);
+    std::vector<double> vp_vec(nzrefl);
+    std::vector<double> vs_vec(nzrefl);
+    std::vector<double> twt_pp_vec(nzrefl);
+    std::vector<double> twt_ss_vec(nzrefl);
+    std::vector<double> vrms_pp_vec(nzrefl);
+    std::vector<double> vrms_ss_vec(nzrefl);
 
     for (size_t k = 0; k < nzrefl; ++k) {
       twt_pp_vec[k] = (*twtppgrid_)(i_max, j_max, k);
@@ -784,14 +807,14 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
 
     double vrms_pp     = vrms_pp_vec[nzrefl - 1];
     double vrms_ss     = vrms_ss_vec[nzrefl - 1];
-    double twt_pp_max  = twt_pp_vec[nzrefl - 1];
-    double twt_ss_max  = twt_ss_vec[nzrefl - 1];
+    double twt_pp_max  = twt_pp_vec [nzrefl - 1];
+    double twt_ss_max  = twt_ss_vec [nzrefl - 1];
     double tmp         = offset_max / (vrms_pp_vec[nzrefl - 1]*twt_pp_max / 1000);
     double start_value = atan(tmp);
     if (start_value >= 1.0)
       start_value = 0.99;
     double dU        = vrms_ss * twt_ss_max / 2000;
-    double dD        = vrms_pp* twt_pp_max / 2000;
+    double dD        = vrms_pp * twt_pp_max / 2000;
     double vr        = vrms_ss / vrms_pp;
     size_t n_it      = 10;
     double y_out     = FindSinThetaPSWithNewtonsMethod(start_value,
@@ -810,86 +833,94 @@ std::vector<double> SeismicParameters::GenerateTwt0ForNMO(size_t & nt_stretch,
     double twtx_ss   = std::sqrt(twt_ss_max * twt_ss_max / 4 + 1000 * 1000 * (offset_ss * offset_ss) / (vrms_ss * vrms_ss));
     twtx_max         = twtx_pp + twtx_ss;
   }
-  else {  //------------PP seismic------------
+  //
+  //------------PP seismic------------
+  //
+  else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate Twt0 for NMO assuming PP seismic.\n");
-    //find max vrms in index
-    std::vector<double> vrms_vec(nzrefl), vp_vec(nzrefl), twt_vec(nzrefl);
+    std::vector<double> vrms_vec(nzrefl);
+    std::vector<double> vp_vec(nzrefl);
+    std::vector<double> twt_vec(nzrefl);
     for (size_t k = 0; k < nzrefl; ++k) {
       twt_vec[k] = (*twtgrid_)(i_max, j_max, k);
       vp_vec[k]  = (*vpgrid_) (i_max, j_max, k);
     }
-    FindVrms(vrms_vec, twt_vec, vp_vec, (*zgrid_)(i_max, j_max, 0));
+    FindVrms(vrms_vec, twt_vec, vp_vec, (*zgrid_)(i_max, j_max, 0));  // Find max vrms in index
     double vrms_max_t = vrms_vec[vrms_vec.size() - 1];
     twtx_max = std::sqrt(twt_max*twt_max + 1000 * 1000 * offset_max*offset_max / (vrms_max_t*vrms_max_t));
-  } //---------------------------
+  }
 
-  double sf            = twtx_max / twt_max;                   //stretch factor. NO wavelet in twtx_max and twt_max
-  double tmin          = t0;                                   //min twt sample. Includes wavlet
-  size_t nt_top        = 0;                                    //samples on top due to stretch
-  double tmax_stretch  = seismic_geometry_->tmax();            //max twt sample due to stretch. Includes wavelet
-  nt_stretch           = nt;                                   //samples in nmo corrected seismic - include stretch top and bot
-  size_t nt_seis       = nt;                                   //number of samples in prenmo seis (twt_0)
-  twtx_max            += twt_wavelet;                          //add one wavelet (as no wavelet is included here)
+  stretch_factor       = twtx_max / twt_max;                   // stretch factor. NO wavelet in twtx_max and twt_max
+  double tmin          = t0;                                   // min twt sample. Includes wavlet
+  size_t nt_top        = 0;                                    // samples on top due to stretch
+  double tmax_stretch  = seismic_geometry_->tmax();            // max twt sample due to stretch. Includes wavelet
+  nt_stretch           = nt;                                   // samples in nmo corrected seismic - include stretch top and bot
+  size_t nt_seis       = nt;                                   // number of samples in prenmo seis (twt_0)
+  twtx_max            += twt_wavelet;                          // add one wavelet (as no wavelet is included here)
 
-  if (sf > 1) {
-    tmin         -= sf * 2 * twt_wavelet;
+  if (stretch_factor > 1) {
+    tmin         -= stretch_factor*2*twt_wavelet;              // Subtracting a stetched wavlet
     nt_top        = static_cast<size_t>((t0 - tmin) / dt);
-    tmax_stretch += sf * 6 * twt_wavelet;
+    tmax_stretch += stretch_factor*6*twt_wavelet;
     nt_stretch    = static_cast<size_t>(floor((tmax_stretch - tmin) / dt + 0.5));
     nt_seis       = static_cast<size_t>(floor((twtx_max     - tmin) / dt + 0.5));
   }
 
-  twt_0_.resize(nt_seis);
+  twt_0.resize(nt_seis);
   for (size_t i = 0; i < nt_seis; ++i){
-    twt_0_[i] = (t0 - nt_top * dt) + i*dt;
+    twt_0[i] = (t0 - nt_top * dt) + i*dt;
   }
-  if (nt_stretch > twt_0_.size()){
-    nt_stretch = twt_0_.size();
+  if (nt_stretch > twt_0.size()){
+    nt_stretch = twt_0.size();
   }
-  return twt_0_;
+
+  if (stretch_factor > 1) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   stretch factor :  %7.5f  (twtx_max / twt_max)\n", stretch_factor);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   wavelet length :  %7.2f\n", twt_wavelet*2);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   nt_stretch     :  %7d\n"  , nt_stretch);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   nt_seis        :  %7d\n"  , nt_seis);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   tmax_stretch   :  %7.2f\n", tmax_stretch);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   twtx_max       :  %7.2f\n", twtx_max);
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   twt0_min       :  %7.2f\n",twt_0[0]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   twt0_max       :  %7.2f\n",twt_0[nt_seis - 1]);
 }
 
-//--------------------------------------------------------
-std::vector<double>  SeismicParameters::GenerateZ0ForNMO()
-//--------------------------------------------------------
+//----------------------------------------------------------------------------
+void SeismicParameters::GenerateZ0ForNMO(std::vector<double> & z_0,
+                                         const double          stretch_factor)
+//----------------------------------------------------------------------------
 {
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGenerate Z0 for NMO.\n");
 
-  size_t nz                      = seismic_geometry_->nz();
-  double zmin                    = seismic_geometry_->z0();
-  double dz                      = seismic_geometry_->dz();
-  double dt                      = seismic_geometry_->dt();
-
-  std::vector<double> constvp    = model_settings_->GetConstVp();
-  double twt_wavelet             = wavelet_->GetTwtLength();
   double z_top_wavelet           = model_settings_->GetZWaveletTop();
   double z_bot_wavelet           = model_settings_->GetZWaveletBot();
 
+  double zmin                    = seismic_geometry_->z0();
+  size_t nz                      = seismic_geometry_->nz();
+  double dz                      = seismic_geometry_->dz();
 
-  double tmax                    = seismic_geometry_->tmax();
-  tmax                           = static_cast<size_t>(floor(tmax / dt + 0.5)) * dt;
-  double twt_0_max               = twt_0_[twt_0_.size()-1];
-  double sf                      = (twt_0_max - twt_wavelet) / (tmax - twt_wavelet);
   double min_z                   = zmin;
-  double max_z                   = zmin + (nz-1)*dz;
+  double max_z                   = zmin + (nz - 1)*dz;
 
-  //account for stretch above and below reservoir
-  if (sf > 1) {
-    min_z -= sf * 2 * z_top_wavelet;
-    max_z += sf * 2 * z_bot_wavelet;
+  // Account for stretch above and below reservoir
+
+  if (stretch_factor > 1) {
+    min_z -= stretch_factor * 2 * z_top_wavelet;
+    max_z += stretch_factor * 2 * z_bot_wavelet;
   }
 
-  size_t nz_seis                 = static_cast<size_t>(std::floor((max_z - min_z)/dz + 0.5)) + 1;
-
-  //find min z in a sample
-  size_t nzmin = static_cast<size_t>(floor(min_z) / dz + 0.5);
+  size_t nz_seis     = static_cast<size_t>(std::floor((max_z - min_z)/dz + 0.5)) + 1;
+  size_t nzmin       = static_cast<size_t>(floor(min_z) / dz + 0.5);                  // Find min z in a sample
   double min_z_sampl = nzmin *dz;
 
-  z_0_.resize(nz_seis);
+  z_0.resize(nz_seis);
   for (size_t i = 0; i < nz_seis; ++i){
-    z_0_[i] = min_z_sampl + i*dz;
+    z_0[i] = min_z_sampl + i*dz;
   }
-  return z_0_;
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   z0_min        :  %7.2f\n", min_z_sampl);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   z0_max        :  %7.2f\n", z_0[nz_seis - 1]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   dz            :  %7.2f\n", dz);
 }
 
 //-------------------------------------------------------------------------

@@ -54,8 +54,6 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
 
   FindTWT(seismic_parameters, model_settings, toptime, bottime, n_threads);
 
-  NRLib::LogKit::WriteHeader("Export grids");
-
   //---generate, write and delete vrms grid if writing is requested---------
   if (model_settings->GetNMOCorr() && model_settings->GetOutputVrms()){
     if (model_settings->GetPSSeismic()) {
@@ -105,6 +103,11 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   seismic_parameters.GetSeismicGeometry()->setNt(nt);
   seismic_parameters.GetSeismicGeometry()->setTRange(tmin, tmax);
 
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   tmin           :  %7.2f  (top Eclipse - 1/2 wavelet)\n", tmin);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   tmax           :  %7.2f  (bot Eclipse + 1/2 wavelet)\n", tmax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   dt             :  %7.2f\n", dt);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   nt             :  %7d\n", nt);
+
   //---write toptime and bottime---------------------------------
   if (model_settings->GetOutputTimeSurfaces()) {
     seismic_parameters.GetSeismicOutput()->WriteTimeSurfaces(seismic_parameters);
@@ -112,6 +115,8 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
 
   bool   interpolate = model_settings->GetResamplParamToSegyInterpol();
   time_t t1          = time(0);   // get time now
+
+  NRLib::LogKit::WriteHeader("Export grids");
 
   //---resample and write ELASTIC parameters in segy------------
   if (model_settings->GetOutputElasticParametersTimeSegy() || model_settings->GetOutputElasticParametersDepthSegy()) {

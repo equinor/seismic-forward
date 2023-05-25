@@ -61,7 +61,7 @@ private:
   std::string         file_format_;
 
   double              time_sampling_in_ms_;
-  double              twt_length_;
+  double              twt_length_;               ///< Half a wavelet!
 
   double              peak_frequency_;
 

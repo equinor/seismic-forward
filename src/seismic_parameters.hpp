@@ -88,10 +88,18 @@ class SeismicParameters
                            size_t              & time_samples_stretch,
                            bool                  ps_seis);
 
-    std::vector<double> GenerateTwt0ForNMO(size_t & time_stretch_samples,
-                                           bool     ps_seis);
+    void GenerateTwt0ForNMO(std::vector<double> & twt_0,
+                            size_t              & nt_stretch,
+                            double              & stretch_factor,
+                            const bool            ps_seis,
+                            const double          twt_wavelet,
+                            const size_t          nt,
+                            const double          dt,
+                            const double          t0,
+                            const size_t          nzrefl);
 
-    std::vector<double> GenerateZ0ForNMO();
+    void GenerateZ0ForNMO(std::vector<double> & z_0,
+                          const double          stretch_factor);
 
     std::vector<double> GenerateTWT0Shift(double twt_0_min,
                                           size_t n_samples);
@@ -240,9 +248,6 @@ private:
   NRLib::StormContGrid               * vrmsgrid_;
   std::vector<NRLib::StormContGrid>  * rgridvec_;
   std::vector<NRLib::StormContGrid*>   extra_parameter_grid_;
-
-  std::vector<double>                  twt_0_;
-  std::vector<double>                  z_0_;
 
   float                                missing_;
 };
