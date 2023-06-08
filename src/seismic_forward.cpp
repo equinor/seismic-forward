@@ -487,7 +487,13 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       nmo_timegrid_pos = NRLib::Grid2D<double>(timegrid_pos);
     }
     else {
-      NMOCorrect(param->twt_0, timegrid_pos, twtx_reg, nmo_timegrid_pos, n_min, n_max, max_sample);
+      NMOCorrect(param->twt_0,
+                 timegrid_pos,
+                 twtx_reg,
+                 nmo_timegrid_pos, // output
+                 n_min,
+                 n_max,
+                 max_sample);      // output
     }
 
     if (add_white_noise) {                // Add noise to seismic signal
@@ -538,6 +544,17 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
       }
       */
 
+      /*
+      //xxxXXX
+      if (i == 0 && j == 0) {
+        std::cout << "\ni,j = " << i << " " << j << std::endl;
+        for (size_t ii = 0 ; ii < nmo_depthgrid_stack_pos.GetNI() ; ii++) {
+          printf("%3lu  nmo_timegrid_pos = %7.3f\n",ii,nmo_timegrid_pos(ii, 0));
+        }
+      }
+      */
+
+
       if (nmo_output->GetDepthSegyOk()) {
         ConvertSeis(twt_vec_extrapol,
                     param->twt_0,
@@ -546,6 +563,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
                     nmo_timegrid_pos,
                     nmo_depthgrid_pos,
                     max_sample);
+
 
 
         /*
@@ -1114,47 +1132,74 @@ void SeismicForward::ConvertSeis(const std::vector<double>   & twt_vec,
                                  const size_t                & max_sample)
 {
   size_t nk = conv_seismic.GetNI();
-  std::vector<double> seismic_vec(max_sample);
+
+
+  std::vector<double> seismic_vec(seismic.GetNI());
+  //xxxx
+  //std::vector<double> seismic_vec(max_sample);
+
+
   std::vector<double> conv_seismic_vec(nk);
 
-  std::vector<double> zt_reg = LinInterp1D(twt_vec, zgrid_vec, twt_0);
-  zt_reg.resize(max_sample);
+  std::vector<double> zt_reg  // nt
+    = LinInterp1D(twt_vec,    // nzrefl + 1 or 2
+                  zgrid_vec,  // nzrefl + 1 or 2
+                  twt_0);     // nt
 
   /*
   //xxxXXX
+  printf("nt = %lu    nk = %lu   max_sample = %lu\n",twt_0.size(),nk,max_sample);
   for (size_t ii = 0 ; ii < twt_0.size() ; ii++) {
-    printf("%3lu  twt_0 = %7.3f\n",ii,twt_0[ii]);
+    printf("%3lu  twt_0 = %7.3f   zt_reg = %7.3f\n",ii,twt_0[ii],zt_reg[ii]);
   }
-  for (size_t ii = 0 ; ii < zt_reg.size() ; ii++) {
-    printf("%3lu  zt_reg = %7.3f\n",ii,zt_reg[ii]);
-  }
-  printf("nk = %lu   max_sample = %lu\n",nk,max_sample);
-  exit(1);
+  //exit(1);
   */
 
-  for (size_t off = 0; off < seismic.GetNJ(); off++) {
-    for (size_t k = 0; k < max_sample; k++) {
+  //zt_reg.resize(max_sample);
+
+  for (size_t off = 0 ; off < seismic.GetNJ() ; off++) {
+    //xxxxx
+    //    for (size_t k = 0; k < max_sample; k++) {
+    for (size_t k = 0 ; k < seismic.GetNI() ; k++) {
       seismic_vec[k] = seismic(k, off);
     }
-    conv_seismic_vec = SplineInterp1D(zt_reg, seismic_vec, z_0, 0);
+
+    /*
+    //xxxxx
+    for (size_t ii = 0 ; ii < nk ; ii++) {
+      printf("%3lu  seismic_vec = %7.3f\n",ii,seismic(ii,off));
+    }
+    exit(1);
+    */
+
+    conv_seismic_vec                 // nk            | y_out
+      = SplineInterp1D(zt_reg,       // max_sample    | x_in
+                       seismic_vec,  // max_sample    | y_in
+                       z_0,          // nk            | x_out
+                       0.0);         //               | Extrapolation value
+
     for (size_t k = 0; k < nk; k++) {
       conv_seismic(k, off) = conv_seismic_vec[k];
     }
   }
 }
 
-void SeismicForward::NMOCorrect(const std::vector<double>   &t_in,
-                                const NRLib::Grid2D<double> &data_in,
-                                const NRLib::Grid2D<double> &t_out,
-                                NRLib::Grid2D<double>       &data_out,
-                                const std::vector<size_t>   &n_min,
-                                const std::vector<size_t>   &n_max,
-                                size_t                      &max_sample)
+void SeismicForward::NMOCorrect(const std::vector<double>   & t_in,
+                                const NRLib::Grid2D<double> & data_in,
+                                const NRLib::Grid2D<double> & t_out,
+                                NRLib::Grid2D<double>       & data_out,
+                                const std::vector<size_t>   & n_min,
+                                const std::vector<size_t>   & n_max,
+                                size_t                      & max_sample)
 {
   max_sample = 0;
   size_t nt_in = data_in.GetNI();
   size_t noff  = data_in.GetNJ();
-  std::vector<double> data_vec_in(nt_in), t_vec_in(nt_in), t_vec_out(nt_in), data_vec_out(nt_in);
+  std::vector<double> data_vec_in(nt_in);
+  std::vector<double> data_vec_out(nt_in);
+  std::vector<double> t_vec_in(nt_in);
+  std::vector<double> t_vec_out(nt_in);
+
   for (size_t off = 0; off < noff; off++) {
     size_t n_min_max = (n_max[off]-n_min[off]+1);
     data_vec_in.resize(n_min_max);
@@ -1168,8 +1213,8 @@ void SeismicForward::NMOCorrect(const std::vector<double>   &t_in,
       t_vec_in[k - n_min[off]]    = t_in[k];
     }
 
-    //not necessary to interpolate AT values higher than max t
-    //t_out not monotonously increasing, must check that we are inside
+    // not necessary to interpolate AT values higher than max t
+    // t_out not monotonously increasing, must check that we are inside
     bool inside = false;
     for (size_t k = 0; k < nt_in; k++) {
       t_vec_out[k]   = t_out(k, off);
