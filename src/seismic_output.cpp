@@ -245,14 +245,14 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
   return true;
 }
 
-void SeismicOutput::WriteSegyGather(NRLib::Grid2D<double>     & data_gather,
-                                    NRLib::SegY               & segyout,
-                                    const std::vector<double>   twt_0,
-                                    const std::vector<double>   offset_vec,
-                                    bool                        time,
-                                    double                      x,
-                                    double                      y,
-                                    bool                        nmo)
+void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
+                                    NRLib::SegY                 & segyout,
+                                    const std::vector<double>   & twt_0,
+                                    const std::vector<double>   & offset_vec,
+                                    bool                          time,
+                                    double                        x,
+                                    double                        y,
+                                    bool                          nmo)
 {
   float  dz = segyout.GetDz();
   size_t nz = segyout.GetNz();
@@ -260,8 +260,8 @@ void SeismicOutput::WriteSegyGather(NRLib::Grid2D<double>     & data_gather,
   std::vector<float> datavec(nz);
 
   int k;
-  int firstSample = static_cast<int>(floor((twt_0[0])              / dz));
-  int endData   = static_cast<int>(floor((twt_0[data_gather.GetNI()-1]) / dz));
+  int firstSample = static_cast<int>(floor((twt_0[0])                     / dz));
+  int endData     = static_cast<int>(floor((twt_0[data_gather.GetNI()-1]) / dz));
   int firstData   = firstSample;
 
   int windowTop, windowBot;
@@ -314,6 +314,7 @@ void SeismicOutput::WriteSegyGather(NRLib::Grid2D<double>     & data_gather,
         datavec[k] = 0.0;
       }
     }
+
     if (nmo)
       segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(offset_vec[off]));
     else
