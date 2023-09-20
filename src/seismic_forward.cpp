@@ -167,8 +167,6 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seispar,
                             time_samples_stretch,
                             ps_seis);
 
-  std::cout << "offset_vec.size() = " << offset_vec.size() << std::endl;
-
   Output output(seispar,
                 model_settings,
                 twt_0,
@@ -866,11 +864,13 @@ void SeismicForward::MakeReflections(NRLib::Grid2D<double>             & refl,
     }
   }
   if (add_noise) {
-    NRLib::Grid2D<double> noise(m, n);
-    GenerateWhiteNoise(seed + static_cast<long>(i + nx*j), std, noise);
-
-    refl += noise;
-
+    std::vector<double> noise(m);
+    for (int jj = 0 ; jj < n ; jj++) {
+      GenerateWhiteNoise(seed + static_cast<long>(i + nx*j), std, noise); // Gives equal noise for equal angles
+      for (int ii = 0 ; ii < m ; ii++) {
+        refl(ii, jj) += noise[ii];
+      }
+    }
     if (output_refl) { // Keep reflections for zero offset if output on storm and white noise
       for (size_t k = 0 ; k < m ; ++k) {
         rgridvec[1](i, j, k) = static_cast<float>(refl(k, 0));
@@ -1087,14 +1087,11 @@ void SeismicForward::ConvertSeis(const std::vector<double>   & twt_vec,
                                  NRLib::Grid2D<double>       & conv_seismic,
                                  const size_t                & max_sample)
 {
-  size_t nk = conv_seismic.GetNI();
+  size_t ni   = seismic.GetNI();
+  size_t noff = seismic.GetNJ();
+  size_t nk   = conv_seismic.GetNI();
 
-
-  std::vector<double> seismic_vec(seismic.GetNI());
-  //xxxx
-  //std::vector<double> seismic_vec(max_sample);
-
-
+  std::vector<double> seismic_vec(ni);
   std::vector<double> conv_seismic_vec(nk);
 
   std::vector<double> zt_reg  // nt
@@ -1102,37 +1099,18 @@ void SeismicForward::ConvertSeis(const std::vector<double>   & twt_vec,
                   zgrid_vec,  // nzrefl + 1 or 2
                   twt_0);     // nt
 
-  /*
-  //xxxXXX
-  printf("nt = %lu    nk = %lu   max_sample = %lu\n",twt_0.size(),nk,max_sample);
-  for (size_t ii = 0 ; ii < twt_0.size() ; ii++) {
-    printf("%3lu  twt_0 = %7.3f   zt_reg = %7.3f\n",ii,twt_0[ii],zt_reg[ii]);
-  }
-  //exit(1);
-  */
+  zt_reg.resize(seismic.GetNI());
 
-  //zt_reg.resize(max_sample);
-
-  for (size_t off = 0 ; off < seismic.GetNJ() ; off++) {
-    //xxxxx
-    //    for (size_t k = 0; k < max_sample; k++) {
-    for (size_t k = 0 ; k < seismic.GetNI() ; k++) {
+  for (size_t off = 0 ; off < noff ; off++) {
+    for (size_t k = 0 ; k < ni ; k++) {
       seismic_vec[k] = seismic(k, off);
     }
 
-    /*
-    //xxxxx
-    for (size_t ii = 0 ; ii < nk ; ii++) {
-      printf("%3lu  seismic_vec = %7.3f\n",ii,seismic(ii,off));
-    }
-    exit(1);
-    */
-
-    conv_seismic_vec                 // nk            | y_out
-      = SplineInterp1D(zt_reg,       // max_sample    | x_in
-                       seismic_vec,  // max_sample    | y_in
-                       z_0,          // nk            | x_out
-                       0.0);         //               | Extrapolation value
+    conv_seismic_vec                 // nk   | y_out
+      = SplineInterp1D(zt_reg,       // ni   | x_in
+                       seismic_vec,  // ni   | y_in
+                       z_0,          // nk   | x_out
+                       0.0);         //      | Extrapolation value
 
     for (size_t k = 0; k < nk; k++) {
       conv_seismic(k, off) = conv_seismic_vec[k];
