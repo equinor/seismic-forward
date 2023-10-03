@@ -285,16 +285,17 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
 {
   SeismicParameters & seismic_parameters = param->seismic_parameters;
   ModelSettings     * model_settings     = param->seismic_parameters.GetModelSettings();
+  size_t              nzrefl             = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
   ResultTrace       * result_trace;
 
   if (!param->empty_queue.try_pop(result_trace)){
-    result_trace = new ResultTrace(seismic_parameters,
-                                   model_settings,
-                                   param->twt_0,
-                                   param->z_0,
-                                   param->twts_0,
+    result_trace = new ResultTrace(model_settings,
+                                   nzrefl,
+                                   param->twt_0.size(),
+                                   param->z_0.size(),
+                                   param->twts_0.size(),
                                    param->time_samples_stretch,
-                                   param->offset_vec);
+                                   param->offset_vec.size());
   }
 
   result_trace->SetJobID(trace);
@@ -504,7 +505,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
 
     if (add_white_noise) {                // Add noise to seismic signal
       double twt_shift = t0_non_nmo - twt_0[0];
-      int    ishift    = twt_shift/dz;
+      int    ishift    = static_cast<int>(twt_shift/dz);
       std::vector<double> noise(nt_non_nmo);
       for (int off = 0 ; off < noff ; off++) {
         GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise); // Gives equal noise for each offset
@@ -641,16 +642,17 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
 {
   SeismicParameters & seismic_parameters = param->seismic_parameters;
   ModelSettings     * model_settings     = param->seismic_parameters.GetModelSettings();
+  size_t              nzrefl             = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
   ResultTrace       * result_trace;
 
   if (!param->empty_queue.try_pop(result_trace)){
-    result_trace = new ResultTrace(seismic_parameters,
-                                   model_settings,
-                                   param->twt_0,
-                                   param->z_0,
-                                   param->twts_0,
+    result_trace = new ResultTrace(model_settings,
+                                   nzrefl,
                                    param->twt_0.size(),
-                                   param->theta_vec);
+                                   param->z_0.size(),
+                                   param->twts_0.size(),
+                                   param->twt_0.size(),
+                                   param->theta_vec.size());
   }
 
   result_trace->SetJobID(trace);
