@@ -862,8 +862,8 @@ void SeismicParameters::GenerateTwt0ForNMO(std::vector<double> & twt_0,
     tmin         -= stretch_factor*2*twt_wavelet;              // Subtracting a stetched wavlet
     nt_top        = static_cast<size_t>((t0 - tmin) / dt);
     tmax_stretch += stretch_factor*6*twt_wavelet;
-    nt_stretch    = static_cast<size_t>(ceil((tmax_stretch - tmin) / dt + 0.5));
-    nt_seis       = static_cast<size_t>(ceil((twtx_max     - tmin) / dt + 0.5));
+    nt_stretch    = static_cast<size_t>(floor((tmax_stretch - tmin) / dt + 0.5));
+    nt_seis       = static_cast<size_t>(floor((twtx_max     - tmin) / dt + 0.5));
   }
 
   twt_0.resize(nt_seis);

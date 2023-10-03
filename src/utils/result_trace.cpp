@@ -1,45 +1,43 @@
 #include "result_trace.hpp"
 #include <seismic_geometry.hpp>
 
-//------------------------------------------------------------------------
-ResultTrace::ResultTrace(SeismicParameters         & seismic_parameters,
-                         ModelSettings             * model_settings,
-                         std::vector<double>         twt_0,
-                         std::vector<double>         z_0,
-                         std::vector<double>         twts_0,
-                         size_t                      time_samples_stretch,
-                         const std::vector<double> & offset_vec)
-//------------------------------------------------------------------------
+//------------------------------------------------------
+ResultTrace::ResultTrace(ModelSettings * model_settings,
+                         const size_t    nzrefl,
+                         const size_t    nt,
+                         const size_t    nz,
+                         const size_t    ntwts0,
+                         const size_t    nt_stretch,
+                         const size_t    noff)
+//------------------------------------------------------
   : empty_(false)
 {
-  size_t nzrefl = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
   if (model_settings->GetNMOCorr()) {
-
-    twtx_reg_.           Resize(twt_0.size(), offset_vec.size());
-    twtx_.               Resize(nzrefl,       offset_vec.size());
-    theta_.              Resize(nzrefl,       offset_vec.size());
-    refl_.               Resize(nzrefl,       offset_vec.size());
-    prenmo_timegrid_pos_.Resize(twt_0.size(), offset_vec.size());
+    twtx_reg_.           Resize(nt    , noff);
+    twtx_.               Resize(nzrefl, noff);
+    theta_.              Resize(nzrefl, noff);
+    refl_.               Resize(nzrefl, noff);
+    prenmo_timegrid_pos_.Resize(nt    , noff);
 
     if (model_settings->GetPSSeismic()) {
-      offset_pp_.    Resize(nzrefl, offset_vec.size());
-      offset_ss_.    Resize(nzrefl, offset_vec.size());
-      offset_pp_reg_.Resize(twt_0.size(), offset_vec.size());
-      offset_ss_reg_.Resize(twt_0.size(), offset_vec.size());
+      offset_pp_.    Resize(nzrefl, noff);
+      offset_ss_.    Resize(nzrefl, noff);
+      offset_pp_reg_.Resize(nt    , noff);
+      offset_ss_reg_.Resize(nt    , noff);
     }
   }
-  timegrid_pos_.Resize(time_samples_stretch, offset_vec.size());
+  timegrid_pos_.Resize(nt_stretch, noff);
 
   if (model_settings->GetStackOutput() || model_settings->GetStormOutput()) {
-    timegrid_stack_pos_.Resize(time_samples_stretch, 1);
+    timegrid_stack_pos_.Resize(nt_stretch, 1);
   }
   if (model_settings->GetTimeshiftOutput()) {
-    timeshiftgrid_pos_.      Resize(twts_0.size(), offset_vec.size());
-    timeshiftgrid_stack_pos_.Resize(twts_0.size(), 1);
+    timeshiftgrid_pos_.      Resize(ntwts0, noff);
+    timeshiftgrid_stack_pos_.Resize(ntwts0, 1);
   }
   if (model_settings->GetDepthOutput()){
-    depthgrid_pos_.      Resize(z_0.size(), offset_vec.size());
-    depthgrid_stack_pos_.Resize(z_0.size(), 1);
+    depthgrid_pos_.      Resize(nz, noff);
+    depthgrid_stack_pos_.Resize(nz, 1);
   }
 }
 
