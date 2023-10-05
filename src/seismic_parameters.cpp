@@ -850,28 +850,28 @@ void SeismicParameters::GenerateTwt0ForNMO(std::vector<double> & twt_0,
     twtx_max = std::sqrt(twt_max*twt_max + 1000 * 1000 * offset_max*offset_max / (vrms_max_t*vrms_max_t));
   }
 
-  stretch_factor       = twtx_max / twt_max;                   // stretch factor. NO wavelet in twtx_max and twt_max
-  double tmin          = t0;                                   // min twt sample. Includes wavlet
-  size_t nt_top        = 0;                                    // samples on top due to stretch
-  double tmax_stretch  = seismic_geometry_->tmax();            // max twt sample due to stretch. Includes wavelet
-  nt_stretch           = nt;                                   // samples in nmo corrected seismic - include stretch top and bot
-  size_t nt_seis       = nt;                                   // number of samples in prenmo seis (twt_0)
-  twtx_max            += twt_wavelet;                          // add one wavelet (as no wavelet is included here)
+  stretch_factor       = twtx_max / twt_max;                          // stretch factor. NO wavelet in twtx_max and twt_max
+  double tmin          = t0;                                          // min twt sample. Includes wavlet
+  size_t ishift        =  0;                                          // samples on top due to stretch
+  double tmax_stretch  = seismic_geometry_->tmax();                   // max twt sample due to stretch. Includes wavelet
+  size_t nt_seis       = nt;                                          // number of samples in prenmo seis (twt_0)
+  nt_stretch           = nt;                                          // samples in nmo corrected seismic - include stretch top and bot
+  twtx_max            += twt_wavelet;                                 // add one wavelet (as no wavelet is included here)
 
   if (stretch_factor > 1) {
-    tmin         -= stretch_factor*2*twt_wavelet;              // Subtracting a stetched wavlet
-    nt_top        = static_cast<size_t>((t0 - tmin) / dt);
-    tmax_stretch += stretch_factor*6*twt_wavelet;
-    nt_stretch    = static_cast<size_t>(floor((tmax_stretch - tmin) / dt + 0.5));
-    nt_seis       = static_cast<size_t>(floor((twtx_max     - tmin) / dt + 0.5));
+    tmin         -= stretch_factor*2*twt_wavelet;                     // Subtracting a stetched wavlet
+    tmax_stretch += stretch_factor*6*twt_wavelet;                     // Add three stetched wavlets
+    ishift        = static_cast<size_t>(floor((t0 - tmin)/dt + 0.5)); // Difference in start time between non NMO and NMO
+    nt_stretch    = static_cast<size_t>(ceil((tmax_stretch - tmin) / dt + 0.5));
+    nt_seis       = static_cast<size_t>(ceil((twtx_max     - tmin) / dt + 0.5));
   }
 
   twt_0.resize(nt_seis);
   for (size_t i = 0; i < nt_seis; ++i){
-    twt_0[i] = (t0 - nt_top * dt) + i*dt;
+    twt_0[i] = (t0 - ishift * dt) + i*dt;
   }
-  if (nt_stretch > twt_0.size()){
-    nt_stretch = twt_0.size();
+  if (nt_stretch > nt_seis){
+    nt_stretch = nt_seis;
   }
 
   if (stretch_factor > 1) {
