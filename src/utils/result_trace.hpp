@@ -9,13 +9,13 @@ class ResultTrace
 {
   public:
 
-    ResultTrace(SeismicParameters         & seismic_parameters,
-                ModelSettings             * model_settings,
-                std::vector<double>         twt_0,
-                std::vector<double>         z_0,
-                std::vector<double>         twts_0,
-                size_t                      time_samples_stretch,
-                const std::vector<double> & offset_vec);
+    ResultTrace(ModelSettings * model_settings,
+                const size_t    nzrefl,
+                const size_t    ntwt0,
+                const size_t    nz0,
+                const size_t    ntwts0,
+                const size_t    nt_stretch,
+                const size_t    noff);
 
     void SetJobID(Trace *trace);
     void SetIsEmpty(bool empty) { empty_ = empty; };

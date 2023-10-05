@@ -149,8 +149,13 @@ void Output::AddTrace(ResultTrace   * result_trace,
         (*timegrid_)(i, j, k) = 0.0f;
       else
         (*timegrid_)(i, j, k) = float(result_trace->GetTimeStackTrace()(k,0));
+
+      // xxxXXXX
+      //printf("nk = %lu  k = %3lu  timegrid_ = %10.5f\n",timegrid_->GetNK(),k,(*timegrid_)(i,j,k));
+
     }
   }
+
   if (model_settings->GetTimeshiftOutput()) {
     for (size_t k = 0 ; k < timeshiftgrid_->GetNK() ; ++k) {
       if (result_trace->GetIsEmpty() || !timeshift_stack_segy_ok_)
