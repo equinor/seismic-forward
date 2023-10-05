@@ -327,7 +327,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
     size_t                              nx                          = seismic_parameters.GetSeismicGeometry()->nx();
     double                              dz                          = seismic_parameters.GetSeismicGeometry()->dz();
     double                              dt                          = seismic_parameters.GetSeismicGeometry()->dt();
-    double                              t0_non_nmo                  = seismic_parameters.GetSeismicGeometry()->t0();
+    double                              t0                          = seismic_parameters.GetSeismicGeometry()->t0();
     double                              nt_non_nmo                  = seismic_parameters.GetSeismicGeometry()->nt();
     size_t                              nzrefl                      = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
     double                              wavelet_scale               = seismic_parameters.GetWaveletScale();
@@ -503,17 +503,22 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
                  max_sample);      // output
     }
 
-    if (add_white_noise) {                // Add noise to seismic signal
-      double twt_shift = t0_non_nmo - twt_0[0];
-      int    ishift    = static_cast<int>(twt_shift/dz);
+    if (add_white_noise) {         // Add noise to seismic signal
+      int ishift = static_cast<int>(floor((t0 - twt_0[0]) / dt + 0.5));
+
       std::vector<double> noise(nt_non_nmo);
+
       for (int off = 0 ; off < noff ; off++) {
         GenerateWhiteNoise(seed1 + static_cast<long>(i + nx*j), sd1, noise); // Gives equal noise for each offset
         for (int ii = 0 ; ii < nt_non_nmo ; ii++) {
           nmo_timegrid_pos(ishift + ii, off) += noise[ii];
+
+          //printf("ii = %3d, ishift+ii = %3d nmo_timegrid_pos(ishift + ii, off) = %10.5f\n",ii,ishift+ii,nmo_timegrid_pos(ishift + ii, off));
+
         }
       }
     }
+    //exit(1); //xxxXXX
 
     //stacking of offsets:
     if (model_settings->GetStackOutput() || model_settings->GetStormOutput()) {
