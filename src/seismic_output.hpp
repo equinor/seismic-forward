@@ -50,6 +50,15 @@ public:
                        double                        y,
                        bool                          nmo);
 
+  void WriteSegyGather2(const NRLib::Grid2D<double> & data_gather,
+                       NRLib::SegY                 & segyout,
+                       const std::vector<double>   & twt_0,
+                       const std::vector<double>   & offset_vec,
+                       bool                          time,
+                       double                        x,
+                       double                        y,
+                       bool                          nmo);
+
   void WriteZeroSegyGather(NRLib::SegY               & segyout,
                            const std::vector<double>   offset_vec,
                            double                      x,
