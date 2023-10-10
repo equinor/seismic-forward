@@ -149,10 +149,6 @@ void Output::AddTrace(ResultTrace   * result_trace,
         (*timegrid_)(i, j, k) = 0.0f;
       else
         (*timegrid_)(i, j, k) = float(result_trace->GetTimeStackTrace()(k,0));
-
-      // xxxXXXX
-      //printf("nk = %lu  k = %3lu  timegrid_ = %10.5f\n",timegrid_->GetNK(),k,(*timegrid_)(i,j,k));
-
     }
   }
 
