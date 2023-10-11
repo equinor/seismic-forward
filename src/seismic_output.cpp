@@ -264,7 +264,6 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
   int    firstData   = firstSample;
 
   int    windowTop   = 0; // Default setting needed when there is no window in use.
-  int    windowBot;
 
   if ((time && time_window_) || (!time && depth_window_)) {
     if (time) {
@@ -273,13 +272,9 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
     else {
       windowTop = static_cast<int>(floor((top_depth_window_) / dz));
     }
-    windowBot = windowTop + nz;
 
-    if (windowTop >= firstSample) {
+    if (windowTop > firstSample) {
       firstData = windowTop;
-    }
-    if (windowBot < endData) {
-      endData = windowBot;
     }
   }
 
@@ -289,23 +284,11 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
   for (size_t off = 0; off < angle_or_offset.size(); ++off) {
     std::vector<float> datavec(nz, 0.0);
 
-    if (!empty) {
+    if (!empty) {   // data_gather contains stray data for empty result traces?
       for (int k = 0 ; k < maxk ; k++) {
         datavec[k + firstData - windowTop] = float(data_gather(k + firstData - firstSample, off));
-        //printf("XXX: k=%3d   datavec[k_f-w]=%10.5f\n",k,datavec[k + firstData - windowTop]);
       }
     }
-
-    /*
-    for (int k = 0 ; k < nz ; k++) {
-      printf("YYY: k=%3d   datavec[k]=%10.5f\n",k,datavec[k]);
-    }
-
-    if (empty) {
-      exit(1);
-    }
-    */
-
     segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, angle_or_offset[off]);
   }
 }
