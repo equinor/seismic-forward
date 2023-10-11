@@ -112,33 +112,31 @@ void Output::AddTrace(ResultTrace   * result_trace,
                       SeismicOutput * seismic_output)
 //---------------------------------------------------
 {
-  std::vector<double> zero_vec(1, 0.0);
-  bool                nmo            = model_settings->GetNMOCorr();
-  double              x              = result_trace->GetX();
-  double              y              = result_trace->GetY();
-  size_t              i              = result_trace->GetI();
-  size_t              j              = result_trace->GetJ();
+  std::vector<short> zero_vec(1, 0);
+  std::vector<short> angle_or_offset(offset_vec_.size());
 
-  if (result_trace->GetIsEmpty()) {
-    if (time_segy_ok_           ) seismic_output->WriteZeroSegyGather(time_segy_             , offset_vec_, x, y, nmo);
-    if (prenmo_time_segy_ok_    ) seismic_output->WriteZeroSegyGather(prenmo_time_segy_      , offset_vec_, x, y, nmo);
-    if (time_stack_segy_ok_     ) seismic_output->WriteZeroSegyGather(time_stack_segy_       , zero_vec   , x, y, nmo);
-    if (depth_segy_ok_          ) seismic_output->WriteZeroSegyGather(depth_segy_            , offset_vec_, x, y, nmo);
-    if (depth_stack_segy_ok_    ) seismic_output->WriteZeroSegyGather(depth_stack_segy_      , zero_vec   , x, y, nmo);
-    if (timeshift_segy_ok_      ) seismic_output->WriteZeroSegyGather(timeshift_segy_        , offset_vec_, x, y, nmo);
-    if (timeshift_stack_segy_ok_) seismic_output->WriteZeroSegyGather(timeshift_stack_segy_  , zero_vec   , x, y, nmo);
-    if (twtx_segy_ok_           ) seismic_output->WriteZeroSegyGather(twtx_segy_             , offset_vec_, x, y, nmo);
+  for (size_t off = 0; off < offset_vec_.size() ; ++off) {
+    if (model_settings->GetNMOCorr())
+      angle_or_offset[off] = static_cast<short>(offset_vec_[off]);
+    else
+      angle_or_offset[off] = static_cast<short>(std::floor(offset_vec_[off]/NRLib::Degree + 0.5));
   }
-  else {
-    if (time_segy_ok_           ) seismic_output->WriteSegyGather(result_trace->GetTimeTrace()          , time_segy_           , twt_0_ , offset_vec_, true , x, y, nmo);
-    if (prenmo_time_segy_ok_    ) seismic_output->WriteSegyGather(result_trace->GetPreNMOTimeTrace()    , prenmo_time_segy_    , twt_0_ , offset_vec_, true , x, y, nmo);
-    if (time_stack_segy_ok_     ) seismic_output->WriteSegyGather(result_trace->GetTimeStackTrace()     , time_stack_segy_     , twt_0_ , zero_vec   , true , x, y, nmo);
-    if (twtx_segy_ok_           ) seismic_output->WriteSegyGather(result_trace->GetTWTxReg()            , twtx_segy_           , twt_0_ , offset_vec_, true , x, y, nmo);
-    if (depth_segy_ok_          ) seismic_output->WriteSegyGather(result_trace->GetDepthTrace()         , depth_segy_          , z_0_   , offset_vec_, false, x, y, nmo);
-    if (depth_stack_segy_ok_    ) seismic_output->WriteSegyGather(result_trace->GetDepthStackTrace()    , depth_stack_segy_    , z_0_   , zero_vec   , false, x, y, nmo);
-    if (timeshift_segy_ok_      ) seismic_output->WriteSegyGather(result_trace->GetTimeShiftTrace()     , timeshift_segy_      , twts_0_, offset_vec_, true , x, y, nmo);
-    if (timeshift_stack_segy_ok_) seismic_output->WriteSegyGather(result_trace->GetTimeShiftStackTrace(), timeshift_stack_segy_, twts_0_, zero_vec   , true , x, y, nmo);
-  }
+
+  double x = result_trace->GetX();
+  double y = result_trace->GetY();
+  size_t i = result_trace->GetI();
+  size_t j = result_trace->GetJ();
+
+  bool empty = result_trace->GetIsEmpty();
+
+  if (time_segy_ok_           ) seismic_output->WriteSegyGather(result_trace->GetTimeTrace()          , time_segy_           , twt_0_ , angle_or_offset, true , x, y, empty);
+  if (prenmo_time_segy_ok_    ) seismic_output->WriteSegyGather(result_trace->GetPreNMOTimeTrace()    , prenmo_time_segy_    , twt_0_ , angle_or_offset, true , x, y, empty);
+  if (time_stack_segy_ok_     ) seismic_output->WriteSegyGather(result_trace->GetTimeStackTrace()     , time_stack_segy_     , twt_0_ , zero_vec       , true , x, y, empty);
+  if (twtx_segy_ok_           ) seismic_output->WriteSegyGather(result_trace->GetTWTxReg()            , twtx_segy_           , twt_0_ , angle_or_offset, true , x, y, empty);
+  if (depth_segy_ok_          ) seismic_output->WriteSegyGather(result_trace->GetDepthTrace()         , depth_segy_          , z_0_   , angle_or_offset, false, x, y, empty);
+  if (depth_stack_segy_ok_    ) seismic_output->WriteSegyGather(result_trace->GetDepthStackTrace()    , depth_stack_segy_    , z_0_   , zero_vec       , false, x, y, empty);
+  if (timeshift_segy_ok_      ) seismic_output->WriteSegyGather(result_trace->GetTimeShiftTrace()     , timeshift_segy_      , twts_0_, angle_or_offset, true , x, y, empty);
+  if (timeshift_stack_segy_ok_) seismic_output->WriteSegyGather(result_trace->GetTimeShiftStackTrace(), timeshift_stack_segy_, twts_0_, zero_vec       , true , x, y, empty);
 
   //
   // Save to storm grid for output, print storm when finish loop

@@ -250,11 +250,11 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
 void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
                                     NRLib::SegY                 & segyout,
                                     const std::vector<double>   & twt_0,
-                                    const std::vector<double>   & offset_vec,
+                                    const std::vector<short>    & angle_or_offset,
                                     bool                          time,
                                     double                        x,
                                     double                        y,
-                                    bool                          nmo)
+                                    bool                          empty)
 {
   float  dz          = segyout.GetDz();
   size_t nz          = segyout.GetNz();
@@ -263,8 +263,7 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
   int    endData     = static_cast<int>(floor((twt_0[data_gather.GetNI()-1]) / dz));
   int    firstData   = firstSample;
 
-  int windowTop      = 0; // Default setting needed when there is no window in use.
-  int windowBot;
+  int    windowTop   = 0; // Default setting needed when there is no window in use.
 
   if ((time && time_window_) || (!time && depth_window_)) {
     if (time) {
@@ -273,31 +272,24 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
     else {
       windowTop = static_cast<int>(floor((top_depth_window_) / dz));
     }
-    windowBot = windowTop + nz;
 
-    if (windowTop >= firstSample) {
+    if (windowTop > firstSample) {
       firstData = windowTop;
-    }
-    if (windowBot < endData) {
-      endData = windowBot;
     }
   }
 
-  for (size_t off = 0; off < offset_vec.size(); ++off) {
+  int ndata = endData - firstData + 1;
+  int maxk  = std::min(ndata, static_cast<int>(nz) - firstData + windowTop); // Ensure we do not write past end of datavec
+
+  for (size_t off = 0; off < angle_or_offset.size(); ++off) {
     std::vector<float> datavec(nz, 0.0);
 
-    for (int k = 0 ; k < (endData - firstData + 1) ; k++) {
-      datavec[k + firstData - windowTop] = float(data_gather(k + firstData - firstSample, off));
-      //xxxXXXX
-      //printf("k=%3d  k+firstData-windowTop=%3d   datavec[k+firstData-windowTop]=%10.5f\n",k,k +firstData - windowTop,datavec[k +firstData - windowTop]);
+    if (!empty) {   // data_gather contains stray data for empty result traces?
+      for (int k = 0 ; k < maxk ; k++) {
+        datavec[k + firstData - windowTop] = float(data_gather(k + firstData - firstSample, off));
+      }
     }
-    //xxxxXXXXX
-    //exit(1);
-
-    if (nmo)
-      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(offset_vec[off]));
-    else
-      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(std::floor(offset_vec[off]/NRLib::Degree + 0.5)));
+    segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, angle_or_offset[off]);
   }
 }
 
