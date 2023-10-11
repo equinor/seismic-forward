@@ -47,7 +47,8 @@ public:
                        const std::vector<short>    & angle_or_offset,
                        bool                          time,
                        double                        x,
-                       double                        y);
+                       double                        y,
+                       bool                          empty);
 
   void WriteSegyGather2(const NRLib::Grid2D<double> & data_gather,
                        NRLib::SegY                 & segyout,
@@ -58,13 +59,7 @@ public:
                        double                        y,
                        bool                          nmo);
 
-  void WriteZeroSegyGather(NRLib::SegY              & segyout,
-                           const std::vector<short> & angle_or_offset,
-                           double                     x,
-                           double                     y,
-                           bool                       nmo);
-
-  void WriteZeroSegyGather2(NRLib::SegY               & segyout,
+  void WriteZeroSegyGather(NRLib::SegY               & segyout,
                            const std::vector<double>   offset_vec,
                            double                      x,
                            double                      y,

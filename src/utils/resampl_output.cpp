@@ -61,7 +61,7 @@ void ResamplOutput::AddTrace(SeismicParameters                    & seismic_para
   std::vector<short> zero_vec(1, 0);
   for (size_t l = 0; l < traces.size(); ++l) {
     if (segy_files_ok_[l]) {
-      seismic_parameters.GetSeismicOutput()->WriteSegyGather(traces[l], *(segy_files_[l]), time_or_depth_vec_reg, zero_vec, time_, x, y);
+      seismic_parameters.GetSeismicOutput()->WriteSegyGather(traces[l], *(segy_files_[l]), time_or_depth_vec_reg, zero_vec, time_, x, y, false);
     }
   }
 }
