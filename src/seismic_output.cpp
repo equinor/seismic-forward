@@ -253,7 +253,8 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
                                     const std::vector<short>    & angle_or_offset,
                                     bool                          time,
                                     double                        x,
-                                    double                        y)
+                                    double                        y,
+                                    bool                          empty)
 {
   float  dz          = segyout.GetDz();
   size_t nz          = segyout.GetNz();
@@ -262,8 +263,8 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
   int    endData     = static_cast<int>(floor((twt_0[data_gather.GetNI()-1]) / dz));
   int    firstData   = firstSample;
 
-  int windowTop      = 0; // Default setting needed when there is no window in use.
-  int windowBot;
+  int    windowTop   = 0; // Default setting needed when there is no window in use.
+  int    windowBot;
 
   if ((time && time_window_) || (!time && depth_window_)) {
     if (time) {
@@ -288,36 +289,26 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
   for (size_t off = 0; off < angle_or_offset.size(); ++off) {
     std::vector<float> datavec(nz, 0.0);
 
-    for (int k = 0 ; k < maxk ; k++) {
-      datavec[k + firstData - windowTop] = float(data_gather(k + firstData - firstSample, off));
-      //xxxXXXX
-      //printf("k=%3d  k+firstData-windowTop=%3d   datavec[k+firstData-windowTop]=%10.5f\n",k,k +firstData - windowTop,datavec[k +firstData - windowTop]);
+    if (!empty) {
+      for (int k = 0 ; k < maxk ; k++) {
+        datavec[k + firstData - windowTop] = float(data_gather(k + firstData - firstSample, off));
+        //printf("XXX: k=%3d   datavec[k_f-w]=%10.5f\n",k,datavec[k + firstData - windowTop]);
+      }
     }
-    //xxxxXXXXX
-    //exit(1);
+
+    /*
+    for (int k = 0 ; k < nz ; k++) {
+      printf("YYY: k=%3d   datavec[k]=%10.5f\n",k,datavec[k]);
+    }
+
+    if (empty) {
+      exit(1);
+    }
+    */
 
     segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, angle_or_offset[off]);
   }
 }
-
-void SeismicOutput::WriteZeroSegyGather(NRLib::SegY              & segyout,
-                                        const std::vector<short> & angle_or_offset,
-                                        double                     x,
-                                        double                     y,
-                                        bool                       nmo)
-{
-  size_t nz = segyout.GetNz();
-
-  std::vector<float> datavec(nz);
-  for (size_t k = 0; k < nz; ++k) {
-    datavec[k] = 0.0;
-  }
-  for (size_t off = 0; off < angle_or_offset.size(); ++off) {
-    segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, angle_or_offset[off]);
-  }
-}
-
-
 
 void SeismicOutput::WriteSegyGather2(const NRLib::Grid2D<double> & data_gather,
                                     NRLib::SegY                 & segyout,
@@ -396,7 +387,7 @@ void SeismicOutput::WriteSegyGather2(const NRLib::Grid2D<double> & data_gather,
   }
 }
 
-void SeismicOutput::WriteZeroSegyGather2(NRLib::SegY               &segyout,
+void SeismicOutput::WriteZeroSegyGather(NRLib::SegY               &segyout,
                                         const std::vector<double>  offset_vec,
                                         double                     x,
                                         double                     y,
