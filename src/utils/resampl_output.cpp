@@ -52,17 +52,16 @@ void ResamplOutput::AddResampleCase(std::string            filename,
   input_grid_.push_back(&input_grid);
 }
 
-void ResamplOutput::AddTrace(SeismicParameters                    &seismic_parameters,
-                              std::vector<double>                 &time_or_depth_vec_reg,
-                              std::vector<NRLib::Grid2D<double> > &traces,
-                              double                               x,
-                              double                               y)
+void ResamplOutput::AddTrace(SeismicParameters                    & seismic_parameters,
+                              std::vector<double>                 & time_or_depth_vec_reg,
+                              std::vector<NRLib::Grid2D<double> > & traces,
+                              double                                x,
+                              double                                y)
 {
-  std::vector<double> zero_vec(1);
-  zero_vec[0] = 0;
+  std::vector<short> zero_vec(1, 0);
   for (size_t l = 0; l < traces.size(); ++l) {
     if (segy_files_ok_[l]) {
-      seismic_parameters.GetSeismicOutput()->WriteSegyGather(traces[l], *(segy_files_[l]), time_or_depth_vec_reg, zero_vec, time_, x, y, false);
+      seismic_parameters.GetSeismicOutput()->WriteSegyGather(traces[l], *(segy_files_[l]), time_or_depth_vec_reg, zero_vec, time_, x, y);
     }
   }
 }
