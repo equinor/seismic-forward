@@ -245,8 +245,7 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
   return true;
 }
 
-
-
+//---------------------------------------------------------------------------------
 void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
                                     NRLib::SegY                 & segyout,
                                     const std::vector<double>   & twt_0,
@@ -255,6 +254,7 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
                                     double                        x,
                                     double                        y,
                                     bool                          empty)
+//---------------------------------------------------------------------------------
 {
   float  dz          = segyout.GetDz();
   size_t nz          = segyout.GetNz();
@@ -293,106 +293,6 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
   }
 }
 
-void SeismicOutput::WriteSegyGather2(const NRLib::Grid2D<double> & data_gather,
-                                    NRLib::SegY                 & segyout,
-                                    const std::vector<double>   & twt_0,
-                                    const std::vector<double>   & offset_vec,
-                                    bool                          time,
-                                    double                        x,
-                                    double                        y,
-                                    bool                          nmo)
-{
-  float  dz = segyout.GetDz();
-  size_t nz = segyout.GetNz();
-
-  std::vector<float> datavec(nz);
-
-  int k;
-  int firstSample = static_cast<int>(floor((twt_0[0])                     / dz));
-  int endData     = static_cast<int>(floor((twt_0[data_gather.GetNI()-1]) / dz));
-  int firstData   = firstSample;
-
-  int windowTop, windowBot;
-  if ((time == true && time_window_) || (time == false && depth_window_)) {
-    if (time == true ) {
-      windowTop = static_cast<int>(floor((top_time_window_) / dz));
-      windowBot = windowTop + nz;
-    }
-    else {
-      windowTop = static_cast<int>(floor((top_depth_window_) / dz));
-      windowBot = windowTop + nz;
-    }
-  }
-  for (size_t off = 0; off < offset_vec.size(); ++off) {
-    if ((time == true && time_window_) || (time == false && depth_window_)) {
-      if (windowTop < firstSample) {
-        for (k = windowTop; k < firstSample; k++) {
-          datavec[k - windowTop] = 0.0;
-        }
-      }
-      else {
-        firstData = windowTop;
-      }
-      if (windowBot < endData) {
-        endData = windowBot;
-      }
-      for (k = firstData; k < endData; k++) {
-       datavec[k - windowTop] = float(data_gather(k - firstSample, off));
-      }
-      if (windowBot > endData) {
-        for (k = endData; k < windowBot; k++) {
-          datavec[k - windowTop] = 0.0;
-        }
-      }
-    }
-    else {
-      if (firstData < 0) {
-        firstData = 0;
-      }
-      if (endData > nz) {
-        endData = int(nz);
-      }
-      for (k = 0; k < firstData; k++) {
-        datavec[k] = 0.0;
-      }
-      for (k = firstData; k < endData; k++) {
-        datavec[k] = float(data_gather(k - firstSample, off));
-      }
-      for (k = endData; k < nz; k++) {
-        datavec[k] = 0.0;
-      }
-    }
-
-    if (nmo)
-      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(offset_vec[off]));
-    else
-      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(std::floor(offset_vec[off]/NRLib::Degree + 0.5)));
-  }
-}
-
-void SeismicOutput::WriteZeroSegyGather(NRLib::SegY               &segyout,
-                                        const std::vector<double>  offset_vec,
-                                        double                     x,
-                                        double                     y,
-                                        bool                       nmo)
-{
-  size_t nz = segyout.GetNz();
-
-  std::vector<float> datavec(nz);
-  for (size_t k = 0; k < nz; ++k) {
-    datavec[k] = 0.0;
-  }
-  if (nmo) {
-    for (size_t off = 0; off < offset_vec.size(); ++off) {
-      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(offset_vec[off]));
-    }
-  }
-  else {
-    for (size_t off = 0; off < offset_vec.size(); ++off) {
-      segyout.WriteTrace(x,y, datavec, NULL, 0.0, 0.0, scalco_, short(std::floor(offset_vec[off]/NRLib::Degree + 0.5)));
-    }
-  }
-}
 
 void SeismicOutput::WriteDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse)
 {

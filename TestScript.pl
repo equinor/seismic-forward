@@ -534,7 +534,8 @@ my @modeldir    =  (
                     "12_Reek_center_point_interpolation",
                     "13_Reek_corner_point_interpolation",
                     "14_Drogon_center_point_interpolation_nmo",
-                    "15_Drogon_corner_point_interpolation_nmo"
+                    "15_Drogon_corner_point_interpolation_nmo",
+                    "16_Drogon_center_point_interpolation_nmo_white_noise"
                     );
 
 my @parameters  =  ("seismic_depth",
@@ -548,6 +549,7 @@ my @parameters  =  ("seismic_depth",
                     "rho",
                     "twt",
                     "zgrid",
+                    "vrms",
                     "reflections_0");
 
 my $threshold   =  1.0e-08;                                # Match if diff < threshold

@@ -91,12 +91,11 @@ std::vector<double> Interpolation::Linear1D(const std::vector<double> & x_in,
 }
 
 
-
-std::vector<double> Interpolation::Spline1D(const std::vector<double> &x_in,
-                                            const std::vector<double> &y_in,
-                                            const std::vector<double> &x_out,
-                                            const double               extrap_value,
-                                            const bool                 use_extrap_value)
+std::vector<double> Interpolation::Spline1D(const std::vector<double> & x_in,
+                                            const std::vector<double> & y_in,
+                                            const std::vector<double> & x_out,
+                                            const double                extrap_value,
+                                            const bool                  use_extrap_value)
 {
   // Cubic spline algorithm using natural boundary conditions from:
   // Numerical Analysis, David Kincaid and Ward Cheney, Second Ed. (1996)
@@ -118,13 +117,14 @@ std::vector<double> Interpolation::Spline1D(const std::vector<double> &x_in,
   std::vector<double> v(n_in, 0.0);
   u[1] = 2.0*(h[0] + h[1]);
   v[1] = b[1] - b[0];
+
   for (size_t i = 2; i < n_in - 1; ++i) {
     u[i] = 2.0*(h[i] + h[i-1]) - h[i-1]*h[i-1]/u[i-1];
     v[i] = b[i] - b[i-1] - h[i-1]*v[i-1]/u[i-1];
   }
 
   std::vector<double> z(n_in, 0.0);
-  z[n_in-1] = 0.0;                          // Natural boundary conditions
+  z[n_in-1] = 0.0;                         // Natural boundary conditions
   for (size_t i = n_in-2; i > 0; --i) {
     z[i] = (v[i] - h[i]*z[i+1])/u[i];
   }
@@ -139,33 +139,20 @@ std::vector<double> Interpolation::Spline1D(const std::vector<double> &x_in,
     C[i] = -h[i]/6.0*z[i+1] - h[i]/3*z[i] + 1/h[i]*(y_in[i+1]-y_in[i]);
   }
 
-
   for(size_t i = 0; i < n_out; ++i) {
     double x = x_out[i];
-    int  idx = FindNearestNeighborIndex(x, x_in);
-    bool outside_defined_interval = false;   // Defined interval for the spline functions is from x_in[0] to x_in[n_in].
+    int idx = FindNearestNeighborIndex(x, x_in);
 
-    // Unless specified an extrapolation value, we use the first spline or last spline for values outside the defined intervals.
-    if(idx == -1) {
-      idx = 0;
-      if(x < x_in[0]){
-        outside_defined_interval = true;
+    if (x < x_in[0] || x > x_in[n_in - 1]) {
+      if (use_extrap_value) {
+        y_out[i] = extrap_value;
       }
     }
-    if(idx == static_cast<int>(n_in - 1)) {
-      idx = static_cast<int>(n_in - 2);
-      if(x > x_in[n_in-1]){
-        outside_defined_interval = true;
-      }
-    }
-
-    y_out[i] = y_in[idx] + (x - x_in[idx])*(C[idx] + (x - x_in[idx])*(B[idx] + (x - x_in[idx])*A[idx]));
-
-    if(outside_defined_interval && use_extrap_value){
-      y_out[i] = extrap_value;
+    else {
+      double dx = x - x_in[idx];
+      y_out[i] = y_in[idx] + dx*(C[idx] + dx*(B[idx] + dx*A[idx]));
     }
   }
-
   return y_out;
 }
 
@@ -176,12 +163,12 @@ int Interpolation::FindNearestNeighborIndex(const double                x,
 {
   // Returning int as it might be -1.
   double dist = 1e10;
-  int idx = -1;
+  int    idx  = -1;
   for (int i = 0; i < static_cast<int>(x_in.size()); ++i) {
     double newDist = x - x_in[i];
-    if ( newDist > 0.0 && newDist < dist ) {
+    if (newDist > 0.0 && newDist < dist) {
       dist = newDist;
-      idx = i;
+      idx  = i;
     }
     else if (newDist < 0.0) {
       break;

@@ -46,8 +46,9 @@ ModelSettings::ModelSettings(void)
   traces_in_memory_                    = 100000;
   max_threads_                         = 100;
 
-  add_white_noise_                     = false;
   add_noise_to_refl_coef_              = false;
+  add_white_noise_                     = false;
+  equal_noise_for_offsets_             = true;
   standard_deviation_1_                = 1.0;
   standard_deviation_2_                = 1.0;
   seed_1_                              = static_cast<unsigned long>(std::time(0)    );
@@ -290,6 +291,7 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Resample parameters to Segy with interpol.: %10s\n"  , GetResamplParamToSegyInterpol()       ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Add white noise                           : %10s\n"  , GetAddWhiteNoise()                    ? "yes" : "no");
   if (GetAddWhiteNoise()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Use equal noise for offsets             : %10s\n"  , GetUseEqualNoiseForOffsets()        ? "yes" : "no");
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Standard deviation                      : %10.1f\n", GetStandardDeviation1());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Seed                                    : %10lu\n" , GetSeed1());
   }
