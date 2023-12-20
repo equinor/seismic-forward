@@ -29,6 +29,8 @@
 #include <string>
 #include <vector>
 
+#include <assert.h>
+
 #include <boost/endian/conversion.hpp>
 
 #include "stringtools.hpp"
