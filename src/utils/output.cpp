@@ -159,6 +159,7 @@ void Output::AddTrace(ResultTrace   * result_trace,
     }
   }
   if (model_settings->GetDepthOutput()) {
+
     for (size_t k = 0 ; k < depthgrid_->GetNK() ; ++k) {
       if (result_trace->GetIsEmpty() || !depth_stack_segy_ok_)
         (*depthgrid_)(i, j, k) = 0.0f;
