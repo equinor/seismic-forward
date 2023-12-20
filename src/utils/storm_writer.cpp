@@ -11,7 +11,6 @@ void STORM::WriteStorm(NRLib::StormContGrid &grid,
                        bool window_specified,
                        bool keep_grid)
 {
-
   if (window_specified == false) {
     grid.WriteToFile(filename);
   } else {
@@ -30,12 +29,13 @@ void STORM::WriteStorm(NRLib::StormContGrid &grid,
 
       size_t nk = grid.GetNK();
       double dz = (z_max - z_min) / nk;
+
       if (top_window < z_max) {
         if (top_window > z_min) {
           grid.FindIndex(x_min, y_min, top_window, i_top, j_top, k_top_temp);
           k_top = k_top_temp;
         } else {
-          k_top = (top_window - z_min) / dz;
+          k_top = static_cast<size_t>(floor((top_window - z_min) / dz));
         }
       }
       else {

@@ -1306,8 +1306,14 @@ bool XmlModelFile::ParseWhiteNoise(TiXmlNode   * node,
   }
 
   std::vector<std::string> legalCommands;
+  legalCommands.push_back("equal-noise-for-offsets");
   legalCommands.push_back("standard-deviation");
   legalCommands.push_back("seed");
+
+  bool equal;
+  if (ParseBool(root, "equal-noise-for-offsets", equal, errTxt)) {
+    modelSettings_->SetUseEqualNoiseForOffsets(equal);
+  }
 
   double std_dev;
   if (ParseValue(root, "standard-deviation", std_dev, errTxt)) {

@@ -36,16 +36,6 @@
     <theta-max>         0 </theta-max>
   </angle>
 
-  <nmo-stretch>
-    <seafloor-depth>  150 </seafloor-depth>
-    <velocity-water> 1500 </velocity-water>
-    <offset>
-      <offset-0>        0 </offset-0>
-      <doffset>       200 </doffset>
-      <offset-max>    200 </offset-max>
-    </offset>
-  </nmo-stretch>
-
   <wavelet>
     <ricker>
      <peak-frequency>  30 </peak-frequency>
@@ -63,14 +53,10 @@
     <area>
       <x0>        461513.38 </x0>
       <y0>       5926548.91 </y0>
-      <lx>         10900    </lx>
-      <ly>          6900    </ly>
+      <lx>          6900    </lx>
+      <ly>         10900    </ly>
       <angle>        29.998 </angle>
     </area>
-
-#    <area-from-segy>
-#       <filename> ../input/seismiclayout.segy </filename>
-#    </area-from-segy>
 
     <cell-size>
       <dx>           50.0 </dx>
@@ -93,14 +79,11 @@
   </output-grid>
 
   <output-parameters>
-    <zvalues>         yes </zvalues>
-    <twt>             yes </twt>
-    <twt-offset-segy> yes </twt-offset-segy>
-    <vrms>            yes </vrms>
+    <zvalues>            yes  </zvalues>
+    <twt>                yes  </twt>
     <seismic-stack>
-      <depth-segy>    yes </depth-segy>
-      <time-segy>     yes </time-segy>
+      <depth-segy>       yes  </depth-segy>
+      <time-segy>        yes  </time-segy>
     </seismic-stack>
   </output-parameters>
-
 </seismic-forward>
