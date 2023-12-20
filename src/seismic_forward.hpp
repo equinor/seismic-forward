@@ -65,9 +65,6 @@ class SeismicForward {
                                 size_t              i,
                                 size_t              j);
 
-    static  void GenerateWhiteNoise(unsigned long         seed,
-                                    double                std_dev,
-                                    std::vector<double> & noise);
 
     static void WriteSeismicTraces(GenSeisTraceParams * param,
                                    Output             * output);
@@ -102,22 +99,66 @@ class SeismicForward {
                                 size_t                                n_min,
                                 size_t                                n_max);
 
+    static void ConvertShiftAndStack(NRLib::Grid2D<double>      & nmo_timegrid_stack_pos,
+                                     NRLib::Grid2D<double>      & nmo_timeshiftgrid_stack_pos,
+                                     NRLib::Grid2D<double>      & nmo_depthgrid_stack_pos,
+                                     NRLib::Grid2D<double>      & nmo_depthgrid_pos,
+                                     NRLib::Grid2D<double>      & nmo_timeshiftgrid_pos,
+                                     NRLib::Grid2D<double>      & nmo_timegrid_pos,
+                                     const NRLib::StormContGrid & twt_timeshift,
+                                     const std::vector<double>  & twt_vec,
+                                     const std::vector<double>  & twts_0,
+                                     const std::vector<double>  & twt_0,
+                                     const NRLib::StormContGrid & zgrid,
+                                     const std::vector<double>  & z_0,
+                                     const double                 vp_bot,
+                                     const double                 vs_bot,
+                                     const double                 z_wavelet_bot_stretched,
+                                     const double                 twt_wavelet_stretched,
+                                     const double                 sd,
+                                     const int                    tshift,
+                                     const int                    zshift,
+                                     const bool                   depth_conversion,
+                                     const bool                   time_shift,
+                                     const bool                   add_white_noise,
+                                     const bool                   equal_noise,
+                                     const bool                   ps_seis,
+                                     const bool                   stack_time,
+                                     const bool                   stack_timeshift,
+                                     const bool                   stack_depth,
+                                     const size_t                 nzrefl,
+                                     const size_t                 noff,
+                                     const unsigned long          seed,
+                                     const size_t                 nt_non_nmo,
+                                     const size_t                 i,
+                                     const size_t                 j);
+
+    static void GenerateWhiteNoiseAllOffsets(std::vector<std::vector<double> > & noise,
+                                             bool                                equal_noise,
+                                             unsigned long                       seed,
+                                             double                              sd,
+                                             size_t                              n);
+
+    static std::vector<double> GenerateWhiteNoise(unsigned long seed,
+                                                  double        sd,
+                                                  size_t        n);
+
+    static void StackOffsets(NRLib::Grid2D<double>       & stack,
+                             const NRLib::Grid2D<double> & offset);
+
     static void ConvertSeis(const std::vector<double>   & twt_vec,
                             const std::vector<double>   & twt_0,
                             const std::vector<double>   & zgrid_vec,
                             const std::vector<double>   & z_0,
                             const NRLib::Grid2D<double> & seismic,
-                            NRLib::Grid2D<double>       & conv_seismic,
-                            const size_t                & max_sample);
-
+                            NRLib::Grid2D<double>       & conv_seismic);
 
     static void NMOCorrect(const std::vector<double>   & t_in,
                            const NRLib::Grid2D<double> & data_in,
                            const NRLib::Grid2D<double> & t_out,
                            NRLib::Grid2D<double>       & data_out,
                            const std::vector<size_t>   & n_min,
-                           const std::vector<size_t>   & n_max,
-                           size_t                      & max_sample);
+                           const std::vector<size_t>   & n_max);
 
     static void FindNMOTheta(NRLib::Grid2D<double>     & thetagrid,
                              const std::vector<double> & twt_vec,
@@ -175,6 +216,14 @@ class SeismicForward {
                                std::vector<size_t>         & n_min,
                                std::vector<size_t>         & n_max,
                                double                        twt_wave);
+
+    static void ExtrapolTwtAndTimeShift(std::vector<double>        & timeshift_extrapol,
+                                        std::vector<double>        & twt_extrapol,
+                                        const NRLib::StormContGrid & twt_timeshift,
+                                        const std::vector<double>  & twt,
+                                        const double                 twt_wavelet_extrapol,
+                                        const size_t                 i,
+                                        const size_t                 j);
 
     static void ExtrapolZandTwtVec(std::vector<double>        & zgrid_vec_extrapol,
                                    std::vector<double>        & twt_vec_extrapol,

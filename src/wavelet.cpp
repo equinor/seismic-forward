@@ -133,10 +133,6 @@ Wavelet::Wavelet(const std::string & filename,
                            filename2);
     }
 
-    //for (size_t ii = 0 ; ii < wavelet_.size() ; ii++) {
-    //  printf("wavelet: %10.5f    time: %10.5f\n",wavelet_[ii],time_vector_[ii]);
-    //}
-
     //
     // Fill time vector
     //

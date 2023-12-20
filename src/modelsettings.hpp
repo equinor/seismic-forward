@@ -72,8 +72,9 @@ public:
   int                       GetSegyInlineStep()                       { return inline_step_                    ;}
   int                       GetSegyXlineStep()                        { return xline_step_                     ;}
 
-  bool                      GetAddWhiteNoise()                        { return add_white_noise_                ;}
   bool                      GetAddNoiseToReflCoef()                   { return add_noise_to_refl_coef_         ;}
+  bool                      GetAddWhiteNoise()                        { return add_white_noise_                ;}
+  bool                      GetUseEqualNoiseForOffsets()              { return equal_noise_for_offsets_        ;}
   double                    GetStandardDeviation1()                   { return standard_deviation_1_           ;}
   double                    GetStandardDeviation2()                   { return standard_deviation_2_           ;}
   unsigned long             GetSeed1()                                { return seed_1_                         ;}
@@ -193,8 +194,9 @@ public:
   void SetOffsetMax(double value)                      { offset_max_                          = value   ;}
   void SetOffsetWithoutStretch(bool value)             { offset_without_stretch_              = value   ;}
 
-  void SetAddWhiteNoise(void)                          { add_white_noise_                     = true    ;}
   void SetAddNoiseToReflCoef(void)                     { add_noise_to_refl_coef_              = true    ;}
+  void SetAddWhiteNoise(void)                          { add_white_noise_                     = true    ;}
+  void SetUseEqualNoiseForOffsets(bool equal)          { equal_noise_for_offsets_             = equal   ;}
   void SetStandardDeviation1(double value)             { standard_deviation_1_                = value   ;}
   void SetStandardDeviation2(double value)             { standard_deviation_2_                = value   ;}
   void SetSeed1(unsigned long value)                   { seed_1_                              = value   ;}
@@ -332,8 +334,9 @@ private:
   size_t                    max_threads_;
   double                    zero_thickness_limit_;
 
-  bool                      add_white_noise_;
   bool                      add_noise_to_refl_coef_;
+  bool                      add_white_noise_;
+  bool                      equal_noise_for_offsets_;
   double                    standard_deviation_1_;
   double                    standard_deviation_2_;
   unsigned long             seed_1_;
