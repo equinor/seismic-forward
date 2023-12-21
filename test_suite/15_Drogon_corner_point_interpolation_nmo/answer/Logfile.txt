@@ -3,7 +3,7 @@
 *****                                                                                          *****
 *****                          Seismic Forward Modeling                                        *****
 *****                                 version 4.3 beta                                         *****
-*****                         Copyright (c) 2019 by Equinor                                    *****
+*****                         Copyright (c) 2022 by Equinor                                    *****
 *****                                                                                          *****
 ****************************************************************************************************
 
@@ -21,8 +21,6 @@ Log level                                 :          7
 Prefix                                    :           
 Suffix                                    :           
 
-Seed                                      : 1663074425
-
 Seismic data type                         :         PP
 NMO correction                            :        yes
 Offset without stretch                    :         no
@@ -34,12 +32,12 @@ Use vertical interpolation in regridding  :        yes
 Use default underburden                   :         no
 Resample parameters to Segy with interpol.:         no
 Add white noise                           :         no
-  Standard deviation                      :        1.0
+Add noise to reflection coefficients      :         no
 
 NMO correction settings
   Sea floor depth                         :      150.0
   Vp velocity in water                    :     1500.0
-  Offsets                                 :   0.0 -> 200.0
+  Offsets                                 :   0.0 -> 1000.0
 
 Wavelet
   Ricker with peak frequency              :       30.0
@@ -60,8 +58,8 @@ Extra parameters                          :         no
 Output area is specified in model file:
   x-start                                 :   461513.4
   y-start                                 :  5926548.9
-  x-length                                :    10900.0
-  y-length                                :     6900.0
+  x-length                                :     6900.0
+  y-length                                :    10900.0
   angle                                   :     29.998
 
 Cell size:
@@ -101,7 +99,7 @@ Extra parameters output:
 Other output:
   TWT                                     :         no
   TWT offset                              :         no
-  Vrms                                    :         no
+  Vrms                                    :        yes
   Vp                                      :         no
   Reflections                             :         no
   Time surfaces                           :         no
@@ -121,10 +119,10 @@ Reading Eclipse grid from file '../../14_Drogon_center_point_interpolation_nmo/i
 
                                      x            y           lx         ly     angle
 -------------------------------------------------------------------------------------
-Area from model file         461513.38   5926548.91     10900.00    6900.00     30.00
+Area from model file         461513.38   5926548.91      6900.00   10900.00     30.00
 
 Taking top time surface from file '../../14_Drogon_center_point_interpolation_nmo/input/TopVolantis.txt'
-Setting base time surface to maximum of top time : 1883.14
+Setting base time surface to maximum of top time : 1883.05
 
 Top layer of Eclipse grid                 :    0
 Base layer of Eclipse grid                :   30
@@ -145,8 +143,9 @@ Grid minimum value                        :  1522.16
 Grid maximum value                        :  2049.59
 
 Making regular grids:
-  z, TWT                218 x  138 x   32 :     962688
-  Vp, Vs, Rho           218 x  138 x   33 :     992772
+  z, TWT                138 x  218 x   32 :     962688
+  Vp, Vs, Rho           138 x  218 x   33 :     992772
+  Vrms                  138 x  218 x   32 :     962688
 
 
 ****************************************************************************************************
@@ -157,14 +156,14 @@ Extracting z-values from Eclipse grid using corner-point interpolation.
 
 Interpolating z-values that are undefined using vertical interpolation.
 
-  35.55% of the cells were interpolated.
+   1.75% of the cells were interpolated.
 
-Number of negative dz found               :     2
-Largest negative value                    : -15.02
+Number of negative dz found               :    12
+Largest negative value                    : -21.97
 
-Largest negative value location (x,y,z)   : (462236.87, 5933346.18, 1530.35)
+Largest negative value location (x,y,z)   : (461271.33, 5937118.80, 1841.47)
 
-Largest negative value location (i,j,k)   : (80, 110, 0)    (indices starting at zero)
+Largest negative value location (i,j,k)   : (101, 185, 19)    (indices starting at zero)
 
 Exporting points where there are negative dz values (z-value is the conflicting value)!
 
@@ -209,15 +208,15 @@ Parameter statistics for regular grid after resampling.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            3083.15   2000.00   4788.45
-Vs            1653.38    890.00   2988.62
-Rho           2328.61   2052.29   2633.91
+Vp            3149.64   2000.00   4807.41
+Vs            1686.91    890.00   3034.54
+Rho           2352.18   1924.16   2638.19
 
 Filling remaining cells in regular grids.
 
-Setting undefined cells in trace equal to default reservoir value    :     364320
+Setting undefined cells in trace equal to default reservoir value    :          0
 Setting cells in bottom layer equal to default reservoir value       :          0
-Setting cells in trace equal to layer below                          :      11040
+Setting cells in trace equal to layer below                          :          0
 
 Deleting Eclipse grid to free memory.
 
@@ -226,6 +225,11 @@ Deleting Eclipse grid to free memory.
 ****************************************************************************************************
 
 Assuming NMO.
+
+Find Vrms using Vp.   tmin           :  1540.00  (top Eclipse - 1/2 wavelet)
+   tmax           :  1955.71  (bot Eclipse + 1/2 wavelet)
+   dt             :     4.00
+   nt             :      105
 
 ****************************************************************************************************
 *****                                       Export grids                                       *****
@@ -237,21 +241,32 @@ Write z-values on STORM format to file : zgrid.storm
 ****************************************************************************************************
 
 Generate Twt0 for NMO assuming PP seismic.
+   stretch factor :  1.03026  (twtx_max / twt_max)
+   wavelet length :    64.00
+   nt_stretch     :      136
+   nt_seis        :      136
+   tmax_stretch   :  2153.51
+   twtx_max       :  2014.14
+   twt0_min       :  1476.00
+   twt0_max       :  2016.00
 
 Generate Z0 for NMO.
+   z0_min        :  1456.00
+   z0_max        :  2140.00
+   dz            :     4.00
 
 Segy geometry:
 
              ReferencePoint      Length Increment
 -------------------------------------------------
-X-coordinate      461513.38    10900.00  50.00000
-Y-coordinate     5926548.91     6900.00  50.00000
+X-coordinate      461513.38     6900.00  50.00000
+Y-coordinate     5926548.91    10900.00  50.00000
 Azimuth             330.002
 
                  Start      End    Step
 ---------------------------------------
-In-line              0      137       1
-Cross-line           0      217       1
+In-line              0      217       1
+Cross-line           0      137       1
 
 Required precision of UTM coordinates is verified.
 
@@ -261,13 +276,14 @@ Initializing Segy file 'seismic_time_stack.segy' using format SeisWorks
 
 1 of 8 available threads are used.
 
-Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 200.0 
+Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 1000.0 
 
 Statistics for generated seismic data.
 
 Type               Avg         Min         Max
 ----------------------------------------------
-Time            0.0000     -0.3272      0.3666
+Time            0.0000     -0.4481      0.5552
+
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****
