@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Avoid files larger than 25MB to be commited
+#
+# The size of 16_Drogon_center_point_interpolation_nmo_white_noise/answer/seismic_depth.segy is 23469120
+#
+max_file_size=25000000
+for filename in $(git diff --cached --name-only --diff-filter=A HEAD); do
+    filesize=$(stat -c%s "$filename")
+    if  (( filesize > max_file_size )) ; then
+        echo "The file "$filename" is more than $max_file_size bytes. Git commit cancled." >/dev/stderr
+        exit -1
+    fi
+done

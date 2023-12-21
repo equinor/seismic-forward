@@ -31,19 +31,13 @@
     <remove-negative-delta-z>                    no </remove-negative-delta-z>
   </elastic-param>
 
-  <angle>
-    <theta-0>           0 </theta-0>
-    <dtheta>            0 </dtheta>
-    <theta-max>         0 </theta-max>
-  </angle>
-
   <nmo-stretch>
     <seafloor-depth>  150 </seafloor-depth>
     <velocity-water> 1500 </velocity-water>
     <offset>
       <offset-0>        0 </offset-0>
-      <doffset>       200 </doffset>
-      <offset-max>    200 </offset-max>
+      <doffset>      1000 </doffset>
+      <offset-max>   1000 </offset-max>
     </offset>
   </nmo-stretch>
 
@@ -64,14 +58,10 @@
     <area>
       <x0>        461513.38 </x0>
       <y0>       5926548.91 </y0>
-      <lx>         10900    </lx>
-      <ly>          6900    </ly>
+      <lx>          6900    </lx>
+      <ly>         10900    </ly>
       <angle>        29.998 </angle>
     </area>
-
-#    <area-from-segy>
-#       <filename> ../input/seismiclayout.segy </filename>
-#    </area-from-segy>
 
     <cell-size>
       <dx>           50.0 </dx>
@@ -95,9 +85,7 @@
 
   <output-parameters>
     <zvalues>         yes </zvalues>
-    <twt>             no  </twt>
-    <twt-offset-segy> no  </twt-offset-segy>
-    <vrms>            no  </vrms>
+    <vrms>            yes </vrms>
     <seismic-stack>
       <depth-segy>    no  </depth-segy>
       <time-segy>     yes </time-segy>
