@@ -326,6 +326,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
     NRLib::StormContGrid              & vpgrid                      = seismic_parameters.GetVpGrid();
     NRLib::StormContGrid              & twt_timeshift               = seismic_parameters.GetTwtShiftGrid();
     size_t                              nx                          = seismic_parameters.GetSeismicGeometry()->nx();
+    size_t                              ny                          = seismic_parameters.GetSeismicGeometry()->ny();
     double                              dz                          = seismic_parameters.GetSeismicGeometry()->dz();
     double                              nt_non_nmo                  = seismic_parameters.GetSeismicGeometry()->nt();
     double                              dt                          = seismic_parameters.GetSeismicGeometry()->dt();
@@ -543,6 +544,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
                          nzrefl,
                          noff,
                          seed1 + static_cast<long>(i + nx*j),
+                         nx*ny, // Number of traces
                          nt_non_nmo,
                          i,
                          j);
@@ -613,6 +615,7 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
     NRLib::StormContGrid              & twt_timeshift           = seismic_parameters.GetTwtShiftGrid();
 
     size_t                              nx                      = seismic_parameters.GetSeismicGeometry()->nx();
+    size_t                              ny                      = seismic_parameters.GetSeismicGeometry()->ny();
     double                              dz                      = seismic_parameters.GetSeismicGeometry()->dz();
     size_t                              nt                      = seismic_parameters.GetSeismicGeometry()->nt();
     double                              dt                      = seismic_parameters.GetSeismicGeometry()->dt();
@@ -725,6 +728,7 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
                          nzrefl,
                          ntheta,
                          seed1 + static_cast<long>(i + nx*j),
+                         nx*ny, // Number of traces
                          nt,
                          i,
                          j);
@@ -793,8 +797,8 @@ void SeismicForward::ConvertShiftAndStack(NRLib::Grid2D<double>      & timegrid_
                                           const std::vector<double>  & z_0,
                                           const double                 vp_bot,
                                           const double                 vs_bot,
-                                          const double                 z_wavelet_bot_stretched,
-                                          const double                 twt_wavelet_stretched,
+                                          const double                 z_wavelet_bot_stretched, // NMO => z_wavelet_bot * z_extrapol_factor
+                                          const double                 twt_wavelet_stretched,   // NMO => twt_wavelet   * z_extrapol_factor
                                           const double                 sd,
                                           const int                    tshift,
                                           const int                    zshift,
@@ -809,6 +813,7 @@ void SeismicForward::ConvertShiftAndStack(NRLib::Grid2D<double>      & timegrid_
                                           const size_t                 nzrefl,
                                           const size_t                 noff,
                                           const unsigned long          seed,
+                                          const size_t                 n_traces,
                                           const size_t                 nt_non_nmo,
                                           const size_t                 i,
                                           const size_t                 j)
@@ -864,7 +869,7 @@ void SeismicForward::ConvertShiftAndStack(NRLib::Grid2D<double>      & timegrid_
   //
   if (add_white_noise) {
     std::vector<std::vector<double> > noise(noff);
-    GenerateWhiteNoiseAllOffsets(noise, equal_noise, seed, sd, nt_non_nmo);
+    GenerateWhiteNoiseAllOffsets(noise, equal_noise, seed, sd, n_traces, nt_non_nmo);
 
     for (int off = 0 ; off < noff ; off++) {
       for (int ii = 0 ; ii < nt_non_nmo ; ii++) {
@@ -918,15 +923,16 @@ void SeismicForward::GenerateWhiteNoiseAllOffsets(std::vector<std::vector<double
                                                   bool                                equal_noise,
                                                   unsigned long                       seed,
                                                   double                              sd,
-                                                  size_t                              n)
+                                                  size_t                              n_traces,
+                                                  size_t                              nt)
 //------------------------------------------------------------------------------------------------
 {
-  noise[0] = GenerateWhiteNoise(seed, sd, n);
+  noise[0] = GenerateWhiteNoise(seed, sd, nt);
   for (int off = 1 ; off < noise.size() ; off++) {
     if (equal_noise)
-      noise[off] = noise[0];                              // Equal noise for each offset
+      noise[off] = noise[0];                                        // Equal noise for each offset
     else
-      noise[off] = GenerateWhiteNoise(seed + off, sd, n); // Unique noise for each offset
+      noise[off] = GenerateWhiteNoise(seed + n_traces*off, sd, nt); // Unique noise for each offset
   }
 }
 
