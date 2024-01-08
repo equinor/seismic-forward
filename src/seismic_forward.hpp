@@ -129,6 +129,7 @@ class SeismicForward {
                                      const size_t                 nzrefl,
                                      const size_t                 noff,
                                      const unsigned long          seed,
+                                     const size_t                 n_traces,
                                      const size_t                 nt_non_nmo,
                                      const size_t                 i,
                                      const size_t                 j);
@@ -137,7 +138,8 @@ class SeismicForward {
                                              bool                                equal_noise,
                                              unsigned long                       seed,
                                              double                              sd,
-                                             size_t                              n);
+                                             size_t                              n_traces,
+                                             size_t                              nt);
 
     static std::vector<double> GenerateWhiteNoise(unsigned long seed,
                                                   double        sd,
