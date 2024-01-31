@@ -109,6 +109,7 @@ public:
   std::string               GetWaveletFileName()                      { return wavelet_file_name_              ;}
   double                    GetWaveletScale()                         { return wavelet_scale_                  ;}
   double                    GetWaveletLength()                        { return wavelet_length_                 ;}
+  double                    GetWaveletLengthFactor()                  { return wavelet_length_factor_          ;}
   double                    GetZWaveletTop()                          { return z_wavelet_top_                  ;}
   double                    GetZWaveletBot()                          { return z_wavelet_bot_                  ;}
 
@@ -236,14 +237,14 @@ public:
   void SetAreaFromSegy(std::string val)                { area_from_segy_           = val                   ;}
   void SetUtmPrecision(short value)                    { utm_precision_            = value                 ;}
 
+  void SetTimeWindowSpecified(bool value)              { time_window_specified_    = value   ;}
+  void SetDepthWindowSpecified(bool value)             { depth_window_specified_   = value   ;}
   void SetTopTimeSurface(std::string toptime)          { top_time_surface_         = toptime ;}
   void SetTopTimeConstant(double value)                { top_time_constant_        = value   ;}
   void SetTopTimeWindow(double value)                  { top_time_window_          = value   ;}
   void SetBotTimeWindow(double value)                  { bot_time_window_          = value   ;}
   void SetTopDepthWindow(double value)                 { top_depth_window_         = value   ;}
   void SetBotDepthWindow(double value)                 { bot_depth_window_         = value   ;}
-  void SetTimeWindowSpecified(bool value)              { time_window_specified_    = value   ;}
-  void SetDepthWindowSpecified(bool value)             { depth_window_specified_   = value   ;}
 
   void SetX0(double x0)                                { x0_                       = x0 ;}
   void SetY0(double y0)                                { y0_                       = y0 ;}
@@ -275,6 +276,7 @@ public:
   void SetWaveletFileName(std::string value)           { wavelet_file_name_        = value  ;}
   void SetWaveletScale(double scale)                   { wavelet_scale_            = scale  ;}
   void SetWaveletLength(double length)                 { wavelet_length_           = length ;}
+  void SetWaveletLengthFactor(double value)            { wavelet_length_factor_    = value  ;}
   void SetZWaveletTop(double wave)                     { z_wavelet_top_            = wave   ;}
   void SetZWaveletBot(double wave)                     { z_wavelet_bot_            = wave   ;}
 
@@ -393,6 +395,7 @@ private:
   bool                      ricker_;
   double                    wavelet_scale_;
   double                    wavelet_length_;
+  double                    wavelet_length_factor_;   // Multiply (1/2 wavelet) length by this number.
   double                    z_wavelet_top_;
   double                    z_wavelet_bot_;
   double                    z_extrapol_factor_;
@@ -446,15 +449,13 @@ private:
   double                    v_w_;
   double                    z_w_;
 
+  bool                      time_window_specified_;
+  bool                      depth_window_specified_;
+
   double                    top_time_window_;
   double                    bot_time_window_;
   double                    top_depth_window_;
   double                    bot_depth_window_;
-
-  bool                      time_window_specified_;
-  bool                      depth_window_specified_;
 };
-
-
 
 #endif

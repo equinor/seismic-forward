@@ -10,6 +10,7 @@ public:
   Wavelet(const double        peakF,
           const double        dt,
           const double        length,
+          const double        length_factor,
           const bool          write_wavelet,
           const std::string & prefix);
 
@@ -17,6 +18,7 @@ public:
           const std::string & file_format,
           const double        dt,
           const double        length,
+          const double        length_factor,
           const bool          write_wavelet,
           const std::string & prefix,
           bool              & error);

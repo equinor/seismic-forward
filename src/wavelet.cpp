@@ -13,13 +13,14 @@
 #include <list>
 
 
-//--------------------------------------------------
-Wavelet::Wavelet(const double         peakF,
-                 const double         dt,
-                 const double         length,
-                 const bool           write_wavelet,
-                 const std::string  & prefix)
-//--------------------------------------------------
+//-------------------------------------------------
+Wavelet::Wavelet(const double        peakF,
+                 const double        dt,
+                 const double        length,
+                 const double        length_factor,
+                 const bool          write_wavelet,
+                 const std::string & prefix)
+//-------------------------------------------------
   : wavelet_            ( std::vector<double>(0) ),
     time_vector_        ( std::vector<double>(0) ),
     file_format_        ( ""                     ),
@@ -51,6 +52,8 @@ Wavelet::Wavelet(const double         peakF,
   else
     twt_length_ = 0.5*length;
 
+  twt_length_ *= length_factor;       // Change twt_length from (1/2 wavelet) to length_factor * (1/2 wavelet)
+
   if (write_wavelet) {
     WriteLandMarkWavelet(wavelet_,
                          sample_number_peak,
@@ -64,6 +67,7 @@ Wavelet::Wavelet(const std::string & filename,
                  const std::string & file_format,
                  const double        dt,
                  const double        length,
+                 const double        length_factor,
                  const bool          write_wavelet,
                  const std::string & prefix,
                  bool              & error)
@@ -93,6 +97,8 @@ Wavelet::Wavelet(const std::string & filename,
                     twt_length_);         // Size of a half wavelet
     else
       twt_length_ = 0.5*length;
+
+    twt_length_ *= length_factor;          // Change twt_length from (1/2 wavelet) to length_factor * (1/2 wavelet)
 
     //
     // Export wavelet as read from file - for debugging
