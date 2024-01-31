@@ -187,6 +187,7 @@ private:
                     const bool           use_ricker,
                     const double         peakF,
                     const double         length,
+                    const double         length_factor,
                     const double         dt,
                     const std::string  & file_name,
                     const std::string  & file_format,
