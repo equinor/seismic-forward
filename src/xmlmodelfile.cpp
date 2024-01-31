@@ -573,6 +573,7 @@ bool XmlModelFile::ParseWavelet(TiXmlNode   * node,
   legalCommands.push_back("ricker");
   legalCommands.push_back("scale");
   legalCommands.push_back("length");
+  legalCommands.push_back("length-factor");
 
   if (ParseRicker(root, errTxt)) {
     modelSettings_->SetRicker(true);
@@ -591,6 +592,15 @@ bool XmlModelFile::ParseWavelet(TiXmlNode   * node,
 
   if (ParseValue(root, "length", value, errTxt)) {
     modelSettings_->SetWaveletLength(value);
+  }
+
+  double factor;
+  if (ParseValue(root, "length-factor", factor, errTxt)) {
+    if (factor < 0.00 || factor > 10.0) {
+      errTxt += "Value given for <length-factor> is not valid. Legal values are in range [0.0, 10.0].\n";
+    } else {
+      modelSettings_->SetWaveletLengthFactor(factor);
+    }
   }
 
   CheckForJunk(root, errTxt, legalCommands);
@@ -732,6 +742,7 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode   * node,
       errTxt += "Value given in <utm-precision> is not valid. Optional values are 0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000 or 10000.\n";
     }
   }
+
   std::string format;
   if (ParseValue(root, "segy-file-format", format, errTxt)) {
     if (format == "seisworks")
