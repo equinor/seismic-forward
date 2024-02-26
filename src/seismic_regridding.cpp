@@ -90,9 +90,12 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
       seismic_parameters.DeleteVrmsGrid();
     }
   }
+
+  double factor = model_settings->GetPaddingFactorSeismicModelling();
+
   //---add wavelet above and below toptime and bottime-------------
-  toptime.Add(-1 * wavelet->GetTwtLength()); // add one wavelet length to bot and subtract from top
-  bottime.Add(     wavelet->GetTwtLength());
+  toptime.Add(-1 * wavelet->GetTwtLength() * factor); // add one wavelet length to bot and subtract from top
+  bottime.Add(     wavelet->GetTwtLength() * factor);
 
   double tmin = toptime.Min();
   double dt   = seismic_parameters.GetSeismicGeometry()->dt();
@@ -103,8 +106,8 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   seismic_parameters.GetSeismicGeometry()->setNt(nt);
   seismic_parameters.GetSeismicGeometry()->setTRange(tmin, tmax);
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   tmin           :  %7.2f  (top Eclipse - 1/2 wavelet)\n", tmin);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   tmax           :  %7.2f  (bot Eclipse + 1/2 wavelet)\n", tmax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   tmin           :  %7.2f  (top Eclipse - %.1f wavelet)\n", tmin,factor/2.0);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   tmax           :  %7.2f  (bot Eclipse + %.1f wavelet)\n", tmax,factor/2.0);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   dt             :  %7.2f\n", dt);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "   nt             :  %7d\n", nt);
 
