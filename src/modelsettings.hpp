@@ -132,6 +132,8 @@ public:
   double                    GetTopDepthWindow()                       { return top_depth_window_               ;}
   double                    GetBotDepthWindow()                       { return bot_depth_window_               ;}
 
+  double                    GetPaddingFactorSeismicModelling()        { return padding_factor_                 ;}
+
   bool                      GetAreaGiven()                            { return area_given_                     ;}
   std::string               GetAreaFromSegy()                         { return area_from_segy_                 ;}
   std::string               GetAreaFromSurface()                      { return area_from_surface_              ;}
@@ -237,14 +239,15 @@ public:
   void SetAreaFromSegy(std::string val)                { area_from_segy_           = val                   ;}
   void SetUtmPrecision(short value)                    { utm_precision_            = value                 ;}
 
-  void SetTimeWindowSpecified(bool value)              { time_window_specified_    = value   ;}
-  void SetDepthWindowSpecified(bool value)             { depth_window_specified_   = value   ;}
   void SetTopTimeSurface(std::string toptime)          { top_time_surface_         = toptime ;}
   void SetTopTimeConstant(double value)                { top_time_constant_        = value   ;}
   void SetTopTimeWindow(double value)                  { top_time_window_          = value   ;}
   void SetBotTimeWindow(double value)                  { bot_time_window_          = value   ;}
   void SetTopDepthWindow(double value)                 { top_depth_window_         = value   ;}
   void SetBotDepthWindow(double value)                 { bot_depth_window_         = value   ;}
+  void SetTimeWindowSpecified(bool value)              { time_window_specified_    = value   ;}
+  void SetDepthWindowSpecified(bool value)             { depth_window_specified_   = value   ;}
+  void SetPaddingFactorSeismicModelling(double value)  { padding_factor_           = value   ;}
 
   void SetX0(double x0)                                { x0_                       = x0 ;}
   void SetY0(double y0)                                { y0_                       = y0 ;}
@@ -449,13 +452,15 @@ private:
   double                    v_w_;
   double                    z_w_;
 
-  bool                      time_window_specified_;
-  bool                      depth_window_specified_;
-
   double                    top_time_window_;
   double                    bot_time_window_;
   double                    top_depth_window_;
   double                    bot_depth_window_;
+
+  double                    padding_factor_;    // Padding factor for seismic modelling
+
+  bool                      time_window_specified_;
+  bool                      depth_window_specified_;
 };
 
 #endif
