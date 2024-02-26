@@ -106,6 +106,8 @@ ModelSettings::ModelSettings(void)
   top_depth_window_                    = -9999.0;
   bot_depth_window_                    = -9999.0;
 
+  padding_factor_                      = 1.0;
+
   use_cornerpoint_interpol_            = false;
   cornerpoint_interpol_at_faults_      = false;
   use_vertical_interpolation_          = true;
