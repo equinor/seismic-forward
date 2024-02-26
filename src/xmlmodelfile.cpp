@@ -685,6 +685,7 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode   * node,
   legalCommands.push_back("time-window");
   legalCommands.push_back("top-time");
   legalCommands.push_back("utm-precision");
+  legalCommands.push_back("padding-factor-seismic-modelling");
 
   if (ParseArea(root, errTxt)) {
     modelSettings_->SetAreaGiven(true);
@@ -740,6 +741,16 @@ bool XmlModelFile::ParseOutputGrid(TiXmlNode   * node,
       modelSettings_->SetUtmPrecision(static_cast<short>(utm_prec));
     } else {
       errTxt += "Value given in <utm-precision> is not valid. Optional values are 0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000 or 10000.\n";
+    }
+  }
+
+  double padding;
+  if (ParseValue(root, "padding-factor-seismic-modelling", padding, errTxt)) {
+    if (padding >= 0.0 && padding < 10.0) {
+      modelSettings_->SetPaddingFactorSeismicModelling(padding);
+    }
+    else {
+      errTxt += "Padding factor for seismic modelling must be between 0.0 and 10.0\n";
     }
   }
 
