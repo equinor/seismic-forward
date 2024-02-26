@@ -406,13 +406,15 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   topeclipse.Add(-1 * z_top_wavelet); // add one wavelet length to bot and subtract from top
   boteclipse.Add(     z_bot_wavelet);
 
-  d1 -= z_top_wavelet;
-  d2 += z_bot_wavelet;
+  double factor = model_settings_->GetPaddingFactorSeismicModelling();
+
+  d1 -= z_top_wavelet*factor;
+  d2 += z_bot_wavelet*factor;
 
   seismic_geometry->setZRange(d1, d2);
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid minimum value                        : %8.2f", d1);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid maximum value                        : %8.2f\n", d2);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid minimum value                        : %8.2f (Eclipse grid minimum - %.1f wavelet)"  , d1, factor/2.0);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid maximum value                        : %8.2f (Eclipse grid maximum + %.1f wavelet)\n", d2, factor/2.0);
 }
 
 //---------------------------------------------------------------------
