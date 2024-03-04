@@ -329,6 +329,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
     size_t                              ny                          = seismic_parameters.GetSeismicGeometry()->ny();
     double                              dz                          = seismic_parameters.GetSeismicGeometry()->dz();
     double                              nt_non_nmo                  = seismic_parameters.GetSeismicGeometry()->nt();
+    double                              nz_non_nmo                  = seismic_parameters.GetSeismicGeometry()->nz();
     double                              dt                          = seismic_parameters.GetSeismicGeometry()->dt();
     double                              t0                          = seismic_parameters.GetSeismicGeometry()->t0();
     double                              z0                          = seismic_parameters.GetSeismicGeometry()->z0();
@@ -546,6 +547,7 @@ void SeismicForward::GenerateNMOSeismicTraces(Output             * nmo_output,
                          seed1 + static_cast<long>(i + nx*j),
                          nx*ny, // Number of traces
                          nt_non_nmo,
+                         nz_non_nmo,
                          i,
                          j);
 
@@ -618,6 +620,7 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
     size_t                              ny                      = seismic_parameters.GetSeismicGeometry()->ny();
     double                              dz                      = seismic_parameters.GetSeismicGeometry()->dz();
     size_t                              nt                      = seismic_parameters.GetSeismicGeometry()->nt();
+    size_t                              nz                      = seismic_parameters.GetSeismicGeometry()->nz();
     double                              dt                      = seismic_parameters.GetSeismicGeometry()->dt();
     double                              t0                      = seismic_parameters.GetSeismicGeometry()->t0();
     double                              z0                      = seismic_parameters.GetSeismicGeometry()->z0();
@@ -730,6 +733,7 @@ void SeismicForward::GenerateSeismicTraces(Output             * output,
                          seed1 + static_cast<long>(i + nx*j),
                          nx*ny, // Number of traces
                          nt,
+                         nz,
                          i,
                          j);
 
@@ -815,6 +819,7 @@ void SeismicForward::ConvertShiftAndStack(NRLib::Grid2D<double>      & timegrid_
                                           const unsigned long          seed,
                                           const size_t                 n_traces,
                                           const size_t                 nt_non_nmo,
+                                          const size_t                 nz_non_nmo,
                                           const size_t                 i,
                                           const size_t                 j)
 //--------------------------------------------------------------------------------------
@@ -868,21 +873,24 @@ void SeismicForward::ConvertShiftAndStack(NRLib::Grid2D<double>      & timegrid_
   // Add white noise to seismic signal
   //
   if (add_white_noise) {
-    std::vector<std::vector<double> > noise(noff);
-    GenerateWhiteNoiseAllOffsets(noise, equal_noise, seed, sd, n_traces, nt_non_nmo);
+    std::vector<std::vector<double> > noise_time(noff);
+    GenerateWhiteNoiseAllOffsets(noise_time, equal_noise, seed, sd, n_traces, nt_non_nmo);
+
+    std::vector<std::vector<double> > noise_depth(noff);
+    GenerateWhiteNoiseAllOffsets(noise_depth, equal_noise, seed, sd, n_traces, nz_non_nmo);
 
     for (int off = 0 ; off < noff ; off++) {
       for (int ii = 0 ; ii < nt_non_nmo ; ii++) {
-        timegrid(tshift + ii, off) += noise[off][ii];           // Add noise to time
-      }
-      if (depth_conversion) {
-        for (int ii = 0 ; ii < nt_non_nmo ; ii++) {
-          depthgrid(zshift + ii, off) += noise[off][ii];        // Add noise to depth
-        }
+        timegrid(tshift + ii, off) += noise_time[off][ii];           // Add noise to time
       }
       if (time_shift) {
         for (int ii = 0 ; ii < nt_non_nmo ; ii++) {
-          timeshiftgrid(tshift + ii, off) += noise[off][ii];    // Add noise to time shift. Is tshift correct?
+          timeshiftgrid(tshift + ii, off) += noise_time[off][ii];    // Add noise to time shift. Is tshift correct?
+        }
+      }
+      if (depth_conversion) {
+        for (int ii = 0 ; ii < nz_non_nmo ; ii++) {
+          depthgrid(zshift + ii, off) += noise_depth[off][ii];       // Add noise to depth
         }
       }
     }
