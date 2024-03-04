@@ -131,6 +131,7 @@ class SeismicForward {
                                      const unsigned long          seed,
                                      const size_t                 n_traces,
                                      const size_t                 nt_non_nmo,
+                                     const size_t                 nz_non_nmo,
                                      const size_t                 i,
                                      const size_t                 j);
 
