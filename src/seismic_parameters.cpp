@@ -1036,7 +1036,7 @@ double SeismicParameters::FindSinThetaPSWithNewtonsMethod(double   start_value,
                                                           size_t & n_it)
 //-----------------------------------------------------------------------------
 {
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFind sin(theta) PS with Newtons method.\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::High, "\nFind sin(theta) PS with Newtons method.\n");
   double y_old = start_value;
   double y_new, f_y, f_der_y;
 
