@@ -987,7 +987,7 @@ void SeismicParameters::FindPSNMOThetaAndOffset(NRLib::Grid2D<double>     & thet
                                                 bool                        save_theta)
 //-------------------------------------------------------------------------------------------
 {
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFinding PS NMO angles and offsets\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::High, "\nFinding PS NMO angles and offsets\n");
 
   double tol         = 0.000001;
   size_t n_it        = 10;
