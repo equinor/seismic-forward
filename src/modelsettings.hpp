@@ -56,7 +56,10 @@ public:
   bool                      GetRemoveNegativeDeltaZ()                 { return remove_negative_delta_z_        ;}
   bool                      GetUseCornerpointInterpol()               { return use_cornerpoint_interpol_       ;}
   bool                      GetCornerpointInterpolationAtFaults()     { return cornerpoint_interpol_at_faults_ ;}
+  bool                      GetUseHorizontalInterpolation()           { return use_horizontal_interpolation_   ;}
   bool                      GetUseVerticalInterpolation()             { return use_vertical_interpolation_     ;}
+  bool                      GetUseBilinearInterpolation()             { return use_bilinear_interpolation_     ;}
+  bool                      GetUseActivePillars()                     { return use_active_pillars_             ;}
 
   int                       GetIL0Loc()                               { return il0_loc_                        ;}
   int                       GetXL0Loc()                               { return xl0_loc_                        ;}
@@ -207,7 +210,10 @@ public:
 
   void SetUseCornerpointInterpol(bool value)           { use_cornerpoint_interpol_            = value   ;}
   void SetCornerpointInterpolationAtFaults(bool value) { cornerpoint_interpol_at_faults_      = value   ;}
+  void SetUseHorizontalInterpolation(bool value)       { use_horizontal_interpolation_        = value   ;}
   void SetUseVerticalInterpolation(bool value)         { use_vertical_interpolation_          = value   ;}
+  void SetUseBilinearInterpolation(bool value)         { use_bilinear_interpolation_          = value   ;}
+  void SetUseActivePillars(bool value)                 { use_active_pillars_                  = value   ;}
   void SetRemoveNegativeDeltaZ(bool value)             { remove_negative_delta_z_             = value   ;}
   void SetPSSeismic(bool ps)                           { ps_seismic_                          = ps      ;}
   void SetDefaultUnderburden(bool value)               { default_underburden_                 = value   ;}
@@ -431,7 +437,10 @@ private:
 
   bool                      use_cornerpoint_interpol_;
   bool                      cornerpoint_interpol_at_faults_;
+  bool                      use_horizontal_interpolation_;
   bool                      use_vertical_interpolation_;
+  bool                      use_bilinear_interpolation_;
+  bool                      use_active_pillars_;
   bool                      remove_negative_delta_z_;
 
   bool                      elastic_parameters_time_segy_;

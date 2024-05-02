@@ -250,7 +250,9 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
   std::vector<std::string> legalCommands;
   legalCommands.push_back("cornerpt-interpolation-in-depth");
   legalCommands.push_back("cornerpt-interpolation-at-faults");
+  legalCommands.push_back("horizontal-interpolation-of-undefined-cells");
   legalCommands.push_back("vertical-interpolation-of-undefined-cells");
+  legalCommands.push_back("use-active-pillars-for-centerpt-interpolation");
   legalCommands.push_back("default-values");
   legalCommands.push_back("eclipse-file");
   legalCommands.push_back("extra-parameters");
@@ -283,8 +285,20 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
     modelSettings_->SetCornerpointInterpolationAtFaults(bolval);
   }
 
+  if (ParseBool(root, "horizontal-interpolation-of-undefined-cells", bolval, errTxt)) {
+    modelSettings_->SetUseHorizontalInterpolation(bolval);
+  }
+
   if (ParseBool(root, "vertical-interpolation-of-undefined-cells", bolval, errTxt)) {
     modelSettings_->SetUseVerticalInterpolation(bolval);
+  }
+
+  if (ParseBool(root, "use-bilinear-interpolation", bolval, errTxt)) {
+    modelSettings_->SetUseBilinearInterpolation(bolval);
+  }
+
+  if (ParseBool(root, "use-active-pillars-for-centerpt-interpolation", bolval, errTxt)) {
+    modelSettings_->SetUseActivePillars(bolval);
   }
 
   if (ParseBool(root, "remove-negative-delta-z", bolval, errTxt)) {
