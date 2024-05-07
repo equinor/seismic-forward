@@ -191,6 +191,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
   const bool                            use_corner_point        = model_settings->GetUseCornerpointInterpol();
   const bool                            interpolation_at_faults = model_settings->GetCornerpointInterpolationAtFaults();
   const bool                            vertical_interpolation  = model_settings->GetUseVerticalInterpolation();
+  const bool                            fixed_triangularization = model_settings->GetUseFixedTriangularization();
   const std::string                   & prefix                  = model_settings->GetPrefix();
   std::string                           filename                = "negative_dz_points.rxat";
   if (prefix != "") {
@@ -217,6 +218,7 @@ void SeismicRegridding::FindZValues(SeismicParameters & seismic_parameters,
                                     use_corner_point,
                                     interpolation_at_faults,
                                     bilinear,
+                                    fixed_triangularization,
                                     vertical_interpolation,
                                     missing);
 
