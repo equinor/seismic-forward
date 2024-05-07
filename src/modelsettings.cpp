@@ -375,9 +375,15 @@ void ModelSettings::PrintSettings(void)
   }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Scale                                             : %10.1f\n", GetWaveletScale());
   if (GetWaveletLength() != -999.0)
+<<<<<<< HEAD
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Length                                            : %10.1f\n", GetWaveletLength());
   if (GetWaveletLengthFactor() != -999.0)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Length Factor                                     : %10.1f\n", GetWaveletLengthFactor());
+=======
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Length                                  : %10.1f\n", GetWaveletLength());
+  if (GetWaveletLengthFactor() != -999.0)
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Length Factor                           : %10.1f\n", GetWaveletLengthFactor());
+>>>>>>> release-4.3
   if (GetZWaveletTop() != 0.0) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  z-extension above grid                            : %10.1f\n", GetZWaveletTop());
   }
