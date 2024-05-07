@@ -250,6 +250,7 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
   std::vector<std::string> legalCommands;
   legalCommands.push_back("cornerpt-interpolation-in-depth");
   legalCommands.push_back("cornerpt-interpolation-at-faults");
+  legalCommands.push_back("use-fixed-triangularization-of-eclipse-grid");
   legalCommands.push_back("horizontal-interpolation-of-undefined-cells");
   legalCommands.push_back("vertical-interpolation-of-undefined-cells");
   legalCommands.push_back("use-active-pillars-for-centerpt-interpolation");
@@ -283,6 +284,10 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
 
   if (ParseBool(root, "cornerpt-interpolation-at-faults", bolval, errTxt)) {
     modelSettings_->SetCornerpointInterpolationAtFaults(bolval);
+  }
+
+  if (ParseBool(root, "use-fixed-triangularization-of-eclipse-grid", bolval, errTxt)) {
+    modelSettings_->SetUseFixedTriangularization(bolval);
   }
 
   if (ParseBool(root, "horizontal-interpolation-of-undefined-cells", bolval, errTxt)) {

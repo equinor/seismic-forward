@@ -1256,7 +1256,8 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
                                                     NRLib::Grid2D<int>              & is_set,
                                                     const std::vector<NRLib::Point> & corners_in,
                                                     const double                      dx,
-                                                    const double                      dy) const
+                                                    const double                      dy,
+                                                    const bool                        fixed_triangularization) const
 {
   std::vector<NRLib::Point> corners       = corners_in;
   bool                      two_triangles = true;
@@ -1297,14 +1298,14 @@ void EclipseGeometry::TriangularFillInZValuesInArea(NRLib::Grid2D<double>       
     // crucial within a given column, and as we do the modelling layer by layer, this is
     // the only way to ensure consistency.
     //
-    //if (vec1_vec2_angle <= NRLib::Pi) {
-    triangle1.SetCornerPoints(corners[3], corners[0], corners[1]);
-    triangle2.SetCornerPoints(corners[1], corners[2], corners[3]);
-    //}
-    //else {
-    //  triangle1.SetCornerPoints(corners[0], corners[1], corners[2]);
-    //  triangle2.SetCornerPoints(corners[2], corners[3], corners[0]);
-    //}
+    if (fixed_triangularization || vec1_vec2_angle <= NRLib::Pi) {
+      triangle1.SetCornerPoints(corners[3], corners[0], corners[1]);
+      triangle2.SetCornerPoints(corners[1], corners[2], corners[3]);
+    }
+    else {
+      triangle1.SetCornerPoints(corners[0], corners[1], corners[2]);
+      triangle2.SetCornerPoints(corners[2], corners[3], corners[0]);
+    }
   }
 
   //Calculate the min and max in x- and y-direction (rotated, i.e. same direction as z_grid)
@@ -1478,6 +1479,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
                                                const bool                            cornerpoint_interpolation,
                                                const bool                            interpolation_at_faults,
                                                const bool                            bilinear_else_triangles,
+                                               const bool                            fixed_triangularization,
                                                const bool                            vertical_interpolation,
                                                const double                          missingValue) const
 //----------------------------------------------------------------------------------------------------------------
@@ -1527,6 +1529,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
             cornerpoint_interpolation,
             interpolation_at_faults,   // For corner point interpolation only
             bilinear_else_triangles,
+            fixed_triangularization,
             is_surface,
             missingValue);
 
@@ -1551,6 +1554,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
               cornerpoint_interpolation,
               interpolation_at_faults,   // For corner point interpolation only
               bilinear_else_triangles,
+              fixed_triangularization,
               is_surface,
               missingValue);
     Monitor(nk - 1, nk - 2 - k,  monitor_size, next_monitor, count, carets);
@@ -1777,6 +1781,7 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_grid,
                                 const bool              cornerpoint_interpolation,
                                 const bool              interpolation_at_faults,
                                 const bool              bilinear_else_triangles,
+                                const bool              fixed_triangularization,
                                 const bool              is_surface,
                                 const double            missingValue) const
 {
@@ -1791,6 +1796,7 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_grid,
                                       angle,
                                       interpolation_at_faults,
                                       bilinear_else_triangles,
+                                      fixed_triangularization,
                                       is_surface,
                                       missingValue); // Currently not in use
   else
@@ -1803,6 +1809,7 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_grid,
                                       y0,
                                       angle,
                                       bilinear_else_triangles,
+                                      fixed_triangularization,
                                       is_surface,
                                       missingValue);
 }
@@ -1818,6 +1825,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & 
                                                         const double            angle,
                                                         const bool              interpolation_at_faults,
                                                         const bool              bilinear_else_triangles,
+                                                        const bool              fixed_triangularization,
                                                         const bool              is_surface,
                                                         const double            missingValue) const
 {
@@ -1846,7 +1854,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & 
       TranslateAndRotate(Crot[3], C3, x0, y0, cosA, sinA);
 
       if (FindTopCell(i,j) != nk_) {
-        FillInZValuesInArea(z_grid, is_set, Crot, dx, dy, bilinear_else_triangles, surface_edge, true);
+        FillInZValuesInArea(z_grid, is_set, Crot, dx, dy, bilinear_else_triangles, surface_edge, fixed_triangularization, true);
       }
 
       if (interpolation_at_faults) {
@@ -1874,7 +1882,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & 
               fault_corners[2].z = cell_under_right_corner.z;
               fault_corners[3].z = Crot[3].z;
             }
-            FillInZValuesInArea(z_grid, is_set, fault_corners, dx, dy, bilinear_else_triangles, surface_edge, false);
+            FillInZValuesInArea(z_grid, is_set, fault_corners, dx, dy, bilinear_else_triangles, surface_edge, fixed_triangularization, false);
           }
         }
 
@@ -1897,7 +1905,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & 
               fault_corners[3].z = prev_lower_corner.z;
 
             }
-            FillInZValuesInArea(z_grid, is_set, fault_corners, dx, dy, bilinear_else_triangles, surface_edge, false);
+            FillInZValuesInArea(z_grid, is_set, fault_corners, dx, dy, bilinear_else_triangles, surface_edge, fixed_triangularization, false);
           }
         }
         prev_upper_corner = Crot[2];
@@ -1924,6 +1932,7 @@ void EclipseGeometry::FillInZValuesInArea(NRLib::Grid2D<double>           & z_gr
                                           const double                      dy,
                                           const bool                        bilinear_else_triangles,
                                           const bool                        surface_edge,
+                                          const bool                        fixed_triangularization,
                                           const bool                        write_warning) const
 {
   if (bilinear_else_triangles) {
@@ -1934,7 +1943,7 @@ void EclipseGeometry::FillInZValuesInArea(NRLib::Grid2D<double>           & z_gr
     BilinearFillInZValuesInArea(z_grid, is_set, corners, dx, dy);
   }
   else {
-    TriangularFillInZValuesInArea(z_grid, is_set, corners, dx, dy);
+    TriangularFillInZValuesInArea(z_grid, is_set, corners, dx, dy, fixed_triangularization);
     if (surface_edge) {
       TriangularFillInZValuesAtEdges(z_grid, is_set, corners, dx, dy);
     }
@@ -1951,6 +1960,7 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
                                                         const double            y0,
                                                         const double            angle,
                                                         const bool              bilinear_else_triangles,
+                                                        const bool              fixed_triangularization,
                                                         const bool              is_surface,
                                                         const double            missingValue) const
 {
@@ -2001,7 +2011,7 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
           //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 2:  %7.2f, %7.2f, %7.2f\n", k, Crot[2].x, Crot[2].y, Crot[2].z);
           //NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Corner 3:  %7.2f, %7.2f, %7.2f\n", k, Crot[3].x, Crot[3].y, Crot[3].z);
 
-          FillInZValuesInArea(z_grid, is_set, Crot, dx, dy, bilinear_else_triangles, surface_edge, true);
+          FillInZValuesInArea(z_grid, is_set, Crot, dx, dy, bilinear_else_triangles, surface_edge, fixed_triangularization, true);
         }
       }
     }

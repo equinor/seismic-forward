@@ -125,6 +125,7 @@ public:
                                 const bool                            cornerpoint_interpolation,
                                 const bool                            interpolation_at_faults,
                                 const bool                            bilinear_else_triangles,
+                                const bool                            fixed_triangularization,
                                 const bool                            vertical_interpolation,
                                 const double                          missingValue) const;
 
@@ -140,19 +141,20 @@ public:
 ///Stores z-values in layer k for a rectangle with a corner in x0,y0 and step lengths dx and dy, angle indicates rotated angle in the xy-plane
   ///\\param lower_or_upper 0 for upper, 1 for lower
   ///\\param bilinear_else_triangles true for calulating z-coordinates inside corners by bilinear interpolation, false for calculating by intersection of plane through triangles
-  void FindLayer(NRLib::Grid2D<double>     & z_grid,
-                 const size_t                k,
-                 const int                   lower_or_upper,
-                 const double                dx,
-                 const double                dy,
-                 const double                x0,
-                 const double                y0,
-                 const double                angle,
-                 const bool                  cornerpoint_interpolation,
-                 const bool                  interpolation_at_faults,
-                 const bool                  bilinear_else_triangles,
-                 const bool                  is_surface,
-                 const double                missingValue) const;
+  void FindLayer(NRLib::Grid2D<double> & z_grid,
+                 const size_t            k,
+                 const int               lower_or_upper,
+                 const double            dx,
+                 const double            dy,
+                 const double            x0,
+                 const double            y0,
+                 const double            angle,
+                 const bool              cornerpoint_interpolation,
+                 const bool              interpolation_at_faults,
+                 const bool              bilinear_else_triangles,
+                 const bool              fixed_triangularization,
+                 const bool              is_surface,
+                 const double            missingValue) const;
 
   void TranslateAndRotate(NRLib::Point       & corners,
                           const NRLib::Point & C,
@@ -276,6 +278,7 @@ private:
                                          const double            angle,
                                          const bool              interpolation_at_faults,
                                          const bool              bilinear_else_triangles,
+                                         const bool              fixed_triangularization,
                                          const bool              is_surface,
                                          const double            missingValue) const;
 
@@ -288,6 +291,7 @@ private:
                                           const double            y0,
                                           const double            angle,
                                           const bool              bilinear_else_triangles,
+                                          const bool              fixed_triangularization,
                                           const bool              is_surface,
                                           const double            missingValue) const;
 
@@ -298,6 +302,7 @@ private:
                            const double                      dy,
                            const bool                        bilinear_else_triangles,
                            const bool                        surface_edge,
+                           const bool                        fixed_triangularization,
                            const bool                        write_warning) const;
 
   ///Function used by FindLayerSurface to fill in values to z_grid in the area inside the (NB) four corners (listed clockwise)
@@ -305,7 +310,8 @@ private:
                                      NRLib::Grid2D<int>              & is_set,
                                      const std::vector<NRLib::Point> & corners,
                                      const double                      dx,
-                                     const double                      dy) const;
+                                     const double                      dy,
+                                     const bool                        fixed_triangularization) const;
 
   void TriangularFillInZValuesAtEdges(NRLib::Grid2D<double>           & z_grid,
                                       NRLib::Grid2D<int>              & is_set,
