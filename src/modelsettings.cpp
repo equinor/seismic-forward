@@ -110,6 +110,7 @@ ModelSettings::ModelSettings(void)
 
   use_cornerpoint_interpol_            = false;
   cornerpoint_interpol_at_faults_      = false;
+  use_fixed_triangularization_         = true;
   use_horizontal_interpolation_        = false;
   use_vertical_interpolation_          = true;
   use_bilinear_interpolation_          = false;
@@ -303,6 +304,7 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Remove negative thicknesses                       : %10s\n"  , GetRemoveNegativeDeltaZ()             ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Minimum thickness for Eclipse grid cells          : %10.1f\n", GetZeroThicknessLimit());
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Use corner-point interpolation                    : %10s\n"  , GetUseCornerpointInterpol()           ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Use fixed triangularization of Eclipe grid        : %10s\n"  , GetUseFixedTriangularization()        ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Interpolate at faults when corner-point           : %10s\n"  , GetCornerpointInterpolationAtFaults() ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Use horizontal interpolation of layers            : %10s\n"  , GetUseHorizontalInterpolation()       ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Use vertical interpolation of layers              : %10s\n"  , GetUseVerticalInterpolation()         ? "yes" : "no");
