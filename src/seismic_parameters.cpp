@@ -303,9 +303,9 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   double angle      = 0.0;
   bool   cornerpt   = model_settings->GetUseCornerpointInterpol();
   bool   fixed      = model_settings->GetUseFixedTriangularization();
+  bool   bilinear   = model_settings->GetUseBilinearInterpolation();
   bool   faults     = model_settings->GetCornerpointInterpolationAtFaults();
-  bool   bilinear   = false;
-  bool   is_surface = true;
+  bool   horizontal = true; // Always use horizontal interpolation for top and base surface
 
   if (cornerpt)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
@@ -315,8 +315,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   NRLib::Grid2D<double> tvalues(nx, ny, 0.0);
   NRLib::Grid2D<double> bvalues(nx, ny, 0.0);
 
-  eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, faults, bilinear, fixed, is_surface, missing_);
-  eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, faults, bilinear, fixed, is_surface, missing_);
+  eclipse_geometry.FindLayer(tvalues, top_k, 0, etdx, etdy, x0, y0, 0.0, cornerpt, faults, bilinear, fixed, horizontal, missing_);
+  eclipse_geometry.FindLayer(bvalues, bot_k, 1, ebdx, ebdy, x0, y0, 0.0, cornerpt, faults, bilinear, fixed, horizontal, missing_);
 
   for (size_t i = 0; i < topeclipse.GetNI(); i++) {    // This fixes small, insignificant defects
     for (size_t j = 0; j < topeclipse.GetNJ(); j++) {
