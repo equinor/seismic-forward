@@ -1480,6 +1480,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
                                                const bool                            interpolation_at_faults,
                                                const bool                            bilinear_else_triangles,
                                                const bool                            fixed_triangularization,
+                                               const bool                            horizontal_interpolation,
                                                const bool                            vertical_interpolation,
                                                const double                          missingValue) const
 //----------------------------------------------------------------------------------------------------------------
@@ -1493,8 +1494,6 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
   const size_t ni    = zgrid.GetNI();
   const size_t nj    = zgrid.GetNJ();
   const size_t nk    = zgrid.GetNK();
-
-  bool         is_surface = false; // We generate layers and not top and bot Eclipse grid surfaces in this case
 
   float        monitor_size;
   float        next_monitor;
@@ -1530,7 +1529,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
             interpolation_at_faults,   // For corner point interpolation only
             bilinear_else_triangles,
             fixed_triangularization,
-            is_surface,
+            horizontal_interpolation,
             missingValue);
 
   //
@@ -1555,7 +1554,7 @@ void EclipseGeometry::FindRegularGridOfZValues(NRLib::StormContGrid             
               interpolation_at_faults,   // For corner point interpolation only
               bilinear_else_triangles,
               fixed_triangularization,
-              is_surface,
+              horizontal_interpolation,
               missingValue);
     Monitor(nk - 1, nk - 2 - k,  monitor_size, next_monitor, count, carets);
   }
@@ -1782,7 +1781,7 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_grid,
                                 const bool              interpolation_at_faults,
                                 const bool              bilinear_else_triangles,
                                 const bool              fixed_triangularization,
-                                const bool              is_surface,
+                                const bool              horizontal_interpolation,
                                 const double            missingValue) const
 {
   if (cornerpoint_interpolation)
@@ -1797,7 +1796,7 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_grid,
                                       interpolation_at_faults,
                                       bilinear_else_triangles,
                                       fixed_triangularization,
-                                      is_surface,
+                                      horizontal_interpolation,
                                       missingValue); // Currently not in use
   else
     FindLayerCenterPointInterpolation(z_grid,
@@ -1810,7 +1809,7 @@ void EclipseGeometry::FindLayer(NRLib::Grid2D<double> & z_grid,
                                       angle,
                                       bilinear_else_triangles,
                                       fixed_triangularization,
-                                      is_surface,
+                                      horizontal_interpolation,
                                       missingValue);
 }
 
@@ -1826,7 +1825,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & 
                                                         const bool              interpolation_at_faults,
                                                         const bool              bilinear_else_triangles,
                                                         const bool              fixed_triangularization,
-                                                        const bool              is_surface,
+                                                        const bool              horizontal_interpolation,
                                                         const double            missingValue) const
 {
   double                    cosA = cos(angle);
@@ -1841,7 +1840,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & 
   for (size_t j = 0 ; j < nj_ ; j++) { // Loops over each cell in the given layer
     for (size_t i = 0 ; i < ni_ ; i++) {
 
-      bool surface_edge = is_surface && (i == 0 || j == 0 || i == ni_ - 2 || j == nj_ - 2);
+      bool surface_edge = horizontal_interpolation && (i == 0 || j == 0 || i == ni_ - 2 || j == nj_ - 2);
 
       C0 = FindCornerPoint(i, j, k, 0, 0, lower_or_upper); // Find rotated coordinates for the corners of the cell
       C1 = FindCornerPoint(i, j, k, 0, 1, lower_or_upper);
@@ -1917,7 +1916,7 @@ void EclipseGeometry::FindLayerCornerPointInterpolation(NRLib::Grid2D<double> & 
   // We do a horizontal extrapolation/interpolation for the top and base surfaces, but not
   // for grid layers. These will be interpolated vertically to ensure vertical consistency
   //
-  if (is_surface) {
+  if (horizontal_interpolation) {
     bool iterate = true;
     while (iterate) {
       FillInZValuesByAveraging(z_grid, is_set, iterate);
@@ -1961,7 +1960,7 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
                                                         const double            angle,
                                                         const bool              bilinear_else_triangles,
                                                         const bool              fixed_triangularization,
-                                                        const bool              is_surface,
+                                                        const bool              horizontal_interpolation,
                                                         const double            missingValue) const
 {
   double                    cosA = cos(angle);
@@ -1980,7 +1979,7 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
                     IsColumnActive(i+1, j+1);
 
       if (active) {
-        bool surface_edge = is_surface && (i == 0 || j == 0 || i == ni_ - 2 || j == nj_ - 2);
+        bool surface_edge = horizontal_interpolation && (i == 0 || j == 0 || i == ni_ - 2 || j == nj_ - 2);
 
         //NRLib::LogKit::LogFormatted(NRLib:a:LogKit::Low, "i,j =  %d, %d\n",i,j);
 
@@ -2021,7 +2020,7 @@ void EclipseGeometry::FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & 
   // We do a horizontal extrapolation/interpolation for the top and base surfaces, but not
   // for grid layers. These will be interpolated vertically to ensure vertical consistency
   //
-  if (is_surface) {
+  if (horizontal_interpolation) {
     bool iterate = true;
     while (iterate) {
       FillInZValuesByAveraging(z_grid, is_set, iterate);
