@@ -126,6 +126,7 @@ public:
                                 const bool                            interpolation_at_faults,
                                 const bool                            bilinear_else_triangles,
                                 const bool                            fixed_triangularization,
+                                const bool                            horizontal_interpolation,
                                 const bool                            vertical_interpolation,
                                 const double                          missingValue) const;
 
@@ -153,7 +154,7 @@ public:
                  const bool              interpolation_at_faults,
                  const bool              bilinear_else_triangles,
                  const bool              fixed_triangularization,
-                 const bool              is_surface,
+                 const bool              horizontal_interpolation,
                  const double            missingValue) const;
 
   void TranslateAndRotate(NRLib::Point       & corners,
@@ -279,7 +280,7 @@ private:
                                          const bool              interpolation_at_faults,
                                          const bool              bilinear_else_triangles,
                                          const bool              fixed_triangularization,
-                                         const bool              is_surface,
+                                         const bool              horizontal_interpolation,
                                          const double            missingValue) const;
 
    void FindLayerCenterPointInterpolation(NRLib::Grid2D<double> & z_grid,
@@ -292,7 +293,7 @@ private:
                                           const double            angle,
                                           const bool              bilinear_else_triangles,
                                           const bool              fixed_triangularization,
-                                          const bool              is_surface,
+                                          const bool              horizontal_interpolation,
                                           const double            missingValue) const;
 
   void FillInZValuesInArea(NRLib::Grid2D<double>           & z_grid,
