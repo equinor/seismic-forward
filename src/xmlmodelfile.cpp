@@ -286,11 +286,7 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
     modelSettings_->SetCornerpointInterpolationAtFaults(bolval);
   }
 
-<<<<<<< HEAD
-  if (ParseBool(root, "use-fixed-triangularization-of-eclipse-grid", bolval, errTxt)) {
-=======
   if (ParseBool(root, "fixed-triangularization-of-eclipse-grid", bolval, errTxt)) {
->>>>>>> release-4.3
     modelSettings_->SetUseFixedTriangularization(bolval);
   }
 
@@ -302,21 +298,10 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
     modelSettings_->SetUseVerticalInterpolation(bolval);
   }
 
-<<<<<<< HEAD
-  if (ParseBool(root, "use-bilinear-interpolation", bolval, errTxt)) {
-    modelSettings_->SetUseBilinearInterpolation(bolval);
-  }
-
-  if (ParseBool(root, "use-active-pillars-for-centerpt-interpolation", bolval, errTxt)) {
-    modelSettings_->SetUseActivePillars(bolval);
-  }
-
-=======
   if (ParseBool(root, "bilinear-interpolation", bolval, errTxt)) {
     modelSettings_->SetUseBilinearInterpolation(bolval);
   }
 
->>>>>>> release-4.3
   if (ParseBool(root, "remove-negative-delta-z", bolval, errTxt)) {
     modelSettings_->SetRemoveNegativeDeltaZ(bolval);
   }
