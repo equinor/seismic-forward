@@ -248,18 +248,18 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
   }
 
   std::vector<std::string> legalCommands;
+  legalCommands.push_back("bilinear-interpolation");
   legalCommands.push_back("cornerpt-interpolation-in-depth");
   legalCommands.push_back("cornerpt-interpolation-at-faults");
-  legalCommands.push_back("use-fixed-triangularization-of-eclipse-grid");
-  legalCommands.push_back("horizontal-interpolation-of-undefined-cells");
-  legalCommands.push_back("vertical-interpolation-of-undefined-cells");
-  legalCommands.push_back("use-active-pillars-for-centerpt-interpolation");
-  legalCommands.push_back("default-values");
   legalCommands.push_back("eclipse-file");
   legalCommands.push_back("extra-parameters");
+  legalCommands.push_back("default-values");
+  legalCommands.push_back("fixed-triangularization-of-eclipse-grid");
+  legalCommands.push_back("horizontal-interpolation-of-undefined-cells");
   legalCommands.push_back("parameter-names");
   legalCommands.push_back("remove-negative-delta-z");
   legalCommands.push_back("resampl-param-to-segy-with-interpol");
+  legalCommands.push_back("vertical-interpolation-of-undefined-cells");
   legalCommands.push_back("zero-thickness-limit");
 
   std::string value;
@@ -286,7 +286,11 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
     modelSettings_->SetCornerpointInterpolationAtFaults(bolval);
   }
 
+<<<<<<< HEAD
   if (ParseBool(root, "use-fixed-triangularization-of-eclipse-grid", bolval, errTxt)) {
+=======
+  if (ParseBool(root, "fixed-triangularization-of-eclipse-grid", bolval, errTxt)) {
+>>>>>>> release-4.3
     modelSettings_->SetUseFixedTriangularization(bolval);
   }
 
@@ -298,6 +302,7 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
     modelSettings_->SetUseVerticalInterpolation(bolval);
   }
 
+<<<<<<< HEAD
   if (ParseBool(root, "use-bilinear-interpolation", bolval, errTxt)) {
     modelSettings_->SetUseBilinearInterpolation(bolval);
   }
@@ -306,6 +311,12 @@ bool XmlModelFile::ParseElasticParam(TiXmlNode   * node,
     modelSettings_->SetUseActivePillars(bolval);
   }
 
+=======
+  if (ParseBool(root, "bilinear-interpolation", bolval, errTxt)) {
+    modelSettings_->SetUseBilinearInterpolation(bolval);
+  }
+
+>>>>>>> release-4.3
   if (ParseBool(root, "remove-negative-delta-z", bolval, errTxt)) {
     modelSettings_->SetRemoveNegativeDeltaZ(bolval);
   }
