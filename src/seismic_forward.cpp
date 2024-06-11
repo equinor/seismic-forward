@@ -4,7 +4,8 @@
 
 #include "utils/output.hpp"
 
-#include "tbb/compat/thread"
+#include <tbb/concurrent_queue.h>
+//#include "tbb/compat/thread"
 
 #include "seismic_geometry.hpp"
 #include "seismic_output.hpp"

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ROOT_DIR=../seismic-forward
+ROOT_DIR=$1
 CUR_DIR=`basename "$PWD"`
 OBJ_DIR=CMakeFiles/seismic-forward-lib.dir
 EXE=compare_storm_grids

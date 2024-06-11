@@ -61,9 +61,9 @@ sub JoinPaths( $$ )
     return $path;
 }
 
-#--------------------------
-sub Initialize( $$$$$$$$$ )
-#--------------------------
+#---------------------------
+sub Initialize( $$$$$$$$$$ )
+#---------------------------
 {
     my $exedir        = shift;
     my $basedir       = shift;
@@ -73,6 +73,7 @@ sub Initialize( $$$$$$$$$ )
     my $geo2seis      = shift;
     my $compare_segy  = shift;
     my $compare_storm = shift;
+    my $dir           = shift;
     my $debug         = shift;
 
     if (! -e $geo2seis) {
@@ -95,7 +96,7 @@ sub Initialize( $$$$$$$$$ )
 
         Cwd::chdir($exedir);
         print "\nMaking Segy comparison executable \'$compare_segy\'\n";
-        open (MAKE, "$make_segy |");
+        open (MAKE, "$make_segy $dir |");
         while ( <MAKE> ) { print $_; }
         close(MAKE);
     }
@@ -120,7 +121,7 @@ sub Initialize( $$$$$$$$$ )
 
         Cwd::chdir($exedir);
         print "\nMaking STORM comparison executable \'$compare_storm\'\n";
-        open (MAKE, "$make_storm |");
+        open (MAKE, "$make_storm $dir |");
         while ( <MAKE> ) { print $_; }
         close(MAKE);
     }
@@ -568,8 +569,11 @@ my ($tmpdir,
     $passive,
     @cases)       = ExtractOptions(@ARGV);
 
+$0 =~ m|^(.*/)|;
+my $dir = $1;
+
 my ($exedir,                                               # This is where the seismic forward and comparison executables are stored
-    $basedir)     = FindBaseAndExeDir($tmpdir, "../seismic-forward", $debug);
+    $basedir)     = FindBaseAndExeDir($tmpdir, $dir, $debug);
 
 my $testdir       = $basedir."/test_suite";                  # Where tests are stored
 my $make_segy     = $basedir."/make_compare_traces.sh";      # Script for making the comparison function
@@ -592,7 +596,7 @@ print "\nTest directory              : $testdir\n";
 print "\nPassive mode                : $passive\n";
 print "\nThreshold                   : $threshold\n";
 
-Initialize($exedir,$basedir,$testdir,$make_segy,$make_storm,$geo2seis,$compare_segy,$compare_storm,$debug);
+Initialize($exedir,$basedir,$testdir,$make_segy,$make_storm,$geo2seis,$compare_segy,$compare_storm,$dir,$debug);
 
 my $ok1;
 my $ok2;

@@ -10,6 +10,8 @@
 # Use -d or --debug for debug compilation
 # Use -m or --matlab for MATLAB compilation
 
+directory=$(dirname "$0")
+
 matlab=-DBUILD_MATLAB_MEX=OFF
 if [ "$1" = "-m" ] || [ "$1" = "--matlab" ] || [ "$2" = "-m" ] || [ "$2" = "--matlab" ]
 then
@@ -23,5 +25,5 @@ then
     debug=-DCMAKE_BUILD_TYPE=DEBUG
 fi
 
-echo "Running cmake ../seismic-forward ${matlab} ${debug}"
-cmake -Wno-dev ../seismic-forward ${matlab} ${debug}
+echo "Running cmake ${directory} ${matlab} ${debug}"
+cmake -Wno-dev ${directory} ${matlab} ${debug}
