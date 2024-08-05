@@ -2,7 +2,8 @@
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/geometry/interpolation.hpp"
 
-#include <tbb/concurrent_queue.h>
+#include <thread>
+//#include <tbb/concurrent_queue.h>  // Ubuntu 24.04
 //#include "tbb/compat/thread"
 
 #include "seismic_parameters.hpp"

@@ -4,7 +4,8 @@
 
 #include "utils/output.hpp"
 
-#include <tbb/concurrent_queue.h>
+#include <thread>
+//#include <tbb/concurrent_queue.h>   // Ubuntu 24.04
 //#include "tbb/compat/thread"
 
 #include "seismic_geometry.hpp"
