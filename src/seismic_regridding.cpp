@@ -6,7 +6,8 @@
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
-#include <tbb/concurrent_queue.h>
+#include <thread>
+//#include <tbb/concurrent_queue.h>  // Ubuntu 24.04
 //#include "tbb/compat/thread"
 
 #include "seismic_regridding.hpp"
