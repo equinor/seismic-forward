@@ -2,7 +2,8 @@
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/geometry/interpolation.hpp"
 
-#include "tbb/compat/thread"
+#include <tbb/concurrent_queue.h>
+//#include "tbb/compat/thread"
 
 #include "seismic_parameters.hpp"
 #include "wavelet.hpp"

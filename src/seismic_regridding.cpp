@@ -6,7 +6,8 @@
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
-#include "tbb/compat/thread"
+#include <tbb/concurrent_queue.h>
+//#include "tbb/compat/thread"
 
 #include "seismic_regridding.hpp"
 #include "tasklist.hpp"

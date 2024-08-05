@@ -15,13 +15,16 @@
 
 if(UNIX)
     find_path(INTEL_STUDIO_ROOT
-              NAMES mkl/include/mkl.h
+              NAMES
+	           mkl/latest/include/mkl.h
+	           mkl/include/mkl.h
               PATHS
+		   ENV ONEAPI_ROOT
                    /prog/Intel/studioxe2016
                    /prog/Intel/studioxe2015
                    /prog/Intel/studioxe2013  # Statoil Linux
                    /nr/prog/intel/Compiler   # NR Linux
-                   /opt/software/intel       # Paals laptop
+                   /opt/software/intel       # Paals laptop fra 2018
               DOC "Root directory for Intel MKL."
               )
 elseif(WIN32)
@@ -48,7 +51,9 @@ if(INTEL_STUDIO_ROOT)
    # Intel MKL
    find_path(MKL_ROOT
              NAMES include/mkl.h
-             PATHS ${INTEL_STUDIO_ROOT}/mkl
+             PATHS
+		${INTEL_STUDIO_ROOT}/mkl/latest
+		${INTEL_STUDIO_ROOT}/mkl
              DOC "Root directory for Intel MKL."
              )
 
@@ -106,7 +111,9 @@ if(INTEL_STUDIO_ROOT)
    # Intel TBB
    find_path(TBB_ROOT
              NAMES include/tbb/compat/thread include/tbb/tbb.h
-             PATHS ${INTEL_STUDIO_ROOT}/tbb
+             PATHS
+		${INTEL_STUDIO_ROOT}/tbb/latest
+		${INTEL_STUDIO_ROOT}/tbb
              DOC "Root directory for Intel TBB."
              )
 
@@ -154,12 +161,12 @@ if(INTEL_STUDIO_ROOT)
                 NAMES tbb libtbb
                 HINTS ${TBB_LIB_DIR})
 
-   find_library(TBB_LIBRARIES_DEBUG
-                NAMES tbb_debug libtbb_debug
-                HINTS ${TBB_LIB_DIR})
+   #find_library(TBB_LIBRARIES_DEBUG
+   #             NAMES tbb_debug libtbb_debug
+   #             HINTS ${TBB_LIB_DIR})
 
    set(TBB_LIBRARIES
-      debug ${TBB_LIBRARIES_DEBUG}
+   #   debug ${TBB_LIBRARIES_DEBUG}
       optimized ${TBB_LIBRARIES_RELEASE})
 
 
@@ -174,7 +181,8 @@ find_package_handle_standard_args(INTEL_STUDIO DEFAULT_MSG MKL_LIBRARIES MKL_INC
 mark_as_advanced(MKL_LIBRARIES MKL_INCLUDE_DIRS MKL_FFTW_INCLUDE_DIRS)
 mark_as_advanced(MKL_INTERFACE_LIBRARY MKL_THREADING_LIBRARY MKL_COMPUTATIONAL_LIBRARY)
 mark_as_advanced(TBB_LIBRARIES TBB_INCLUDE_DIRS TBB_LIB_DIR)
-mark_as_advanced(TBB_LIBRARIES_RELEASE TBB_LIBRARIES_DEBUG)
+mark_as_advanced(TBB_LIBRARIES_RELEASE)
+#mark_as_advanced(TBB_LIBRARIES_RELEASE TBB_LIBRARIES_DEBUG)
 
 # message(STATUS "TBB_ROOT = ${TBB_ROOT}")
 # message(STATUS "TBB_INCLUDE_DIRS = ${TBB_INCLUDE_DIRS}")
