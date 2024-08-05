@@ -2,12 +2,10 @@
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/geometry/interpolation.hpp"
 
-#include <thread>
-//#include <tbb/concurrent_queue.h>  // Ubuntu 24.04
-//#include "tbb/compat/thread"
-
 #include "seismic_parameters.hpp"
 #include "wavelet.hpp"
+
+#include <thread>
 
 
 //------------------------------------------------------------------
@@ -25,6 +23,7 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
   wavelet_scale_    = model_settings->GetWaveletScale();
 
   SetupWavelet(wavelet_,
+               model_settings->GetUseZeroTimeFromFile(),
                model_settings->GetOutputWavelet(),
                model_settings->GetRicker(),
                model_settings->GetPeakFrequency(),
@@ -61,8 +60,9 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
 }
 
 
-//------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
+                                     const bool           use_zero_time_from_file,
                                      const bool           write_wavelet,
                                      const bool           use_ricker,
                                      const double         peakF,
@@ -72,7 +72,7 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
                                      const std::string  & file_name,
                                      const std::string  & file_format,
                                      const std::string  & prefix)
-//------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 {
   if (use_ricker) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nMaking Ricker wavelet with peak frequency %.1f Hz\n", peakF);
@@ -91,6 +91,7 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
                           dt,
                           length,
                           length_factor,
+                          use_zero_time_from_file,
                           write_wavelet,
                           prefix,
                           error);

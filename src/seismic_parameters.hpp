@@ -183,6 +183,7 @@ class SeismicParameters
 private:
 
   void SetupWavelet(Wavelet           *& wavelet,
+                    const bool           use_zero_time_from_file,
                     const bool           write_wavelet,
                     const bool           use_ricker,
                     const double         peakF,
