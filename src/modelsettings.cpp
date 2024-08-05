@@ -93,6 +93,7 @@ ModelSettings::ModelSettings(void)
   wavelet_scale_                       = 1.0;
   wavelet_length_                      = -999.0;
   wavelet_length_factor_               = 1.0;
+  use_zero_time_from_file_             = false;
   z_wavelet_top_                       = 0.0;
   z_wavelet_bot_                       = 0.0;
   z_extrapol_factor_                   = 50.0;
@@ -372,6 +373,7 @@ void ModelSettings::PrintSettings(void)
   else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File                                              : %10.1f\n", GetWaveletFileName().c_str());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Format                                            : %10.1f\n", GetWaveletFileFormat().c_str());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Use zero time from file                           : %10s\n"  , GetUseZeroTimeFromFile() ? "yes" : "no");
   }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Scale                                             : %10.1f\n", GetWaveletScale());
   if (GetWaveletLength() != -999.0)
