@@ -30,7 +30,7 @@ Wavelet::Wavelet(const double        peakF,
     is_ricker_          ( true                   )
 {
   //
-  // EVERYTHING below is CURRENTLY for wavelet export only. Wavelet is calculated on the fly!
+  // EVERYTHING below is CURRENTLY for wavelet export only. WAVELET IS CALCULATED ON THE FLY!
   //
   double      dummy_length       = 1000.0/peakF;
   size_t      n                  = static_cast<size_t>(floor(dummy_length));
@@ -40,7 +40,7 @@ Wavelet::Wavelet(const double        peakF,
     filename = prefix + "_" + filename;
   }
 
-  FillWaveletVector(wavelet_,       // This is not the wavelet used in final calculations
+  FillWaveletVector(wavelet_,         // This is not the wavelet used in final calculations
                     dt,
                     n);
 
@@ -49,8 +49,8 @@ Wavelet::Wavelet(const double        peakF,
     FindTwtLength(wavelet_,
                   dt,
                   dummy,
-                  sample_number_peak,      // Find peak position
-                  twt_length_);            // Size of a half wavelet
+                  sample_number_peak, // Find peak position
+                  twt_length_);       // Size of a half wavelet
   else
     twt_length_ = 0.5*length;
 
@@ -102,7 +102,7 @@ Wavelet::Wavelet(const std::string & filename,
     else
       twt_length_ = 0.5*length;
 
-    twt_length_ *= length_factor;          // Change twt_length from (1/2 wavelet) to length_factor * (1/2 wavelet)
+    twt_length_ *= length_factor;           // Change twt_length from (1/2 wavelet) to length_factor * (1/2 wavelet)
 
     //
     // Export wavelet as read from file - for debugging

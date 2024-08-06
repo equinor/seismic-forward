@@ -373,7 +373,7 @@ void ModelSettings::PrintSettings(void)
   else {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File                                              : %10s\n", GetWaveletFileName().c_str());
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Format                                            : %10s\n", GetWaveletFileFormat().c_str());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Use zero time from file                           : %10s\n", GetUseZeroTimeFromHeader() ? "yes" : "no");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Use zero time from header                         : %10s\n", GetUseZeroTimeFromHeader() ? "yes" : "no");
   }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Scale                                             : %10.1f\n", GetWaveletScale());
   if (GetWaveletLength() != -999.0)

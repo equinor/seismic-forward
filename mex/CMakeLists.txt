@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.10) # Due to $<CONFIG:>
+cmake_minimum_required(VERSION 3.5) # Due to $<CONFIG:>
 
 project(mex)
 
