@@ -659,7 +659,7 @@ bool XmlModelFile::ParseWaveletFromFile(TiXmlNode   * node,
   std::vector<std::string> legalCommands;
   legalCommands.push_back("file-name");
   legalCommands.push_back("format");
-  legalCommands.push_back("find-zero-time");
+  legalCommands.push_back("zero-time-from-header");
 
   std::string format;
   std::string file_name;
@@ -670,8 +670,8 @@ bool XmlModelFile::ParseWaveletFromFile(TiXmlNode   * node,
     modelSettings_->SetWaveletFileFormat("LANDMARK");
 
   bool bolval;
-  if (ParseBool(root, "find-zero-time", bolval, errTxt)) {
-    modelSettings_->SetUseZeroTimeFromFile(bolval);
+  if (ParseBool(root, "zero-time-from-header", bolval, errTxt)) {
+    modelSettings_->SetUseZeroTimeFromHeader(bolval);
   }
 
   if (ParseValue(root, "file-name", file_name, errTxt))
