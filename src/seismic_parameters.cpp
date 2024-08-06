@@ -23,7 +23,7 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
   wavelet_scale_    = model_settings->GetWaveletScale();
 
   SetupWavelet(wavelet_,
-               model_settings->GetUseZeroTimeFromFile(),
+               model_settings->GetUseZeroTimeFromHeader(),
                model_settings->GetOutputWavelet(),
                model_settings->GetRicker(),
                model_settings->GetPeakFrequency(),
@@ -62,7 +62,7 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
 
 //--------------------------------------------------------------------------------
 void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
-                                     const bool           use_zero_time_from_file,
+                                     const bool           use_zero_time_from_header,
                                      const bool           write_wavelet,
                                      const bool           use_ricker,
                                      const double         peakF,
@@ -91,7 +91,7 @@ void SeismicParameters::SetupWavelet(Wavelet           *& wavelet,
                           dt,
                           length,
                           length_factor,
-                          use_zero_time_from_file,
+                          use_zero_time_from_header,
                           write_wavelet,
                           prefix,
                           error);

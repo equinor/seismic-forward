@@ -114,7 +114,7 @@ public:
   double                    GetWaveletScale()                         { return wavelet_scale_                  ;}
   double                    GetWaveletLength()                        { return wavelet_length_                 ;}
   double                    GetWaveletLengthFactor()                  { return wavelet_length_factor_          ;}
-  bool                      GetUseZeroTimeFromFile()                  { return use_zero_time_from_file_        ;}
+  bool                      GetUseZeroTimeFromHeader()                { return use_zero_time_from_header_      ;}
   double                    GetZWaveletTop()                          { return z_wavelet_top_                  ;}
   double                    GetZWaveletBot()                          { return z_wavelet_bot_                  ;}
 
@@ -289,7 +289,7 @@ public:
   void SetWaveletScale(double scale)                   { wavelet_scale_            = scale  ;}
   void SetWaveletLength(double length)                 { wavelet_length_           = length ;}
   void SetWaveletLengthFactor(double value)            { wavelet_length_factor_    = value  ;}
-  void SetUseZeroTimeFromFile(bool value)              { use_zero_time_from_file_  = value  ;}
+  void SetUseZeroTimeFromHeader(bool value)            { use_zero_time_from_header_= value  ;}
   void SetZWaveletTop(double wave)                     { z_wavelet_top_            = wave   ;}
   void SetZWaveletBot(double wave)                     { z_wavelet_bot_            = wave   ;}
 
@@ -409,7 +409,7 @@ private:
   double                    wavelet_scale_;
   double                    wavelet_length_;
   double                    wavelet_length_factor_;   // Multiply (1/2 wavelet) length by this number.
-  bool                      use_zero_time_from_file_;
+  bool                      use_zero_time_from_header_;
   double                    z_wavelet_top_;
   double                    z_wavelet_bot_;
   double                    z_extrapol_factor_;

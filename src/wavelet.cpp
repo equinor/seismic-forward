@@ -64,17 +64,17 @@ Wavelet::Wavelet(const double        peakF,
   }
 }
 
-//-----------------------------------------------
+//-------------------------------------------------------------
 Wavelet::Wavelet(const std::string & filename,
                  const std::string & file_format,
                  const double        dt,
                  const double        length,
                  const double        length_factor,
-                 const bool          use_zero_time_from_file,
+                 const bool          use_zero_time_from_header,
                  const bool          write_wavelet,
                  const std::string & prefix,
                  bool              & error)
-//-----------------------------------------------
+//-------------------------------------------------------------
   : wavelet_            ( std::vector<double>(0) ),
     time_vector_        ( std::vector<double>(0) ),
     time_sampling_in_ms_( -999.0                 ),
@@ -96,8 +96,8 @@ Wavelet::Wavelet(const std::string & filename,
     if (length == -999.0)
       FindTwtLength(wavelet_,
                     time_sampling_in_ms_,
-                    use_zero_time_from_file,
-                    sample_number_peak,     // Find peak position unless use_zero_time_from_file is true
+                    use_zero_time_from_header,
+                    sample_number_peak,     // Find peak position unless use_zero_time_from_header is true
                     twt_length_);           // Size of a half wavelet
     else
       twt_length_ = 0.5*length;
@@ -224,19 +224,19 @@ void Wavelet::WriteLandMarkWavelet(const std::vector<double> & wavelet,
                                    const std::string         & filename) const
 //-----------------------------------------------------------------------------------------
 {
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExporting Landmark ASCII wavelet \'%s\'",filename.c_str());
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Wavelet size   : %3d",wavelet.size());
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Peak at sample : %3d",sample_number_peak);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Density in ms  : %.1f\n",time_sampling_in_ms);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExporting Landmark ASCII wavelet \'%s\'", filename.c_str());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Wavelet size   : %3d", wavelet.size());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Peak at sample : %3d", sample_number_peak + 1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Density in ms  : %.1f\n", time_sampling_in_ms);
 
   std::ofstream file_out;
   NRLib::OpenWrite(file_out, filename);
   file_out << "Landmark ASCII Wavelet\n"
-           << wavelet.size()              << "\n"
-           << sample_number_peak << "\n";
+           << wavelet.size()         << "\n"
+           << sample_number_peak + 1 << "\n";
   file_out << std::fixed
            << std::setprecision(2)
-           << time_sampling_in_ms         << "\n";
+           << time_sampling_in_ms    << "\n";
   for (size_t i = 0 ; i < wavelet.size() ; ++i){
     file_out << std::setprecision(6) << wavelet[i] << "\n";
   }
@@ -245,7 +245,7 @@ void Wavelet::WriteLandMarkWavelet(const std::vector<double> & wavelet,
 //----------------------------------------------------------------------------------
 void Wavelet::FindTwtLength(const std::vector<double> & wavelet,
                             const double                time_sampling_in_ms,
-                            const bool                  use_zero_time_from_file,
+                            const bool                  use_zero_time_from_header,
                             int                       & sample_number_peak,
                             double                    & twt_length)
 //----------------------------------------------------------------------------------
@@ -264,14 +264,14 @@ void Wavelet::FindTwtLength(const std::vector<double> & wavelet,
   }
 
   if (sample_number_peak != -999 && i_max != sample_number_peak) {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nWARNING: Sample incorrect sample number for peak amplitude in file?");
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Peak sample number from file   : %3d", sample_number_peak);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Peak sample number calculated  : %3d", i_max);
-    if (use_zero_time_from_file) {
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Sample number from file is used\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nWARNING: Sample number for zero time in header does not match peak amplitude");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Zero time sample number from header : %3d", sample_number_peak + 1);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Peak sample number calculated       : %3d", i_max + 1);
+    if (use_zero_time_from_header) {
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSample number from header is used!\n");
     }
     else {
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n   Calculated sample number is used\n");
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nCalculated sample number is used!\n");
       sample_number_peak = i_max;
     }
   }
