@@ -525,7 +525,7 @@ my @modeldir    =  (
                     "02_nmo_pp_noise",
                     "03_nmo_ps",
                     "04_off_pp",
-                    "05_off_ps",
+                    "05_off_pp_wavelet_from_file",
                     "06_pp",
                     "07_ps",
                     "08_ps_noise",

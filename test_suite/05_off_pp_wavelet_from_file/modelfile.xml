@@ -1,7 +1,7 @@
 <seismic-forward>
 
 <elastic-param>
-  <eclipse-file > ../../01_nmo_pp/input/Input_grid.grdecl </eclipse-file>
+  <eclipse-file> ../../01_nmo_pp/input/Input_grid.grdecl </eclipse-file>
   <default-values>
     <vp-top>  2400 </vp-top>
     <vp-mid>  2240 </vp-mid>
@@ -24,29 +24,33 @@
 </elastic-param>
 
 <nmo-stretch>
-  <seafloor-depth>  150 </seafloor-depth>
-  <velocity-water> 1500 </velocity-water>
-
+  <seafloor-depth>          150 </seafloor-depth>
+  <velocity-water>         1500 </velocity-water>
   <offset>
-    <offset-0>      0  </offset-0>
-    <doffset>    1000  </doffset>
-    <offset-max> 3000  </offset-max>
+    <offset-0>                0 </offset-0>
+    <doffset>              1000 </doffset>
+    <offset-max>           3000 </offset-max>
   </offset>
-
-  <offset-without-stretch> yes </offset-without-stretch>
+  <offset-without-stretch>  yes </offset-without-stretch>
 </nmo-stretch>
 
 <wavelet>
+  <!--
   <ricker>
     <peak-frequency> 30 </peak-frequency>
   </ricker>
+  -->
+  <from-file>
+    <file-name>../Ricker_30Hz_4.0ms.txt</file-name>
+    <zero-time-from-header> yes </zero-time-from-header>
+  </from-file>
   <scale> -1 </scale>
 </wavelet>
 
 <output-grid>
   <segy-file-format> seisworks </segy-file-format>
   <top-time>
-    <top-time-surface> ../../01_nmo_pp/input/Input_top_surface_PS.irap </top-time-surface>
+    <top-time-surface> ../../01_nmo_pp/input/Input_top_surface_PP.irap </top-time-surface>
   </top-time>
 
   <area>
@@ -73,15 +77,14 @@
   </cell-size>
 
   <depth-window>
-    <top> 1500 </top>
+    <top>    1500 </top>
     <bot> 1900 </bot>
   </depth-window>
 
   <time-window>
-    <top> 2400 </top>
-    <bot> 3000 </bot>
+    <top>    1500 </top>
+    <bot>    2000 </bot>
   </time-window>
-
   <utm-precision> 0.01 </utm-precision>
 </output-grid>
 
@@ -93,10 +96,13 @@
   <seismic-time-segy>        yes    </seismic-time-segy>
   <seismic-depth-segy>       yes    </seismic-depth-segy>
   <seismic-timeshift-segy>   yes    </seismic-timeshift-segy>
+  <wavelet>                  yes    </wavelet>
 </output-parameters>
 
-<ps-seismic> yes </ps-seismic>
-<timeshift-twt> ../../01_nmo_pp/input/Input_timeshift_minus50_twt_PS.storm </timeshift-twt>
+<timeshift-twt> ../../01_nmo_pp/input/Input_timeshift_minus50_twt.storm </timeshift-twt>
+
 <traces-in-memory> 4 </traces-in-memory>
+
+<max-threads> 1 </max-threads>
 
 </seismic-forward>

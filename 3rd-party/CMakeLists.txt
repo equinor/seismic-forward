@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.5)
 
 set(C_FILES
     boost_1_65_1/libs/filesystem/src/operations.cpp

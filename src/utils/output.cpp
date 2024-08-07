@@ -112,10 +112,11 @@ void Output::AddTrace(ResultTrace   * result_trace,
                       SeismicOutput * seismic_output)
 //---------------------------------------------------
 {
+  size_t             noff = offset_vec_.size();
   std::vector<short> zero_vec(1, 0);
-  std::vector<short> angle_or_offset(offset_vec_.size());
+  std::vector<short> angle_or_offset(noff);
 
-  for (size_t off = 0; off < offset_vec_.size() ; ++off) {
+  for (size_t off = 0; off < noff ; ++off) {
     if (model_settings->GetNMOCorr())
       angle_or_offset[off] = static_cast<short>(offset_vec_[off]);
     else
@@ -142,41 +143,66 @@ void Output::AddTrace(ResultTrace   * result_trace,
   // Save to storm grid for output, print storm when finish loop
   //
   if (model_settings->GetTimeOutput()) {
-    for (size_t k = 0 ; k < timegrid_->GetNK() ; ++k) {
-      if (result_trace->GetIsEmpty() || !time_stack_segy_ok_)
-        (*timegrid_)(i, j, k) = 0.0f;
-      else
-        (*timegrid_)(i, j, k) = float(result_trace->GetTimeStackTrace()(k,0));
-    }
+    if (empty)
+      AddZeroTraceToStormGrid(*timegrid_, i, j);
+    else if (time_stack_segy_ok_)
+      AddTraceToStormGrid(*timegrid_, result_trace->GetTimeStackTrace(), i, j); // STACK
+    else if (time_segy_ok_)
+      AddTraceToStormGrid(*timegrid_, result_trace->GetTimeTrace(), i, j);
   }
 
   if (model_settings->GetTimeshiftOutput()) {
-    for (size_t k = 0 ; k < timeshiftgrid_->GetNK() ; ++k) {
-      if (result_trace->GetIsEmpty() || !timeshift_stack_segy_ok_)
-        (*timeshiftgrid_)(i, j, k) = 0.0f;
-      else
-        (*timeshiftgrid_)(i, j, k) = float(result_trace->GetTimeShiftStackTrace()(k,0));
-    }
+    if (empty)
+      AddZeroTraceToStormGrid(*timeshiftgrid_, i, j);
+    else if (timeshift_stack_segy_ok_)
+      AddTraceToStormGrid(*timeshiftgrid_, result_trace->GetTimeShiftStackTrace(), i, j); // STACK
+    else if (timeshift_segy_ok_)
+      AddTraceToStormGrid(*timeshiftgrid_, result_trace->GetTimeShiftTrace(), i, j);
   }
-  if (model_settings->GetDepthOutput()) {
 
-    for (size_t k = 0 ; k < depthgrid_->GetNK() ; ++k) {
-      if (result_trace->GetIsEmpty() || !depth_stack_segy_ok_)
-        (*depthgrid_)(i, j, k) = 0.0f;
-      else
-        (*depthgrid_)(i, j, k) = float(result_trace->GetDepthStackTrace()(k,0));
-    }
+  if (model_settings->GetDepthOutput()) {
+    if (empty)
+      AddZeroTraceToStormGrid(*depthgrid_, i, j);
+    else if (depth_stack_segy_ok_)
+      AddTraceToStormGrid(*depthgrid_, result_trace->GetDepthStackTrace(), i, j); // STACK
+    else if (depth_segy_ok_)
+      AddTraceToStormGrid(*depthgrid_, result_trace->GetDepthTrace(), i, j);
   }
 }
 
+//---------------------------------------------------------------
+void Output::AddZeroTraceToStormGrid(NRLib::StormContGrid & grid,
+                                     const size_t           i,
+                                     const size_t           j)
+//---------------------------------------------------------------
+{
+  for (size_t k = 0 ; k < grid.GetNK() ; ++k) {
+    grid(i, j, k) = 0.0f;
+  }
+}
+
+//-------------------------------------------------------------------
+void Output::AddTraceToStormGrid(NRLib::StormContGrid        & grid,
+                                 const NRLib::Grid2D<double> & data,
+                                 const size_t                  i,
+                                 const size_t                  j)
+//-------------------------------------------------------------------
+{
+  for (size_t k = 0 ; k < grid.GetNK() ; ++k) {
+    grid(i, j, k) = static_cast<float>(data(k, 0)); // Only choose first angle/offset
+  }
+}
+
+//--------------------------------------------------------------------
 void Output::WriteStatisticsForSeismic(ModelSettings * model_settings)
+//--------------------------------------------------------------------
 {
   if (model_settings->GetTimeOutput() || model_settings->GetTimeshiftOutput() || model_settings->GetDepthOutput()) {
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nStatistics for generated seismic data.\n");
-      if (!model_settings->GetUseVerticalInterpolation()) {
-        NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNB! Odd values like not-a-number (nan) may occur since vertical\ninterpolation has been turned off for depth grid generation\n");
-      }
-      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nType               Avg         Min         Max");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nStatistics for generated seismic data. If present, stack data are used,\nif not, data are taken from first offset angle.\n");
+    if (!model_settings->GetUseVerticalInterpolation()) {
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nNB! Odd values like not-a-number (nan) may occur since vertical\ninterpolation has been turned off for depth grid generation\n");
+    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nType               Avg         Min         Max");
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n----------------------------------------------\n");
   }
   float min, max, avg;
