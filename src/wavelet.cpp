@@ -225,9 +225,9 @@ void Wavelet::WriteLandMarkWavelet(const std::vector<double> & wavelet,
 //-----------------------------------------------------------------------------------------
 {
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nExporting Landmark ASCII wavelet \'%s\'", filename.c_str());
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Wavelet size   : %3d", wavelet.size());
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Peak at sample : %3d", sample_number_peak + 1);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Density in ms  : %.1f\n", time_sampling_in_ms);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Wavelet size        : %3d"   , wavelet.size());
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Zero time at sample : %3d"   , sample_number_peak + 1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Density in ms       : %.1f\n", time_sampling_in_ms);
 
   std::ofstream file_out;
   NRLib::OpenWrite(file_out, filename);
