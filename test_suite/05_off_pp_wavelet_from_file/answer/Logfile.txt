@@ -50,7 +50,7 @@ NMO correction settings
 Wavelet
   File                                              : ../Ricker_30Hz_4.0ms.txt
   Format                                            :   LANDMARK
-  Use zero time from file                           :        yes
+  Use zero time from header                         :        yes
   Scale                                             :       -1.0
   Length Factor                                     :        1.0
 
@@ -286,13 +286,14 @@ Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 Generating synthetic NMO PP-seismic for offsets: 0.0 1000.0 2000.0 3000.0 
 
-Statistics for generated seismic data.
+Statistics for generated seismic data. If present, stack data are used,
+if not, data are taken from first offset angle.
 
 Type               Avg         Min         Max
 ----------------------------------------------
-Time            0.0000      0.0000      0.0000
-Time shift      0.0000      0.0000      0.0000
-Depth           0.0000      0.0000      0.0000
+Time            0.0000     -0.1589      0.1569
+Time shift     -0.0000     -0.1639      0.1585
+Depth          -0.0019     -0.1636      0.1513
 
 
 ****************************************************************************************************
