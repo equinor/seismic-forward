@@ -19,6 +19,7 @@ public:
           const double        dt,
           const double        length,
           const double        length_factor,
+          const bool          use_zero_time_from_header,
           const bool          write_wavelet,
           const std::string & prefix,
           bool              & error);
@@ -29,6 +30,7 @@ public:
 
   void   FindTwtLength(const std::vector<double> & wavelet,
                        const double                time_sampling_in_ms,
+                       const bool                  use_zero_time_from_header,
                        int                       & sample_number_for_zero_time,
                        double                    & twt_length);
 

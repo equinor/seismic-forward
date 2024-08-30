@@ -2,112 +2,127 @@
 ****************************************************************************************************
 *****                                                                                          *****
 *****                          Seismic Forward Modeling                                        *****
-*****                                 version 4.3 beta                                         *****
-*****                         Copyright (c) 2022 by Equinor                                    *****
+*****                                 version 4.3                                              *****
+*****                         Copyright (c) 2024 by Equinor                                    *****
 *****                                                                                          *****
 ****************************************************************************************************
 
-Threads in use                            :     1 /   8
+Threads in use                            :     1 /  20
 
 ****************************************************************************************************
 *****                                      Model settings                                      *****
 ****************************************************************************************************
 
-Max threads                               :          1
-Traces in memory                          :     100000
+Max threads                                         :          1
+Traces in memory                                    :     100000
 
-Log level                                 :          7
+Log level                                           :          7
 
-Prefix                                    :           
-Suffix                                    :           
+Prefix                                              :           
+Suffix                                              :           
 
-Seismic data type                         :         PP
-NMO correction                            :        yes
-Offset without stretch                    :         no
-Remove negative thicknesses               :         no
-Minimum thickness for Eclipse grid cells  :        0.1
-Use corner-point interpolation            :        yes
-Interpolate at faults when corner-point   :         no
-Use vertical interpolation in regridding  :        yes
-Use default underburden                   :         no
-Resample parameters to Segy with interpol.:         no
-Add white noise                           :         no
-Add noise to reflection coefficients      :         no
+Seismic data type                                   :         PP
+NMO correction                                      :        yes
+Offset without stretch                              :         no
+Use default underburden                             :         no
+Resample parameters to Segy with interpolation      :         no
+
+Regular grid
+  Remove negative thicknesses                       :         no
+  Minimum thickness for Eclipse grid cells          :        0.1
+  Use corner-point interpolation                    :        yes
+  Use fixed triangularization of Eclipe grid        :        yes
+  Interpolate at faults when corner-point           :         no
+  Use horizontal interpolation of layers            :         no
+  Use vertical interpolation of layers              :        yes
+  Use triangular interpolation                      :        yes
+  Use active pillars for center-point interpolation :         no
+
+Add white noise to seismic data                     :         no
+
+Add noise to reflection coefficients                :         no
 
 NMO correction settings
-  Sea floor depth                         :      150.0
-  Vp velocity in water                    :     1500.0
-  Offsets                                 :   0.0 -> 1000.0
+  Sea floor depth                                   :      150.0
+  Vp velocity in water                              :     1500.0
+  Offsets                                           :   0.0 -> 1000.0
 
 Wavelet
-  Ricker with peak frequency              :       30.0
-  Scale                                   :        1.0
+  Ricker with peak frequency                        :       30.0
+  Scale                                             :        1.0
+  Length Factor                                     :        1.0
 
-Parameters names:
-  Vp                                      :         VP
-  Vs                                      :         VS
-  Rho                                     :       DENS
+Parameters names
+  Vp                                                :         VP
+  Vs                                                :         VS
+  Rho                                               :       DENS
 
-Default values for overburden, reservoir and underburden: 
-  Vp                                      : 2000.0 -> 2240.0 -> 3000.0
-  Vs                                      : 1100.0 ->  890.0 ->  890.0
-  Rho                                     : 2300.0 -> 2240.0 -> 2240.0
+Default values for overburden, reservoir and underburden
+  Vp                                                : 2000.0 -> 2240.0 -> 3000.0
+  Vs                                                : 1100.0 ->  890.0 ->  890.0
+  Rho                                               : 2300.0 -> 2240.0 -> 2240.0
 
-Extra parameters                          :         no
+Extra parameters                                    :         no
 
-Output area is specified in model file:
-  x-start                                 :   461513.4
-  y-start                                 :  5926548.9
-  x-length                                :     6900.0
-  y-length                                :    10900.0
-  angle                                   :     29.998
+Output area is specified in model file
+  x-start                                           :   461513.4
+  y-start                                           :  5926548.9
+  x-length                                          :     6900.0
+  y-length                                          :    10900.0
+  angle                                             :     29.998
 
-Cell size:
-  dx                                      :       50.0
-  dy                                      :       50.0
-  dt                                      :        4.0
-  dz                                      :        4.0
+Cell size
+  dx                                                :       50.0
+  dy                                                :       50.0
+  dt                                                :        4.0
+  dz                                                :        4.0
 
-Top time surface                          : ../../14_Drogon_center_point_interpolation_nmo/input/TopVolantis.txt
-Specified time window:
-  Top:                                    :     1500.0
-  Base:                                   :     2000.0
+Top time surface                                    : ../../14_Drogon_center_point_interpolation_nmo/input/TopVolantis.txt
 
-Specified depth window:
-  Top:                                    :     1500.0
-  Base:                                   :     2000.0
+Specified time window
+  Top:                                              :     1500.0
+  Base:                                             :     2000.0
 
-Seismic data output:
-  Time                                    :         no
-  Time shift                              :         no
-  Depth                                   :         no
-Seismic stack time/depth in SEGY format:
-  Format name                             :  SeisWorks
-  Time                                    :        yes
-  Time shift                              :         no
-  Depth                                   :         no
-Seismic stack time/depth in STORM format:
-  Time                                    :         no
-  Time shift                              :         no
-  Depth                                   :         no
-Elastic parameters output:
-  Time                                    :         no
-  Depth                                   :         no
-Extra parameters output:
-  Time                                    :         no
-  Depth                                   :         no
-Other output:
-  TWT                                     :         no
-  TWT offset                              :         no
-  Vrms                                    :        yes
-  Vp                                      :         no
-  Reflections                             :         no
-  Time surfaces                           :         no
-  Depth surfaces                          :         no
-  Time                                    :         no
-  Time pre NMO                            :         no
-  Time shift                              :         no
-  Depth                                   :         no
+Specified depth window
+  Top:                                              :     1500.0
+  Base:                                             :     2000.0
+
+Seismic data output
+  Time                                              :         no
+  Time shift                                        :         no
+  Depth                                             :         no
+
+Seismic stack time/depth in SEGY format
+  Format name                                       :  SeisWorks
+  Time                                              :        yes
+  Time shift                                        :         no
+  Depth                                             :         no
+
+Seismic stack time/depth in STORM format
+  Time                                              :         no
+  Time shift                                        :         no
+  Depth                                             :         no
+
+Elastic parameters output
+  Time                                              :         no
+  Depth                                             :         no
+
+Extra parameters output
+  Time                                              :         no
+  Depth                                             :         no
+
+Other output
+  TWT                                               :         no
+  TWT offset                                        :         no
+  Vrms                                              :        yes
+  Vp                                                :         no
+  Reflections                                       :         no
+  Time surfaces                                     :         no
+  Depth surfaces                                    :         no
+  Time                                              :         no
+  Time pre NMO                                      :         no
+  Time shift                                        :         no
+  Depth                                             :         no
 
 ****************************************************************************************************
 *****                                     Setting up grid                                      *****
@@ -139,8 +154,8 @@ Wavelet time length is                    :    64.00
 Eclipse top surface lift due to wavelet   :    32.00
 Eclipse base surface drop due to wavelet  :    48.00
 
-Grid minimum value                        :  1522.16
-Grid maximum value                        :  2049.59
+Grid minimum value                        :  1522.16 (Eclipse grid minimum - 0.5 wavelet)
+Grid maximum value                        :  2049.59 (Eclipse grid maximum + 0.5 wavelet)
 
 Making regular grids:
   z, TWT                138 x  218 x   32 :     962688
@@ -226,8 +241,8 @@ Deleting Eclipse grid to free memory.
 
 Assuming NMO.
 
-Find Vrms using Vp.   tmin           :  1540.00  (top Eclipse - 1/2 wavelet)
-   tmax           :  1955.71  (bot Eclipse + 1/2 wavelet)
+Find Vrms using Vp.   tmin           :  1540.00  (top Eclipse - 0.5 wavelet)
+   tmax           :  1955.71  (bot Eclipse + 0.5 wavelet)
    dt             :     4.00
    nt             :      105
 
@@ -274,11 +289,12 @@ Initializing Segy file 'seismic_time_stack.segy' using format SeisWorks
 
 30084 traces to be generated.
 
-1 of 8 available threads are used.
+1 of 20 available threads are used.
 
 Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 1000.0 
 
-Statistics for generated seismic data.
+Statistics for generated seismic data. If present, stack data are used,
+if not, data are taken from first offset angle.
 
 Type               Avg         Min         Max
 ----------------------------------------------
