@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n****************************************************************************************************");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                          Seismic Forward Modeling                                        *****");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                 version 4.3                                              *****");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                version 4.3.1                                             *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                         Copyright (c) 2024 by Equinor                                    *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****                                                                                          *****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n****************************************************************************************************\n\n");

@@ -22,8 +22,8 @@ Prefix                                              :
 Suffix                                              :           
 
 Seismic data type                                   :         PP
-NMO correction                                      :         no
-Offset without stretch                              :         no
+NMO correction                                      :        yes
+Offset without stretch                              :        yes
 Use default underburden                             :         no
 Resample parameters to Segy with interpolation      :         no
 
@@ -42,14 +42,15 @@ Add white noise to seismic data                     :         no
 
 Add noise to reflection coefficients                :         no
 
-AVA angle span
-  Minimum                                           :        0.0
-  Delta                                             :        0.3
-  Maximum                                           :        0.8
-  Angles                                            :    0.0 -> 0.3 -> 0.5 -> 0.8
+NMO correction settings
+  Sea floor depth                                   :      150.0
+  Vp velocity in water                              :     1500.0
+  Offsets                                           :   0.0 -> 1000.0 -> 2000.0 -> 3000.0
 
 Wavelet
-  Ricker with peak frequency                        :       30.0
+  File                                              : ../Ricker_30Hz_4.0ms.txt
+  Format                                            :   LANDMARK
+  Use zero time from header                         :        yes
   Scale                                             :       -1.0
   Length Factor                                     :        1.0
 
@@ -129,7 +130,16 @@ Other output
 *****                                     Setting up grid                                      *****
 ****************************************************************************************************
 
-Making Ricker wavelet with peak frequency 30.0 Hz
+Reading wavelet from file '../Ricker_30Hz_4.0ms.txt'
+
+Landmark format assumed for wavelet
+
+Resampling wavelet from 4.0 ms to 1.0 ms
+
+Exporting Landmark ASCII wavelet 'Wavelet_resampled_to_1.0ms.txt'
+  Wavelet size   : 265
+  Peak at sample : 133
+  Density in ms  : 1.0
 
 Reading Eclipse grid from file '../../01_nmo_pp/input/Input_grid.grdecl'
 
@@ -232,6 +242,8 @@ Deleting Eclipse grid to free memory.
 ****************************************************************************************************
 *****                                      Make TWT grid                                       *****
 ****************************************************************************************************
+
+Assuming NMO.
    tmin           :  1728.00  (top Eclipse - 0.5 wavelet)
    tmax           :  1834.67  (bot Eclipse + 0.5 wavelet)
    dt             :     4.00
@@ -272,16 +284,16 @@ Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 1 of 20 available threads are used.
 
-Generating synthetic PP-seismic for angles: 0.0 15.0 30.0 45.0 
+Generating synthetic NMO PP-seismic for offsets: 0.0 1000.0 2000.0 3000.0 
 
 Statistics for generated seismic data. If present, stack data are used,
 if not, data are taken from first offset angle.
 
 Type               Avg         Min         Max
 ----------------------------------------------
-Time            0.0000     -0.1591      0.1577
-Time shift     -0.0000     -0.1645      0.1593
-Depth          -0.0019     -0.1642      0.1520
+Time            0.0000     -0.1589      0.1569
+Time shift     -0.0000     -0.1639      0.1585
+Depth          -0.0019     -0.1636      0.1513
 
 
 ****************************************************************************************************

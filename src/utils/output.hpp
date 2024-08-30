@@ -23,6 +23,15 @@ public:
                 ModelSettings * model_settings,
                 SeismicOutput * seismic_output);
 
+  void AddZeroTraceToStormGrid(NRLib::StormContGrid & grid,
+                               const size_t           i,
+                               const size_t           j);
+
+  void AddTraceToStormGrid(NRLib::StormContGrid        & grid,
+                           const NRLib::Grid2D<double> & trace,
+                           const size_t                  i,
+                           const size_t                  j);
+
   void WriteStatisticsForSeismic(ModelSettings * model_settings);
 
   void WriteSeismicStorm(ModelSettings                     * model_settings,
