@@ -6,19 +6,17 @@
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
-#include "tbb/compat/thread"
-
 #include "seismic_regridding.hpp"
 #include "tasklist.hpp"
 #include "wavelet.hpp"
 
 #include <numeric>
+#include <thread>
 #include <ctime>
 
 #ifdef WITH_OMP
 #include <omp.h>
 #endif
-
 
 //-----------------------------------------------------------------------------------
 void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parameters,

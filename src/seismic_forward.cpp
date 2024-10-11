@@ -4,13 +4,12 @@
 
 #include "utils/output.hpp"
 
-#include "tbb/compat/thread"
-
 #include "seismic_geometry.hpp"
 #include "seismic_output.hpp"
 #include "seismic_forward.hpp"
 #include "wavelet.hpp"
 
+#include <thread>
 #include <ctime>
 #include <map>
 

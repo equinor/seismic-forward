@@ -93,6 +93,7 @@ ModelSettings::ModelSettings(void)
   wavelet_scale_                       = 1.0;
   wavelet_length_                      = -999.0;
   wavelet_length_factor_               = 1.0;
+  use_zero_time_from_header_           = false;
   z_wavelet_top_                       = 0.0;
   z_wavelet_bot_                       = 0.0;
   z_extrapol_factor_                   = 50.0;
@@ -370,8 +371,9 @@ void ModelSettings::PrintSettings(void)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Ricker with peak frequency                        : %10.1f\n", GetPeakFrequency());
   }
   else {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File                                              : %10.1f\n", GetWaveletFileName().c_str());
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Format                                            : %10.1f\n", GetWaveletFileFormat().c_str());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  File                                              : %10s\n", GetWaveletFileName().c_str());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Format                                            : %10s\n", GetWaveletFileFormat().c_str());
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Use zero time from header                         : %10s\n", GetUseZeroTimeFromHeader() ? "yes" : "no");
   }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Scale                                             : %10.1f\n", GetWaveletScale());
   if (GetWaveletLength() != -999.0)
