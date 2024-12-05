@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.6)
 
 project(G2S)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." ON)
+option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." OFF)
 
 #
 # Deactivated by PAAL 2017.10.25 because of problems to get this to work with new boost
@@ -24,15 +24,9 @@ endif()
 
 include(cmake/AddSource.cmake)
 
-#
-# Boost things added by PAAL
-#
-set(BOOST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/boost_1_65_1")
-#find_package(Boost 1.65.1 REQUIRED COMPONENTS system filesystem)
-
-find_package(Boost 1.65.1 REQUIRED)
+find_package(Boost 1.65.1 REQUIRED COMPONENTS system filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
-#link_directories(${Boost_LIBRARY_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
 
 option( USE_INTEL_STUDIO "Use libraries from Intel Studio" ON )
 find_package(IntelStudio)
@@ -55,7 +49,7 @@ if(USE_INTEL_STUDIO)
     include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS} ${TBB_INCLUDE_DIRS})
     link_directories(${TBB_LIB_DIR})
     set(FFT_LIBRARIES ${MKL_LIBRARIES})
-    set(MATH_LIBRARIES ${MKL_LIBRARIES} ${TBB_LIBRARIES})
+    set(MATH_LIBRARIES ${MKL_LIBRARIES} ${TBB_LIBRARIES_RELEASE})
     set(FFT_MATLAB_LIBRARIES -L${MKL_LIB_PATH} -lmkl_rt)
     add_definitions(-DMKL)
 else()
@@ -126,10 +120,9 @@ endforeach()
 
 add_executable(seismic_forward src/main.cpp)
 
-#message(STATUS "Boost libraries to be linked with: ${Boost_LIBRARIES}")
+message(STATUS "Boost libraries to be linked with: ${Boost_LIBRARIES}")
 
-#target_link_libraries(seismic_forward seismic-forward-lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(seismic_forward seismic-forward-lib ${MATH_LIBRARIES})
+target_link_libraries(seismic_forward seismic-forward-lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
 
 if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)

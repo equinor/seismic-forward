@@ -46,28 +46,34 @@ class SeismicForward {
     static void MakeSeismic(SeismicParameters & seismic_parameters,
                             ModelSettings     * model_settings);
 
-    static void GenerateSeismicTracesQueue(Output             * output,
-                                           GenSeisTraceParams * param);
+    static void GenerateSeismicTraces(SeismicParameters         & seismic_parameters,
+                                      const std::vector<double> & twt_0,
+                                      const std::vector<double> & z_0,
+                                      const std::vector<double> & twts_0,
+                                      const std::vector<double> & theta_vec,
+                                      const std::vector<double> & offset_vec,
 
-    static void GenerateSeismicTraces(Output             * output,
+                                      Output             * output,
                                       GenSeisTraceParams * param,
                                       Trace              * trace);
 
-    static void GenerateNMOSeismicTracesQueue(Output             * nmo_output,
-                                              GenSeisTraceParams * param);
+    static void GenerateNMOSeismicTraces(SeismicParameters         & seismic_parameters,
+                                         const std::vector<double> & twt_0,
+                                         const std::vector<double> & z_0,
+                                         const std::vector<double> & twts_0,
+                                         const std::vector<double> & theta_vec,
+                                         const std::vector<double> & offset_vec,
+                                         const size_t                time_samples_stretch,
 
-    static void GenerateNMOSeismicTraces(Output             * nmo_output,
-                                         GenSeisTraceParams * param,
-                                         Trace              * trace);
+                                         Output                    * nmo_output,
+                                         GenSeisTraceParams        * param,
+                                         Trace                     * trace);
 
     static bool GenerateTraceOk(SeismicParameters & seismic_parameters,
                                 ModelSettings     * model_settings,
                                 size_t              i,
                                 size_t              j);
 
-
-    static void WriteSeismicTraces(GenSeisTraceParams * param,
-                                   Output             * output);
 
     static void SeisConvolutionNMO(NRLib::Grid2D<double>               & timegrid_pos,
                                    NRLib::Grid2D<double>               & refl_pos,
