@@ -6,14 +6,12 @@
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
-#include "utils/gen_seis_trace_params.hpp"
+#include "utils/result_trace.hpp"
 #include "utils/output.hpp"
 #include "utils/trace.hpp"
 
 #include "seismic_parameters.hpp"
 #include "modelsettings.hpp"
-
-#include <tbb/concurrent_queue.h>
 
 #include <algorithm>
 #include <stdio.h>
@@ -54,7 +52,7 @@ class SeismicForward {
                                       const std::vector<double> & offset_vec,
                                       Output                    * output,
                                       Trace                     * trace,
-                                      ResultTrace               *& result_trace);
+                                      ResultTrace               * result_trace);
 
     static void GenerateNMOSeismicTraces(SeismicParameters         & seismic_parameters,
                                          const std::vector<double> & twt_0,
@@ -65,7 +63,7 @@ class SeismicForward {
                                          const size_t                time_samples_stretch,
                                          Output                    * nmo_output,
                                          Trace                     * trace,
-                                         ResultTrace               *& result_trace);
+                                         ResultTrace               * result_trace);
 
     static bool GenerateTraceOk(SeismicParameters & seismic_parameters,
                                 ModelSettings     * model_settings,
