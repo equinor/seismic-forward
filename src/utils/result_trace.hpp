@@ -3,13 +3,14 @@
 
 #include "seismic_parameters.hpp"
 
-#include "utils/trace.hpp"
+class Trace;
 
 class ResultTrace
 {
   public:
 
     ResultTrace(ModelSettings * model_settings,
+                Trace         * trace,
                 const size_t    nzrefl,
                 const size_t    ntwt0,
                 const size_t    nz0,
@@ -17,7 +18,6 @@ class ResultTrace
                 const size_t    nt_stretch,
                 const size_t    noff);
 
-    void SetJobID(Trace *trace);
     void SetIsEmpty(bool empty) { empty_ = empty; };
 
     NRLib::Grid2D<double> & GetTimeTrace()           { return timegrid_pos_            ;}

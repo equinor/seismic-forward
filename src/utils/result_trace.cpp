@@ -1,8 +1,11 @@
 #include "result_trace.hpp"
-#include <seismic_geometry.hpp>
+#include "trace.hpp"
+
+//#include <seismic_geometry.hpp>
 
 //------------------------------------------------------
 ResultTrace::ResultTrace(ModelSettings * model_settings,
+                         Trace         * trace,
                          const size_t    nzrefl,
                          const size_t    nt,
                          const size_t    nz,
@@ -10,7 +13,12 @@ ResultTrace::ResultTrace(ModelSettings * model_settings,
                          const size_t    nt_stretch,
                          const size_t    noff)
 //------------------------------------------------------
-  : empty_(false)
+  : x_         ( trace->GetX()         ),
+    y_         ( trace->GetY()         ),
+    i_         ( trace->GetI()         ),
+    j_         ( trace->GetJ()         ),
+    job_number_( trace->GetJobNumber() ),
+    empty_     ( false                 )
 {
   if (model_settings->GetNMOCorr()) {
     twtx_reg_.           Resize(nt    , noff);
@@ -39,13 +47,4 @@ ResultTrace::ResultTrace(ModelSettings * model_settings,
     depthgrid_pos_.      Resize(nz, noff);
     depthgrid_stack_pos_.Resize(nz, 1);
   }
-}
-
-void ResultTrace::SetJobID(Trace *trace)
-{
-  x_          = trace->GetX();
-  y_          = trace->GetY();
-  i_          = trace->GetI();
-  j_          = trace->GetJ();
-  job_number_ = trace->GetJobNumber();
 }

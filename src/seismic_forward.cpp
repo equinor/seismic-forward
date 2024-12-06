@@ -58,33 +58,30 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
 
   time_t t1 = time(0);
 
-  size_t              n_traces;
-  std::vector<Trace*> seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
+  size_t                n_traces;
+  std::vector<Trace*>   seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
+  size_t                nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
+  std::vector<double>   dummy_vec;
+  float                 monitor_size;
+  float                 next_monitor;
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n%d traces to be generated.\n", n_traces);
 
   PrintSeisType(false, ps_seis, theta_vec, false);
 
-  std::vector<double> dummy_vec;
-
-  float monitor_size, next_monitor;
   MonitorInitialize(n_traces, monitor_size, next_monitor);
   for (size_t i = 0; i < n_traces; ++i) {
 
     Trace       * trace = seismic_traces[i];
 
-    ModelSettings * model_settings = seismic_parameters.GetModelSettings();
-    size_t          nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
-
     ResultTrace result_trace(model_settings,
-                           nzrefl,
-                           twt_0.size(),
-                           z_0.size(),
-                           twts_0.size(),
-                           twt_0.size(),
-                           theta_vec.size());
-
-  result_trace.SetJobID(trace);
+                             trace,
+                             nzrefl,
+                             twt_0.size(),
+                             z_0.size(),
+                             twts_0.size(),
+                             twt_0.size(),
+                             theta_vec.size());
 
   GenerateSeismicTraces(seismic_parameters,
                           twt_0,
@@ -171,14 +168,13 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
     Trace * trace = seismic_traces[i];
 
     ResultTrace result_trace(model_settings,
+                             trace,
                              nzrefl,
                              twt_0.size(),
                              z_0.size(),
                              twts_0.size(),
                              time_samples_stretch,
                              offset_vec.size());
-
-    result_trace.SetJobID(trace);
 
     GenerateNMOSeismicTraces(seismic_parameters,
                              twt_0,
