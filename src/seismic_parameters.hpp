@@ -143,7 +143,8 @@ class SeismicParameters
     static void PrintElapsedTime(time_t      start_time,
                                  std::string work);
 
-    tbb::concurrent_queue<Trace*> FindTracesInForward(size_t & n_traces);
+  tbb::concurrent_queue<Trace*> FindTracesInForward2(size_t & n_traces);
+  std::vector<Trace*>           FindTracesInForward(size_t & n_traces);
 
 
     static void MonitorInitialize(size_t   n_traces,

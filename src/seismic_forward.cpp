@@ -1,5 +1,6 @@
 
 #include "nrlib/geometry/interpolation.hpp"
+
 #include "nrlib/math/constants.hpp"
 
 #include "utils/output.hpp"
@@ -57,46 +58,31 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
 
   time_t t1 = time(0);
 
-  size_t                        n_traces;
-  tbb::concurrent_queue<Trace*> seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
-  size_t                        max_threads    = model_settings->GetMaxThreads();
-  size_t                        queue_capacity = model_settings->GetTracesInMemory();
-  unsigned int                  n              = std::thread::hardware_concurrency();
+  size_t              n_traces;
+  std::vector<Trace*> seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n%d traces to be generated.\n", n_traces);
 
   PrintSeisType(false, ps_seis, theta_vec, false);
 
-  tbb::concurrent_queue<ResultTrace*>         empty_queue;
-  tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
-  result_queue.set_capacity(queue_capacity);
-  std::vector<std::thread*>                   worker_thread;
-
   std::vector<double> dummy_vec;
-  GenSeisTraceParams parameters(empty_queue,
-                                result_queue,
-                                seismic_traces,
-                                n_traces);
 
   float monitor_size, next_monitor;
   MonitorInitialize(n_traces, monitor_size, next_monitor);
   for (size_t i = 0; i < n_traces; ++i) {
-    Trace * trace;
 
-    parameters.seismic_traces.try_pop(trace);
+    Trace       * trace = seismic_traces[i];
+    ResultTrace * result_trace;
+
     GenerateSeismicTraces(seismic_parameters,
                           twt_0,
                           z_0,
                           twts_0,
                           theta_vec,
                           dummy_vec,
-
                           &output,
-                          &parameters,
-                          trace);
-
-    ResultTrace * result_trace;
-    parameters.result_queue.try_pop(result_trace);
+                          trace,
+                          result_trace);
 
     output.AddTrace(result_trace,
                     model_settings,
@@ -105,11 +91,6 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
     Monitor(i, monitor_size, next_monitor);
     delete result_trace;
     delete trace;
-  }
-
-  ResultTrace *result_trace;
-  while (empty_queue.try_pop(result_trace)){
-    delete result_trace;
   }
 
   std::cout << "\n";
@@ -157,33 +138,22 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
 
   time_t t1 = time(0);
 
-  size_t                        n_traces;
-  tbb::concurrent_queue<Trace*> seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
-  size_t                        max_threads    = model_settings->GetMaxThreads();
-  size_t                        queue_capacity = model_settings->GetTracesInMemory();
-  unsigned int                  n              = std::thread::hardware_concurrency();
+  size_t              n_traces;
+  std::vector<Trace*> seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n%d traces to be generated.\n", n_traces);
 
   PrintSeisType(true, ps_seis, offset_vec, offset_without_stretch);
 
-  tbb::concurrent_queue<ResultTrace*>         empty_queue;
-  tbb::concurrent_bounded_queue<ResultTrace*> result_queue;
-  result_queue.set_capacity(queue_capacity);
-  std::vector<std::thread*>                   worker_thread;
-
   std::vector<double> dummy_vec;
-  GenSeisTraceParams parameters(empty_queue,
-                                result_queue,
-                                seismic_traces,
-                                n_traces);
 
   float monitor_size, next_monitor;
   MonitorInitialize(n_traces, monitor_size, next_monitor);
   for (size_t i = 0; i < n_traces; ++i) {
-    Trace * trace;
 
-    parameters.seismic_traces.try_pop(trace);
+    Trace       * trace = seismic_traces[i];
+    ResultTrace * result_trace;
+
     GenerateNMOSeismicTraces(seismic_parameters,
                              twt_0,
                              z_0,
@@ -191,13 +161,10 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
                              dummy_vec,
                              offset_vec,
                              time_samples_stretch,
-
                              &output,
-                             &parameters,
-                             trace);
+                             trace,
+                             result_trace);
 
-    ResultTrace *result_trace;
-    parameters.result_queue.try_pop(result_trace);
     output.AddTrace(result_trace,
                     model_settings,
                     seismic_parameters.GetSeismicOutput());
@@ -205,11 +172,6 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
     Monitor(i, monitor_size, next_monitor);
     delete result_trace;
     delete trace;
-  }
-
-  ResultTrace *result_trace;
-  while (empty_queue.try_pop(result_trace)){
-    delete result_trace;
   }
 
   std::cout << "\n";
@@ -236,23 +198,20 @@ void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismi
                                               const std::vector<double> & offset_vec,
                                               const size_t                time_samples_stretch,
                                               Output                    * nmo_output,
-                                              GenSeisTraceParams        * param,
-                                              Trace                     * trace)
+                                              Trace                     * trace,
+                                              ResultTrace               *& result_trace)
 //--------------------------------------------------------------------------------
 {
   ModelSettings * model_settings = seismic_parameters.GetModelSettings();
   size_t          nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
-  ResultTrace   * result_trace;
 
-  if (!param->empty_queue.try_pop(result_trace)){
-    result_trace = new ResultTrace(model_settings,
-                                   nzrefl,
-                                   twt_0.size(),
-                                   z_0.size(),
-                                   twts_0.size(),
-                                   time_samples_stretch,
-                                   offset_vec.size());
-  }
+  result_trace = new ResultTrace(model_settings,
+                                 nzrefl,
+                                 twt_0.size(),
+                                 z_0.size(),
+                                 twts_0.size(),
+                                 time_samples_stretch,
+                                 offset_vec.size());
 
   result_trace->SetJobID(trace);
 
@@ -504,11 +463,9 @@ void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismi
                          j);
 
     result_trace->SetIsEmpty(false);
-    param->result_queue.push(result_trace);
   }
   else {
     result_trace->SetIsEmpty(true);
-    param->result_queue.push(result_trace);
   }
 }
 
@@ -520,23 +477,20 @@ void SeismicForward::GenerateSeismicTraces(SeismicParameters         & seismic_p
                                            const std::vector<double> & theta_vec,
                                            const std::vector<double> & dummy_vec,
                                            Output                    * output,
-                                           GenSeisTraceParams        * param,
-                                           Trace                     * trace)
+                                           Trace                     * trace,
+                                           ResultTrace               *& result_trace)
 //---------------------------------------------------------------------
 {
   ModelSettings * model_settings = seismic_parameters.GetModelSettings();
   size_t          nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
-  ResultTrace   * result_trace;
 
-  if (!param->empty_queue.try_pop(result_trace)){
-    result_trace = new ResultTrace(model_settings,
-                                   nzrefl,
-                                   twt_0.size(),
-                                   z_0.size(),
-                                   twts_0.size(),
-                                   twt_0.size(),
-                                   theta_vec.size());
-  }
+  result_trace = new ResultTrace(model_settings,
+                                 nzrefl,
+                                 twt_0.size(),
+                                 z_0.size(),
+                                 twts_0.size(),
+                                 twt_0.size(),
+                                 theta_vec.size());
 
   result_trace->SetJobID(trace);
 
@@ -680,11 +634,9 @@ void SeismicForward::GenerateSeismicTraces(SeismicParameters         & seismic_p
                          j);
 
     result_trace->SetIsEmpty(false);
-    param->result_queue.push(result_trace);
   }
   else {
     result_trace->SetIsEmpty(true);
-    param->result_queue.push(result_trace);
   }
 }
 

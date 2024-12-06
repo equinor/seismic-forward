@@ -52,10 +52,9 @@ class SeismicForward {
                                       const std::vector<double> & twts_0,
                                       const std::vector<double> & theta_vec,
                                       const std::vector<double> & offset_vec,
-
-                                      Output             * output,
-                                      GenSeisTraceParams * param,
-                                      Trace              * trace);
+                                      Output                    * output,
+                                      Trace                     * trace,
+                                      ResultTrace               *& result_trace);
 
     static void GenerateNMOSeismicTraces(SeismicParameters         & seismic_parameters,
                                          const std::vector<double> & twt_0,
@@ -64,10 +63,9 @@ class SeismicForward {
                                          const std::vector<double> & theta_vec,
                                          const std::vector<double> & offset_vec,
                                          const size_t                time_samples_stretch,
-
                                          Output                    * nmo_output,
-                                         GenSeisTraceParams        * param,
-                                         Trace                     * trace);
+                                         Trace                     * trace,
+                                         ResultTrace               *& result_trace);
 
     static bool GenerateTraceOk(SeismicParameters & seismic_parameters,
                                 ModelSettings     * model_settings,
