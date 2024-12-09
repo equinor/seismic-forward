@@ -1,0 +1,26 @@
+name: Build Boost
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install basic build tools
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          build-essential \
+          cmake
+
+    - name: Configure and Build Boost
+      run: |
+        cd 3rd-party/boost_1_65_1
+        ./bootstrap.sh
+        cat bootstrap.log
+        # Only try to run b2 if bootstrap succeeded
+        if [ $? -eq 0 ]; then
+          ./b2 --with-system --with-filesystem
+        fi
