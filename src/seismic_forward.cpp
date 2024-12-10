@@ -98,6 +98,15 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                 z_0);
   }
 
+  output.WriteStatisticsForSeismic(model_settings);
+  output.WriteSeismicStorm(model_settings,
+                           seismic_parameters.GetSeismicOutput(),
+                           seismic_parameters.GetRGrids());
+
+  seismic_parameters.DeleteZandRandTWTGrids();
+  seismic_parameters.DeleteElasticParameterGrids();
+  seismic_parameters.DeleteWavelet();
+  seismic_parameters.DeleteGeometryAndOutput();
 
   seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 }
@@ -156,16 +165,6 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
 
   std::cout << "\n";
 
-  //write storm grid if requested
-  output.WriteStatisticsForSeismic(model_settings);
-  output.WriteSeismicStorm(model_settings,
-                           seismic_parameters.GetSeismicOutput(),
-                           seismic_parameters.GetRGrids());
-
-  seismic_parameters.DeleteZandRandTWTGrids();
-  seismic_parameters.DeleteElasticParameterGrids();
-  seismic_parameters.DeleteWavelet();
-  seismic_parameters.DeleteGeometryAndOutput();
 }
 
 //---------------------------------------------------------------------
@@ -224,17 +223,6 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
   }
 
   std::cout << "\n";
-
-  //write storm grid if requested
-  output.WriteStatisticsForSeismic(model_settings);
-  output.WriteSeismicStorm(model_settings,
-                           seismic_parameters.GetSeismicOutput(),
-                           seismic_parameters.GetRGrids());
-
-  seismic_parameters.DeleteZandRandTWTGrids();
-  seismic_parameters.DeleteElasticParameterGrids();
-  seismic_parameters.DeleteWavelet();
-  seismic_parameters.DeleteGeometryAndOutput();
 }
 
 //--------------------------------------------------------------------------------
