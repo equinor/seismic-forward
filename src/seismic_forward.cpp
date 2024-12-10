@@ -25,6 +25,8 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
   std::vector<double> twt_0;
   std::vector<double> z_0;
 
+  time_t t1 = time(0);
+
   if (nmo) {
 
     size_t time_samples_stretch = seismic_parameters.GetSeismicGeometry()->nt();
@@ -46,9 +48,19 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                   offset_vec,
                   time_samples_stretch);
 
+
+  size_t                n_traces;
+  std::vector<Trace*>   seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
+  size_t                nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
+
+
+
     MakeNMOSeismic(seismic_parameters,
                    model_settings,
                    output,
+                   seismic_traces,
+                   n_traces,
+                   nzrefl,
                    offset_vec,
                    time_samples_stretch,
                    twts_0,
@@ -75,20 +87,36 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                   theta_vec,
                   twt_0.size());
 
+
+    size_t                n_traces;
+    std::vector<Trace*>   seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
+    size_t                nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
+
+
     MakeSeismic(seismic_parameters,
                 model_settings,
                 output,
+                seismic_traces,
+                n_traces,
+                nzrefl,
                 theta_vec,
                 twts_0,
                 twt_0,
                 z_0);
   }
+
+
+
+  seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 }
 
 //----------------------------------------------------------------------
 void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
                                  ModelSettings     * model_settings,
                                  Output                    & output,
+                                 const std::vector<Trace*> & seismic_traces,
+                                 const size_t                n_traces,
+                                 const size_t                nzrefl,
                                  const std::vector<double> & theta_vec,
                                  const std::vector<double> & twts_0,
                                  const std::vector<double> & twt_0,
@@ -97,11 +125,6 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
 {
   bool                  ps_seis   = model_settings->GetPSSeismic();
 
-  time_t t1 = time(0);
-
-  size_t                n_traces;
-  std::vector<Trace*>   seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
-  size_t                nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
   std::vector<double>   dummy_vec;
   float                 monitor_size;
   float                 next_monitor;
@@ -146,7 +169,6 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
   }
 
   std::cout << "\n";
-  seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 
   //write storm grid if requested
   output.WriteStatisticsForSeismic(model_settings);
@@ -164,6 +186,9 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
 void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
                                     ModelSettings     * model_settings,
                                     Output                    & output,
+                                    const std::vector<Trace*> & seismic_traces,
+                                    const size_t                n_traces,
+                                    const size_t                nzrefl,
                                     const std::vector<double> & offset_vec,
                                     const size_t                time_samples_stretch,
                                     const std::vector<double> & twts_0,
@@ -174,11 +199,6 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
   bool                  ps_seis                = model_settings->GetPSSeismic();
   bool                  offset_without_stretch = model_settings->GetOffsetWithoutStretch();
 
-  time_t t1 = time(0);
-
-  size_t                n_traces;
-  std::vector<Trace*>   seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
-  size_t                nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
   std::vector<double>   dummy_vec;
   float                 monitor_size;
   float                 next_monitor;
@@ -229,7 +249,6 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
   }
 
   std::cout << "\n";
-  seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 
   //write storm grid if requested
   output.WriteStatisticsForSeismic(model_settings);
