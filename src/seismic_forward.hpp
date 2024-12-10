@@ -39,10 +39,17 @@ class SeismicForward {
                                 size_t                              j);
 
     static void MakeNMOSeismic(SeismicParameters & seismic_parameters,
-                               ModelSettings     * model_settings);
+                               ModelSettings     * model_settings,
+                               const size_t                time_samples_stretch,
+                               const std::vector<double> & twts_0,
+                               const std::vector<double> & twt_0,
+                               const std::vector<double> & z_0);
 
     static void MakeSeismic(SeismicParameters & seismic_parameters,
-                            ModelSettings     * model_settings);
+                            ModelSettings     * model_settings,
+                            const std::vector<double> & twts_0,
+                            const std::vector<double> & twt_0,
+                            const std::vector<double> & z_0);
 
     static void GenerateSeismicTraces(SeismicParameters         & seismic_parameters,
                                       ModelSettings             * model_settings,
