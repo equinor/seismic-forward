@@ -245,7 +245,8 @@ bool ModelSettings::GetTimeshiftOutput() const
           || GetOutputSeismicStackTimeShiftStorm());
 }
 
-bool ModelSettings::GetStackOutput() {
+bool ModelSettings::GetStackOutput() const
+{
   return (GetOutputSeismicStackTimeSegy()
           || GetOutputSeismicStackDepthSegy()
           || GetOutputSeismicStackTimeShiftSegy()
@@ -253,7 +254,9 @@ bool ModelSettings::GetStackOutput() {
           || GetOutputSeismicStackDepthStorm()
           || GetOutputSeismicStackTimeShiftStorm());
 }
-bool ModelSettings::GetSegyOutput() {
+
+bool ModelSettings::GetSegyOutput() const
+{
   return (GetOutputTimeSegy()
           || GetOutputSeismicStackTimeSegy()
           || GetOutputDepthSegy()
@@ -263,22 +266,26 @@ bool ModelSettings::GetSegyOutput() {
           || GetOutputPrenmoTimeSegy());
 }
 
-bool ModelSettings::GetTimeStormOutput() {
+bool ModelSettings::GetTimeStormOutput() const
+{
   return (GetOutputSeismicStackTimeStorm()
           || GetOutputSeismicTime());
 }
 
-bool ModelSettings::GetDepthStormOutput() {
+bool ModelSettings::GetDepthStormOutput() const
+{
   return (GetOutputSeismicStackDepthStorm()
           || GetOutputSeismicDepth());
 }
 
-bool ModelSettings::GetTimeshiftStormOutput() {
+bool ModelSettings::GetTimeshiftStormOutput() const
+{
   return (GetOutputSeismicStackTimeShiftStorm()
           || GetOutputSeismicTimeshift());
 }
 
-bool ModelSettings::GetStormOutput() {
+bool ModelSettings::GetStormOutput() const
+{
   return (GetTimeStormOutput()
           || GetDepthStormOutput()
           || GetTimeshiftStormOutput());

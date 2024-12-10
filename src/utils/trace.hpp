@@ -1,7 +1,6 @@
 #ifndef TRACE_HPP
 #define TRACE_HPP
 
-
 #include <string>
 
 class Trace {
@@ -12,11 +11,11 @@ class Trace {
           size_t i,
           size_t j);
 
-    size_t GetI() { return i_; };
-    size_t GetJ() { return j_; };
-    double GetX() { return x_; };
-    double GetY() { return y_; };
-    size_t GetJobNumber() { return job_number_; };
+    size_t GetI()         const { return i_          ;}
+    size_t GetJ()         const { return j_          ;}
+    double GetX()         const { return x_          ;}
+    double GetY()         const { return y_          ;}
+    size_t GetJobNumber() const { return job_number_ ;}
 
   private:
     size_t job_number_;

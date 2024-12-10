@@ -74,8 +74,9 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
 
     Trace       * trace = seismic_traces[k];
 
-    ResultTrace result_trace(model_settings,
-                             trace,
+    ResultTrace result_trace(seismic_parameters,
+                             *model_settings,
+                             *trace,
                              nzrefl,
                              twt_0.size(),
                              z_0.size(),
@@ -83,10 +84,7 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
                              twt_0.size(),
                              theta_vec.size());
 
-    size_t i = trace->GetI();
-    size_t j = trace->GetJ();
-
-    if (GenerateTraceOk(seismic_parameters, model_settings, i, j)) {
+    if (!result_trace.GetIsEmpty()) {
       GenerateSeismicTraces(seismic_parameters,
                             model_settings,
                             twt_0,
@@ -97,15 +95,12 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
                             output,
                             result_trace);
     }
-    else {
-      result_trace.SetIsEmpty(true);
-    }
 
     output.AddTrace(result_trace,
                     *model_settings,
                     seismic_parameters.GetSeismicOutput());
 
-    Monitor(i, monitor_size, next_monitor);
+    Monitor(k, monitor_size, next_monitor);
     delete trace;
   }
 
@@ -175,8 +170,9 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
 
     Trace * trace = seismic_traces[k];
 
-    ResultTrace result_trace(model_settings,
-                             trace,
+    ResultTrace result_trace(seismic_parameters,
+                             *model_settings,
+                             *trace,
                              nzrefl,
                              twt_0.size(),
                              z_0.size(),
@@ -184,10 +180,7 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
                              time_samples_stretch,
                              offset_vec.size());
 
-    size_t i = trace->GetI();
-    size_t j = trace->GetJ();
-
-    if (GenerateTraceOk(seismic_parameters, model_settings, i, j)) {
+    if (!result_trace.GetIsEmpty()) {
       GenerateNMOSeismicTraces(seismic_parameters,
                                model_settings,
                                twt_0,
@@ -199,15 +192,12 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
                                output,
                                result_trace);
     }
-    else {
-      result_trace.SetIsEmpty(true);
-    }
 
     output.AddTrace(result_trace,
                     *model_settings,
                     seismic_parameters.GetSeismicOutput());
 
-    Monitor(i, monitor_size, next_monitor);
+    Monitor(k, monitor_size, next_monitor);
     delete trace;
   }
 
@@ -922,6 +912,7 @@ void SeismicForward::PrintTime()
     << "\n";
 }
 
+/*
 //--------------------------------------------------------------------------
 bool SeismicForward::GenerateTraceOk(SeismicParameters & seismic_parameters,
                                      ModelSettings     * model_settings,
@@ -961,6 +952,7 @@ bool SeismicForward::GenerateTraceOk(SeismicParameters & seismic_parameters,
   }
   return generate_ok;
 }
+*/
 
 std::vector<double> SeismicForward::LinInterp1D(const std::vector<double> &x_in,
                                                 const std::vector<double> &y_in,

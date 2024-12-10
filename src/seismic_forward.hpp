@@ -64,12 +64,12 @@ class SeismicForward {
                                          const size_t                time_samples_stretch,
                                          const Output              & nmo_output,
                                          ResultTrace               & result_trace);
-
+  /*
     static bool GenerateTraceOk(SeismicParameters & seismic_parameters,
                                 ModelSettings     * model_settings,
                                 size_t              i,
                                 size_t              j);
-
+  */
 
     static void SeisConvolutionNMO(NRLib::Grid2D<double>               & timegrid_pos,
                                    NRLib::Grid2D<double>               & refl_pos,

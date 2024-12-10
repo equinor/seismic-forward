@@ -1,5 +1,6 @@
 #include "utils/result_trace.hpp"
 
+#include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
 #include "modelsettings.hpp"
 #include "output.hpp"

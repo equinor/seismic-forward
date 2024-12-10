@@ -327,15 +327,15 @@ public:
   void AddExtraParameterName(std::string name)         { extra_parameter_names_.push_back(name);}
   void AddExtraParameterDefaultValue(double value)     { extra_parameter_default_values_.push_back(value);}
 
-  bool GetTimeOutput() const;
-  bool GetDepthOutput() const;
-  bool GetTimeshiftOutput() const;
-  bool GetStackOutput();
-  bool GetSegyOutput();
-  bool GetTimeStormOutput();
-  bool GetDepthStormOutput();
-  bool GetTimeshiftStormOutput();
-  bool GetStormOutput();
+  bool GetTimeOutput()           const;
+  bool GetDepthOutput()          const;
+  bool GetTimeshiftOutput()      const;
+  bool GetStackOutput()          const;
+  bool GetSegyOutput()           const;
+  bool GetTimeStormOutput()      const;
+  bool GetDepthStormOutput()     const;
+  bool GetTimeshiftStormOutput() const;
+  bool GetStormOutput()          const;
 
 private:
 

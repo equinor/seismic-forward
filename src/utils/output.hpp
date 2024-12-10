@@ -1,8 +1,13 @@
 #ifndef OUTPUT_HPP
 #define OUTPUT_HPP
 
-#include "seismic_parameters.hpp"
+#include "nrlib/stormgrid/stormcontgrid.hpp"
+#include "nrlib/grid/grid2d.hpp"
+#include "nrlib/segy/segy.hpp"
 
+class SeismicParameters;
+class SeismicOutput;
+class ModelSettings;
 class ResultTrace;
 
 class Output
