@@ -45,6 +45,7 @@ class SeismicForward {
                             ModelSettings     * model_settings);
 
     static void GenerateSeismicTraces(SeismicParameters         & seismic_parameters,
+                                      ModelSettings             * model_settings,
                                       const std::vector<double> & twt_0,
                                       const std::vector<double> & z_0,
                                       const std::vector<double> & twts_0,
@@ -55,6 +56,7 @@ class SeismicForward {
                                       ResultTrace               * result_trace);
 
     static void GenerateNMOSeismicTraces(SeismicParameters         & seismic_parameters,
+                                         ModelSettings             * model_settings,
                                          const std::vector<double> & twt_0,
                                          const std::vector<double> & z_0,
                                          const std::vector<double> & twts_0,
