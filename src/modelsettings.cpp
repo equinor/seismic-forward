@@ -220,7 +220,8 @@ void ModelSettings::SetDerivedVariables(void)
   }
 }
 
-bool ModelSettings::GetTimeOutput() {
+bool ModelSettings::GetTimeOutput() const
+{
   return (GetOutputTimeSegy()
           || GetOutputSeismicStackTimeSegy()
           || GetOutputSeismicTime()
@@ -228,19 +229,22 @@ bool ModelSettings::GetTimeOutput() {
           || GetOutputPrenmoTimeSegy());
 }
 
-bool ModelSettings::GetDepthOutput() {
+bool ModelSettings::GetDepthOutput() const
+{
   return (GetOutputDepthSegy()
           || GetOutputSeismicStackDepthSegy()
           || GetOutputSeismicDepth()
           || GetOutputSeismicStackDepthStorm());
 }
 
-bool ModelSettings::GetTimeshiftOutput() {
+bool ModelSettings::GetTimeshiftOutput() const
+{
   return (GetOutputTimeshiftSegy()
           || GetOutputSeismicStackTimeShiftSegy()
           || GetOutputSeismicTimeshift()
           || GetOutputSeismicStackTimeShiftStorm());
 }
+
 bool ModelSettings::GetStackOutput() {
   return (GetOutputSeismicStackTimeSegy()
           || GetOutputSeismicStackDepthSegy()

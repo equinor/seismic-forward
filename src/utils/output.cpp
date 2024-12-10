@@ -107,9 +107,9 @@ Output::~Output(void)
 }
 
 //---------------------------------------------------
-void Output::AddTrace(ResultTrace   * result_trace,
-                      ModelSettings * model_settings,
-                      SeismicOutput * seismic_output)
+void Output::AddTrace(const ResultTrace   & result_trace,
+                      const ModelSettings & model_settings,
+                      SeismicOutput       * seismic_output)
 //---------------------------------------------------
 {
   size_t             noff = offset_vec_.size();
@@ -117,56 +117,56 @@ void Output::AddTrace(ResultTrace   * result_trace,
   std::vector<short> angle_or_offset(noff);
 
   for (size_t off = 0; off < noff ; ++off) {
-    if (model_settings->GetNMOCorr())
+    if (model_settings.GetNMOCorr())
       angle_or_offset[off] = static_cast<short>(offset_vec_[off]);
     else
       angle_or_offset[off] = static_cast<short>(std::floor(offset_vec_[off]/NRLib::Degree + 0.5));
   }
 
-  double x = result_trace->GetX();
-  double y = result_trace->GetY();
-  size_t i = result_trace->GetI();
-  size_t j = result_trace->GetJ();
+  double x = result_trace.GetX();
+  double y = result_trace.GetY();
+  size_t i = result_trace.GetI();
+  size_t j = result_trace.GetJ();
 
-  bool empty = result_trace->GetIsEmpty();
+  bool empty = result_trace.GetIsEmpty();
 
-  if (time_segy_ok_           ) seismic_output->WriteSegyGather(result_trace->GetTimeTrace()          , time_segy_           , twt_0_ , angle_or_offset, true , x, y, empty);
-  if (prenmo_time_segy_ok_    ) seismic_output->WriteSegyGather(result_trace->GetPreNMOTimeTrace()    , prenmo_time_segy_    , twt_0_ , angle_or_offset, true , x, y, empty);
-  if (time_stack_segy_ok_     ) seismic_output->WriteSegyGather(result_trace->GetTimeStackTrace()     , time_stack_segy_     , twt_0_ , zero_vec       , true , x, y, empty);
-  if (twtx_segy_ok_           ) seismic_output->WriteSegyGather(result_trace->GetTWTxReg()            , twtx_segy_           , twt_0_ , angle_or_offset, true , x, y, empty);
-  if (depth_segy_ok_          ) seismic_output->WriteSegyGather(result_trace->GetDepthTrace()         , depth_segy_          , z_0_   , angle_or_offset, false, x, y, empty);
-  if (depth_stack_segy_ok_    ) seismic_output->WriteSegyGather(result_trace->GetDepthStackTrace()    , depth_stack_segy_    , z_0_   , zero_vec       , false, x, y, empty);
-  if (timeshift_segy_ok_      ) seismic_output->WriteSegyGather(result_trace->GetTimeShiftTrace()     , timeshift_segy_      , twts_0_, angle_or_offset, true , x, y, empty);
-  if (timeshift_stack_segy_ok_) seismic_output->WriteSegyGather(result_trace->GetTimeShiftStackTrace(), timeshift_stack_segy_, twts_0_, zero_vec       , true , x, y, empty);
+  if (time_segy_ok_           ) seismic_output->WriteSegyGather(result_trace.GetTimeTrace()          , time_segy_           , twt_0_ , angle_or_offset, true , x, y, empty);
+  if (prenmo_time_segy_ok_    ) seismic_output->WriteSegyGather(result_trace.GetPreNMOTimeTrace()    , prenmo_time_segy_    , twt_0_ , angle_or_offset, true , x, y, empty);
+  if (time_stack_segy_ok_     ) seismic_output->WriteSegyGather(result_trace.GetTimeStackTrace()     , time_stack_segy_     , twt_0_ , zero_vec       , true , x, y, empty);
+  if (twtx_segy_ok_           ) seismic_output->WriteSegyGather(result_trace.GetTWTxReg()            , twtx_segy_           , twt_0_ , angle_or_offset, true , x, y, empty);
+  if (depth_segy_ok_          ) seismic_output->WriteSegyGather(result_trace.GetDepthTrace()         , depth_segy_          , z_0_   , angle_or_offset, false, x, y, empty);
+  if (depth_stack_segy_ok_    ) seismic_output->WriteSegyGather(result_trace.GetDepthStackTrace()    , depth_stack_segy_    , z_0_   , zero_vec       , false, x, y, empty);
+  if (timeshift_segy_ok_      ) seismic_output->WriteSegyGather(result_trace.GetTimeShiftTrace()     , timeshift_segy_      , twts_0_, angle_or_offset, true , x, y, empty);
+  if (timeshift_stack_segy_ok_) seismic_output->WriteSegyGather(result_trace.GetTimeShiftStackTrace(), timeshift_stack_segy_, twts_0_, zero_vec       , true , x, y, empty);
 
   //
   // Save to storm grid for output, print storm when finish loop
   //
-  if (model_settings->GetTimeOutput()) {
+  if (model_settings.GetTimeOutput()) {
     if (empty)
       AddZeroTraceToStormGrid(*timegrid_, i, j);
     else if (time_stack_segy_ok_)
-      AddTraceToStormGrid(*timegrid_, result_trace->GetTimeStackTrace(), i, j); // STACK
+      AddTraceToStormGrid(*timegrid_, result_trace.GetTimeStackTrace(), i, j);          // STACK
     else if (time_segy_ok_)
-      AddTraceToStormGrid(*timegrid_, result_trace->GetTimeTrace(), i, j);
+      AddTraceToStormGrid(*timegrid_, result_trace.GetTimeTrace(), i, j);
   }
 
-  if (model_settings->GetTimeshiftOutput()) {
+  if (model_settings.GetTimeshiftOutput()) {
     if (empty)
       AddZeroTraceToStormGrid(*timeshiftgrid_, i, j);
     else if (timeshift_stack_segy_ok_)
-      AddTraceToStormGrid(*timeshiftgrid_, result_trace->GetTimeShiftStackTrace(), i, j); // STACK
+      AddTraceToStormGrid(*timeshiftgrid_, result_trace.GetTimeShiftStackTrace(), i, j); // STACK
     else if (timeshift_segy_ok_)
-      AddTraceToStormGrid(*timeshiftgrid_, result_trace->GetTimeShiftTrace(), i, j);
+      AddTraceToStormGrid(*timeshiftgrid_, result_trace.GetTimeShiftTrace(), i, j);
   }
 
-  if (model_settings->GetDepthOutput()) {
+  if (model_settings.GetDepthOutput()) {
     if (empty)
       AddZeroTraceToStormGrid(*depthgrid_, i, j);
     else if (depth_stack_segy_ok_)
-      AddTraceToStormGrid(*depthgrid_, result_trace->GetDepthStackTrace(), i, j); // STACK
+      AddTraceToStormGrid(*depthgrid_, result_trace.GetDepthStackTrace(), i, j);         // STACK
     else if (depth_segy_ok_)
-      AddTraceToStormGrid(*depthgrid_, result_trace->GetDepthTrace(), i, j);
+      AddTraceToStormGrid(*depthgrid_, result_trace.GetDepthTrace(), i, j);
   }
 }
 

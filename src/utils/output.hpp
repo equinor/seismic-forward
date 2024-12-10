@@ -19,9 +19,9 @@ public:
 
   ~Output(void);
 
-  void AddTrace(ResultTrace   * result_trace,
-                ModelSettings * model_settings,
-                SeismicOutput * seismic_output);
+  void AddTrace(const ResultTrace   & result_trace,
+                const ModelSettings & model_settings,
+                SeismicOutput       * seismic_output);
 
   void AddZeroTraceToStormGrid(NRLib::StormContGrid & grid,
                                const size_t           i,
@@ -38,10 +38,10 @@ public:
                          SeismicOutput                     * seismic_output,
                          std::vector<NRLib::StormContGrid> & rgrids);
 
-  const bool GetDepthSegyOk(void)          { return depth_segy_ok_          ;}
-  const bool GetDepthStackSegyOk(void)     { return depth_stack_segy_ok_    ;}
-  const bool GetTimeshiftSegyOk(void)      { return timeshift_segy_ok_      ;}
-  const bool GetTimeshiftStackSegyOk(void) { return timeshift_stack_segy_ok_;}
+  bool GetDepthSegyOk(void)          const { return depth_segy_ok_          ;}
+  bool GetDepthStackSegyOk(void)     const { return depth_stack_segy_ok_    ;}
+  bool GetTimeshiftSegyOk(void)      const { return timeshift_segy_ok_      ;}
+  bool GetTimeshiftStackSegyOk(void) const { return timeshift_stack_segy_ok_;}
 
 private:
 

@@ -94,16 +94,15 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
                             twts_0,
                             theta_vec,
                             dummy_vec,
-                            &output,
-                            trace,
-                            &result_trace);
+                            output,
+                            result_trace);
     }
     else {
       result_trace.SetIsEmpty(true);
     }
 
-    output.AddTrace(&result_trace,
-                    model_settings,
+    output.AddTrace(result_trace,
+                    *model_settings,
                     seismic_parameters.GetSeismicOutput());
 
     Monitor(i, monitor_size, next_monitor);
@@ -197,16 +196,15 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
                                dummy_vec,
                                offset_vec,
                                time_samples_stretch,
-                               &output,
-                               trace,
-                               &result_trace);
+                               output,
+                               result_trace);
     }
     else {
       result_trace.SetIsEmpty(true);
     }
 
-    output.AddTrace(&result_trace,
-                    model_settings,
+    output.AddTrace(result_trace,
+                    *model_settings,
                     seismic_parameters.GetSeismicOutput());
 
     Monitor(i, monitor_size, next_monitor);
@@ -237,25 +235,23 @@ void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismi
                                               const std::vector<double> & dummy_vec,
                                               const std::vector<double> & offset_vec,
                                               const size_t                time_samples_stretch,
-                                              Output                    * nmo_output,
-                                              Trace                     * trace,
-                                              ResultTrace               * result_trace)
+                                              const Output              & nmo_output,
+                                              ResultTrace               & result_trace)
 //--------------------------------------------------------------------------------
 {
-  size_t i = trace->GetI();
-  size_t j = trace->GetJ();
-
-  NRLib::Grid2D<double>             & timegrid_pos                = result_trace->GetPreNMOTimeTrace();
-  NRLib::Grid2D<double>             & nmo_timegrid_pos            = result_trace->GetTimeTrace();
-  NRLib::Grid2D<double>             & nmo_timegrid_stack_pos      = result_trace->GetTimeStackTrace();
-  NRLib::Grid2D<double>             & nmo_depthgrid_pos           = result_trace->GetDepthTrace();
-  NRLib::Grid2D<double>             & nmo_depthgrid_stack_pos     = result_trace->GetDepthStackTrace();
-  NRLib::Grid2D<double>             & nmo_timeshiftgrid_pos       = result_trace->GetTimeShiftTrace();
-  NRLib::Grid2D<double>             & nmo_timeshiftgrid_stack_pos = result_trace->GetTimeShiftStackTrace();
-  NRLib::Grid2D<double>             & twtx_reg                    = result_trace->GetTWTxReg();
-  NRLib::Grid2D<double>             & theta_pos                   = result_trace->GetTheta();
-  NRLib::Grid2D<double>             & refl_pos                    = result_trace->GetRefl();
-  NRLib::Grid2D<double>             & twtx                        = result_trace->GetTWTx();
+  size_t                              i                           = result_trace.GetI();
+  size_t                              j                           = result_trace.GetJ();
+  NRLib::Grid2D<double>             & timegrid_pos                = result_trace.GetPreNMOTimeTrace();
+  NRLib::Grid2D<double>             & nmo_timegrid_pos            = result_trace.GetTimeTrace();
+  NRLib::Grid2D<double>             & nmo_timegrid_stack_pos      = result_trace.GetTimeStackTrace();
+  NRLib::Grid2D<double>             & nmo_depthgrid_pos           = result_trace.GetDepthTrace();
+  NRLib::Grid2D<double>             & nmo_depthgrid_stack_pos     = result_trace.GetDepthStackTrace();
+  NRLib::Grid2D<double>             & nmo_timeshiftgrid_pos       = result_trace.GetTimeShiftTrace();
+  NRLib::Grid2D<double>             & nmo_timeshiftgrid_stack_pos = result_trace.GetTimeShiftStackTrace();
+  NRLib::Grid2D<double>             & twtx_reg                    = result_trace.GetTWTxReg();
+  NRLib::Grid2D<double>             & theta_pos                   = result_trace.GetTheta();
+  NRLib::Grid2D<double>             & refl_pos                    = result_trace.GetRefl();
+  NRLib::Grid2D<double>             & twtx                        = result_trace.GetTWTx();
   NRLib::Grid2D<double>               dummygrid;
 
   std::vector<NRLib::StormContGrid> & rgridvec                    = seismic_parameters.GetRGrids();
@@ -323,10 +319,10 @@ void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismi
     std::vector<double>     vrms_ss_vec(nzrefl);
     std::vector<double>     vrms_ss_vec_reg(nt);
 
-    NRLib::Grid2D<double> & offset_pp     = result_trace->GetOffsetPP();
-    NRLib::Grid2D<double> & offset_ss     = result_trace->GetOffsetSS();
-    NRLib::Grid2D<double> & offset_pp_reg = result_trace->GetOffsetPPReg();
-    NRLib::Grid2D<double> & offset_ss_reg = result_trace->GetOffsetSSReg();
+    NRLib::Grid2D<double> & offset_pp     = result_trace.GetOffsetPP();
+    NRLib::Grid2D<double> & offset_ss     = result_trace.GetOffsetSS();
+    NRLib::Grid2D<double> & offset_pp_reg = result_trace.GetOffsetPPReg();
+    NRLib::Grid2D<double> & offset_ss_reg = result_trace.GetOffsetSSReg();
 
     NRLib::StormContGrid  & vsgrid        = seismic_parameters.GetVsGrid();
     NRLib::StormContGrid  & twtssgrid     = seismic_parameters.GetTwtSSGrid();
@@ -442,11 +438,11 @@ void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismi
                n_max);
   }
 
-  bool depth_conversion = nmo_output->GetDepthSegyOk()          || nmo_output->GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
-  bool time_shift       = nmo_output->GetTimeshiftSegyOk()      || nmo_output->GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
-  bool stack_time       = model_settings->GetStackOutput()      || model_settings->GetStormOutput();
-  bool stack_timeshift  = nmo_output->GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
-  bool stack_depth      = nmo_output->GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
+  bool depth_conversion = nmo_output.GetDepthSegyOk()          || nmo_output.GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
+  bool time_shift       = nmo_output.GetTimeshiftSegyOk()      || nmo_output.GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
+  bool stack_time       = model_settings->GetStackOutput()     || model_settings->GetStormOutput();
+  bool stack_timeshift  = nmo_output.GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
+  bool stack_depth      = nmo_output.GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
 
   int  tshift           = static_cast<int>(floor((t0 - twt_0[0]) / dt + 0.5));   //| Align noise with zero offset
   int  zshift           = static_cast<int>(floor((z0 - z_0[0]  ) / dz + 0.5));   //|
@@ -497,20 +493,18 @@ void SeismicForward::GenerateSeismicTraces(SeismicParameters         & seismic_p
                                            const std::vector<double> & twts_0,
                                            const std::vector<double> & theta_vec,
                                            const std::vector<double> & dummy_vec,
-                                           Output                    * output,
-                                           Trace                     * trace,
-                                           ResultTrace               * result_trace)
+                                           const Output              & output,
+                                           ResultTrace               & result_trace)
 //---------------------------------------------------------------------
 {
-  size_t i = trace->GetI();
-  size_t j = trace->GetJ();
-
-  NRLib::Grid2D<double>             & timegrid_pos            = result_trace->GetTimeTrace();
-  NRLib::Grid2D<double>             & timegrid_stack_pos      = result_trace->GetTimeStackTrace();
-  NRLib::Grid2D<double>             & depthgrid_pos           = result_trace->GetDepthTrace();
-  NRLib::Grid2D<double>             & depthgrid_stack_pos     = result_trace->GetDepthStackTrace();
-  NRLib::Grid2D<double>             & timeshiftgrid_pos       = result_trace->GetTimeShiftTrace();
-  NRLib::Grid2D<double>             & timeshiftgrid_stack_pos = result_trace->GetTimeShiftStackTrace();
+  size_t                              i                       = result_trace.GetI();
+  size_t                              j                       = result_trace.GetJ();
+  NRLib::Grid2D<double>             & timegrid_pos            = result_trace.GetTimeTrace();
+  NRLib::Grid2D<double>             & timegrid_stack_pos      = result_trace.GetTimeStackTrace();
+  NRLib::Grid2D<double>             & depthgrid_pos           = result_trace.GetDepthTrace();
+  NRLib::Grid2D<double>             & depthgrid_stack_pos     = result_trace.GetDepthStackTrace();
+  NRLib::Grid2D<double>             & timeshiftgrid_pos       = result_trace.GetTimeShiftTrace();
+  NRLib::Grid2D<double>             & timeshiftgrid_stack_pos = result_trace.GetTimeShiftStackTrace();
 
   std::vector<NRLib::StormContGrid> & rgridvec                = seismic_parameters.GetRGrids();
   NRLib::RegularSurface<double>     & toptime                 = seismic_parameters.GetTopTime();
@@ -593,11 +587,11 @@ void SeismicForward::GenerateSeismicTraces(SeismicParameters         & seismic_p
                   n_min,
                   n_max);
 
-  bool depth_conversion = output->GetDepthSegyOk()          || output->GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
-  bool time_shift       = output->GetTimeshiftSegyOk()      || output->GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
-  bool stack_time       = model_settings->GetStackOutput()  || model_settings->GetStormOutput();
-  bool stack_timeshift  = output->GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
-  bool stack_depth      = output->GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
+  bool depth_conversion = output.GetDepthSegyOk()          || output.GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
+  bool time_shift       = output.GetTimeshiftSegyOk()      || output.GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
+  bool stack_time       = model_settings->GetStackOutput() || model_settings->GetStormOutput();
+  bool stack_timeshift  = output.GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
+  bool stack_depth      = output.GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
 
   int  tshift           = static_cast<int>(floor((t0 - twt_0[0]) / dt + 0.5));   //| Align noise with zero offset
   int  zshift           = static_cast<int>(floor((z0 - z_0[0]  ) / dz + 0.5));   //|
