@@ -19,12 +19,13 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                                       ModelSettings     * model_settings)
 //---------------------------------------------------------------------------
 {
-  bool                ps_seis   = model_settings->GetPSSeismic();
+  bool                nmo     = model_settings->GetNMOCorr();
+  bool                ps_seis = model_settings->GetPSSeismic();
   std::vector<double> twts_0;
   std::vector<double> twt_0;
   std::vector<double> z_0;
 
-  if (model_settings->GetNMOCorr()) {
+  if (nmo) {
 
     size_t time_samples_stretch = seismic_parameters.GetSeismicGeometry()->nt();
 
@@ -35,9 +36,20 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                                          time_samples_stretch,
                                          ps_seis);
 
+  std::vector<double> & offset_vec = seismic_parameters.GetOffsetVec();
+
+  Output output(seismic_parameters,
+                  model_settings,
+                  twt_0,
+                  z_0,
+                  twts_0,
+                  offset_vec,
+                  time_samples_stretch);
 
     MakeNMOSeismic(seismic_parameters,
                    model_settings,
+                   output,
+                   offset_vec,
                    time_samples_stretch,
                    twts_0,
                    twt_0,
@@ -53,8 +65,20 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                                          dummy,
                                          ps_seis);
 
+    std::vector<double> & theta_vec = seismic_parameters.GetThetaVec();
+
+    Output output(seismic_parameters,
+                  model_settings,
+                  twt_0,
+                  z_0,
+                  twts_0,
+                  theta_vec,
+                  twt_0.size());
+
     MakeSeismic(seismic_parameters,
                 model_settings,
+                output,
+                theta_vec,
                 twts_0,
                 twt_0,
                 z_0);
@@ -64,21 +88,14 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
 //----------------------------------------------------------------------
 void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
                                  ModelSettings     * model_settings,
+                                 Output                    & output,
+                                 const std::vector<double> & theta_vec,
                                  const std::vector<double> & twts_0,
                                  const std::vector<double> & twt_0,
                                  const std::vector<double> & z_0)
 //----------------------------------------------------------------------
 {
   bool                  ps_seis   = model_settings->GetPSSeismic();
-  std::vector<double> & theta_vec = seismic_parameters.GetThetaVec();
-
-  Output output(seismic_parameters,
-                model_settings,
-                twt_0,
-                z_0,
-                twts_0,
-                theta_vec,
-                twt_0.size());
 
   time_t t1 = time(0);
 
@@ -146,6 +163,8 @@ void SeismicForward::MakeSeismic(SeismicParameters & seismic_parameters,
 //---------------------------------------------------------------------
 void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
                                     ModelSettings     * model_settings,
+                                    Output                    & output,
+                                    const std::vector<double> & offset_vec,
                                     const size_t                time_samples_stretch,
                                     const std::vector<double> & twts_0,
                                     const std::vector<double> & twt_0,
@@ -154,15 +173,6 @@ void SeismicForward::MakeNMOSeismic(SeismicParameters & seismic_parameters,
 {
   bool                  ps_seis                = model_settings->GetPSSeismic();
   bool                  offset_without_stretch = model_settings->GetOffsetWithoutStretch();
-  std::vector<double> & offset_vec             = seismic_parameters.GetOffsetVec();
-
-  Output output(seismic_parameters,
-                model_settings,
-                twt_0,
-                z_0,
-                twts_0,
-                offset_vec,
-                time_samples_stretch);
 
   time_t t1 = time(0);
 
@@ -888,12 +898,12 @@ void SeismicForward::Monitor(size_t trace,
   }
 }
 
-//------------------------------------------------------------------------------
-void SeismicForward::PrintSeisType(bool                  nmo,
-                                   bool                  ps_seis,
-                                   std::vector<double> & off_theta_vec,
-                                   bool                  offset_without_stretch)
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------
+void SeismicForward::PrintSeisType(bool                        nmo,
+                                   bool                        ps_seis,
+                                   const std::vector<double> & off_theta_vec,
+                                   bool                        offset_without_stretch)
+//------------------------------------------------------------------------------------
 {
   if (nmo) {
     if (offset_without_stretch) {

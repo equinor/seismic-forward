@@ -40,6 +40,8 @@ class SeismicForward {
 
     static void MakeNMOSeismic(SeismicParameters & seismic_parameters,
                                ModelSettings     * model_settings,
+                               Output                    & output,
+                               const std::vector<double> & offset_vec,
                                const size_t                time_samples_stretch,
                                const std::vector<double> & twts_0,
                                const std::vector<double> & twt_0,
@@ -47,6 +49,8 @@ class SeismicForward {
 
     static void MakeSeismic(SeismicParameters & seismic_parameters,
                             ModelSettings     * model_settings,
+                            Output                    & output,
+                            const std::vector<double> & theta_vec,
                             const std::vector<double> & twts_0,
                             const std::vector<double> & twt_0,
                             const std::vector<double> & z_0);
@@ -256,10 +260,10 @@ class SeismicForward {
                         float    monitor_size,
                         float  & next_monitor);
 
-    static void PrintSeisType(bool                  nmo,
-                              bool                  ps_seis,
-                              std::vector<double> & off_theta_vec,
-                              bool                  offset_without_stretch);
+    static void PrintSeisType(bool                        nmo,
+                              bool                        ps_seis,
+                              const std::vector<double> & off_theta_vec,
+                              bool                        offset_without_stretch);
 
     static void PrintTime();
 
