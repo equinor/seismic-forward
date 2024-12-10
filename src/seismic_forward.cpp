@@ -19,39 +19,51 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                                       ModelSettings     * model_settings)
 //---------------------------------------------------------------------------
 {
+  time_t              t1      = time(0);
   bool                nmo     = model_settings->GetNMOCorr();
   bool                ps_seis = model_settings->GetPSSeismic();
   std::vector<double> twts_0;
   std::vector<double> twt_0;
   std::vector<double> z_0;
 
-  time_t t1 = time(0);
+  std::vector<double> offset_theta_vec;
+  size_t              time_samples_stretch;
+  size_t              n_time_samples;
 
   if (nmo) {
+    time_samples_stretch = seismic_parameters.GetSeismicGeometry()->nt();
+  }
 
-    size_t time_samples_stretch = seismic_parameters.GetSeismicGeometry()->nt();
+  seismic_parameters.GenerateTwt0AndZ0(model_settings,
+                                       twt_0,
+                                       z_0,
+                                       twts_0,
+                                       time_samples_stretch,
+                                       ps_seis);
 
-    seismic_parameters.GenerateTwt0AndZ0(model_settings,
-                                         twt_0,
-                                         z_0,
-                                         twts_0,
-                                         time_samples_stretch,
-                                         ps_seis);
 
-  std::vector<double> & offset_vec = seismic_parameters.GetOffsetVec();
+  if (nmo) {
+    offset_theta_vec = seismic_parameters.GetOffsetVec();
+    n_time_samples   = time_samples_stretch;
+  }
+  else {
+    offset_theta_vec = seismic_parameters.GetThetaVec();
+    n_time_samples   = twt_0.size();
+  }
 
   Output output(seismic_parameters,
-                  model_settings,
-                  twt_0,
-                  z_0,
-                  twts_0,
-                  offset_vec,
-                  time_samples_stretch);
+                model_settings,
+                twt_0,
+                z_0,
+                twts_0,
+                offset_theta_vec,
+                n_time_samples);
 
 
-  size_t                n_traces;
-  std::vector<Trace*>   seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
-  size_t                nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
+  if (nmo) {
+    size_t                n_traces;
+    std::vector<Trace*>   seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
+    size_t                nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
 
 
 
@@ -61,32 +73,13 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                    seismic_traces,
                    n_traces,
                    nzrefl,
-                   offset_vec,
+                   offset_theta_vec,
                    time_samples_stretch,
                    twts_0,
                    twt_0,
                    z_0);
   }
   else {
-    size_t dummy;
-
-    seismic_parameters.GenerateTwt0AndZ0(model_settings,
-                                         twt_0,
-                                         z_0,
-                                         twts_0,
-                                         dummy,
-                                         ps_seis);
-
-    std::vector<double> & theta_vec = seismic_parameters.GetThetaVec();
-
-    Output output(seismic_parameters,
-                  model_settings,
-                  twt_0,
-                  z_0,
-                  twts_0,
-                  theta_vec,
-                  twt_0.size());
-
 
     size_t                n_traces;
     std::vector<Trace*>   seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
@@ -99,7 +92,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                 seismic_traces,
                 n_traces,
                 nzrefl,
-                theta_vec,
+                offset_theta_vec,
                 twts_0,
                 twt_0,
                 z_0);
