@@ -9,8 +9,8 @@ option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." ON)
 #
 # Deactivated by PAAL 2017.10.25 because of problems to get this to work with new boost
 #
-#option( BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
-#enable_testing()
+option( BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
+enable_testing()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -24,15 +24,8 @@ endif()
 
 include(cmake/AddSource.cmake)
 
-#
-# Boost things added by PAAL
-#
-set(BOOST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/boost_1_65_1")
-#find_package(Boost 1.65.1 REQUIRED COMPONENTS system filesystem)
-
-find_package(Boost 1.65.1 REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
-#link_directories(${Boost_LIBRARY_DIRS})
 
 option( USE_INTEL_STUDIO "Use libraries from Intel Studio" ON )
 find_package(IntelStudio)
@@ -93,7 +86,6 @@ else()
     add_definitions(-fPIC)
 endif(MSVC)
 
-add_subdirectory(3rd-party)
 add_subdirectory(nr)
 add_subdirectory(src)
 
@@ -126,10 +118,25 @@ endforeach()
 
 add_executable(seismic_forward src/main.cpp)
 
-#message(STATUS "Boost libraries to be linked with: ${Boost_LIBRARIES}")
+target_link_libraries(seismic_forward 
+    PRIVATE
+    seismic-forward-lib 
+    ${MATH_LIBRARIES}
+    ${TBB_LIBRARIES}
+    ${FFTW_LIBRARIES}
+    ${Boost_LIBRARIES}
+    -ltbb
+    -lfftw3
+)
 
-#target_link_libraries(seismic_forward seismic-forward-lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(seismic_forward seismic-forward-lib ${MATH_LIBRARIES})
+target_link_libraries(seismic-forward-lib
+    PRIVATE
+    ${TBB_LIBRARIES}
+    ${FFTW_LIBRARIES}
+    ${Boost_LIBRARIES}
+    -ltbb
+    -lfftw3
+)
 
 if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)

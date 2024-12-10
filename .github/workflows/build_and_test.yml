@@ -1,0 +1,35 @@
+name: Build Project
+on:
+  push:
+    branches: [ '*' ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential libfftw3-dev libtbb-dev perl \
+          libboost-system-dev libboost-filesystem-dev libboost-dev libboost-test-dev
+
+    - name: Build following local installation process
+      run: |
+        cd ..
+        mkdir TEST
+        cd TEST
+        export BOOST_ROOT=/usr
+        ../seismic-forward/run_cmake.sh || exit 1
+        make -j 8 || exit 1
+        make test_seismicforward || exit 1
+        ../seismic-forward/TestScript.pl || exit 1
+
+    - name: Copy test data and run tests
+      run: |
+        cd ../TEST/tests
+        # Copy files to the current directory
+        cp -rv ../../seismic-forward/tests/data/* .
+        # Uncompress the gzipped files
+        gunzip *.grdecl.gz
+        ./test_seismicforward --log_level=all
