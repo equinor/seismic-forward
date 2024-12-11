@@ -17,34 +17,30 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                                       ModelSettings     * model_settings)
 //---------------------------------------------------------------------------
 {
-  time_t              t1                = time(0);
-  bool                nmo               = model_settings->GetNMOCorr();
-  bool                ps_seis           = model_settings->GetPSSeismic();
-  bool                offset_wo_stretch = model_settings->GetOffsetWithoutStretch();
+  time_t              t1      = time(0);
+  bool                nmo     = model_settings->GetNMOCorr();
+  bool                ps_seis = model_settings->GetPSSeismic();
 
   std::vector<double> twts_0;
   std::vector<double> twt_0;
   std::vector<double> z_0;
 
   std::vector<double> offset_theta_vec;
-  size_t              time_samples_stretch;
   size_t              n_time_samples;
 
   seismic_parameters.GenerateTwt0AndZ0(*model_settings,
                                        twt_0,
                                        z_0,
                                        twts_0,
-                                       time_samples_stretch,
+                                       n_time_samples,
                                        ps_seis);
 
 
   if (nmo) {
     offset_theta_vec = seismic_parameters.GetOffsetVec();
-    n_time_samples   = time_samples_stretch;
   }
   else {
     offset_theta_vec = seismic_parameters.GetThetaVec();
-    n_time_samples   = twt_0.size();
   }
 
   Output output(seismic_parameters,
@@ -55,9 +51,10 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                 offset_theta_vec,
                 n_time_samples);
 
-  std::vector<Trace*> seismic_traces = seismic_parameters.FindTracesInForward();
-  size_t              nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
-  size_t              n_traces       = seismic_traces.size();
+  std::vector<Trace*> seismic_traces    = seismic_parameters.FindTracesInForward();
+  size_t              nzrefl            = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
+  size_t              n_traces          = seismic_traces.size();
+  bool                offset_wo_stretch = model_settings->GetOffsetWithoutStretch();
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n%d traces to be generated.\n", n_traces);
 
@@ -87,18 +84,18 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
     if (!result_trace.GetIsEmpty()) {
       if (nmo) {
         GenerateNMOSeismicTraces(seismic_parameters,
-                                 model_settings,
+                                 *model_settings,
                                  twt_0,
                                  z_0,
                                  twts_0,
                                  offset_theta_vec,
-                                 time_samples_stretch,
+                                 n_time_samples,
                                  output,
                                  result_trace);
       }
       else {
         GenerateSeismicTraces(seismic_parameters,
-                              model_settings,
+                              *model_settings,
                               twt_0,
                               z_0,
                               twts_0,
@@ -133,7 +130,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
 
 //--------------------------------------------------------------------------------
 void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismic_parameters,
-                                              ModelSettings             * model_settings,
+                                              const ModelSettings       & model_settings,
                                               const std::vector<double> & twt_0,
                                               const std::vector<double> & z_0,
                                               const std::vector<double> & twts_0,
@@ -178,22 +175,22 @@ void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismi
   Wavelet                           * wavelet                     = seismic_parameters.GetWavelet();
   double                              twt_wavelet                 = wavelet->GetTwtLength();
 
-  std::vector<double>                 constvp                     = model_settings->GetConstVp();
-  std::vector<double>                 constvs                     = model_settings->GetConstVs();
-  bool                                ps_seis                     = model_settings->GetPSSeismic();
-  double                              z_wavelet_bot               = model_settings->GetZWaveletBot();
-  double                              z_extrapol_factor           = model_settings->GetZExtrapolFactor();
-  bool                                offset_without_stretch      = model_settings->GetOffsetWithoutStretch();
-  double                              z_w                         = model_settings->GetZw();
-  double                              v_w                         = model_settings->GetVw();
-  bool                                output_refl                 = model_settings->GetOutputReflections();
-  bool                                add_noise                   = model_settings->GetAddNoiseToReflCoef();
-  bool                                add_white_noise             = model_settings->GetAddWhiteNoise();
-  bool                                equal_noise                 = model_settings->GetUseEqualNoiseForOffsets();
-  double                              sd1                         = model_settings->GetStandardDeviation1();
-  double                              sd2                         = model_settings->GetStandardDeviation2();
-  unsigned long                       seed1                       = model_settings->GetSeed1();
-  unsigned long                       seed2                       = model_settings->GetSeed2();
+  std::vector<double>                 constvp                     = model_settings.GetConstVp();
+  std::vector<double>                 constvs                     = model_settings.GetConstVs();
+  bool                                ps_seis                     = model_settings.GetPSSeismic();
+  double                              z_wavelet_bot               = model_settings.GetZWaveletBot();
+  double                              z_extrapol_factor           = model_settings.GetZExtrapolFactor();
+  bool                                offset_without_stretch      = model_settings.GetOffsetWithoutStretch();
+  double                              z_w                         = model_settings.GetZw();
+  double                              v_w                         = model_settings.GetVw();
+  bool                                output_refl                 = model_settings.GetOutputReflections();
+  bool                                add_noise                   = model_settings.GetAddNoiseToReflCoef();
+  bool                                add_white_noise             = model_settings.GetAddWhiteNoise();
+  bool                                equal_noise                 = model_settings.GetUseEqualNoiseForOffsets();
+  double                              sd1                         = model_settings.GetStandardDeviation1();
+  double                              sd2                         = model_settings.GetStandardDeviation2();
+  unsigned long                       seed1                       = model_settings.GetSeed1();
+  unsigned long                       seed2                       = model_settings.GetSeed2();
 
   double                              tmin                        = twt_0[0];
   int                                 noff                        = offset_vec.size();
@@ -342,11 +339,11 @@ void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismi
                n_max);
   }
 
-  bool depth_conversion = nmo_output.GetDepthSegyOk()          || nmo_output.GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
-  bool time_shift       = nmo_output.GetTimeshiftSegyOk()      || nmo_output.GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
-  bool stack_time       = model_settings->GetStackOutput()     || model_settings->GetStormOutput();
-  bool stack_timeshift  = nmo_output.GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
-  bool stack_depth      = nmo_output.GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
+  bool depth_conversion = nmo_output.GetDepthSegyOk()          || nmo_output.GetDepthStackSegyOk()     || model_settings.GetDepthStormOutput();
+  bool time_shift       = nmo_output.GetTimeshiftSegyOk()      || nmo_output.GetTimeshiftStackSegyOk() || model_settings.GetTimeshiftStormOutput();
+  bool stack_time       = model_settings.GetStackOutput()      || model_settings.GetStormOutput();
+  bool stack_timeshift  = nmo_output.GetTimeshiftStackSegyOk() || model_settings.GetTimeshiftStormOutput();
+  bool stack_depth      = nmo_output.GetDepthStackSegyOk()     || model_settings.GetDepthStormOutput();
 
   int  tshift           = static_cast<int>(floor((t0 - twt_0[0]) / dt + 0.5));   //| Align noise with zero offset
   int  zshift           = static_cast<int>(floor((z0 - z_0[0]  ) / dz + 0.5));   //|
@@ -391,7 +388,7 @@ void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismi
 
 //---------------------------------------------------------------------
 void SeismicForward::GenerateSeismicTraces(SeismicParameters         & seismic_parameters,
-                                           ModelSettings             * model_settings,
+                                           const ModelSettings       & model_settings,
                                            const std::vector<double> & twt_0,
                                            const std::vector<double> & z_0,
                                            const std::vector<double> & twts_0,
@@ -431,18 +428,18 @@ void SeismicForward::GenerateSeismicTraces(SeismicParameters         & seismic_p
   NRLib::Grid2D<double>               refl_pos(nzrefl, theta_vec.size());
   std::vector<double>                 twt_vec(nzrefl);
 
-  std::vector<double>                 constvp                 = model_settings->GetConstVp();
-  std::vector<double>                 constvs                 = model_settings->GetConstVs();
-  bool                                ps_seis                 = model_settings->GetPSSeismic();
-  double                              z_wavelet_bot           = model_settings->GetZWaveletBot();
-  bool                                output_refl             = model_settings->GetOutputReflections();
-  bool                                add_noise               = model_settings->GetAddNoiseToReflCoef();
-  bool                                add_white_noise         = model_settings->GetAddWhiteNoise();
-  bool                                equal_noise             = model_settings->GetUseEqualNoiseForOffsets();
-  double                              sd1                     = model_settings->GetStandardDeviation1();
-  double                              sd2                     = model_settings->GetStandardDeviation2();
-  unsigned long                       seed1                   = model_settings->GetSeed1();
-  unsigned long                       seed2                   = model_settings->GetSeed2();
+  std::vector<double>                 constvp                 = model_settings.GetConstVp();
+  std::vector<double>                 constvs                 = model_settings.GetConstVs();
+  bool                                ps_seis                 = model_settings.GetPSSeismic();
+  double                              z_wavelet_bot           = model_settings.GetZWaveletBot();
+  bool                                output_refl             = model_settings.GetOutputReflections();
+  bool                                add_noise               = model_settings.GetAddNoiseToReflCoef();
+  bool                                add_white_noise         = model_settings.GetAddWhiteNoise();
+  bool                                equal_noise             = model_settings.GetUseEqualNoiseForOffsets();
+  double                              sd1                     = model_settings.GetStandardDeviation1();
+  double                              sd2                     = model_settings.GetStandardDeviation2();
+  unsigned long                       seed1                   = model_settings.GetSeed1();
+  unsigned long                       seed2                   = model_settings.GetSeed2();
 
   double                              tmin                    = twt_0[0];
   int                                 ntheta                  = theta_vec.size();
@@ -490,11 +487,11 @@ void SeismicForward::GenerateSeismicTraces(SeismicParameters         & seismic_p
                   n_min,
                   n_max);
 
-  bool depth_conversion = output.GetDepthSegyOk()          || output.GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
-  bool time_shift       = output.GetTimeshiftSegyOk()      || output.GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
-  bool stack_time       = model_settings->GetStackOutput() || model_settings->GetStormOutput();
-  bool stack_timeshift  = output.GetTimeshiftStackSegyOk() || model_settings->GetTimeshiftStormOutput();
-  bool stack_depth      = output.GetDepthStackSegyOk()     || model_settings->GetDepthStormOutput();
+  bool depth_conversion = output.GetDepthSegyOk()          || output.GetDepthStackSegyOk()     || model_settings.GetDepthStormOutput();
+  bool time_shift       = output.GetTimeshiftSegyOk()      || output.GetTimeshiftStackSegyOk() || model_settings.GetTimeshiftStormOutput();
+  bool stack_time       = model_settings.GetStackOutput()  || model_settings.GetStormOutput();
+  bool stack_timeshift  = output.GetTimeshiftStackSegyOk() || model_settings.GetTimeshiftStormOutput();
+  bool stack_depth      = output.GetDepthStackSegyOk()     || model_settings.GetDepthStormOutput();
 
   int  tshift           = static_cast<int>(floor((t0 - twt_0[0]) / dt + 0.5));   //| Align noise with zero offset
   int  zshift           = static_cast<int>(floor((z0 - z_0[0]  ) / dz + 0.5));   //|
