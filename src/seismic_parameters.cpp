@@ -710,12 +710,12 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
 }
 
 //-----------------------------------------------------------------------------------
-void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
+void SeismicParameters::GenerateTwt0AndZ0(const ModelSettings & model_settings,
                                           std::vector<double> & twt_0,
                                           std::vector<double> & z_0,
                                           std::vector<double> & twts_0,
-                                          size_t              & time_samples_stretch,
-                                          bool                  ps_seis)
+                                          size_t              & n_time_samples,
+                                          const bool            ps_seis)
 //-----------------------------------------------------------------------------------
 {
   size_t nt             = seismic_geometry_->nt();
@@ -726,9 +726,11 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
   double twt_wavelet    = wavelet_->GetTwtLength();              // Half a wavelet
   double stretch_factor = -999.0;
 
-  if (model_settings->GetNMOCorr() && !model_settings->GetOffsetWithoutStretch()){
+  n_time_samples        = nt;
+
+  if (model_settings.GetNMOCorr() && !model_settings.GetOffsetWithoutStretch()) {
     GenerateTwt0ForNMO(twt_0,
-                       time_samples_stretch,
+                       n_time_samples,
                        stretch_factor,
                        ps_seis,
                        twt_wavelet,
@@ -739,10 +741,6 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
 
     GenerateZ0ForNMO(z_0,
                      stretch_factor);
-
-    if (model_settings_->GetTwtFileName() != "") {
-      twts_0 = GenerateTWT0Shift(twt_0[0], time_samples_stretch);
-    }
   }
   else {
     twt_0.resize(nt);
@@ -753,15 +751,14 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
     double dz         = seismic_geometry_->dz();
     size_t nzmin      = static_cast<size_t>(floor(zmin) / dz + 0.5); // Find min z in a sample
     double zmin_sampl = nzmin *dz;
-    z_0.resize(nz);
 
+    z_0.resize(nz);
     for (size_t i = 0; i < nz; ++i){
       z_0[i] = zmin_sampl + i*dz;
     }
-
-    if (model_settings_->GetTwtFileName() != "") {
-      twts_0 = GenerateTWT0Shift(twt_0[0], twt_0.size());
-    }
+  }
+  if (model_settings.GetTwtFileName() != "") {
+    twts_0 = GenerateTWT0Shift(twt_0[0], n_time_samples);
   }
 }
 

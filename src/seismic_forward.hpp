@@ -35,7 +35,6 @@ class SeismicForward
                                       const std::vector<double> & z_0,
                                       const std::vector<double> & twts_0,
                                       const std::vector<double> & theta_vec,
-                                      const std::vector<double> & offset_vec,
                                       const Output              & output,
                                       ResultTrace               & result_trace);
 
@@ -44,7 +43,6 @@ class SeismicForward
                                          const std::vector<double> & twt_0,
                                          const std::vector<double> & z_0,
                                          const std::vector<double> & twts_0,
-                                         const std::vector<double> & theta_vec,
                                          const std::vector<double> & offset_vec,
                                          const size_t                time_samples_stretch,
                                          const Output              & nmo_output,

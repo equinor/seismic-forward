@@ -30,11 +30,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
   size_t              time_samples_stretch;
   size_t              n_time_samples;
 
-  if (nmo) {
-    time_samples_stretch = seismic_parameters.GetSeismicGeometry()->nt();
-  }
-
-  seismic_parameters.GenerateTwt0AndZ0(model_settings,
+  seismic_parameters.GenerateTwt0AndZ0(*model_settings,
                                        twt_0,
                                        z_0,
                                        twts_0,
@@ -70,10 +66,8 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                 offset_theta_vec,
                 offset_wo_stretch);
 
-  std::vector<double> dummy_vec;
-  float               monitor_size;
-  float               next_monitor;
-
+  float monitor_size;
+  float next_monitor;
   MonitorInitialize(n_traces, monitor_size, next_monitor);
 
   for (size_t k = 0; k < n_traces; ++k) {
@@ -97,7 +91,6 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                                  twt_0,
                                  z_0,
                                  twts_0,
-                                 dummy_vec,
                                  offset_theta_vec,
                                  time_samples_stretch,
                                  output,
@@ -110,7 +103,6 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                               z_0,
                               twts_0,
                               offset_theta_vec,
-                              dummy_vec,
                               output,
                               result_trace);
       }
@@ -145,7 +137,6 @@ void SeismicForward::GenerateNMOSeismicTraces(SeismicParameters         & seismi
                                               const std::vector<double> & twt_0,
                                               const std::vector<double> & z_0,
                                               const std::vector<double> & twts_0,
-                                              const std::vector<double> & dummy_vec,
                                               const std::vector<double> & offset_vec,
                                               const size_t                time_samples_stretch,
                                               const Output              & nmo_output,
@@ -405,7 +396,6 @@ void SeismicForward::GenerateSeismicTraces(SeismicParameters         & seismic_p
                                            const std::vector<double> & z_0,
                                            const std::vector<double> & twts_0,
                                            const std::vector<double> & theta_vec,
-                                           const std::vector<double> & dummy_vec,
                                            const Output              & output,
                                            ResultTrace               & result_trace)
 //---------------------------------------------------------------------
