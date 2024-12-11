@@ -12,8 +12,8 @@ class SeismicForward
 {
   public:
 
-    static void DoSeismicForward(SeismicParameters & seismic_parameters,
-                                 ModelSettings     * model_settings);
+    static void DoSeismicForward(SeismicParameters   & seismic_parameters,
+                                 const ModelSettings & model_settings);
 
   private:
 

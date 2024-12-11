@@ -13,13 +13,13 @@
 #include "wavelet.hpp"
 
 //---------------------------------------------------------------------------
-void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
-                                      ModelSettings     * model_settings)
+void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
+                                      const ModelSettings & model_settings)
 //---------------------------------------------------------------------------
 {
   time_t              t1      = time(0);
-  bool                nmo     = model_settings->GetNMOCorr();
-  bool                ps_seis = model_settings->GetPSSeismic();
+  bool                nmo     = model_settings.GetNMOCorr();
+  bool                ps_seis = model_settings.GetPSSeismic();
 
   std::vector<double> twts_0;
   std::vector<double> twt_0;
@@ -28,7 +28,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
   std::vector<double> offset_theta_vec;
   size_t              n_time_samples;
 
-  seismic_parameters.GenerateTwt0AndZ0(*model_settings,
+  seismic_parameters.GenerateTwt0AndZ0(model_settings,
                                        twt_0,
                                        z_0,
                                        twts_0,
@@ -44,7 +44,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
   }
 
   Output output(seismic_parameters,
-                *model_settings,
+                model_settings,
                 twt_0,
                 z_0,
                 twts_0,
@@ -54,7 +54,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
   std::vector<Trace*> seismic_traces    = seismic_parameters.FindTracesInForward();
   size_t              nzrefl            = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
   size_t              n_traces          = seismic_traces.size();
-  bool                offset_wo_stretch = model_settings->GetOffsetWithoutStretch();
+  bool                offset_wo_stretch = model_settings.GetOffsetWithoutStretch();
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n%d traces to be generated.\n", n_traces);
 
@@ -72,7 +72,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
     Trace * trace = seismic_traces[k];
 
     ResultTrace result_trace(seismic_parameters,
-                             *model_settings,
+                             model_settings,
                              *trace,
                              nzrefl,
                              twt_0.size(),
@@ -84,7 +84,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
     if (!result_trace.GetIsEmpty()) {
       if (nmo) {
         GenerateNMOSeismicTraces(seismic_parameters,
-                                 *model_settings,
+                                 model_settings,
                                  twt_0,
                                  z_0,
                                  twts_0,
@@ -95,7 +95,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
       }
       else {
         GenerateSeismicTraces(seismic_parameters,
-                              *model_settings,
+                              model_settings,
                               twt_0,
                               z_0,
                               twts_0,
@@ -106,7 +106,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
     }
 
     output.AddTrace(result_trace,
-                    *model_settings,
+                    model_settings,
                     seismic_parameters.GetSeismicOutput());
 
     Monitor(k, monitor_size, next_monitor);
@@ -115,8 +115,8 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
 
   std::cout << "\n";
 
-  output.WriteStatisticsForSeismic(*model_settings);
-  output.WriteSeismicStorm(*model_settings,
+  output.WriteStatisticsForSeismic(model_settings);
+  output.WriteSeismicStorm(model_settings,
                            seismic_parameters.GetSeismicOutput(),
                            seismic_parameters.GetRGrids());
 
