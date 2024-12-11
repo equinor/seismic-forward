@@ -1,18 +1,16 @@
 
 #include "nrlib/geometry/interpolation.hpp"
-
 #include "nrlib/math/constants.hpp"
 
+#include "utils/result_trace.hpp"
 #include "utils/output.hpp"
 
+#include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
-#include "seismic_output.hpp"
 #include "seismic_forward.hpp"
+#include "seismic_output.hpp"
+#include "modelsettings.hpp"
 #include "wavelet.hpp"
-
-#include <thread>
-#include <ctime>
-#include <map>
 
 //---------------------------------------------------------------------------
 void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
@@ -61,9 +59,9 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
                 offset_theta_vec,
                 n_time_samples);
 
-  size_t              n_traces;
-  std::vector<Trace*> seismic_traces = seismic_parameters.FindTracesInForward(n_traces);
+  std::vector<Trace*> seismic_traces = seismic_parameters.FindTracesInForward();
   size_t              nzrefl         = seismic_parameters.GetSeismicGeometry()->zreflectorcount();
+  size_t              n_traces       = seismic_traces.size();
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n%d traces to be generated.\n", n_traces);
 

@@ -1202,18 +1202,21 @@ tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward2(size_t & n
   return traces;
 }
 
-//-------------------------------------------------------------------------------------
-std::vector<Trace*> SeismicParameters::FindTracesInForward(size_t & n_traces)
-//-------------------------------------------------------------------------------------
+//--------------------------------------------------------------
+std::vector<Trace*> SeismicParameters::FindTracesInForward(void)
+//--------------------------------------------------------------
 {
   std::vector<Trace*> traces;
+
   int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
   bool ilxl_loop = false;
+
   //find index min and max and whether loop over i,j or il,xl:
   FindLoopIndeces(n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step, ilxl_loop);
-  //NRLib::SegyGeometry *geometry = GetSegyGeometry();
+
   int il_steps = 0;
   int xl_steps = 0;
+
   //----------------------LOOP OVER I,J OR IL,XL---------------------------------
   size_t job_number = 0;
   for (int il = il_min; il <= il_max; il += il_step) {
@@ -1238,7 +1241,6 @@ std::vector<Trace*> SeismicParameters::FindTracesInForward(size_t & n_traces)
       ++job_number;
     }
   }
-  n_traces = job_number;
   return traces;
 }
 

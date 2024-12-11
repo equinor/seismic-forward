@@ -144,7 +144,7 @@ class SeismicParameters
                                  std::string work);
 
   tbb::concurrent_queue<Trace*> FindTracesInForward2(size_t & n_traces);
-  std::vector<Trace*>           FindTracesInForward(size_t & n_traces);
+  std::vector<Trace*>           FindTracesInForward(void);
 
 
     static void MonitorInitialize(size_t   n_traces,

@@ -1,24 +1,15 @@
 #ifndef SEISMIC_FORWARD_HPP
 #define SEISMIC_FORWARD_HPP
 
-#include "nrlib/stormgrid/stormcontgrid.hpp"
-#include "nrlib/surface/regularsurface.hpp"
-#include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
-#include "utils/result_trace.hpp"
-#include "utils/output.hpp"
-#include "utils/trace.hpp"
+class SeismicParameters;
+class ModelSettings;
+class ResultTrace;
+class Output;
 
-#include "seismic_parameters.hpp"
-#include "modelsettings.hpp"
-
-#include <algorithm>
-#include <stdio.h>
-#include <string>
-#include <vector>
-
-class SeismicForward {
+class SeismicForward
+{
   public:
 
     static void DoSeismicForward(SeismicParameters & seismic_parameters,
@@ -59,7 +50,7 @@ class SeismicForward {
                                          const Output              & nmo_output,
                                          ResultTrace               & result_trace);
 
-  static void SeisConvolutionNMO(NRLib::Grid2D<double>               & timegrid_pos,
+    static void SeisConvolutionNMO(NRLib::Grid2D<double>               & timegrid_pos,
                                    NRLib::Grid2D<double>               & refl_pos,
                                    NRLib::Grid2D<double>               & twtx,
                                    const NRLib::StormContGrid          & zgrid,
