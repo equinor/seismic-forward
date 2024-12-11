@@ -15,12 +15,12 @@ class Output
 
 public:
   Output(SeismicParameters   & seismic_parameters,
-         ModelSettings       * model_settings,
-         std::vector<double>   twt_0,
-         std::vector<double>   z_0,
-         std::vector<double>   twts_0,
-         std::vector<double>   offset_vec,
-         size_t                time_samples_stretch);
+         const ModelSettings       & model_settings,
+         const std::vector<double>   twt_0,
+         const std::vector<double>   z_0,
+         const std::vector<double>   twts_0,
+         const std::vector<double>   offset_vec,
+         const size_t                time_samples_stretch);
 
   ~Output(void);
 
@@ -37,9 +37,9 @@ public:
                            const size_t                  i,
                            const size_t                  j);
 
-  void WriteStatisticsForSeismic(ModelSettings * model_settings);
+  void WriteStatisticsForSeismic(const ModelSettings & model_settings);
 
-  void WriteSeismicStorm(ModelSettings                     * model_settings,
+  void WriteSeismicStorm(const ModelSettings               & model_settings,
                          SeismicOutput                     * seismic_output,
                          std::vector<NRLib::StormContGrid> & rgrids);
 

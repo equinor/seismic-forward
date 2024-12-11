@@ -44,7 +44,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
   }
 
   Output output(seismic_parameters,
-                model_settings,
+                *model_settings,
                 twt_0,
                 z_0,
                 twts_0,
@@ -115,8 +115,8 @@ void SeismicForward::DoSeismicForward(SeismicParameters & seismic_parameters,
 
   std::cout << "\n";
 
-  output.WriteStatisticsForSeismic(model_settings);
-  output.WriteSeismicStorm(model_settings,
+  output.WriteStatisticsForSeismic(*model_settings);
+  output.WriteSeismicStorm(*model_settings,
                            seismic_parameters.GetSeismicOutput(),
                            seismic_parameters.GetRGrids());
 
