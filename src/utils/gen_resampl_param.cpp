@@ -5,11 +5,9 @@
 
 
 GenResamplParam::GenResamplParam(tbb::concurrent_queue<ResamplTrace*>         & empty_queue,
-                                 tbb::concurrent_bounded_queue<ResamplTrace*> & result_queue,
-                                 tbb::concurrent_queue<Trace*>                & traces)
+                                 tbb::concurrent_bounded_queue<ResamplTrace*> & result_queue)
   :
     empty_queue(empty_queue),
-    result_queue(result_queue),
-    traces(traces)
+    result_queue(result_queue)
 {
 }

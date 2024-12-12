@@ -11,15 +11,12 @@
 class GenResamplParam {
   public:
   GenResamplParam(tbb::concurrent_queue<ResamplTrace*>         & empty_queue,
-                  tbb::concurrent_bounded_queue<ResamplTrace*> & result_queue,
-                  tbb::concurrent_queue<Trace*>                & traces);
+                  tbb::concurrent_bounded_queue<ResamplTrace*> & result_queue);
 
   ~GenResamplParam() {};
 
   tbb::concurrent_queue<ResamplTrace*>         empty_queue;
   tbb::concurrent_bounded_queue<ResamplTrace*> result_queue;
-
-  tbb::concurrent_queue<Trace*>                traces;
 
 };
 

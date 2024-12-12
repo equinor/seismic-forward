@@ -1769,37 +1769,27 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
                                    seismic_parameters);
   }
 
-  size_t n_traces;
-  tbb::concurrent_queue<Trace*> traces = seismic_parameters.FindTracesInForward2(n_traces);
 
-  tbb::concurrent_queue<ResamplTrace*>         empty_queue;
-  tbb::concurrent_bounded_queue<ResamplTrace*> result_queue;
-  result_queue.set_capacity(queue_capacity);
-  std::vector<std::thread*>                    worker_thread;
-
-  GenResamplParam parameters(empty_queue,
-                             result_queue,
-                             traces);
-
+  std::vector<Trace*> traces = seismic_parameters.FindTracesInForward();
+  size_t n_traces = traces.size();
 
   float monitor_size;
   float next_monitor;
   seismic_parameters.MonitorInitialize(n_traces, monitor_size, next_monitor);
 
   for (size_t i = 0; i < n_traces; ++i) {
-    Trace * trace;
-    parameters.traces.try_pop(trace);
+    Trace * trace = traces[i];
 
-    GenerateParameterGridForOutput(&parameters,
+    ResamplTrace * resampl_trace = new ResamplTrace(resampl_output.GetTraces());
+    resampl_trace->SetJobID(trace);
+
+    GenerateParameterGridForOutput(resampl_trace,
+                                   input_grid,
                                    seismic_parameters,
                                    time_or_depth_vec_reg,
                                    time_or_depth_grid,
                                    toptime,
-                                   trace,
-                                   &resampl_output);
-
-    ResamplTrace *resampl_trace;
-    parameters.result_queue.try_pop(resampl_trace);
+                                   trace);
 
     resampl_output.AddTrace(seismic_parameters,
                             time_or_depth_vec_reg,
@@ -1808,34 +1798,22 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
                             resampl_trace->GetY());
 
     seismic_parameters.Monitor(i, monitor_size, next_monitor);
-    delete trace;
-    delete resampl_trace;
-  }
 
-  ResamplTrace *resampl_trace;
-  while (empty_queue.try_pop(resampl_trace)) {
+    delete trace;
     delete resampl_trace;
   }
 }
 
 //-------------------------------------------------------------------------------------------------------
-void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam                     * params,
-                                                       const SeismicParameters             & seismic_parameters,
-                                                       const std::vector<double>           & time_or_depth_vec_reg,
-                                                       const NRLib::StormContGrid          & time_or_depth_grid,
-                                                       const NRLib::RegularSurface<double> & toptime,
-                                                       Trace                               * trace,
-                                                       ResamplOutput                       * resampl_output)
+void SeismicRegridding::GenerateParameterGridForOutput(ResamplTrace                             * resampl_trace,
+                                                       const std::vector<NRLib::StormContGrid*> & input_grid,
+                                                       const SeismicParameters                  & seismic_parameters,
+                                                       const std::vector<double>                & time_or_depth_vec_reg,
+                                                       const NRLib::StormContGrid               & time_or_depth_grid,
+                                                       const NRLib::RegularSurface<double>      & toptime,
+                                                       Trace                                    * trace)
 //-------------------------------------------------------------------------------------------------------
 {
-  ResamplTrace *resampl_trace;
-  if (!params->empty_queue.try_pop(resampl_trace)) {
-    resampl_trace = new ResamplTrace(resampl_output->GetTraces());
-  }
-  resampl_trace->SetJobID(trace);
-
-  std::vector<NRLib::StormContGrid*> input_grid = resampl_output->GetInputGrid();
-
   size_t i = trace->GetI();
   size_t j = trace->GetJ();
   double x, y, z;
@@ -1851,8 +1829,8 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam          
   std::vector<double> input_vec(nki - 1);
   std::vector<double> input_t(nktd);
 
-  const NRLib::StormContGrid          & time_or_depth_grid_ref = time_or_depth_grid;
-  std::vector<NRLib::Grid2D<double> > & output_vec             = resampl_trace->GetTraces();
+  const NRLib::StormContGrid         & time_or_depth_grid_ref = time_or_depth_grid;
+  std::vector<NRLib::Grid2D<double>> & output_vec             = resampl_trace->GetTraces();
 
   bool interpolate = seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
 
@@ -1900,7 +1878,6 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam          
       }
     }
   }
-  params->result_queue.push(resampl_trace);
 }
 
 size_t SeismicRegridding::FindCellIndex(size_t                       i,
