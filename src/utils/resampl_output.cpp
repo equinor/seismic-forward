@@ -21,11 +21,9 @@ ResamplOutput::ResamplOutput(const SeismicParameters            & seismic_parame
   }
 
   for (size_t i = 0; i < filenames.size(); ++i) {
-    std::vector<double> dummy_vec(1);
-    dummy_vec[0] = 0;
-    size_t case_number = traces_.size();
+    std::vector<double> dummy_vec(1, 0.0);
     if (segy_ok_) {
-      segy_files_ok_.push_back(seismic_parameters.GetSeismicOutput()->PrepareSegy(*(segy_files_[case_number]),
+      segy_files_ok_.push_back(seismic_parameters.GetSeismicOutput()->PrepareSegy(*(segy_files_[i]),
                                                                                   time_or_depth_vec_reg,
                                                                                   time_or_depth_vec_reg.size(),
                                                                                   filenames[i],
@@ -38,9 +36,6 @@ ResamplOutput::ResamplOutput(const SeismicParameters            & seismic_parame
     else {
       segy_files_ok_.push_back(false);
     }
-
-    NRLib::Grid2D<double> new_trace(n_samples, 1, 0);
-    traces_.push_back(new_trace);
   }
 }
 
