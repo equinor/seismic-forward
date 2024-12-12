@@ -50,8 +50,17 @@ Output::Output(SeismicParameters   & seismic_parameters,
   double            angle            = seismic_geometry->angle();
 
   if (model_settings.GetSegyOutput()) {
-    seismic_output->SetSegyGeometry(seismic_parameters, volume_t, nx, ny);
-    segy_ok_ = seismic_output->CheckUTMPrecision(seismic_parameters, volume_t, nx, ny);
+    NRLib::SegyGeometry * geometry = seismic_output->CreateSegyGeometry(volume, nx, ny);
+    seismic_parameters.SetSegyGeometry(geometry);
+    delete geometry;
+
+    NRLib::SegyGeometry * segy_geometry = seismic_parameters.GetSegyGeometry();
+
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
+    segy_geometry->WriteGeometry();
+    segy_geometry->WriteILXL();
+
+    segy_ok_ = seismic_output->CheckUTMPrecision(segy_geometry, volume_t, nx, ny);
   }
 
   if (segy_ok_) {

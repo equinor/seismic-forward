@@ -10,8 +10,9 @@ ResamplOutput::ResamplOutput(SeismicParameters & seismic_parameters,
   n_samples_ = n_samples;
   time_      = time;
 
-  SeismicOutput   * seismic_output   = seismic_parameters.GetSeismicOutput();
-  SeismicGeometry * seismic_geometry = seismic_parameters.GetSeismicGeometry();
+  SeismicOutput       * seismic_output   = seismic_parameters.GetSeismicOutput();
+  SeismicGeometry     * seismic_geometry = seismic_parameters.GetSeismicGeometry();
+  NRLib::SegyGeometry * segy_geometry    = seismic_parameters.GetSegyGeometry();
 
   size_t nx  = seismic_geometry->nx();
   size_t ny  = seismic_geometry->ny();
@@ -23,16 +24,17 @@ ResamplOutput::ResamplOutput(SeismicParameters & seismic_parameters,
   else
     volume = seismic_geometry->createDepthVolume();
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
-  if (seismic_parameters.GetSegyGeometry() == NULL){
+  if (segy_geometry == NULL){
     NRLib::SegyGeometry * geometry = seismic_output->CreateSegyGeometry(volume, nx, ny);
     seismic_parameters.SetSegyGeometry(geometry);
     delete geometry;
   }
-  seismic_parameters.GetSegyGeometry()->WriteGeometry();
-  seismic_parameters.GetSegyGeometry()->WriteILXL();
 
-  segy_ok_ = seismic_output->CheckUTMPrecision(seismic_parameters, volume, nx, ny);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
+  segy_geometry->WriteGeometry();
+  segy_geometry->WriteILXL();
+
+  segy_ok_ = seismic_output->CheckUTMPrecision(segy_geometry, volume, nx, ny);
 
   segy_files_.push_back(&segy_1_);
   segy_files_.push_back(&segy_2_);

@@ -36,6 +36,7 @@ private:
   std::vector<NRLib::SegY*>           segy_files_;
 
   //Til Paal: Hvis du finner en bedre løsning på dette er det fint:
+
   NRLib::SegY                         segy_1_, segy_2_, segy_3_, segy_4_, segy_5_, segy_6_, segy_7_, segy_8_, segy_9_, segy_10_;
   std::vector<NRLib::Grid2D<double> > traces_;
   double                              n_samples_;

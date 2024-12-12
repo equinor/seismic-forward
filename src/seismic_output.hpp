@@ -25,12 +25,7 @@ public:
                                            size_t                nx,
                                            size_t                ny);
 
-  void SetSegyGeometry(SeismicParameters   & seismic_parameters,
-                       const NRLib::Volume & vol,
-                       size_t                nx,
-                       size_t                ny);
-
-  bool CheckUTMPrecision(SeismicParameters   & seismic_parameters,
+  bool CheckUTMPrecision(NRLib::SegyGeometry * geometry,
                          const NRLib::Volume & vol,
                          size_t                nx,
                          size_t                ny);
