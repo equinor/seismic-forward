@@ -170,20 +170,16 @@ private:
                                             NRLib::StormContGrid               & time_or_depth_grid,
                                             bool                                 time);
 
-  static void GenerateParameterGridForOutputQueue(GenResamplParam * params,
-                                                  ResamplOutput   * resampl_output);
+  static void GenerateParameterGridForOutput(GenResamplParam            * params,
+                                             const std::vector<double>  & time_or_depth_vec_reg,
+                                             const NRLib::StormContGrid & time_or_depth_grid,
+                                             Trace                      * trace,
+                                             ResamplOutput              * resampl_output);
 
-  static void GenerateParameterGridForOutput(GenResamplParam * params,
-                                             Trace           * trace,
-                                             ResamplOutput   * resampl_output);
-
-  static void WriteResampledParameter(GenResamplParam * params,
-                                      ResamplOutput   * resampl_output);
-
-  static size_t FindCellIndex(size_t                 i,
-                              size_t                 j,
-                              double                 target_k,
-                              NRLib::StormContGrid & grid);
+  static size_t FindCellIndex(size_t                       i,
+                              size_t                       j,
+                              double                       target_k,
+                              const NRLib::StormContGrid & grid);
 
 };
 
