@@ -1768,28 +1768,32 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
   }
 
 
-  const NRLib::RegularSurface<double> & toptime = seismic_parameters.GetTopTime();
-  std::vector<Trace*>                   traces  = seismic_parameters.FindTracesInForward();
+  const NRLib::RegularSurface<double> & toptime      = seismic_parameters.GetTopTime();
+  std::vector<Trace*>                   traces       = seismic_parameters.FindTracesInForward();
   size_t n_traces = traces.size();
+
+  ResamplTrace                       * resampl_trace = new ResamplTrace(resampl_output.GetTraces());
+
+  std::vector<NRLib::Grid2D<double>>   output_vec    = resampl_output.GetTraces();
+
 
   float monitor_size;
   float next_monitor;
   seismic_parameters.MonitorInitialize(n_traces, monitor_size, next_monitor);
-
-  ResamplTrace * resampl_trace = new ResamplTrace(resampl_output.GetTraces());
 
   for (size_t i = 0 ; i < n_traces ; ++i) {
     Trace * trace = traces[i];
 
     resampl_trace->SetJobID(trace);
 
-    GenerateParameterGridForOutput(resampl_trace,
+    GenerateParameterGridForOutput(output_vec,
                                    input_grid,
                                    seismic_parameters,
                                    time_or_depth_vec_reg,
                                    time_or_depth_grid,
                                    toptime,
-                                   trace);
+                                   trace->GetI(),
+                                   trace->GetJ());
 
     resampl_output.AddTrace(seismic_parameters,
                             time_or_depth_vec_reg,
@@ -1804,18 +1808,17 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
   delete resampl_trace;
 }
 
-//-------------------------------------------------------------------------------------------------------
-void SeismicRegridding::GenerateParameterGridForOutput(ResamplTrace                             * resampl_trace,
+//---------------------------------------------------------------------------------------------------------
+void SeismicRegridding::GenerateParameterGridForOutput(std::vector<NRLib::Grid2D<double>>       & output_vec,
                                                        const std::vector<NRLib::StormContGrid*> & input_grid,
                                                        const SeismicParameters                  & seismic_parameters,
                                                        const std::vector<double>                & time_or_depth_vec_reg,
                                                        const NRLib::StormContGrid               & time_or_depth_grid,
                                                        const NRLib::RegularSurface<double>      & toptime,
-                                                       Trace                                    * trace)
+                                                       const size_t                               i,
+                                                       const size_t                               j)
 //-------------------------------------------------------------------------------------------------------
 {
-  size_t i = trace->GetI();
-  size_t j = trace->GetJ();
   double x, y, z;
 
   input_grid[0]->FindCenterOfCell(i, j, 0, x, y, z);
@@ -1829,8 +1832,10 @@ void SeismicRegridding::GenerateParameterGridForOutput(ResamplTrace             
   std::vector<double> input_vec(nki - 1);
   std::vector<double> input_t(nktd);
 
-  const NRLib::StormContGrid         & time_or_depth_grid_ref = time_or_depth_grid;
-  std::vector<NRLib::Grid2D<double>>   output_vec             = resampl_trace->GetTraces();
+  const NRLib::StormContGrid & time_or_depth_grid_ref = time_or_depth_grid;
+
+  size_t nvec = output_vec.size();
+  size_t ni   = output_vec[0].GetNI();
 
   bool interpolate = seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
 
@@ -1839,8 +1844,8 @@ void SeismicRegridding::GenerateParameterGridForOutput(ResamplTrace             
       for (size_t k = 0; k < nktd ; ++k) {
         input_t[k] = time_or_depth_grid_ref(i, j, k);
       }
-      for (size_t l = 0; l < output_vec.size(); ++l) {
-        NRLib::StormContGrid &input_grid_ref = *(input_grid[l]);
+      for (size_t l = 0 ; l < nvec ; ++l) {
+        NRLib::StormContGrid & input_grid_ref = *(input_grid[l]);
         for (size_t k = 0; k < nktd ; ++k) {
           input_vec[k] = input_grid_ref(i, j, k);
         }
@@ -1858,22 +1863,22 @@ void SeismicRegridding::GenerateParameterGridForOutput(ResamplTrace             
       }
     }
     else {
-      for (size_t k = 0; k < output_vec[0].GetNI(); k++) {
+      for (size_t k = 0 ; k < ni ; k++) {
         //find cell index in time or depth grid
         double location       = time_or_depth_vec_reg[k];
         size_t location_index = FindCellIndex(i, j, location, time_or_depth_grid);
         if (location_index == 999999) {                 // if location is above all values in pillar of time_or_depth_grid,
           location_index = nki - 1;                     // output_grid is given the value of the bottom cell of input_gridndex) << " " << input_grid[0](i, j, location_index - 1) << "\n";
         }
-        for (size_t l = 0; l < output_vec.size(); ++l) {
+        for (size_t l = 0 ; l < nvec ; ++l) {
           output_vec[l](k, 0) = (*input_grid[l])(i, j, location_index);
         }
       }
     }
   }
   else {
-    for (size_t k = 0; k < output_vec[0].GetNI(); k++) {
-      for (size_t l = 0; l < output_vec.size(); ++l) {
+    for (size_t k = 0 ; k < ni ; k++) {
+      for (size_t l = 0; l < nvec ; ++l) {
         output_vec[l](k, 0) = 0.0;
       }
     }
