@@ -1755,7 +1755,7 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
                                                       bool                                 time)
 //-----------------------------------------------------------------------------------------------------------------
 {
-  NRLib::RegularSurface<double> & toptime = seismic_parameters.GetTopTime();
+  const NRLib::RegularSurface<double> & toptime = seismic_parameters.GetTopTime();
 
   ResamplOutput resampl_output(seismic_parameters,
                                time,
@@ -1777,16 +1777,10 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
   result_queue.set_capacity(queue_capacity);
   std::vector<std::thread*>                    worker_thread;
 
-  GenResamplParam parameters(seismic_parameters,
-                             //time_or_depth_vec_reg,
-                             //time_or_depth_grid,
-                             toptime,
-                             time_or_depth_vec_reg.size(),
-                             n_traces,
-                             time,
-                             empty_queue,
+  GenResamplParam parameters(empty_queue,
                              result_queue,
                              traces);
+
 
   float monitor_size;
   float next_monitor;
@@ -1797,8 +1791,10 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
     parameters.traces.try_pop(trace);
 
     GenerateParameterGridForOutput(&parameters,
+                                   seismic_parameters,
                                    time_or_depth_vec_reg,
                                    time_or_depth_grid,
+                                   toptime,
                                    trace,
                                    &resampl_output);
 
@@ -1823,11 +1819,13 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
 }
 
 //-------------------------------------------------------------------------------------------------------
-void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam            * params,
-                                                       const std::vector<double>  & time_or_depth_vec_reg,
-                                                       const NRLib::StormContGrid & time_or_depth_grid,
-                                                       Trace                      * trace,
-                                                       ResamplOutput              * resampl_output)
+void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam                     * params,
+                                                       const SeismicParameters             & seismic_parameters,
+                                                       const std::vector<double>           & time_or_depth_vec_reg,
+                                                       const NRLib::StormContGrid          & time_or_depth_grid,
+                                                       const NRLib::RegularSurface<double> & toptime,
+                                                       Trace                               * trace,
+                                                       ResamplOutput                       * resampl_output)
 //-------------------------------------------------------------------------------------------------------
 {
   ResamplTrace *resampl_trace;
@@ -1835,18 +1833,19 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam          
     resampl_trace = new ResamplTrace(resampl_output->GetTraces());
   }
   resampl_trace->SetJobID(trace);
+
+  std::vector<NRLib::StormContGrid*> input_grid = resampl_output->GetInputGrid();
+
   size_t i = trace->GetI();
   size_t j = trace->GetJ();
-
   double x, y, z;
-  std::vector<NRLib::StormContGrid*> input_grid = resampl_output->GetInputGrid();
+
   input_grid[0]->FindCenterOfCell(i, j, 0, x, y, z);
-  double topt            = params->toptime.GetZ(x, y);
-  bool   toptime_missing = params->toptime.IsMissing(topt);
+  double topt            = toptime.GetZ(x, y);
+  bool   toptime_missing = toptime.IsMissing(topt);
 
   size_t nktd            = time_or_depth_grid.GetNK();
   size_t nki             = input_grid[0]->GetNK();
-
 
   std::vector<double> linear_interp;
   std::vector<double> input_vec(nki - 1);
@@ -1855,7 +1854,7 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam          
   const NRLib::StormContGrid          & time_or_depth_grid_ref = time_or_depth_grid;
   std::vector<NRLib::Grid2D<double> > & output_vec             = resampl_trace->GetTraces();
 
-  bool interpolate = params->seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
+  bool interpolate = seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
 
   if (!toptime_missing) { //check whether there are values in input_grid in this pillar - if not, cells in output_grid will be zero
     if (interpolate) {
@@ -1867,8 +1866,8 @@ void SeismicRegridding::GenerateParameterGridForOutput(GenResamplParam          
         for (size_t k = 0; k < nktd ; ++k) {
           input_vec[k] = input_grid_ref(i, j, k);
         }
-        linear_interp = params->seismic_parameters.LinInterp1D(input_t, input_vec,
-                                                               time_or_depth_vec_reg);
+        linear_interp = seismic_parameters.LinInterp1D(input_t, input_vec,
+                                                       time_or_depth_vec_reg);
         for (size_t k = 0; k < linear_interp.size(); ++k) {
           if (time_or_depth_vec_reg[k] < input_t[0])
             output_vec[l](k, 0) = input_grid_ref(i, j, 0);

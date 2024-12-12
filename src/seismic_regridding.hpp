@@ -170,11 +170,13 @@ private:
                                             NRLib::StormContGrid               & time_or_depth_grid,
                                             bool                                 time);
 
-  static void GenerateParameterGridForOutput(GenResamplParam            * params,
-                                             const std::vector<double>  & time_or_depth_vec_reg,
-                                             const NRLib::StormContGrid & time_or_depth_grid,
-                                             Trace                      * trace,
-                                             ResamplOutput              * resampl_output);
+  static void GenerateParameterGridForOutput(GenResamplParam                     * params,
+                                             const SeismicParameters             & seismic_parameters,
+                                             const std::vector<double>           & time_or_depth_vec_reg,
+                                             const NRLib::StormContGrid          & time_or_depth_grid,
+                                             const NRLib::RegularSurface<double> & toptime,
+                                             Trace                               * trace,
+                                             ResamplOutput                       * resampl_output);
 
   static size_t FindCellIndex(size_t                       i,
                               size_t                       j,

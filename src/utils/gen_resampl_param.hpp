@@ -10,29 +10,15 @@
 
 class GenResamplParam {
   public:
-  GenResamplParam(SeismicParameters                            & seismic_parameters,
-                  //  const std::vector<double>                    & time_or_depth_vec_reg,
-                  //NRLib::StormContGrid                         & time_or_depth_grid,
-                  const NRLib::RegularSurface<double>          & toptime,
-                  size_t                                         n_samples,
-                  size_t                                         n_traces,
-                  bool                                           time,
-                  tbb::concurrent_queue<ResamplTrace*>         & empty_queue,
+  GenResamplParam(tbb::concurrent_queue<ResamplTrace*>         & empty_queue,
                   tbb::concurrent_bounded_queue<ResamplTrace*> & result_queue,
                   tbb::concurrent_queue<Trace*>                & traces);
 
   ~GenResamplParam() {};
 
-  SeismicParameters             seismic_parameters;
-  //std::vector<double>           time_or_depth_vec_reg;
-  //NRLib::StormContGrid         *time_or_depth_grid;
-  NRLib::RegularSurface<double> toptime;
-  size_t                        n_samples;
-  size_t                        n_traces;
-  bool                          time;
-
-  tbb::concurrent_queue<ResamplTrace*>           empty_queue;
+  tbb::concurrent_queue<ResamplTrace*>         empty_queue;
   tbb::concurrent_bounded_queue<ResamplTrace*> result_queue;
+
   tbb::concurrent_queue<Trace*>                traces;
 
 };
