@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_pp_seis )
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
     }
 
     size_t n_traces = 16, n_samples = 126, n_output = 4;
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(test_nmo_pp_seis_noise)
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
     }
 
     size_t n_traces = 16, n_samples = 126, n_output = 4;
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE( test_nmo_ps_seis )
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
     }
 
     size_t n_traces = 16, n_samples = 126, n_output = 4;
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(test_off_pp_seis)
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
     }
 
     size_t n_traces = 16, n_samples = 126, n_output = 3;
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(test_off_ps_seis)
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
     }
 
     size_t n_traces = 16, n_samples = 126, n_output = 3;
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE( test_pp_seis )
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
     }
 
     size_t n_traces = 16, n_samples = 126, n_output = 3;
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE( test_ps_seis )
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
     }
 
     size_t n_traces = 16, n_samples = 126, n_output = 3;
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(test_ps_seis_noise)
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
     }
 
     size_t n_traces = 16, n_samples = 126, n_output = 3;
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(test_rem_negz)
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
 
       size_t n_traces = 3, n_samples = 154, n_output = 1;
       std::string prefix = "rem_negz";
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(test_keep_negz)
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
 
       size_t n_traces = 3, n_samples = 154, n_output = 1;
       std::string prefix = "keep_negz";
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(test_cornerpt)
     if (modelFile.getParsingFailed() == false) {
       SeismicParameters seismic_parameters = SeismicParameters(model_settings);
       SeismicRegridding::MakeSeismicRegridding(seismic_parameters, model_settings, 1);
-      SeismicForward::DoSeismicForward(seismic_parameters);
+      SeismicForward::DoSeismicForward(seismic_parameters, model_settings);
 
       size_t n_traces = 3, n_samples = 154, n_output = 1;
       std::string prefix = "cornerpt";

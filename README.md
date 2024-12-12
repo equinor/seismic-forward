@@ -4,11 +4,8 @@ User manuals are located in the 'doc' directory.
 
 ## Prerequisites
 
-  Boost     -> version 1.65.1 is included under 3rd-party
-               NB! If another version of Boost is installed in the operating
-               system cmake may become confused and stop working.
-
-  Intel MKL -> Must be installed
+- Boost     
+- Intel MKL -> Must be installed
 
 
 ## GitHub
