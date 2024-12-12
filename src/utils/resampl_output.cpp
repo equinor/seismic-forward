@@ -4,8 +4,7 @@
 #include <seismic_geometry.hpp>
 
 //--------------------------------------------------------------------------------------
-ResamplOutput::ResamplOutput(std::vector<NRLib::StormContGrid*> & input_grid,
-                             const SeismicParameters            & seismic_parameters,
+ResamplOutput::ResamplOutput(const SeismicParameters            & seismic_parameters,
                              const std::vector<double>          & time_or_depth_vec_reg,
                              const std::vector<std::string>     & filenames,
                              const bool                           segy_ok,
@@ -40,10 +39,8 @@ ResamplOutput::ResamplOutput(std::vector<NRLib::StormContGrid*> & input_grid,
       segy_files_ok_.push_back(false);
     }
 
-    NRLib::Grid2D<double> new_trace(n_samples_, 1, 0);
+    NRLib::Grid2D<double> new_trace(n_samples, 1, 0);
     traces_.push_back(new_trace);
-
-    input_grid_.push_back(input_grid[i]);
   }
 }
 
@@ -57,7 +54,7 @@ ResamplOutput::~ResamplOutput(void)
 
 //--------------------------------------------------------------------------------------------
 void ResamplOutput::AddTrace(SeismicOutput                            * seismic_output,
-                             std::vector<double>                      & time_or_depth_vec_reg,
+                             const std::vector<double>                & time_or_depth_vec_reg,
                              const std::vector<NRLib::Grid2D<double>> & traces,
                              const double                               x,
                              const double                               y,

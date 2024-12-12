@@ -158,15 +158,15 @@ private:
                                        std::vector<NRLib::StormContGrid*>   input_grid,
                                        std::vector<std::string>             filenames);
 
-  static void WriteParametersSegyInParallel(SeismicParameters                  & seismic_parameters,
-                                            bool                                 interpolate,
-                                            size_t                               queue_capacity,
-                                            size_t                               n_threads,
-                                            std::vector<NRLib::StormContGrid*>   input_grid,
-                                            std::vector<std::string>             filenames,
-                                            std::vector<double>                & time_or_depth_vec_reg,
-                                            NRLib::StormContGrid               & time_or_depth_grid,
-                                            bool                                 time);
+  static void WriteParametersSegyInParallel(SeismicParameters                        & seismic_parameters,
+                                            const bool                                 interpolate,
+                                            const size_t                               queue_capacity,
+                                            const size_t                               n_threads,
+                                            const std::vector<NRLib::StormContGrid*> & input_grid,
+                                            const std::vector<std::string>           & filenames,
+                                            const std::vector<double>                & time_or_depth_vec_reg,
+                                            const NRLib::StormContGrid               & time_or_depth_grid,
+                                            const bool                                 time);
 
   static void GenerateParameterGridForOutput(std::vector<NRLib::Grid2D<double>>       & output_vec,
                                              const std::vector<NRLib::StormContGrid*> & input_grid,
