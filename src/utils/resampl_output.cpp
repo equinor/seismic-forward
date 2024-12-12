@@ -52,11 +52,13 @@ void ResamplOutput::AddResampleCase(std::string            filename,
   input_grid_.push_back(&input_grid);
 }
 
+//--------------------------------------------------------------------------------------------
 void ResamplOutput::AddTrace(SeismicParameters                        & seismic_parameters,
                              std::vector<double>                      & time_or_depth_vec_reg,
                              const std::vector<NRLib::Grid2D<double>> & traces,
                              double                                     x,
                              double                                     y)
+//--------------------------------------------------------------------------------------------
 {
   std::vector<short> zero_vec(1, 0);
   for (size_t l = 0; l < traces.size(); ++l) {

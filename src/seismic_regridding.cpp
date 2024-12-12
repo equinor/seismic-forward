@@ -1,8 +1,9 @@
+#include "nrlib/eclipsegrid/eclipsegrid.hpp"
 
 #include "nrlib/surface/regularsurfacerotated.hpp"
 #include "nrlib/surface/regularsurface.hpp"
 #include "nrlib/surface/surfaceio.hpp"
-#include "nrlib/eclipsegrid/eclipsegrid.hpp"
+
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
@@ -1767,15 +1768,10 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
                                    seismic_parameters);
   }
 
-
-  const NRLib::RegularSurface<double> & toptime      = seismic_parameters.GetTopTime();
-  std::vector<Trace*>                   traces       = seismic_parameters.FindTracesInForward();
-  size_t n_traces = traces.size();
-
-  ResamplTrace                       * resampl_trace = new ResamplTrace(resampl_output.GetTraces());
-
-  std::vector<NRLib::Grid2D<double>>   output_vec    = resampl_output.GetTraces();
-
+  const NRLib::RegularSurface<double> & toptime    = seismic_parameters.GetTopTime();
+  std::vector<Trace*>                   traces     = seismic_parameters.FindTracesInForward();
+  size_t                                n_traces   = traces.size();
+  std::vector<NRLib::Grid2D<double>>    output_vec = resampl_output.GetTraces();
 
   float monitor_size;
   float next_monitor;
@@ -1783,8 +1779,6 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
 
   for (size_t i = 0 ; i < n_traces ; ++i) {
     Trace * trace = traces[i];
-
-    resampl_trace->SetJobID(trace);
 
     GenerateParameterGridForOutput(output_vec,
                                    input_grid,
@@ -1797,7 +1791,7 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
 
     resampl_output.AddTrace(seismic_parameters,
                             time_or_depth_vec_reg,
-                            resampl_trace->GetTraces(),
+                            resampl_output.GetTraces(),
                             trace->GetX(),
                             trace->GetY());
 
@@ -1805,7 +1799,6 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
 
     delete trace;
   }
-  delete resampl_trace;
 }
 
 //---------------------------------------------------------------------------------------------------------

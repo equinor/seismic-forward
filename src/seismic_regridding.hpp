@@ -8,9 +8,7 @@
 #include "nrlib/grid/grid2d.hpp"
 #include "nrlib/grid/grid.hpp"
 
-#include "utils/gen_resampl_param.hpp"
 #include "utils/resampl_output.hpp"
-#include "utils/resampl_trace.hpp"
 
 #include "seismic_parameters.hpp"
 
