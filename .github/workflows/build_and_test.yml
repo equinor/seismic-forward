@@ -8,19 +8,19 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Install basic build tools
+    - name: Install dependencies
       run: |
-        sudo apt update
-        sudo apt install -y \
-          build-essential \
-          cmake
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential libfftw3-dev libtbb-dev perl \
+          libboost-system-dev libboost-filesystem-dev libboost-dev libboost-test-dev
 
-    - name: Configure and Build Boost
+    - name: Build and run test script
       run: |
-        cd 3rd-party/boost_1_65_1
-        ./bootstrap.sh
-        cat bootstrap.log
-        # Only try to run b2 if bootstrap succeeded
-        if [ $? -eq 0 ]; then
-          ./b2 --with-system --with-filesystem
-        fi
+        cd ..
+        mkdir TEST
+        cd TEST
+        export BOOST_ROOT=/usr
+        ../seismic-forward/run_cmake.sh || exit 1
+        make -j 8 || exit 1
+        make test_seismicforward || exit 1
+        ../seismic-forward/TestScript.pl || exit 1

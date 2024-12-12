@@ -1,16 +1,16 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.26)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-project(G2S)
+project(G2S VERSION 4.3.0 LANGUAGES CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." OFF)
 
-#
-# Deactivated by PAAL 2017.10.25 because of problems to get this to work with new boost
-#
-#option( BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
-#enable_testing()
+option(BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
+enable_testing()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -24,9 +24,7 @@ endif()
 
 include(cmake/AddSource.cmake)
 
-find_package(Boost 1.65.1 REQUIRED COMPONENTS system filesystem)
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 option( USE_INTEL_STUDIO "Use libraries from Intel Studio" ON )
 find_package(IntelStudio)
@@ -46,10 +44,9 @@ endif()
 
 
 if(USE_INTEL_STUDIO)
-    include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS} ${TBB_INCLUDE_DIRS})
-    link_directories(${TBB_LIB_DIR})
+    include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS})
     set(FFT_LIBRARIES ${MKL_LIBRARIES})
-    set(MATH_LIBRARIES ${MKL_LIBRARIES} ${TBB_LIBRARIES_RELEASE})
+    set(MATH_LIBRARIES ${MKL_LIBRARIES})
     set(FFT_MATLAB_LIBRARIES -L${MKL_LIB_PATH} -lmkl_rt)
     add_definitions(-DMKL)
 else()
@@ -67,14 +64,7 @@ else()
     set(FFT_LIBRARIES ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
     set(FFT_MATLAB_LIBRARIES ${FFT_LIBRARIES})
 
-    find_package(TBB REQUIRED)
-    if(TBB_FOUND)
-        include_directories(${TBB_INCLUDE_DIRS})
-    else(TBB_FOUND)
-        message(FATAL_ERROR "Unable to find Intel TBB library.")
-    endif(TBB_FOUND)
-
-    set(MATH_LIBRARIES ${CBLAS_LIBRARY} lapack ${FFT_LIBRARIES} ${TBB_LIBRARIES})
+    set(MATH_LIBRARIES ${CBLAS_LIBRARY} lapack ${FFT_LIBRARIES})
 endif(USE_INTEL_STUDIO)
 
 set_property(GLOBAL PROPERTY SOURCE_FILES)
@@ -87,7 +77,6 @@ else()
     add_definitions(-fPIC)
 endif(MSVC)
 
-add_subdirectory(3rd-party)
 add_subdirectory(nr)
 add_subdirectory(src)
 
@@ -120,9 +109,26 @@ endforeach()
 
 add_executable(seismic_forward src/main.cpp)
 
-message(STATUS "Boost libraries to be linked with: ${Boost_LIBRARIES}")
+add_library(project_deps INTERFACE)
+target_link_libraries(project_deps
+    INTERFACE
+    ${FFTW_LIBRARIES}
+    Boost::filesystem
+    Boost::system
+    -lfftw3
+)
 
-target_link_libraries(seismic_forward seismic-forward-lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(seismic_forward
+    PRIVATE
+    seismic-forward-lib
+    ${MATH_LIBRARIES}
+    project_deps
+)
+
+target_link_libraries(seismic-forward-lib
+    PRIVATE
+    project_deps
+)
 
 if(BUILD_MATLAB_MEX)
   add_subdirectory(mex)
