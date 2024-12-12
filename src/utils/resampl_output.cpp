@@ -10,16 +10,16 @@ ResamplOutput::ResamplOutput(const bool   segy_ok,
     n_samples_( n_samples ),
     time_     ( time      )
 {
-  segy_files_.push_back(&segy_1_);
-  segy_files_.push_back(&segy_2_);
-  segy_files_.push_back(&segy_3_);
-  segy_files_.push_back(&segy_4_);
-  segy_files_.push_back(&segy_5_);
-  segy_files_.push_back(&segy_6_);
-  segy_files_.push_back(&segy_7_);
-  segy_files_.push_back(&segy_8_);
-  segy_files_.push_back(&segy_9_);
-  segy_files_.push_back(&segy_10_);
+  for (int i = 0 ; i < 10 ; i++) {
+    NRLib::SegY * segy = new NRLib::SegY();
+    segy_files_.push_back(segy);
+  }
+}
+
+ResamplOutput::~ResamplOutput(void)
+{
+  for (int i = 0 ; i < 10 ; i++)
+    delete segy_files_[i];
 }
 
 //-------------------------------------------------------------------------------

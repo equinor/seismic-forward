@@ -14,6 +14,8 @@ public:
                 const bool   time,
                 const size_t n_samples);
 
+  ~ResamplOutput(void);
+
   void AddResampleCase(std::string            filename,
                        NRLib::StormContGrid & input_grid,
                        bool                   time,
@@ -37,10 +39,6 @@ private:
 
   std::vector<bool>                   segy_files_ok_;
   std::vector<NRLib::SegY*>           segy_files_;
-
-  //Til Paal: Hvis du finner en bedre løsning på dette er det fint:
-
-  NRLib::SegY                         segy_1_, segy_2_, segy_3_, segy_4_, segy_5_, segy_6_, segy_7_, segy_8_, segy_9_, segy_10_;
 
   std::vector<NRLib::Grid2D<double>>  traces_;
   std::vector<NRLib::StormContGrid*>  input_grid_;
