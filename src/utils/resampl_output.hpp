@@ -10,9 +10,9 @@
 class ResamplOutput
 {
 public:
-  ResamplOutput(SeismicParameters & seismic_parameters,
-                bool                time,
-                size_t              n_samples);
+  ResamplOutput(const bool   segy_ok,
+                const bool   time,
+                const size_t n_samples);
 
   void AddResampleCase(std::string            filename,
                        NRLib::StormContGrid & input_grid,
@@ -32,15 +32,17 @@ public:
 
 private:
   bool                                segy_ok_;
+  double                              n_samples_;
+  bool                                time_;
+
   std::vector<bool>                   segy_files_ok_;
   std::vector<NRLib::SegY*>           segy_files_;
 
   //Til Paal: Hvis du finner en bedre løsning på dette er det fint:
 
   NRLib::SegY                         segy_1_, segy_2_, segy_3_, segy_4_, segy_5_, segy_6_, segy_7_, segy_8_, segy_9_, segy_10_;
-  std::vector<NRLib::Grid2D<double> > traces_;
-  double                              n_samples_;
-  bool                                time_;
+
+  std::vector<NRLib::Grid2D<double>>  traces_;
   std::vector<NRLib::StormContGrid*>  input_grid_;
 
 };

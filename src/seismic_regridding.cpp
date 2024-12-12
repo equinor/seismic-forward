@@ -1756,7 +1756,33 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
                                                       bool                                 time)
 //-----------------------------------------------------------------------------------------------------------------
 {
-  ResamplOutput resampl_output(seismic_parameters,
+  SeismicOutput       * seismic_output   = seismic_parameters.GetSeismicOutput();
+  SeismicGeometry     * seismic_geometry = seismic_parameters.GetSeismicGeometry();
+  NRLib::SegyGeometry * segy_geometry    = seismic_parameters.GetSegyGeometry();
+
+  size_t nx = seismic_geometry->nx();
+  size_t ny = seismic_geometry->ny();
+
+  NRLib::Volume volume;
+
+  if (time)
+    volume = seismic_geometry->createTimeVolume();
+  else
+    volume = seismic_geometry->createDepthVolume();
+
+  if (segy_geometry == NULL){
+    NRLib::SegyGeometry * geometry = seismic_output->CreateSegyGeometry(volume, nx, ny);
+    seismic_parameters.SetSegyGeometry(geometry);
+    delete geometry;
+  }
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
+  segy_geometry->WriteGeometry();
+  segy_geometry->WriteILXL();
+
+  bool segy_ok = seismic_output->CheckUTMPrecision(segy_geometry, volume, nx, ny);
+
+  ResamplOutput resampl_output(segy_ok,
                                time,
                                time_or_depth_vec_reg.size());
 
