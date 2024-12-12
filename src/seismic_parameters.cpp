@@ -1159,46 +1159,6 @@ void SeismicParameters::PrintElapsedTime(time_t      start_time,
     << "\n";
 }
 
-//-------------------------------------------------------------------------------------
-tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward2(size_t & n_traces)
-//-------------------------------------------------------------------------------------
-{
-  tbb::concurrent_queue<Trace*> traces;
-  int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
-  bool ilxl_loop = false;
-  //find index min and max and whether loop over i,j or il,xl:
-  FindLoopIndeces(n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step, ilxl_loop);
-  //NRLib::SegyGeometry *geometry = GetSegyGeometry();
-  int il_steps = 0;
-  int xl_steps = 0;
-  //----------------------LOOP OVER I,J OR IL,XL---------------------------------
-  size_t job_number = 0;
-  for (int il = il_min; il <= il_max; il += il_step) {
-    ++il_steps;
-    xl_steps = 0;
-    for (int xl = xl_min; xl <= xl_max; xl += xl_step) {
-      ++xl_steps;
-      size_t i, j;
-      double x, y;
-      if (ilxl_loop) { //loop over il,xl, find corresponding x,y,i,j
-        segy_geometry_->FindXYFromILXL(il, xl, x, y);
-        segy_geometry_->FindIndex(x, y, i, j);
-      }
-      else { //loop over i,j, no segy output
-        i = il;
-        j = xl;
-        x = 0;
-        y = 0;
-      }
-      Trace * trace = new Trace(job_number, x, y, i, j);
-      traces.push(trace);
-      ++job_number;
-    }
-  }
-  n_traces = job_number;
-  return traces;
-}
-
 //--------------------------------------------------------------
 std::vector<Trace*> SeismicParameters::FindTracesInForward(void)
 //--------------------------------------------------------------

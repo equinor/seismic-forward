@@ -3,21 +3,29 @@
 #include <seismic_parameters.hpp>
 #include <seismic_geometry.hpp>
 
-
-ResamplOutput::ResamplOutput(SeismicParameters &seismic_parameters, bool time, size_t n_samples)
+ResamplOutput::ResamplOutput(SeismicParameters & seismic_parameters,
+                             bool                time,
+                             size_t              n_samples)
 {
-  size_t nx = seismic_parameters.GetSeismicGeometry()->nx();
-  size_t ny = seismic_parameters.GetSeismicGeometry()->ny();
   n_samples_ = n_samples;
-  time_ = time;
+  time_      = time;
+
+  SeismicOutput   * seismic_output   = seismic_parameters.GetSeismicOutput();
+  SeismicGeometry * seismic_geometry = seismic_parameters.GetSeismicGeometry();
+
+  size_t nx  = seismic_geometry->nx();
+  size_t ny  = seismic_geometry->ny();
 
   NRLib::Volume volume;
+
   if (time)
-    volume = seismic_parameters.GetSeismicGeometry()->createTimeVolume();
+    volume = seismic_geometry->createTimeVolume();
   else
-    volume = seismic_parameters.GetSeismicGeometry()->createDepthVolume();
-  seismic_parameters.GetSeismicOutput()->SetSegyGeometry(seismic_parameters, volume, nx, ny);
-  segy_ok_ = seismic_parameters.GetSeismicOutput()->CheckUTMPrecision(seismic_parameters, volume, nx, ny);
+    volume = seismic_geometry->createDepthVolume();
+
+  seismic_output->SetSegyGeometry(seismic_parameters, volume, nx, ny);
+
+  segy_ok_ = seismic_output->CheckUTMPrecision(seismic_parameters, volume, nx, ny);
 
   segy_files_.push_back(&segy_1_);
   segy_files_.push_back(&segy_2_);
@@ -29,7 +37,6 @@ ResamplOutput::ResamplOutput(SeismicParameters &seismic_parameters, bool time, s
   segy_files_.push_back(&segy_8_);
   segy_files_.push_back(&segy_9_);
   segy_files_.push_back(&segy_10_);
-
 }
 
 void ResamplOutput::AddResampleCase(std::string            filename,
@@ -42,7 +49,15 @@ void ResamplOutput::AddResampleCase(std::string            filename,
   dummy_vec[0] = 0;
   size_t case_number = traces_.size();
   if (segy_ok_)
-    segy_files_ok_.push_back(seismic_parameters.GetSeismicOutput()->PrepareSegy(*(segy_files_[case_number]), time_or_depth_vec_reg, time_or_depth_vec_reg.size(), filename, seismic_parameters, dummy_vec, 1, time, false));
+    segy_files_ok_.push_back(seismic_parameters.GetSeismicOutput()->PrepareSegy(*(segy_files_[case_number]),
+                                                                                time_or_depth_vec_reg,
+                                                                                time_or_depth_vec_reg.size(),
+                                                                                filename,
+                                                                                seismic_parameters,
+                                                                                dummy_vec,
+                                                                                1,
+                                                                                time,
+                                                                                false));
   else
     segy_files_ok_.push_back(false);
 
@@ -53,17 +68,25 @@ void ResamplOutput::AddResampleCase(std::string            filename,
 }
 
 //--------------------------------------------------------------------------------------------
-void ResamplOutput::AddTrace(SeismicParameters                        & seismic_parameters,
+void ResamplOutput::AddTrace(SeismicOutput                            * seismic_output,
                              std::vector<double>                      & time_or_depth_vec_reg,
                              const std::vector<NRLib::Grid2D<double>> & traces,
-                             double                                     x,
-                             double                                     y)
+                             const double                               x,
+                             const double                               y,
+                             const bool                                 time)
 //--------------------------------------------------------------------------------------------
 {
   std::vector<short> zero_vec(1, 0);
   for (size_t l = 0; l < traces.size(); ++l) {
     if (segy_files_ok_[l]) {
-      seismic_parameters.GetSeismicOutput()->WriteSegyGather(traces[l], *(segy_files_[l]), time_or_depth_vec_reg, zero_vec, time_, x, y, false);
+      seismic_output->WriteSegyGather(traces[l],
+                                      *(segy_files_[l]),
+                                      time_or_depth_vec_reg,
+                                      zero_vec,
+                                      time,
+                                      x,
+                                      y,
+                                      false);
     }
   }
 }

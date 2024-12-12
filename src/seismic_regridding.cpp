@@ -1789,11 +1789,13 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
                                    trace->GetI(),
                                    trace->GetJ());
 
-    resampl_output.AddTrace(seismic_parameters,
+
+    resampl_output.AddTrace(seismic_parameters.GetSeismicOutput(),
                             time_or_depth_vec_reg,
                             resampl_output.GetTraces(),
                             trace->GetX(),
-                            trace->GetY());
+                            trace->GetY(),
+                            time);
 
     seismic_parameters.Monitor(i, monitor_size, next_monitor);
 
