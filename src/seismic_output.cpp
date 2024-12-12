@@ -1,14 +1,10 @@
-//#include "nrlib/geometry/interpolation.hpp"
 
 #include "utils/storm_writer.hpp"
 
 #include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
 #include "seismic_output.hpp"
-
-//#ifdef WITH_OMP
-//#include <omp.h>
-//#endif
+#include "modelsettings.hpp"
 
 //----------------------------------------------------------
 SeismicOutput::SeismicOutput(ModelSettings * model_settings)
@@ -190,7 +186,6 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
     return false;
   }
 
-  NRLib::SegyGeometry * geometry = seismic_parameters.GetSegyGeometry();
   geometry->FindILXLGeometry();
   std::string filename_out = prefix_ + fileName + suffix_ + ".segy";
 

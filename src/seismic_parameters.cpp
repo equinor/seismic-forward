@@ -1,12 +1,11 @@
+
 #include "nrlib/extrapolation/extrapolategrid2d.hpp"
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/geometry/interpolation.hpp"
 
 #include "seismic_parameters.hpp"
+#include "seismic_geometry.hpp"
 #include "wavelet.hpp"
-
-#include <thread>
-
 
 //------------------------------------------------------------------
 SeismicParameters::SeismicParameters(ModelSettings * model_settings)

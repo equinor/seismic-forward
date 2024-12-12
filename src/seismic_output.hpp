@@ -6,15 +6,9 @@
 #include "nrlib/segy/segygeometry.hpp"
 #include "nrlib/segy/traceheader.hpp"
 
-#include "seismic_parameters.hpp"
-#include "seismic_geometry.hpp"
-#include "modelsettings.hpp"
-
-#include <stdio.h>
-#include <string>
-#include <vector>
-
 class SeismicParameters;
+class SeismicGeometry;
+class ModelSettings;
 
 class SeismicOutput
 {
