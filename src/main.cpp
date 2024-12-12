@@ -75,24 +75,20 @@ int main(int argc, char *argv[]) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"Threads in use                            :   %3d / %3d\n",n_threads, n_threads_avail);
     NRLib::LogKit::WriteHeader("Model settings");
     model_settings->PrintSettings();
+
     time_t t1 = time(0);
+
     NRLib::LogKit::WriteHeader("Setting up grid");
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
     SeismicRegridding::MakeSeismicRegridding(seismic_parameters,
                                              model_settings,
                                              n_threads);
     seismic_parameters.PrintElapsedTime(t1, "for preprocesses");
+
     NRLib::LogKit::WriteHeader("Forward modelling");
     SeismicForward::DoSeismicForward(seismic_parameters,
-                                     model_settings);
-    //seismic_parameters.PrintElapsedTime(t1, "for total program");
-
+                                     *model_settings);
     TaskList::ViewAllTasks();
   }
-  //else {
-  //  printf("Press a key and then enter to continue.\n");
-  //  int x;
-  //  cin >> x;
-  //}
   NRLib::LogKit::EndLog();
 }

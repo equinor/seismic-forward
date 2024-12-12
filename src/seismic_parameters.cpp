@@ -710,12 +710,12 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
 }
 
 //-----------------------------------------------------------------------------------
-void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
+void SeismicParameters::GenerateTwt0AndZ0(const ModelSettings & model_settings,
                                           std::vector<double> & twt_0,
                                           std::vector<double> & z_0,
                                           std::vector<double> & twts_0,
-                                          size_t              & time_samples_stretch,
-                                          bool                  ps_seis)
+                                          size_t              & n_time_samples,
+                                          const bool            ps_seis)
 //-----------------------------------------------------------------------------------
 {
   size_t nt             = seismic_geometry_->nt();
@@ -726,9 +726,11 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
   double twt_wavelet    = wavelet_->GetTwtLength();              // Half a wavelet
   double stretch_factor = -999.0;
 
-  if (model_settings->GetNMOCorr() && !model_settings->GetOffsetWithoutStretch()){
+  n_time_samples        = nt;
+
+  if (model_settings.GetNMOCorr() && !model_settings.GetOffsetWithoutStretch()) {
     GenerateTwt0ForNMO(twt_0,
-                       time_samples_stretch,
+                       n_time_samples,
                        stretch_factor,
                        ps_seis,
                        twt_wavelet,
@@ -739,10 +741,6 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
 
     GenerateZ0ForNMO(z_0,
                      stretch_factor);
-
-    if (model_settings_->GetTwtFileName() != "") {
-      twts_0 = GenerateTWT0Shift(twt_0[0], time_samples_stretch);
-    }
   }
   else {
     twt_0.resize(nt);
@@ -753,15 +751,14 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
     double dz         = seismic_geometry_->dz();
     size_t nzmin      = static_cast<size_t>(floor(zmin) / dz + 0.5); // Find min z in a sample
     double zmin_sampl = nzmin *dz;
-    z_0.resize(nz);
 
+    z_0.resize(nz);
     for (size_t i = 0; i < nz; ++i){
       z_0[i] = zmin_sampl + i*dz;
     }
-
-    if (model_settings_->GetTwtFileName() != "") {
-      twts_0 = GenerateTWT0Shift(twt_0[0], twt_0.size());
-    }
+  }
+  if (model_settings.GetTwtFileName() != "") {
+    twts_0 = GenerateTWT0Shift(twt_0[0], n_time_samples);
   }
 }
 
@@ -1163,7 +1160,7 @@ void SeismicParameters::PrintElapsedTime(time_t      start_time,
 }
 
 //-------------------------------------------------------------------------------------
-tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t & n_traces)
+tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward2(size_t & n_traces)
 //-------------------------------------------------------------------------------------
 {
   tbb::concurrent_queue<Trace*> traces;
@@ -1199,6 +1196,48 @@ tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t & n_
     }
   }
   n_traces = job_number;
+  return traces;
+}
+
+//--------------------------------------------------------------
+std::vector<Trace*> SeismicParameters::FindTracesInForward(void)
+//--------------------------------------------------------------
+{
+  std::vector<Trace*> traces;
+
+  int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
+  bool ilxl_loop = false;
+
+  //find index min and max and whether loop over i,j or il,xl:
+  FindLoopIndeces(n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step, ilxl_loop);
+
+  int il_steps = 0;
+  int xl_steps = 0;
+
+  //----------------------LOOP OVER I,J OR IL,XL---------------------------------
+  size_t job_number = 0;
+  for (int il = il_min; il <= il_max; il += il_step) {
+    ++il_steps;
+    xl_steps = 0;
+    for (int xl = xl_min; xl <= xl_max; xl += xl_step) {
+      ++xl_steps;
+      size_t i, j;
+      double x, y;
+      if (ilxl_loop) { //loop over il,xl, find corresponding x,y,i,j
+        segy_geometry_->FindXYFromILXL(il, xl, x, y);
+        segy_geometry_->FindIndex(x, y, i, j);
+      }
+      else { //loop over i,j, no segy output
+        i = il;
+        j = xl;
+        x = 0;
+        y = 0;
+      }
+      Trace * trace = new Trace(job_number, x, y, i, j);
+      traces.push_back(trace);
+      ++job_number;
+    }
+  }
   return traces;
 }
 

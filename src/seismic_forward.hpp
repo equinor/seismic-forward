@@ -1,30 +1,19 @@
 #ifndef SEISMIC_FORWARD_HPP
 #define SEISMIC_FORWARD_HPP
 
-#include "nrlib/stormgrid/stormcontgrid.hpp"
-#include "nrlib/surface/regularsurface.hpp"
-#include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
-#include "utils/gen_seis_trace_params.hpp"
-#include "utils/output.hpp"
-#include "utils/trace.hpp"
+class SeismicParameters;
+class ModelSettings;
+class ResultTrace;
+class Output;
 
-#include "seismic_parameters.hpp"
-#include "modelsettings.hpp"
-
-#include <tbb/concurrent_queue.h>
-
-#include <algorithm>
-#include <stdio.h>
-#include <string>
-#include <vector>
-
-class SeismicForward {
+class SeismicForward
+{
   public:
 
-    static void DoSeismicForward(SeismicParameters & seismic_parameters,
-                                 ModelSettings     * model_settings);
+    static void DoSeismicForward(SeismicParameters   & seismic_parameters,
+                                 const ModelSettings & model_settings);
 
   private:
 
@@ -40,34 +29,24 @@ class SeismicForward {
                                 size_t                              i,
                                 size_t                              j);
 
-    static void MakeNMOSeismic(SeismicParameters & seismic_parameters,
-                               ModelSettings     * model_settings);
+    static void GenerateSeismicTraces(SeismicParameters         & seismic_parameters,
+                                      const ModelSettings       & model_settings,
+                                      const std::vector<double> & twt_0,
+                                      const std::vector<double> & z_0,
+                                      const std::vector<double> & twts_0,
+                                      const std::vector<double> & theta_vec,
+                                      const Output              & output,
+                                      ResultTrace               & result_trace);
 
-    static void MakeSeismic(SeismicParameters & seismic_parameters,
-                            ModelSettings     * model_settings);
-
-    static void GenerateSeismicTracesQueue(Output             * output,
-                                           GenSeisTraceParams * param);
-
-    static void GenerateSeismicTraces(Output             * output,
-                                      GenSeisTraceParams * param,
-                                      Trace              * trace);
-
-    static void GenerateNMOSeismicTracesQueue(Output             * nmo_output,
-                                              GenSeisTraceParams * param);
-
-    static void GenerateNMOSeismicTraces(Output             * nmo_output,
-                                         GenSeisTraceParams * param,
-                                         Trace              * trace);
-
-    static bool GenerateTraceOk(SeismicParameters & seismic_parameters,
-                                ModelSettings     * model_settings,
-                                size_t              i,
-                                size_t              j);
-
-
-    static void WriteSeismicTraces(GenSeisTraceParams * param,
-                                   Output             * output);
+    static void GenerateNMOSeismicTraces(SeismicParameters         & seismic_parameters,
+                                         const ModelSettings       & model_settings,
+                                         const std::vector<double> & twt_0,
+                                         const std::vector<double> & z_0,
+                                         const std::vector<double> & twts_0,
+                                         const std::vector<double> & offset_vec,
+                                         const size_t                time_samples_stretch,
+                                         const Output              & nmo_output,
+                                         ResultTrace               & result_trace);
 
     static void SeisConvolutionNMO(NRLib::Grid2D<double>               & timegrid_pos,
                                    NRLib::Grid2D<double>               & refl_pos,
@@ -247,10 +226,10 @@ class SeismicForward {
                         float    monitor_size,
                         float  & next_monitor);
 
-    static void PrintSeisType(bool                  nmo,
-                              bool                  ps_seis,
-                              std::vector<double> & off_theta_vec,
-                              bool                  offset_without_stretch);
+    static void PrintSeisType(bool                        nmo,
+                              bool                        ps_seis,
+                              const std::vector<double> & off_theta_vec,
+                              bool                        offset_without_stretch);
 
     static void PrintTime();
 

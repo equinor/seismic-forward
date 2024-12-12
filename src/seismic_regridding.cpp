@@ -1743,6 +1743,7 @@ void SeismicRegridding::WriteParametersTimeSegy(SeismicParameters               
                                 time);
 }
 
+//-----------------------------------------------------------------------------------------------------------------
 void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters                  & seismic_parameters,
                                                       bool                                 interpolate,
                                                       size_t                               queue_capacity,
@@ -1752,16 +1753,24 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
                                                       std::vector<double>                & time_or_depth_vec_reg,
                                                       NRLib::StormContGrid               & time_or_depth_grid,
                                                       bool                                 time)
+//-----------------------------------------------------------------------------------------------------------------
 {
   NRLib::RegularSurface<double> & toptime = seismic_parameters.GetTopTime();
 
-  ResamplOutput resampl_output(seismic_parameters, time, time_or_depth_vec_reg.size());
+  ResamplOutput resampl_output(seismic_parameters,
+                               time,
+                               time_or_depth_vec_reg.size());
 
   for (size_t i = 0; i < filenames.size(); ++i) {
-    resampl_output.AddResampleCase(filenames[i], *(input_grid[i]), time, time_or_depth_vec_reg, seismic_parameters);
+    resampl_output.AddResampleCase(filenames[i],
+                                   *(input_grid[i]),
+                                   time,
+                                   time_or_depth_vec_reg,
+                                   seismic_parameters);
   }
+
   size_t n_traces;
-  tbb::concurrent_queue<Trace*> traces = seismic_parameters.FindTracesInForward(n_traces);
+  tbb::concurrent_queue<Trace*> traces = seismic_parameters.FindTracesInForward2(n_traces);
 
   tbb::concurrent_queue<ResamplTrace*> empty_queue;
   tbb::concurrent_bounded_queue<ResamplTrace*> result_queue;

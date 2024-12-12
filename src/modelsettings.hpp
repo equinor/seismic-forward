@@ -45,141 +45,141 @@ public:
 
   void                      PrintSettings(void);
 
-  size_t                    GetTracesInMemory(void)                   { return traces_in_memory_               ;}
-  size_t                    GetMaxThreads(void)                       { return max_threads_                    ;}
+  size_t                    GetTracesInMemory(void)                   const { return traces_in_memory_               ;}
+  size_t                    GetMaxThreads(void)                       const { return max_threads_                    ;}
 
   std::string               GetTwtFileName()                    const { return twt_file_name_                  ;}
-  bool                      GetPSSeismic()                            { return ps_seismic_                     ;}
-  bool                      GetResamplParamToSegyInterpol()           { return resampl_param_to_segy_with_interpol_ ;}
-  double                    GetZExtrapolFactor()                      { return z_extrapol_factor_              ;}
-  double                    GetZeroThicknessLimit()                   { return zero_thickness_limit_           ;}
-  bool                      GetRemoveNegativeDeltaZ()                 { return remove_negative_delta_z_        ;}
-  bool                      GetUseCornerpointInterpol()               { return use_cornerpoint_interpol_       ;}
-  bool                      GetCornerpointInterpolationAtFaults()     { return cornerpoint_interpol_at_faults_ ;}
-  bool                      GetUseFixedTriangularization()            { return use_fixed_triangularization_    ;}
-  bool                      GetUseHorizontalInterpolation()           { return use_horizontal_interpolation_   ;}
-  bool                      GetUseVerticalInterpolation()             { return use_vertical_interpolation_     ;}
-  bool                      GetUseBilinearInterpolation()             { return use_bilinear_interpolation_     ;}
-  bool                      GetUseActivePillars()                     { return use_active_pillars_             ;}
+  bool                      GetPSSeismic()                            const { return ps_seismic_                     ;}
+  bool                      GetResamplParamToSegyInterpol()           const { return resampl_param_to_segy_with_interpol_ ;}
+  double                    GetZExtrapolFactor()                      const { return z_extrapol_factor_              ;}
+  double                    GetZeroThicknessLimit()                   const { return zero_thickness_limit_           ;}
+  bool                      GetRemoveNegativeDeltaZ()                 const { return remove_negative_delta_z_        ;}
+  bool                      GetUseCornerpointInterpol()               const { return use_cornerpoint_interpol_       ;}
+  bool                      GetCornerpointInterpolationAtFaults()     const { return cornerpoint_interpol_at_faults_ ;}
+  bool                      GetUseFixedTriangularization()            const { return use_fixed_triangularization_    ;}
+  bool                      GetUseHorizontalInterpolation()           const { return use_horizontal_interpolation_   ;}
+  bool                      GetUseVerticalInterpolation()             const { return use_vertical_interpolation_     ;}
+  bool                      GetUseBilinearInterpolation()             const { return use_bilinear_interpolation_     ;}
+  bool                      GetUseActivePillars()                     const { return use_active_pillars_             ;}
 
-  int                       GetIL0Loc()                               { return il0_loc_                        ;}
-  int                       GetXL0Loc()                               { return xl0_loc_                        ;}
-  int                       GetUtmxLoc()                              { return utmx_loc_                       ;}
-  int                       GetUtmyLoc()                              { return utmy_loc_                       ;}
-  int                       GetScalcoLoc()                            { return scalco_loc_                     ;}
-  int                       GetStartTimeLoc()                         { return start_time_loc_                 ;}
-  short                     GetUtmPrecision()                         { return utm_precision_                  ;}
+  int                       GetIL0Loc()                               const { return il0_loc_                        ;}
+  int                       GetXL0Loc()                               const { return xl0_loc_                        ;}
+  int                       GetUtmxLoc()                              const { return utmx_loc_                       ;}
+  int                       GetUtmyLoc()                              const { return utmy_loc_                       ;}
+  int                       GetScalcoLoc()                            const { return scalco_loc_                     ;}
+  int                       GetStartTimeLoc()                         const { return start_time_loc_                 ;}
+  short                     GetUtmPrecision()                         const { return utm_precision_                  ;}
 
-  int                       GetSegyInlineStart()                      { return inline_start_                   ;}
-  int                       GetSegyXlineStart()                       { return xline_start_                    ;}
-  std::string               GetSegyInlineDirection()                  { return inline_direction_               ;}
-  int                       GetSegyInlineStep()                       { return inline_step_                    ;}
-  int                       GetSegyXlineStep()                        { return xline_step_                     ;}
+  int                       GetSegyInlineStart()                      const { return inline_start_                   ;}
+  int                       GetSegyXlineStart()                       const { return xline_start_                    ;}
+  std::string               GetSegyInlineDirection()                  const { return inline_direction_               ;}
+  int                       GetSegyInlineStep()                       const { return inline_step_                    ;}
+  int                       GetSegyXlineStep()                        const { return xline_step_                     ;}
 
-  bool                      GetAddNoiseToReflCoef()                   { return add_noise_to_refl_coef_         ;}
-  bool                      GetAddWhiteNoise()                        { return add_white_noise_                ;}
-  bool                      GetUseEqualNoiseForOffsets()              { return equal_noise_for_offsets_        ;}
-  double                    GetStandardDeviation1()                   { return standard_deviation_1_           ;}
-  double                    GetStandardDeviation2()                   { return standard_deviation_2_           ;}
-  unsigned long             GetSeed1()                                { return seed_1_                         ;}
-  unsigned long             GetSeed2()                                { return seed_2_                         ;}
+  bool                      GetAddNoiseToReflCoef()                   const { return add_noise_to_refl_coef_         ;}
+  bool                      GetAddWhiteNoise()                        const { return add_white_noise_                ;}
+  bool                      GetUseEqualNoiseForOffsets()              const { return equal_noise_for_offsets_        ;}
+  double                    GetStandardDeviation1()                   const { return standard_deviation_1_           ;}
+  double                    GetStandardDeviation2()                   const { return standard_deviation_2_           ;}
+  unsigned long             GetSeed1()                                const { return seed_1_                         ;}
+  unsigned long             GetSeed2()                                const { return seed_2_                         ;}
 
-  std::string               GetEclipseFileName()                      { return eclipse_file_name_              ;}
+  std::string               GetEclipseFileName()                      const { return eclipse_file_name_              ;}
 
-  std::vector<std::string>  GetParameterNames()                       { return parameter_names_                ;}
-  std::vector<double>       GetConstVp()                              { return constvp_                        ;}
-  std::vector<double>       GetConstVs()                              { return constvs_                        ;}
-  std::vector<double>       GetConstRho()                             { return constrho_                       ;}
-  bool                      GetDefaultUnderburden(void)               { return default_underburden_            ;}
+  std::vector<std::string>  GetParameterNames()                       const { return parameter_names_                ;}
+  std::vector<double>       GetConstVp()                              const { return constvp_                        ;}
+  std::vector<double>       GetConstVs()                              const { return constvs_                        ;}
+  std::vector<double>       GetConstRho()                             const { return constrho_                       ;}
+  bool                      GetDefaultUnderburden(void)               const { return default_underburden_            ;}
 
-  std::vector<std::string>  GetExtraParameterNames()                  { return extra_parameter_names_          ;}
-  std::vector<double>       GetExtraParameterDefaultValues()          { return extra_parameter_default_values_ ;}
+  std::vector<std::string>  GetExtraParameterNames()                  const { return extra_parameter_names_          ;}
+  std::vector<double>       GetExtraParameterDefaultValues()          const { return extra_parameter_default_values_ ;}
 
-  bool                      GetNMOCorr()                              { return nmo_corr_                       ;}
-  bool                      GetOffsetWithoutStretch()                 { return offset_without_stretch_         ;}
-  double                    GetVw()                                   { return v_w_                            ;}
-  double                    GetZw()                                   { return z_w_                            ;}
+  bool                      GetNMOCorr()                              const { return nmo_corr_                       ;}
+  bool                      GetOffsetWithoutStretch()                 const { return offset_without_stretch_         ;}
+  double                    GetVw()                                   const { return v_w_                            ;}
+  double                    GetZw()                                   const { return z_w_                            ;}
 
-  std::vector<double>     & GetThetaVec()                             { return theta_vec_                      ;}
-  std::vector<double>     & GetOffsetVec()                            { return offset_vec_                     ;}
+  const std::vector<double> & GetThetaVec()                             const { return theta_vec_                      ;}
+  const std::vector<double> & GetOffsetVec()                            const { return offset_vec_                     ;}
 
-  double                    GetTheta0()                               { return theta_0_                        ;}
-  double                    GetDTheta()                               { return dtheta_                         ;}
-  double                    GetThetaMax()                             { return theta_max_                      ;}
+  double                    GetTheta0()                               const { return theta_0_                        ;}
+  double                    GetDTheta()                               const { return dtheta_                         ;}
+  double                    GetThetaMax()                             const { return theta_max_                      ;}
 
-  bool                      GetRicker()                               { return ricker_                         ;}
-  double                    GetPeakFrequency()                        { return peak_f_                         ;}
-  std::string               GetWaveletFileFormat()                    { return wavelet_file_format_            ;}
-  std::string               GetWaveletFileName()                      { return wavelet_file_name_              ;}
-  double                    GetWaveletScale()                         { return wavelet_scale_                  ;}
-  double                    GetWaveletLength()                        { return wavelet_length_                 ;}
-  double                    GetWaveletLengthFactor()                  { return wavelet_length_factor_          ;}
-  bool                      GetUseZeroTimeFromHeader()                { return use_zero_time_from_header_      ;}
-  double                    GetZWaveletTop()                          { return z_wavelet_top_                  ;}
-  double                    GetZWaveletBot()                          { return z_wavelet_bot_                  ;}
+  bool                      GetRicker()                               const { return ricker_                         ;}
+  double                    GetPeakFrequency()                        const { return peak_f_                         ;}
+  std::string               GetWaveletFileFormat()                    const { return wavelet_file_format_            ;}
+  std::string               GetWaveletFileName()                      const { return wavelet_file_name_              ;}
+  double                    GetWaveletScale()                         const { return wavelet_scale_                  ;}
+  double                    GetWaveletLength()                        const { return wavelet_length_                 ;}
+  double                    GetWaveletLengthFactor()                  const { return wavelet_length_factor_          ;}
+  bool                      GetUseZeroTimeFromHeader()                const { return use_zero_time_from_header_      ;}
+  double                    GetZWaveletTop()                          const { return z_wavelet_top_                  ;}
+  double                    GetZWaveletBot()                          const { return z_wavelet_bot_                  ;}
 
   //
   // Output parameters
   //
-  std::string             & GetLogFileName()                          { return log_file_name_                  ;}
-  int                       GetLogLevel()                             { return log_level_                      ;}
+  const std::string       & GetLogFileName()                          const { return log_file_name_                  ;}
+  int                       GetLogLevel()                             const { return log_level_                      ;}
 
-  std::string               GetPrefix()                               { return prefix_                         ;}
-  std::string               GetSuffix()                               { return suffix_                         ;}
+  std::string               GetPrefix()                               const { return prefix_                         ;}
+  std::string               GetSuffix()                               const { return suffix_                         ;}
 
-  double                    GetTopTimeConstant()                      { return top_time_constant_              ;}
-  std::string               GetTopTimeSurfaceFile()                   { return top_time_surface_               ;}
+  double                    GetTopTimeConstant()                      const { return top_time_constant_              ;}
+  std::string               GetTopTimeSurfaceFile()                   const { return top_time_surface_               ;}
 
-  bool                      GetTimeWindowSpecified()                  { return time_window_specified_          ;}
-  bool                      GetDepthWindowSpecified()                 { return depth_window_specified_         ;}
-  double                    GetTopTimeWindow()                        { return top_time_window_                ;}
-  double                    GetBotTimeWindow()                        { return bot_time_window_                ;}
-  double                    GetTopDepthWindow()                       { return top_depth_window_               ;}
-  double                    GetBotDepthWindow()                       { return bot_depth_window_               ;}
+  bool                      GetTimeWindowSpecified()                  const { return time_window_specified_          ;}
+  bool                      GetDepthWindowSpecified()                 const { return depth_window_specified_         ;}
+  double                    GetTopTimeWindow()                        const { return top_time_window_                ;}
+  double                    GetBotTimeWindow()                        const { return bot_time_window_                ;}
+  double                    GetTopDepthWindow()                       const { return top_depth_window_               ;}
+  double                    GetBotDepthWindow()                       const { return bot_depth_window_               ;}
 
-  double                    GetPaddingFactorSeismicModelling()        { return padding_factor_                 ;}
+  double                    GetPaddingFactorSeismicModelling()        const { return padding_factor_                 ;}
 
-  bool                      GetAreaGiven()                            { return area_given_                     ;}
-  std::string               GetAreaFromSegy()                         { return area_from_segy_                 ;}
-  std::string               GetAreaFromSurface()                      { return area_from_surface_              ;}
-  double                    GetX0()                                   { return x0_                             ;}
-  double                    GetY0()                                   { return y0_                             ;}
-  double                    GetLx()                                   { return lx_                             ;}
-  double                    GetLy()                                   { return ly_                             ;}
-  double                    GetAngle()                                { return angle_                          ;}
+  bool                      GetAreaGiven()                            const { return area_given_                     ;}
+  std::string               GetAreaFromSegy()                         const { return area_from_segy_                 ;}
+  std::string               GetAreaFromSurface()                      const { return area_from_surface_              ;}
+  double                    GetX0()                                   const { return x0_                             ;}
+  double                    GetY0()                                   const { return y0_                             ;}
+  double                    GetLx()                                   const { return lx_                             ;}
+  double                    GetLy()                                   const { return ly_                             ;}
+  double                    GetAngle()                                const { return angle_                          ;}
 
-  double                    GetDx()                                   { return dx_                             ;}
-  double                    GetDy()                                   { return dy_                             ;}
-  double                    GetDz()                                   { return dz_                             ;}
-  double                    GetDt()                                   { return dt_                             ;}
+  double                    GetDx()                                   const { return dx_                             ;}
+  double                    GetDy()                                   const { return dy_                             ;}
+  double                    GetDz()                                   const { return dz_                             ;}
+  double                    GetDt()                                   const { return dt_                             ;}
 
-  bool                      GetOutputVp()                             { return output_vp_                      ;}
-  bool                      GetOutputReflections()                    { return output_reflections_             ;}
-  bool                      GetOutputZvalues()                        { return output_zvalues_                 ;}
-  bool                      GetOutputSeismicDepth()                   { return output_seismic_depth_           ;}
-  bool                      GetOutputSeismicTime()                    { return output_seismic_time_            ;}
-  bool                      GetOutputSeismicTimeshift()               { return output_seismic_timeshift_       ;}
-  bool                      GetOutputDepthSurfaces()                  { return output_depth_surfaces_          ;}
-  bool                      GetOutputTimeSurfaces()                   { return output_time_surfaces_           ;}
-  bool                      GetOutputWavelet()                        { return output_wavelet_                 ;}
-  bool                      GetOutputTwt()                            { return output_twt_                     ;}
-  bool                      GetOutputVrms()                           { return output_vrms_                    ;}
-  bool                      GetOutputTwtOffset()                      { return output_twt_offset_              ;}
-  bool                      GetOutputTimeSegy()                       { return output_time_segy_               ;}
-  bool                      GetOutputTimeshiftSegy()                  { return output_timeshift_segy_          ;}
-  bool                      GetOutputDepthSegy()                      { return output_depth_segy_              ;}
-  bool                      GetOutputPrenmoTimeSegy()                 { return output_prenmo_time_segy_        ;}
-  bool                      GetOutputElasticParametersTimeSegy()      { return elastic_parameters_time_segy_   ;}
-  bool                      GetOutputElasticParametersDepthSegy()     { return elastic_parameters_depth_segy_  ;}
-  bool                      GetOutputExtraParametersTimeSegy()        { return extra_parameters_time_segy_     ;}
-  bool                      GetOutputExtraParametersDepthSegy()       { return extra_parameters_depth_segy_    ;}
-  bool                      GetOutputSeismicStackTimeStorm()          { return seismic_stack_time_storm_       ;}
-  bool                      GetOutputSeismicStackTimeShiftStorm()     { return seismic_stack_time_shift_storm_ ;}
-  bool                      GetOutputSeismicStackDepthStorm()         { return seismic_stack_depth_storm_      ;}
-  bool                      GetOutputSeismicStackTimeSegy()           { return seismic_stack_time_segy_        ;}
-  bool                      GetOutputSeismicStackTimeShiftSegy()      { return seismic_stack_time_shift_segy_  ;}
-  bool                      GetOutputSeismicStackDepthSegy()          { return seismic_stack_depth_segy_       ;}
-  NRLib::TraceHeaderFormat  GetOutputSegyFileFormat()                 { return output_segy_file_format_        ;}
+  bool                      GetOutputVp()                             const { return output_vp_                      ;}
+  bool                      GetOutputReflections()                    const { return output_reflections_             ;}
+  bool                      GetOutputZvalues()                        const { return output_zvalues_                 ;}
+  bool                      GetOutputSeismicDepth()                   const { return output_seismic_depth_           ;}
+  bool                      GetOutputSeismicTime()                    const { return output_seismic_time_            ;}
+  bool                      GetOutputSeismicTimeshift()               const { return output_seismic_timeshift_       ;}
+  bool                      GetOutputDepthSurfaces()                  const { return output_depth_surfaces_          ;}
+  bool                      GetOutputTimeSurfaces()                   const { return output_time_surfaces_           ;}
+  bool                      GetOutputWavelet()                        const { return output_wavelet_                 ;}
+  bool                      GetOutputTwt()                            const { return output_twt_                     ;}
+  bool                      GetOutputVrms()                           const { return output_vrms_                    ;}
+  bool                      GetOutputTwtOffset()                      const { return output_twt_offset_              ;}
+  bool                      GetOutputTimeSegy()                       const { return output_time_segy_               ;}
+  bool                      GetOutputTimeshiftSegy()                  const { return output_timeshift_segy_          ;}
+  bool                      GetOutputDepthSegy()                      const { return output_depth_segy_              ;}
+  bool                      GetOutputPrenmoTimeSegy()                 const { return output_prenmo_time_segy_        ;}
+  bool                      GetOutputElasticParametersTimeSegy()      const { return elastic_parameters_time_segy_   ;}
+  bool                      GetOutputElasticParametersDepthSegy()     const { return elastic_parameters_depth_segy_  ;}
+  bool                      GetOutputExtraParametersTimeSegy()        const { return extra_parameters_time_segy_     ;}
+  bool                      GetOutputExtraParametersDepthSegy()       const { return extra_parameters_depth_segy_    ;}
+  bool                      GetOutputSeismicStackTimeStorm()          const { return seismic_stack_time_storm_       ;}
+  bool                      GetOutputSeismicStackTimeShiftStorm()     const { return seismic_stack_time_shift_storm_ ;}
+  bool                      GetOutputSeismicStackDepthStorm()         const { return seismic_stack_depth_storm_      ;}
+  bool                      GetOutputSeismicStackTimeSegy()           const { return seismic_stack_time_segy_        ;}
+  bool                      GetOutputSeismicStackTimeShiftSegy()      const { return seismic_stack_time_shift_segy_  ;}
+  bool                      GetOutputSeismicStackDepthSegy()          const { return seismic_stack_depth_segy_       ;}
+  NRLib::TraceHeaderFormat  GetOutputSegyFileFormat()                 const { return output_segy_file_format_        ;}
 
   void SetLogLevel(int level)                          { log_level_                           = level    ;}
 
@@ -327,15 +327,15 @@ public:
   void AddExtraParameterName(std::string name)         { extra_parameter_names_.push_back(name);}
   void AddExtraParameterDefaultValue(double value)     { extra_parameter_default_values_.push_back(value);}
 
-  bool GetTimeOutput()           ;
-  bool GetDepthOutput()          ;
-  bool GetTimeshiftOutput()      ;
-  bool GetStackOutput()          ;
-  bool GetSegyOutput()           ;
-  bool GetTimeStormOutput()      ;
-  bool GetDepthStormOutput()     ;
-  bool GetTimeshiftStormOutput() ;
-  bool GetStormOutput()          ;
+  bool GetTimeOutput()           const;
+  bool GetDepthOutput()          const;
+  bool GetTimeshiftOutput()      const;
+  bool GetStackOutput()          const;
+  bool GetSegyOutput()           const;
+  bool GetTimeStormOutput()      const;
+  bool GetDepthStormOutput()     const;
+  bool GetTimeshiftStormOutput() const;
+  bool GetStormOutput()          const;
 
 private:
 
