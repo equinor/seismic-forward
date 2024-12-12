@@ -1755,8 +1755,6 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
                                                       bool                                 time)
 //-----------------------------------------------------------------------------------------------------------------
 {
-  const NRLib::RegularSurface<double> & toptime = seismic_parameters.GetTopTime();
-
   ResamplOutput resampl_output(seismic_parameters,
                                time,
                                time_or_depth_vec_reg.size());
@@ -1770,17 +1768,19 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
   }
 
 
-  std::vector<Trace*> traces = seismic_parameters.FindTracesInForward();
+  const NRLib::RegularSurface<double> & toptime = seismic_parameters.GetTopTime();
+  std::vector<Trace*>                   traces  = seismic_parameters.FindTracesInForward();
   size_t n_traces = traces.size();
 
   float monitor_size;
   float next_monitor;
   seismic_parameters.MonitorInitialize(n_traces, monitor_size, next_monitor);
 
-  for (size_t i = 0; i < n_traces; ++i) {
+  ResamplTrace * resampl_trace = new ResamplTrace(resampl_output.GetTraces());
+
+  for (size_t i = 0 ; i < n_traces ; ++i) {
     Trace * trace = traces[i];
 
-    ResamplTrace * resampl_trace = new ResamplTrace(resampl_output.GetTraces());
     resampl_trace->SetJobID(trace);
 
     GenerateParameterGridForOutput(resampl_trace,
@@ -1794,14 +1794,14 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
     resampl_output.AddTrace(seismic_parameters,
                             time_or_depth_vec_reg,
                             resampl_trace->GetTraces(),
-                            resampl_trace->GetX(),
-                            resampl_trace->GetY());
+                            trace->GetX(),
+                            trace->GetY());
 
     seismic_parameters.Monitor(i, monitor_size, next_monitor);
 
     delete trace;
-    delete resampl_trace;
   }
+  delete resampl_trace;
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -1830,7 +1830,7 @@ void SeismicRegridding::GenerateParameterGridForOutput(ResamplTrace             
   std::vector<double> input_t(nktd);
 
   const NRLib::StormContGrid         & time_or_depth_grid_ref = time_or_depth_grid;
-  std::vector<NRLib::Grid2D<double>> & output_vec             = resampl_trace->GetTraces();
+  std::vector<NRLib::Grid2D<double>>   output_vec             = resampl_trace->GetTraces();
 
   bool interpolate = seismic_parameters.GetModelSettings()->GetResamplParamToSegyInterpol();
 

@@ -6,22 +6,23 @@
 #include <seismic_geometry.hpp>
 #include <nrlib/stormgrid/stormcontgrid.hpp>
 
-class ResamplOutput {
+class ResamplOutput
+{
 public:
   ResamplOutput(SeismicParameters &seismic_parameters, bool time, size_t n_samples);
 
 
   void AddResampleCase(std::string            filename,
-                        NRLib::StormContGrid &input_grid,
-                        bool                  time,
-                        std::vector<double>  &time_or_depth_vec_reg,
-                        SeismicParameters    &seismic_parameters);
+                       NRLib::StormContGrid & input_grid,
+                       bool                   time,
+                       std::vector<double>  & time_or_depth_vec_reg,
+                       SeismicParameters    & seismic_parameters);
 
-  void AddTrace(SeismicParameters                   &seismic_parameters,
-                std::vector<double>                 &time_or_depth_vec_reg,
-                std::vector<NRLib::Grid2D<double> > &traces,
-                double                               x,
-                double                               y);
+  void AddTrace(SeismicParameters                        & seismic_parameters,
+                std::vector<double>                      & time_or_depth_vec_reg,
+                const std::vector<NRLib::Grid2D<double>> & traces,
+                double                                     x,
+                double                                     y);
 
   std::vector<NRLib::Grid2D<double> > &GetTraces()     { return traces_;      }
   std::vector<NRLib::StormContGrid*>  GetInputGrid()  { return input_grid_;  }
