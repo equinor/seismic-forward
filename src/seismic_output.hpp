@@ -28,7 +28,7 @@ public:
                    const std::vector<double> & twt_0,
                    size_t                      n_samples,
                    std::string                 fileName,
-                   SeismicParameters         & seismic_parameters,
+                   NRLib::SegyGeometry       * geometry,
                    const std::vector<double> & offset_vec,
                    size_t                      n_traces_per_ensamble,
                    bool                        time,
