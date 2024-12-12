@@ -1782,17 +1782,13 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
 
   bool segy_ok = seismic_output->CheckUTMPrecision(segy_geometry, volume, nx, ny);
 
-  ResamplOutput resampl_output(segy_ok,
+  ResamplOutput resampl_output(input_grid,
+                               seismic_parameters,
+                               time_or_depth_vec_reg,
+                               filenames,
+                               segy_ok,
                                time,
                                time_or_depth_vec_reg.size());
-
-  for (size_t i = 0; i < filenames.size(); ++i) {
-    resampl_output.AddResampleCase(filenames[i],
-                                   *(input_grid[i]),
-                                   time,
-                                   time_or_depth_vec_reg,
-                                   seismic_parameters);
-  }
 
   const NRLib::RegularSurface<double> & toptime    = seismic_parameters.GetTopTime();
   std::vector<Trace*>                   traces     = seismic_parameters.FindTracesInForward();

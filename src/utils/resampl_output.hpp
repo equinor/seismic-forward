@@ -10,17 +10,15 @@
 class ResamplOutput
 {
 public:
-  ResamplOutput(const bool   segy_ok,
-                const bool   time,
-                const size_t n_samples);
+  ResamplOutput(std::vector<NRLib::StormContGrid*> & input_grid,
+                const SeismicParameters            & seismic_parameters,
+                const std::vector<double>          & time_or_depth_vec_reg,
+                const std::vector<std::string>     & filenames,
+                const bool                           segy_ok,
+                const bool                           time,
+                const size_t                         n_samples);
 
   ~ResamplOutput(void);
-
-  void AddResampleCase(std::string            filename,
-                       NRLib::StormContGrid & input_grid,
-                       bool                   time,
-                       std::vector<double>  & time_or_depth_vec_reg,
-                       SeismicParameters    & seismic_parameters);
 
   void AddTrace(SeismicOutput                            * seismic_output,
                 std::vector<double>                      & time_or_depth_vec_reg,
