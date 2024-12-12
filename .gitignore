@@ -3,8 +3,6 @@
 *~
 output*
 
-3rd-party/boost
-
 geo2seis/cmake-build-debug
 
 segy_amplitude_difference.txt
