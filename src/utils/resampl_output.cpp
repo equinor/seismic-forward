@@ -23,7 +23,14 @@ ResamplOutput::ResamplOutput(SeismicParameters & seismic_parameters,
   else
     volume = seismic_geometry->createDepthVolume();
 
-  seismic_output->SetSegyGeometry(seismic_parameters, volume, nx, ny);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
+  if (seismic_parameters.GetSegyGeometry() == NULL){
+    NRLib::SegyGeometry * geometry = seismic_output->CreateSegyGeometry(volume, nx, ny);
+    seismic_parameters.SetSegyGeometry(geometry);
+    delete geometry;
+  }
+  seismic_parameters.GetSegyGeometry()->WriteGeometry();
+  seismic_parameters.GetSegyGeometry()->WriteILXL();
 
   segy_ok_ = seismic_output->CheckUTMPrecision(seismic_parameters, volume, nx, ny);
 

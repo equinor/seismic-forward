@@ -1,8 +1,10 @@
-#include <seismic_output.hpp>
-#include <utils/storm_writer.hpp>
+#include "nrlib/geometry/interpolation.hpp"
+
+#include "utils/storm_writer.hpp"
+
 #include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
-#include "nrlib/geometry/interpolation.hpp"
+#include "seismic_output.hpp"
 
 #ifdef WITH_OMP
 #include <omp.h>
@@ -45,6 +47,39 @@ SeismicOutput::SeismicOutput(ModelSettings * model_settings)
     suffix_ = "_" + model_settings->GetSuffix();
 }
 
+//--------------------------------------------------------------------------------
+NRLib::SegyGeometry * SeismicOutput::CreateSegyGeometry(const NRLib::Volume & vol,
+                                                        size_t                nx,
+                                                        size_t                ny)
+//--------------------------------------------------------------------------------
+{
+  double rot     = vol.GetAngle();
+  double dx      = vol.GetLX()/nx; //nb check
+  double dy      = vol.GetLY()/ny; //nb check
+  double xlstepx = cos(rot)/dx;
+  double xlstepy = sin(rot)/dx;
+  double ilstepx = -sin(rot)/dy;
+  double ilstepy = cos(rot)/dy;
+
+  if (xline_x_axis_ == false) {
+    double temp = xlstepx;
+    xlstepx = ilstepx;
+    ilstepx = temp;
+    temp    = xlstepy;
+    xlstepy = ilstepy;
+    ilstepy = temp;
+  }
+  ilstepx *= inline_step_;
+  ilstepy *= inline_step_;
+  xlstepx *= xline_step_;
+  xlstepy *= xline_step_;
+
+  NRLib::SegyGeometry * geometry = new NRLib::SegyGeometry(vol.GetXMin(), vol.GetYMin(), dx, dy,
+                                                           nx, ny, inline_start_ - 0.5, xline_start_ - 0.5,
+                                                           ilstepx, ilstepy, xlstepx, xlstepy, rot);
+  return geometry;
+}
+
 //-----------------------------------------------------------------------------
 void SeismicOutput::SetSegyGeometry(SeismicParameters   & seismic_parameters,
                                     const NRLib::Volume & vol,
@@ -75,18 +110,14 @@ void SeismicOutput::SetSegyGeometry(SeismicParameters   & seismic_parameters,
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
   if (seismic_parameters.GetSegyGeometry() == NULL){
-    const NRLib::SegyGeometry * geometry = new NRLib::SegyGeometry(vol.GetXMin(), vol.GetYMin(), dx, dy,
-                                                                   nx, ny, inline_start_ - 0.5, xline_start_ - 0.5,
-                                                                   ilstepx, ilstepy, xlstepx, xlstepy, rot);
+    NRLib::SegyGeometry * geometry = new NRLib::SegyGeometry(vol.GetXMin(), vol.GetYMin(), dx, dy,
+                                                             nx, ny, inline_start_ - 0.5, xline_start_ - 0.5,
+                                                             ilstepx, ilstepy, xlstepx, xlstepy, rot);
     seismic_parameters.SetSegyGeometry(geometry);
-    geometry->WriteGeometry();
-    geometry->WriteILXL();
     delete geometry;
   }
-  else {
-    seismic_parameters.GetSegyGeometry()->WriteGeometry();
-    seismic_parameters.GetSegyGeometry()->WriteILXL();
-  }
+  seismic_parameters.GetSegyGeometry()->WriteGeometry();
+  seismic_parameters.GetSegyGeometry()->WriteILXL();
 }
 
 //-----------------------------------------------------------------------------

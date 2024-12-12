@@ -19,7 +19,11 @@ class SeismicParameters;
 class SeismicOutput
 {
 public:
-  SeismicOutput(ModelSettings *model_settings);
+  SeismicOutput(ModelSettings * model_settings);
+
+  NRLib::SegyGeometry * CreateSegyGeometry(const NRLib::Volume & vol,
+                                           size_t                nx,
+                                           size_t                ny);
 
   void SetSegyGeometry(SeismicParameters   & seismic_parameters,
                        const NRLib::Volume & vol,
