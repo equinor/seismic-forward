@@ -1774,6 +1774,7 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
     NRLib::SegyGeometry * geometry = seismic_output->CreateSegyGeometry(volume, nx, ny);
     seismic_parameters.SetSegyGeometry(geometry);
     delete geometry;
+    segy_geometry = seismic_parameters.GetSegyGeometry();
   }
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
@@ -1782,17 +1783,39 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
 
   bool segy_ok = seismic_output->CheckUTMPrecision(segy_geometry, volume, nx, ny);
 
-  ResamplOutput resampl_output(seismic_parameters,
-                               time_or_depth_vec_reg,
-                               filenames,
-                               segy_ok,
-                               time,
-                               time_or_depth_vec_reg.size());
+  std::vector<NRLib::Grid2D<double>> resampled_traces;
+  std::vector<NRLib::SegY*>          segy_files;
+  std::vector<bool>                  segy_files_ok;
+
+  size_t n_samples = time_or_depth_vec_reg.size();
+
+  for (size_t i = 0; i < filenames.size(); ++i) {
+    NRLib::SegY * segy = new NRLib::SegY();
+    segy_files.push_back(segy);
+
+    std::vector<double> dummy_vec(1, 0.0);
+    if (segy_ok) {
+      segy_files_ok.push_back(seismic_output->PrepareSegy(*(segy_files[i]),
+                                                          time_or_depth_vec_reg,
+                                                          n_samples,
+                                                          filenames[i],
+                                                          segy_geometry,
+                                                          dummy_vec,
+                                                          1,
+                                                          time,
+                                                          false));
+
+      NRLib::Grid2D<double> new_trace(n_samples, 1, 0);
+      resampled_traces.push_back(new_trace);
+    }
+    else {
+      segy_files_ok.push_back(false);
+    }
+  }
 
   const NRLib::RegularSurface<double> & toptime    = seismic_parameters.GetTopTime();
   std::vector<Trace*>                   traces     = seismic_parameters.FindTracesInForward();
   size_t                                n_traces   = traces.size();
-  std::vector<NRLib::Grid2D<double>>    output_vec = resampl_output.GetTraces();
 
   float monitor_size;
   float next_monitor;
@@ -1801,7 +1824,7 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
   for (size_t i = 0 ; i < n_traces ; ++i) {
     Trace * trace = traces[i];
 
-    GenerateParameterGridForOutput(output_vec,
+    GenerateParameterGridForOutput(resampled_traces,
                                    input_grid,
                                    seismic_parameters,
                                    time_or_depth_vec_reg,
@@ -1810,13 +1833,19 @@ void SeismicRegridding::WriteParametersSegyInParallel(SeismicParameters         
                                    trace->GetI(),
                                    trace->GetJ());
 
-
-    resampl_output.AddTrace(seismic_parameters.GetSeismicOutput(),
-                            time_or_depth_vec_reg,
-                            resampl_output.GetTraces(),
-                            trace->GetX(),
-                            trace->GetY(),
-                            time);
+    std::vector<short> zero_vec(1, 0);
+    for (size_t l = 0 ; l < resampled_traces.size() ; ++l) {
+      if (segy_files_ok[l]) {
+        seismic_output->WriteSegyGather(resampled_traces[l],
+                                        *(segy_files[l]),
+                                        time_or_depth_vec_reg,
+                                        zero_vec,
+                                        time,
+                                        trace->GetX(),
+                                        trace->GetY(),
+                                        false);
+      }
+    }
 
     seismic_parameters.Monitor(i, monitor_size, next_monitor);
 

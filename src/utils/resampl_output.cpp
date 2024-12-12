@@ -32,6 +32,11 @@ ResamplOutput::ResamplOutput(const SeismicParameters            & seismic_parame
                                                                                   1,
                                                                                   time,
                                                                                   false));
+
+    NRLib::Grid2D<double> new_trace(n_samples, 1, 0);
+    traces_.push_back(new_trace);
+
+
     }
     else {
       segy_files_ok_.push_back(false);
