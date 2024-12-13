@@ -8,9 +8,7 @@
 #include "nrlib/grid/grid2d.hpp"
 #include "nrlib/grid/grid.hpp"
 
-#include "utils/gen_resampl_param.hpp"
 #include "utils/resampl_output.hpp"
-#include "utils/resampl_trace.hpp"
 
 #include "seismic_parameters.hpp"
 
@@ -160,30 +158,29 @@ private:
                                        std::vector<NRLib::StormContGrid*>   input_grid,
                                        std::vector<std::string>             filenames);
 
-  static void WriteParametersSegyInParallel(SeismicParameters                  & seismic_parameters,
-                                            bool                                 interpolate,
-                                            size_t                               queue_capacity,
-                                            size_t                               n_threads,
-                                            std::vector<NRLib::StormContGrid*>   input_grid,
-                                            std::vector<std::string>             filenames,
-                                            std::vector<double>                & time_or_depth_vec_reg,
-                                            NRLib::StormContGrid               & time_or_depth_grid,
-                                            bool                                 time);
+  static void WriteParametersSegyInParallel(SeismicParameters                        & seismic_parameters,
+                                            const bool                                 interpolate,
+                                            const size_t                               queue_capacity,
+                                            const size_t                               n_threads,
+                                            const std::vector<NRLib::StormContGrid*> & input_grid,
+                                            const std::vector<std::string>           & filenames,
+                                            const std::vector<double>                & time_or_depth_vec_reg,
+                                            const NRLib::StormContGrid               & time_or_depth_grid,
+                                            const bool                                 time);
 
-  static void GenerateParameterGridForOutputQueue(GenResamplParam * params,
-                                                  ResamplOutput   * resampl_output);
+  static void GenerateParameterGridForOutput(std::vector<NRLib::Grid2D<double>>       & output_vec,
+                                             const std::vector<NRLib::StormContGrid*> & input_grid,
+                                             const SeismicParameters                  & seismic_parameters,
+                                             const std::vector<double>                & time_or_depth_vec_reg,
+                                             const NRLib::StormContGrid               & time_or_depth_grid,
+                                             const NRLib::RegularSurface<double>      & toptime,
+                                             const size_t                               i,
+                                             const size_t                               j);
 
-  static void GenerateParameterGridForOutput(GenResamplParam * params,
-                                             Trace           * trace,
-                                             ResamplOutput   * resampl_output);
-
-  static void WriteResampledParameter(GenResamplParam * params,
-                                      ResamplOutput   * resampl_output);
-
-  static size_t FindCellIndex(size_t                 i,
-                              size_t                 j,
-                              double                 target_k,
-                              NRLib::StormContGrid & grid);
+  static size_t FindCellIndex(size_t                       i,
+                              size_t                       j,
+                              double                       target_k,
+                              const NRLib::StormContGrid & grid);
 
 };
 

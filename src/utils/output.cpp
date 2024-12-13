@@ -50,19 +50,27 @@ Output::Output(SeismicParameters   & seismic_parameters,
   double            angle            = seismic_geometry->angle();
 
   if (model_settings.GetSegyOutput()) {
-    seismic_output->SetSegyGeometry(seismic_parameters, volume_t, nx, ny);
-    segy_ok_ = seismic_output->CheckUTMPrecision(seismic_parameters, volume_t, nx, ny);
+    NRLib::SegyGeometry * geometry = seismic_output->CreateSegyGeometry(volume, nx, ny);
+    seismic_parameters.SetSegyGeometry(geometry);
+    delete geometry;
   }
+  NRLib::SegyGeometry * segy_geometry = seismic_parameters.GetSegyGeometry();
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
+  segy_geometry->WriteGeometry();
+  segy_geometry->WriteILXL();
+
+  segy_ok_ = seismic_output->CheckUTMPrecision(segy_geometry, volume_t, nx, ny);
 
   if (segy_ok_) {
-    if (model_settings.GetOutputTimeSegy()                 ) time_segy_ok_            = seismic_output->PrepareSegy(time_segy_           , twt_0_ , time_samples_stretch, "seismic_time"           , seismic_parameters, offset_vec_, n_off, true , nmo);
-    if (model_settings.GetOutputSeismicStackTimeSegy()     ) time_stack_segy_ok_      = seismic_output->PrepareSegy(time_stack_segy_     , twt_0_ , time_samples_stretch, "seismic_time_stack"     , seismic_parameters, offset_vec_, 1    , true , nmo);
-    if (model_settings.GetOutputPrenmoTimeSegy()           ) prenmo_time_segy_ok_     = seismic_output->PrepareSegy(prenmo_time_segy_    , twt_0_ , twt_0_.size()       , "seismic_time_prenmo"    , seismic_parameters, offset_vec_, n_off, true , nmo);
-    if (model_settings.GetOutputTwtOffset()                ) twtx_segy_ok_            = seismic_output->PrepareSegy(twtx_segy_           , twt_0_ , twt_0_.size()       , "twt_offset"             , seismic_parameters, offset_vec_, n_off, true , nmo);
-    if (model_settings.GetOutputDepthSegy()                ) depth_segy_ok_           = seismic_output->PrepareSegy(depth_segy_          , z_0_   , z_0_.size()         , "seismic_depth"          , seismic_parameters, offset_vec_, n_off, false, nmo);
-    if (model_settings.GetOutputSeismicStackDepthSegy()    ) depth_stack_segy_ok_     = seismic_output->PrepareSegy(depth_stack_segy_    , z_0_   , z_0_.size()         , "seismic_depth_stack"    , seismic_parameters, offset_vec_, 1    , false, nmo);
-    if (model_settings.GetOutputTimeshiftSegy()            ) timeshift_segy_ok_       = seismic_output->PrepareSegy(timeshift_segy_      , twts_0_, twts_0_.size()      , "seismic_timeshift"      , seismic_parameters, offset_vec_, n_off, true , nmo);
-    if (model_settings.GetOutputSeismicStackTimeShiftSegy()) timeshift_stack_segy_ok_ = seismic_output->PrepareSegy(timeshift_stack_segy_, twts_0_, twts_0_.size()      , "seismic_timeshift_stack", seismic_parameters, offset_vec_, 1    , true , nmo);
+    if (model_settings.GetOutputTimeSegy()                 ) time_segy_ok_            = seismic_output->PrepareSegy(time_segy_           , twt_0_ , time_samples_stretch, "seismic_time"           , segy_geometry, offset_vec_, n_off, true , nmo);
+    if (model_settings.GetOutputSeismicStackTimeSegy()     ) time_stack_segy_ok_      = seismic_output->PrepareSegy(time_stack_segy_     , twt_0_ , time_samples_stretch, "seismic_time_stack"     , segy_geometry, offset_vec_, 1    , true , nmo);
+    if (model_settings.GetOutputPrenmoTimeSegy()           ) prenmo_time_segy_ok_     = seismic_output->PrepareSegy(prenmo_time_segy_    , twt_0_ , twt_0_.size()       , "seismic_time_prenmo"    , segy_geometry, offset_vec_, n_off, true , nmo);
+    if (model_settings.GetOutputTwtOffset()                ) twtx_segy_ok_            = seismic_output->PrepareSegy(twtx_segy_           , twt_0_ , twt_0_.size()       , "twt_offset"             , segy_geometry, offset_vec_, n_off, true , nmo);
+    if (model_settings.GetOutputDepthSegy()                ) depth_segy_ok_           = seismic_output->PrepareSegy(depth_segy_          , z_0_   , z_0_.size()         , "seismic_depth"          , segy_geometry, offset_vec_, n_off, false, nmo);
+    if (model_settings.GetOutputSeismicStackDepthSegy()    ) depth_stack_segy_ok_     = seismic_output->PrepareSegy(depth_stack_segy_    , z_0_   , z_0_.size()         , "seismic_depth_stack"    , segy_geometry, offset_vec_, 1    , false, nmo);
+    if (model_settings.GetOutputTimeshiftSegy()            ) timeshift_segy_ok_       = seismic_output->PrepareSegy(timeshift_segy_      , twts_0_, twts_0_.size()      , "seismic_timeshift"      , segy_geometry, offset_vec_, n_off, true , nmo);
+    if (model_settings.GetOutputSeismicStackTimeShiftSegy()) timeshift_stack_segy_ok_ = seismic_output->PrepareSegy(timeshift_stack_segy_, twts_0_, twts_0_.size()      , "seismic_timeshift_stack", segy_geometry, offset_vec_, 1    , true , nmo);
   }
 
   //prepare grid if output of seismic in storm is requested

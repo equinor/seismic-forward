@@ -1,12 +1,10 @@
-#include <seismic_output.hpp>
-#include <utils/storm_writer.hpp>
+
+#include "utils/storm_writer.hpp"
+
 #include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
-#include "nrlib/geometry/interpolation.hpp"
-
-#ifdef WITH_OMP
-#include <omp.h>
-#endif
+#include "seismic_output.hpp"
+#include "modelsettings.hpp"
 
 //----------------------------------------------------------
 SeismicOutput::SeismicOutput(ModelSettings * model_settings)
@@ -45,12 +43,11 @@ SeismicOutput::SeismicOutput(ModelSettings * model_settings)
     suffix_ = "_" + model_settings->GetSuffix();
 }
 
-//-----------------------------------------------------------------------------
-void SeismicOutput::SetSegyGeometry(SeismicParameters   & seismic_parameters,
-                                    const NRLib::Volume & vol,
-                                    size_t                nx,
-                                    size_t                ny)
-//-----------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
+NRLib::SegyGeometry * SeismicOutput::CreateSegyGeometry(const NRLib::Volume & vol,
+                                                        size_t                nx,
+                                                        size_t                ny)
+//--------------------------------------------------------------------------------
 {
   double rot     = vol.GetAngle();
   double dx      = vol.GetLX()/nx; //nb check
@@ -73,30 +70,19 @@ void SeismicOutput::SetSegyGeometry(SeismicParameters   & seismic_parameters,
   xlstepx *= xline_step_;
   xlstepy *= xline_step_;
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSegy geometry:\n");
-  if (seismic_parameters.GetSegyGeometry() == NULL){
-    const NRLib::SegyGeometry * geometry = new NRLib::SegyGeometry(vol.GetXMin(), vol.GetYMin(), dx, dy,
-                                                                   nx, ny, inline_start_ - 0.5, xline_start_ - 0.5,
-                                                                   ilstepx, ilstepy, xlstepx, xlstepy, rot);
-    seismic_parameters.SetSegyGeometry(geometry);
-    geometry->WriteGeometry();
-    geometry->WriteILXL();
-    delete geometry;
-  }
-  else {
-    seismic_parameters.GetSegyGeometry()->WriteGeometry();
-    seismic_parameters.GetSegyGeometry()->WriteILXL();
-  }
+  NRLib::SegyGeometry * geometry = new NRLib::SegyGeometry(vol.GetXMin(), vol.GetYMin(), dx, dy,
+                                                           nx, ny, inline_start_ - 0.5, xline_start_ - 0.5,
+                                                           ilstepx, ilstepy, xlstepx, xlstepy, rot);
+  return geometry;
 }
 
-//-----------------------------------------------------------------------------
-bool SeismicOutput::CheckUTMPrecision(SeismicParameters   & seismic_parameters,
+//-------------------------------------------------------------------
+bool SeismicOutput::CheckUTMPrecision(NRLib::SegyGeometry * geometry,
                                       const NRLib::Volume & vol,
                                       size_t                nx,
                                       size_t                ny)
-//-----------------------------------------------------------------------------
+//-------------------------------------------------------------------
 {
-  NRLib::SegyGeometry *geometry   = seismic_parameters.GetSegyGeometry();
   double dx          = vol.GetLX()/nx; //nb check
   double dy          = vol.GetLY()/ny; //nb check
   double x_max_coord = 0;
@@ -147,7 +133,7 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
                                 const std::vector<double> & twt_0,
                                 size_t                      n_samples,
                                 std::string                 fileName,
-                                SeismicParameters         & seismic_parameters,
+                                NRLib::SegyGeometry       * geometry,
                                 const std::vector<double> & offset_vec,
                                 size_t                      n_traces_per_ensamble,
                                 bool                        time,
@@ -200,7 +186,6 @@ bool SeismicOutput::PrepareSegy(NRLib::SegY               & segyout,
     return false;
   }
 
-  NRLib::SegyGeometry * geometry = seismic_parameters.GetSegyGeometry();
   geometry->FindILXLGeometry();
   std::string filename_out = prefix_ + fileName + suffix_ + ".segy";
 
@@ -294,7 +279,8 @@ void SeismicOutput::WriteSegyGather(const NRLib::Grid2D<double> & data_gather,
 }
 
 
-void SeismicOutput::WriteDepthSurfaces(const NRLib::RegularSurface<double> &top_eclipse, const NRLib::RegularSurface<double> &bottom_eclipse)
+void SeismicOutput::WriteDepthSurfaces(const NRLib::RegularSurface<double> & top_eclipse,
+                                       const NRLib::RegularSurface<double> & bottom_eclipse)
 {
   printf("Write depth surfaces on Storm format\n");
   std::string filename = prefix_ + "topeclipse" + suffix_ + ".storm";

@@ -9,8 +9,6 @@
 #include "seismic_output.hpp"
 #include "modelsettings.hpp"
 
-#include <tbb/concurrent_queue.h>
-
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -143,8 +141,7 @@ class SeismicParameters
     static void PrintElapsedTime(time_t      start_time,
                                  std::string work);
 
-  tbb::concurrent_queue<Trace*> FindTracesInForward2(size_t & n_traces);
-  std::vector<Trace*>           FindTracesInForward(void);
+    std::vector<Trace*> FindTracesInForward(void);
 
 
     static void MonitorInitialize(size_t   n_traces,

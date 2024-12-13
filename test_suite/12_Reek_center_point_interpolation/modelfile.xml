@@ -90,18 +90,19 @@
   </output-grid>
 
   <output-parameters>
-    <zvalues>               yes  </zvalues>
-    <twt>                   yes  </twt>
-    <vrms>                  yes  </vrms>
-    <elastic-parameters>    yes  </elastic-parameters>
-    <reflections>           yes  </reflections>
-    <seismic-time>          no   </seismic-time>
-    <seismic-time-segy>     no   </seismic-time-segy>
-    <seismic-depth>         yes  </seismic-depth>
-    <seismic-depth-segy>    yes  </seismic-depth-segy>
-    <seismic-stack>
-      <time-segy>           no   </time-segy>
-      <depth-segy>          yes  </depth-segy>
+    <zvalues>                       yes </zvalues>
+    <twt>                           yes </twt>
+    <vrms>                          yes </vrms>
+    <elastic-parameters>            yes </elastic-parameters>
+    <reflections>                   yes </reflections>
+    <seismic-time>                  no  </seismic-time>
+    <seismic-time-segy>             no  </seismic-time-segy>
+    <seismic-depth>                 yes </seismic-depth>
+    <seismic-depth-segy>            yes </seismic-depth-segy>
+    <elastic-parameters-depth-segy> yes </elastic-parameters-depth-segy>
+      <seismic-stack>
+      <time-segy>                   no  </time-segy>
+      <depth-segy>                  yes </depth-segy>
     </seismic-stack>
   </output-parameters>
 </seismic-forward>
