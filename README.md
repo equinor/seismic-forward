@@ -1,3 +1,5 @@
+**Seismic Forward** is a tool for generating synthetic seismic from elastic parameters Vp, Vs and density.
+
 ## Documentation
 
 User manuals are located in the 'doc' directory.
