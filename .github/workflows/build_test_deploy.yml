@@ -79,6 +79,7 @@ jobs:
 
     - name: Check content in dist folder
       run: |
+        pwd
         ls -la dist/*
 
   deploy:
@@ -94,5 +95,5 @@ jobs:
     steps:
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        packages-dir: dist/
+      #with:
+      #  packages-dir: dist/
