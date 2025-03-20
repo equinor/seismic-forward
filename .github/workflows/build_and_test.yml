@@ -1,26 +1,83 @@
-name: Build Boost
+name: Build and Test
 on:
   push:
+    tags:
+      - '*'
   pull_request:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
+      options: --privileged
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake build-essential libfftw3-dev libtbb-dev perl \
-          libboost-system-dev libboost-filesystem-dev libboost-dev libboost-test-dev
+        dnf install -y cmake make gcc-c++ fftw-devel tbb-devel perl wget bzip2 \
+            gcc openssl-devel bzip2-devel libffi-devel
+        dnf install -y dnf-plugins-core
+        dnf config-manager --set-enabled powertools
+        dnf install -y python3.11 python3.11-devel
 
-    - name: Build and run test script
+    - name: Build Boost
+      run: |
+        BOOST_VERSION=1.66.0
+        wget -q https://archives.boost.io/release/${BOOST_VERSION}/source/boost_1_66_0.tar.bz2
+        tar --bzip2 -xf boost_1_66_0.tar.bz2
+        cd boost_1_66_0
+        ./bootstrap.sh --prefix=/usr/local > /dev/null
+        ./b2 -d0 install --with-system --with-filesystem --with-thread --with-program_options --with-test > /dev/null
+
+    - name: Build and test
       run: |
         cd ..
         mkdir TEST
         cd TEST
-        export BOOST_ROOT=/usr
+        export BOOST_ROOT=/usr/local
+        export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
+        ldconfig /usr/local/lib /usr/local/lib64
         ../seismic-forward/run_cmake.sh || exit 1
         make -j 8 || exit 1
-        make test_seismicforward || exit 1
+        make test_seismicforward || exit 1
         ../seismic-forward/TestScript.pl || exit 1
+        
+        mkdir -p ../seismic-forward/seismicforward/bin/
+        cp seismic_forward ../seismic-forward/seismicforward/bin/
+
+    - name: Build Python package
+      run: |
+        python3.11 -m venv venv
+        source venv/bin/activate
+        python3.11 -m pip install --upgrade pip setuptools wheel
+        python3.11 -m pip install build
+        python3.11 -m build --wheel --no-isolation
+
+    - name: Verify and repair wheel
+      run: |
+        source venv/bin/activate
+        pip install auditwheel
+        auditwheel show dist/*.whl
+        auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64
+        # Move repaired wheel back to dist directory
+        mv wheelhouse/*.whl dist/
+        # Clean up the original wheel
+        rm dist/*-any.whl
+
+    - name: Run tests
+      run: |
+        source venv/bin/activate
+        WHEEL_FILE=$(ls dist/seismic_forward-*.whl)
+        python3.11 -m pip install "$WHEEL_FILE"
+        python3.11 -m pip install pytest
+        python3.11 -m pytest seismicforward/tests/
+        cd tests/data
+        gunzip Input_grid.grdecl.gz
+        seismicforward modelfile_ps.xml
+
+    - name: Upload package as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package
+        path: dist/*.whl
