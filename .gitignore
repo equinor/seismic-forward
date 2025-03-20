@@ -8,3 +8,13 @@ geo2seis/cmake-build-debug
 segy_amplitude_difference.txt
 
 storm_volume_difference.txt
+
+seismicforward/bin/
+build/
+
+tests/data/ps_Logfile.txt
+
+seismic_forward.egg-info/
+
+__pycache__/
+*.pyc
