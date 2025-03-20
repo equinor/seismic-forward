@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build, test and (if release) deploy
 on:
   push:
     tags:
@@ -6,6 +6,7 @@ on:
   pull_request:
 jobs:
   build:
+    name: Build and test
     runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
@@ -76,11 +77,9 @@ jobs:
         gunzip Input_grid.grdecl.gz
         seismicforward modelfile_ps.xml
 
-    # - name: Upload package as artifact
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: python-package
-    #     path: dist/*.whl
+    - name: Check content in dist folder
+      run: |
+        ls -la dist/*
 
   deploy:
     name: Upload release to PyPI
