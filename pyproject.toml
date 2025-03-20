@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "seismic-forward"
-version = "0.0.1"
+version = "0.0.0"
 authors = [
     {name = "Equinor"}
 ]
@@ -14,7 +14,6 @@ requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Programming Language :: Python :: 3",
     "Programming Language :: C++"
 ]
@@ -26,11 +25,11 @@ Homepage = "https://github.com/equinor/seismic-forward"
 test = ["pytest"]
 
 [project.scripts]
-seismicforward = "seismicforward.cli:main"
+seismic_forward = "seismic_forward.cli:main"
 
 [tool.setuptools]
-packages = ["seismicforward"]
-package-data = {seismicforward = ["bin/seismic_forward"]}
+packages = ["seismic_forward"]
+package-data = {seismic_forward = ["bin/seismic_forward"]}
 
 [tool.wheel]
 platforms = ["manylinux_2_28_x86_64"]

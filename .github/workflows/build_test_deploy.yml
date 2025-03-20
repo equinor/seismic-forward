@@ -1,11 +1,15 @@
-name: Build and Test
+name: Build, test and (if release) deploy
 on:
   push:
     tags:
       - '*'
+  release:
+    types:
+      - published
   pull_request:
 jobs:
   build:
+    name: Build and test
     runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
@@ -13,6 +17,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Set release version
+      if: github.event_name == 'release'
+      run: |
+        sed -i "s/{version_number}/$GITHUB_REF_NAME/g" src/main.cpp
+        sed -i "s/version = \"0.0.0\"/version = \"$GITHUB_REF_NAME\"/g" pyproject.toml
+
     - name: Install dependencies
       run: |
         dnf install -y cmake make gcc-c++ fftw-devel tbb-devel perl wget bzip2 \
@@ -40,11 +50,11 @@ jobs:
         ldconfig /usr/local/lib /usr/local/lib64
         ../seismic-forward/run_cmake.sh || exit 1
         make -j 8 || exit 1
-        make test_seismicforward || exit 1
+        make test_seismic_forward || exit 1
         ../seismic-forward/TestScript.pl || exit 1
         
-        mkdir -p ../seismic-forward/seismicforward/bin/
-        cp seismic_forward ../seismic-forward/seismicforward/bin/
+        mkdir -p ../seismic-forward/seismic_forward/bin/
+        cp seismic_forward ../seismic-forward/seismic_forward/bin/
 
     - name: Build Python package
       run: |
@@ -71,13 +81,40 @@ jobs:
         WHEEL_FILE=$(ls dist/seismic_forward-*.whl)
         python3.11 -m pip install "$WHEEL_FILE"
         python3.11 -m pip install pytest
-        python3.11 -m pytest seismicforward/tests/
+        python3.11 -m pytest seismic_forward/tests/
         cd tests/data
         gunzip Input_grid.grdecl.gz
-        seismicforward modelfile_ps.xml
+        seismic_forward modelfile_ps.xml
 
-    - name: Upload package as artifact
+    - name: Check content in dist folder
+      run: |
+        pwd
+        ls -la dist/*
+
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: python-package
-        path: dist/*.whl
+        name: Python dist
+        path: dist/
+
+  deploy:
+    name: Upload release to PyPI
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/seismic-forward
+    permissions:
+      id-token: write  # required for Trusted Publishing to PyPI
+
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: Python dist
+        path: dist/
+
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: dist/

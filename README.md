@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/seismic-forward.svg)](https://badge.fury.io/py/seismic-forward)
+
 **Seismic Forward** is a tool for generating synthetic seismic from elastic parameters Vp, Vs and density.
 
 ## Documentation

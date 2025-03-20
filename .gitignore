@@ -9,7 +9,7 @@ segy_amplitude_difference.txt
 
 storm_volume_difference.txt
 
-seismicforward/bin/
+seismic_forward/bin/
 build/
 
 tests/data/ps_Logfile.txt
