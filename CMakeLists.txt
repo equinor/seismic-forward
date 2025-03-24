@@ -24,7 +24,7 @@ endif()
 
 include(cmake/AddSource.cmake)
 
-find_package(Boost REQUIRED COMPONENTS system filesystem)
+find_package(Boost REQUIRED COMPONENTS system filesystem unit_test_framework)
 
 option( USE_INTEL_STUDIO "Use libraries from Intel Studio" ON )
 find_package(IntelStudio)

@@ -31,3 +31,5 @@ target_link_libraries(test_seismicforward seismic-forward-lib ${MATH_LIBRARIES} 
 
 set (DATA_DIR ${CMAKE_SOURCE_DIR}/tests/data)
 add_test(NAME test_seismicforward WORKING_DIRECTORY ${DATA_DIR} COMMAND test_seismicforward)
+
+target_compile_definitions(test_seismicforward PRIVATE "BOOST_TEST_DYN_LINK=1")
