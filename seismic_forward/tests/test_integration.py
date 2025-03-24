@@ -2,7 +2,7 @@ import shutil
 import gzip
 from pathlib import Path
 import pytest
-from seismicforward.simulation import run_simulation
+from seismic_forward.simulation import run_simulation
 
 def test_run_simulation(tmp_path, monkeypatch):
     # Copy required test files from data directory

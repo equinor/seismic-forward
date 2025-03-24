@@ -26,8 +26,8 @@ find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${Boost_INCLUDE_DIRS})
 
-add_executable(test_seismicforward ${SOURCE_FILES})
-target_link_libraries(test_seismicforward seismic-forward-lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
+add_executable(test_seismic_forward ${SOURCE_FILES})
+target_link_libraries(test_seismic_forward seismic-forward-lib ${MATH_LIBRARIES} ${Boost_LIBRARIES})
 
 set (DATA_DIR ${CMAKE_SOURCE_DIR}/tests/data)
-add_test(NAME test_seismicforward WORKING_DIRECTORY ${DATA_DIR} COMMAND test_seismicforward)
+add_test(NAME test_seismic_forward WORKING_DIRECTORY ${DATA_DIR} COMMAND test_seismic_forward)

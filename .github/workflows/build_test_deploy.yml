@@ -41,11 +41,11 @@ jobs:
         ldconfig /usr/local/lib /usr/local/lib64
         ../seismic-forward/run_cmake.sh || exit 1
         make -j 8 || exit 1
-        make test_seismicforward || exit 1
+        make test_seismic_forward || exit 1
         ../seismic-forward/TestScript.pl || exit 1
         
-        mkdir -p ../seismic-forward/seismicforward/bin/
-        cp seismic_forward ../seismic-forward/seismicforward/bin/
+        mkdir -p ../seismic-forward/seismic_forward/bin/
+        cp seismic_forward ../seismic-forward/seismic_forward/bin/
 
     - name: Build Python package
       run: |
@@ -72,10 +72,10 @@ jobs:
         WHEEL_FILE=$(ls dist/seismic_forward-*.whl)
         python3.11 -m pip install "$WHEEL_FILE"
         python3.11 -m pip install pytest
-        python3.11 -m pytest seismicforward/tests/
+        python3.11 -m pytest seismic_forward/tests/
         cd tests/data
         gunzip Input_grid.grdecl.gz
-        seismicforward modelfile_ps.xml
+        seismic_forward modelfile_ps.xml
 
     - name: Check content in dist folder
       run: |
