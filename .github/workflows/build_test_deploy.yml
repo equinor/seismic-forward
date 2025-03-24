@@ -55,6 +55,8 @@ jobs:
         cp seismic_forward ../seismic-forward/seismic_forward/bin/
 
     - name: Build Python package
+      env:
+        SETUPTOOLS_SCM_PRETEND_VERSION: 0.0.1a3
       run: |
         python3.11 -m venv venv
         source venv/bin/activate
@@ -97,11 +99,14 @@ jobs:
 
   deploy:
     name: Upload release to PyPI
+    # if: github.event_name == 'release'
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/seismic-forward
+    env:
+      SETUPTOOLS_SCM_PRETEND_VERSION: 0.0.1a3
     permissions:
       id-token: write  # required for Trusted Publishing to PyPI
 
