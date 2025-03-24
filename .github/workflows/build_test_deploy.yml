@@ -5,7 +5,7 @@ on:
       - '*'
   pull_request:
 env:
-  SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.1a4"
+  SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.1a3"
 jobs:
   build:
     name: Build and test
@@ -20,7 +20,7 @@ jobs:
       # if: github.event_name == 'release'
       run: |
         sed -i "s/{version_number}/$SETUPTOOLS_SCM_PRETEND_VERSION/g" src/main.cpp
-        sed -i "s/version = 0.0.0/version = $SETUPTOOLS_SCM_PRETEND_VERSION/g" pyproject.toml
+        sed -i "s/version = \"0.0.0\"/version = \"$A\"/g" pyproject.toml
       # run: sed -i "s/{version_number}/$GITHUB_REF_NAME/g" src/main.cpp
 
     - name: Install dependencies
