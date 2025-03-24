@@ -22,9 +22,10 @@ def get_binary_path() -> str:
     Raises:
         FileNotFoundError: If the binary cannot be found in the expected location.
     """
-    package_dir = Path(__file__).parent.absolute()
-    binary_path = package_dir / "bin" / "seismic_forward"
-    
+    package_dir = Path(__file__).parent.parent.absolute()
+    # binary_path = package_dir / "bin" / "seismic_forward"
+    binary_path = package_dir / "seismic_forward"
+
     if not binary_path.exists():
         raise FileNotFoundError(
             f"Binary not found at {binary_path}. "
