@@ -4,6 +4,8 @@ on:
     tags:
       - '*'
   pull_request:
+env:
+  SETUPTOOLS_SCM_PRETEND_VERSION_FOR_SEISMIC_FORWARD: "0.0.1a3"
 jobs:
   build:
     name: Build and test
@@ -11,14 +13,12 @@ jobs:
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
       options: --privileged
-    env:
-      SETUPTOOLS_SCM_PRETEND_VERSION: 0.0.1a3
     steps:
     - uses: actions/checkout@v4
     
     - name: Set release version in C++ code
       # if: github.event_name == 'release'
-      run: sed -i "s/{version_number}/$SETUPTOOLS_SCM_PRETEND_VERSION/g" src/main.cpp
+      run: sed -i "s/{version_number}/$SETUPTOOLS_SCM_PRETEND_VERSION_FOR_SEISMIC_FORWARD/g" src/main.cpp
       # run: sed -i "s/{version_number}/$GITHUB_REF_NAME/g" src/main.cpp
 
     - name: Install dependencies
@@ -55,8 +55,6 @@ jobs:
         cp seismic_forward ../seismic-forward/seismic_forward/bin/
 
     - name: Build Python package
-      env:
-        SETUPTOOLS_SCM_PRETEND_VERSION: 0.0.1a3
       run: |
         python3.11 -m venv venv
         source venv/bin/activate
@@ -105,8 +103,6 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/p/seismic-forward
-    env:
-      SETUPTOOLS_SCM_PRETEND_VERSION: 0.0.1a3
     permissions:
       id-token: write  # required for Trusted Publishing to PyPI
 
