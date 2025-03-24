@@ -11,6 +11,8 @@ jobs:
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
       options: --privileged
+    env:
+      SETUPTOOLS_SCM_PRETEND_VERSION: 0.0.1a3
     steps:
     - uses: actions/checkout@v4
     
