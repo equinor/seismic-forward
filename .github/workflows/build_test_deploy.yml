@@ -16,6 +16,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Set release version in C++ code
+      # if: github.event_name == 'release'
+      run: sed -i "s/{version_number}/$SETUPTOOLS_SCM_PRETEND_VERSION/g" src/main.cpp
+      # run: sed -i "s/{version_number}/$GITHUB_REF_NAME/g" src/main.cpp
+
     - name: Install dependencies
       run: |
         dnf install -y cmake make gcc-c++ fftw-devel tbb-devel perl wget bzip2 \
