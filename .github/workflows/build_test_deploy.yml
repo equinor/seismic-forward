@@ -6,7 +6,6 @@ on:
   pull_request:
 env:
   SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.1a3"
-  SETUPTOOLS_SCM_PRETEND_VERSION_FOR_SEISMIC_FORWARD: "0.0.1a3"
 jobs:
   build:
     name: Build and test
@@ -19,7 +18,7 @@ jobs:
     
     - name: Set release version in C++ code
       # if: github.event_name == 'release'
-      run: sed -i "s/{version_number}/$SETUPTOOLS_SCM_PRETEND_VERSION_FOR_SEISMIC_FORWARD/g" src/main.cpp
+      run: sed -i "s/{version_number}/$SETUPTOOLS_SCM_PRETEND_VERSION/g" src/main.cpp
       # run: sed -i "s/{version_number}/$GITHUB_REF_NAME/g" src/main.cpp
 
     - name: Install dependencies
