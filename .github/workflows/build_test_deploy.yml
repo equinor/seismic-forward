@@ -58,7 +58,7 @@ jobs:
       run: |
         python3.11 -m venv venv
         source venv/bin/activate
-        python3.11 -m pip install --upgrade pip setuptools wheel
+        python3.11 -m pip install --upgrade pip setuptools setuptools-scm wheel
         python3.11 -m pip install build
         python3.11 -m build --wheel --no-isolation
 
