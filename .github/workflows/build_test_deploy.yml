@@ -1,0 +1,120 @@
+name: Build, test and (if release) deploy
+on:
+  push:
+    tags:
+      - '*'
+  release:
+    types:
+      - published
+  pull_request:
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
+      options: --privileged
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set release version
+      if: github.event_name == 'release'
+      run: |
+        sed -i "s/{version_number}/$GITHUB_REF_NAME/g" src/main.cpp
+        sed -i "s/version = \"0.0.0\"/version = \"$GITHUB_REF_NAME\"/g" pyproject.toml
+
+    - name: Install dependencies
+      run: |
+        dnf install -y cmake make gcc-c++ fftw-devel tbb-devel perl wget bzip2 \
+            gcc openssl-devel bzip2-devel libffi-devel
+        dnf install -y dnf-plugins-core
+        dnf config-manager --set-enabled powertools
+        dnf install -y python3.11 python3.11-devel
+
+    - name: Build Boost
+      run: |
+        BOOST_VERSION=1.66.0
+        wget -q https://archives.boost.io/release/${BOOST_VERSION}/source/boost_1_66_0.tar.bz2
+        tar --bzip2 -xf boost_1_66_0.tar.bz2
+        cd boost_1_66_0
+        ./bootstrap.sh --prefix=/usr/local > /dev/null
+        ./b2 -d0 install --with-system --with-filesystem --with-thread --with-program_options --with-test > /dev/null
+
+    - name: Build and test
+      run: |
+        cd ..
+        mkdir TEST
+        cd TEST
+        export BOOST_ROOT=/usr/local
+        export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
+        ldconfig /usr/local/lib /usr/local/lib64
+        ../seismic-forward/run_cmake.sh || exit 1
+        make -j 8 || exit 1
+        make test_seismic_forward || exit 1
+        ../seismic-forward/TestScript.pl || exit 1
+        
+        mkdir -p ../seismic-forward/seismic_forward/bin/
+        cp seismic_forward ../seismic-forward/seismic_forward/bin/
+
+    - name: Build Python package
+      run: |
+        python3.11 -m venv venv
+        source venv/bin/activate
+        python3.11 -m pip install --upgrade pip setuptools wheel
+        python3.11 -m pip install build
+        python3.11 -m build --wheel --no-isolation
+
+    - name: Verify and repair wheel
+      run: |
+        source venv/bin/activate
+        pip install auditwheel
+        auditwheel show dist/*.whl
+        auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64
+        # Move repaired wheel back to dist directory
+        mv wheelhouse/*.whl dist/
+        # Clean up the original wheel
+        rm dist/*-any.whl
+
+    - name: Run tests
+      run: |
+        source venv/bin/activate
+        WHEEL_FILE=$(ls dist/seismic_forward-*.whl)
+        python3.11 -m pip install "$WHEEL_FILE"
+        python3.11 -m pip install pytest
+        python3.11 -m pytest seismic_forward/tests/
+        cd tests/data
+        gunzip Input_grid.grdecl.gz
+        seismic_forward modelfile_ps.xml
+
+    - name: Check content in dist folder
+      run: |
+        pwd
+        ls -la dist/*
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Python dist
+        path: dist/
+
+  deploy:
+    name: Upload release to PyPI
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/seismic-forward
+    permissions:
+      id-token: write  # required for Trusted Publishing to PyPI
+
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: Python dist
+        path: dist/
+
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: dist/
