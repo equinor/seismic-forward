@@ -2,7 +2,7 @@
 ****************************************************************************************************
 *****                                                                                          *****
 *****                          Seismic Forward Modeling                                        *****
-*****                                 version 4.3                                              *****
+*****                                version 4.3.1                                             *****
 *****                         Copyright (c) 2024 by Equinor                                    *****
 *****                                                                                          *****
 ****************************************************************************************************
@@ -230,7 +230,7 @@ Filling remaining cells in regular grids.
 
 Setting undefined cells in trace equal to default reservoir value    :      32976
 Setting cells in bottom layer equal to default reservoir value       :        576
-Setting cells in trace equal to layer below                          :       2061
+Setting cells in trace equal to layer below                          :          0
 
 Deleting Eclipse grid to free memory.
 
@@ -269,8 +269,6 @@ Required precision of UTM coordinates is verified.
 Initializing Segy file 'seismic_depth_stack.segy' using format SeisWorks
 
 20384 traces to be generated.
-
-1 of 20 available threads are used.
 
 Generating synthetic PP-seismic for angles: 0.0 
 

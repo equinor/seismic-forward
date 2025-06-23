@@ -2,7 +2,7 @@
 ****************************************************************************************************
 *****                                                                                          *****
 *****                          Seismic Forward Modeling                                        *****
-*****                                 version 4.3                                              *****
+*****                                version 4.3.1                                             *****
 *****                         Copyright (c) 2024 by Equinor                                    *****
 *****                                                                                          *****
 ****************************************************************************************************
@@ -270,8 +270,6 @@ Initializing Segy file 'seismic_depth.segy' using format SeisWorks
 Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 4 traces to be generated.
-
-1 of 20 available threads are used.
 
 Generating synthetic NMO PP-seismic for offsets: 0.0 1000.0 2000.0 3000.0 
 
