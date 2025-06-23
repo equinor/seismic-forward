@@ -649,7 +649,7 @@ void SeismicParameters::FindReflections(NRLib::Grid2D<double>          & r_vec,
   std::vector<double> rho_vec(bottom_k_ - top_k_ + 3);
 
   for (size_t off = 0; off < theta_vec.GetNJ(); ++off) {
-    for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {
+    for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {  // NBNB-PAL XXXxxx Settes utenfor offset loop
       size_t kk = k - top_k_;
       vp_vec [kk] = (*vpgrid_ )(i, j, kk);
       vs_vec [kk] = (*vsgrid_ )(i, j, kk);

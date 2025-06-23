@@ -8,8 +8,6 @@
 #include "nrlib/grid/grid2d.hpp"
 #include "nrlib/grid/grid.hpp"
 
-#include "utils/resampl_output.hpp"
-
 #include "seismic_parameters.hpp"
 
 class SeismicRegridding

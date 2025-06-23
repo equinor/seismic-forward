@@ -8,6 +8,7 @@
 #include "nrlib/random/normal.hpp"
 
 #include "seismic_regridding.hpp"
+#include "seismic_geometry.hpp"
 #include "tasklist.hpp"
 #include "wavelet.hpp"
 
@@ -38,7 +39,6 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
                  model_settings,
                  n_threads);
 
-
   PostProcess(seismic_parameters,
               model_settings);
   //seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
@@ -52,7 +52,6 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
   Wavelet                       * wavelet = seismic_parameters.GetWavelet();
 
   FindTWT(seismic_parameters, model_settings, toptime, bottime, n_threads);
-
   //---generate, write and delete vrms grid if writing is requested---------
   if (model_settings->GetNMOCorr() && model_settings->GetOutputVrms()){
     if (model_settings->GetPSSeismic()) {
@@ -1416,30 +1415,27 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
         }
         else if (!found_bot && vpgrid(i, j, k) != missing) {
           found_bot = true;
-          if (default_underburden) {
-            for (size_t kk = nk - 1; kk > k; --kk) {
+          for (size_t kk = vpgrid.GetNK() - 1 ; kk > k ; --kk) {
+            if (default_underburden) {
               vpgrid (i, j, kk) = static_cast<float>(constvp [2]);
               vsgrid (i, j, kk) = static_cast<float>(constvs [2]);
               rhogrid(i, j, kk) = static_cast<float>(constrho[2]);
-              count2++;
             }
-          }
-          else {
-            for (size_t kk = nk - 1; kk > k; --kk) {
+            else {
               vpgrid (i, j, kk) = vpgrid (i, j, k);
               vsgrid (i, j, kk) = vsgrid (i, j, k);
               rhogrid(i, j, kk) = rhogrid(i, j, k);
-              count2++;
             }
+            count2++;
           }
         }
-        if (!found_bot) {
-          for (size_t k = 0 ; k < nk ; ++k) {
-            vpgrid (i, j, k) = static_cast<float>(constvp [1]);
-            vsgrid (i, j, k) = static_cast<float>(constvs [1]);
-            rhogrid(i, j, k) = static_cast<float>(constrho[1]);
-            count3++;
-          }
+      }
+      if (found_bot == false) {
+        for (size_t k = 0; k < nk; ++k) {
+          vpgrid (i, j, k) = static_cast<float>(constvp [1]);
+          vsgrid (i, j, k) = static_cast<float>(constvs [1]);
+          rhogrid(i, j, k) = static_cast<float>(constrho[1]);
+          count3++;
         }
       }
     }
