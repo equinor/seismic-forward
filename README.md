@@ -6,9 +6,9 @@ User manuals are located in the 'doc' directory.
 
 ## Prerequisites
 
-- Boost     
-- Intel MKL -> Must be installed
-
+- Boost
+- FFTW3
+- Intel MKL
 
 ## GitHub
 

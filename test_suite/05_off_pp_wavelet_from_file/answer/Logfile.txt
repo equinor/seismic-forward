@@ -2,7 +2,7 @@
 ****************************************************************************************************
 *****                                                                                          *****
 *****                          Seismic Forward Modeling                                        *****
-*****                                 version 4.3                                              *****
+*****                                version 4.3.1                                             *****
 *****                         Copyright (c) 2024 by Equinor                                    *****
 *****                                                                                          *****
 ****************************************************************************************************
@@ -137,9 +137,9 @@ Landmark format assumed for wavelet
 Resampling wavelet from 4.0 ms to 1.0 ms
 
 Exporting Landmark ASCII wavelet 'Wavelet_resampled_to_1.0ms.txt'
-  Wavelet size   : 265
-  Peak at sample : 133
-  Density in ms  : 1.0
+  Wavelet size        : 265
+  Zero time at sample : 133
+  Density in ms       : 1.0
 
 Reading Eclipse grid from file '../../01_nmo_pp/input/Input_grid.grdecl'
 
@@ -281,8 +281,6 @@ Initializing Segy file 'seismic_depth.segy' using format SeisWorks
 Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 4 traces to be generated.
-
-1 of 20 available threads are used.
 
 Generating synthetic NMO PP-seismic for offsets: 0.0 1000.0 2000.0 3000.0 
 

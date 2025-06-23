@@ -9,8 +9,6 @@
 #include "seismic_output.hpp"
 #include "modelsettings.hpp"
 
-#include <tbb/concurrent_queue.h>
-
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -81,12 +79,12 @@ class SeismicParameters
                          size_t & j_max,
                          double & max_value);
 
-    void GenerateTwt0AndZ0(ModelSettings       * model_settings,
+    void GenerateTwt0AndZ0(const ModelSettings & model_settings,
                            std::vector<double> & twt_0,
                            std::vector<double> & z_0,
                            std::vector<double> & twts_0,
-                           size_t              & time_samples_stretch,
-                           bool                  ps_seis);
+                           size_t              & n_time_samples,
+                           const bool            ps_seis);
 
     void GenerateTwt0ForNMO(std::vector<double> & twt_0,
                             size_t              & nt_stretch,
@@ -143,7 +141,7 @@ class SeismicParameters
     static void PrintElapsedTime(time_t      start_time,
                                  std::string work);
 
-    tbb::concurrent_queue<Trace*> FindTracesInForward(size_t & n_traces);
+    std::vector<Trace*> FindTracesInForward(void);
 
 
     static void MonitorInitialize(size_t   n_traces,

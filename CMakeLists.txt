@@ -7,7 +7,7 @@ project(G2S VERSION 4.3.0 LANGUAGES CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." ON)
+option( BUILD_MATLAB_MEX  "Build .mex files for use with Matlab." OFF)
 
 option(BUILD_UNIT_TESTS  "Build unit tests (Requires boost)." ON)
 enable_testing()
@@ -44,10 +44,9 @@ endif()
 
 
 if(USE_INTEL_STUDIO)
-    include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS} ${TBB_INCLUDE_DIRS})
-    link_directories(${TBB_LIB_DIR})
+    include_directories(${MKL_INCLUDE_DIRS} ${MKL_FFTW_INCLUDE_DIRS})
     set(FFT_LIBRARIES ${MKL_LIBRARIES})
-    set(MATH_LIBRARIES ${MKL_LIBRARIES} ${TBB_LIBRARIES})
+    set(MATH_LIBRARIES ${MKL_LIBRARIES})
     set(FFT_MATLAB_LIBRARIES -L${MKL_LIB_PATH} -lmkl_rt)
     add_definitions(-DMKL)
 else()
@@ -65,14 +64,7 @@ else()
     set(FFT_LIBRARIES ${FFTW_STATIC_LIBRARIES} ${FFTWF_STATIC_LIBRARIES})
     set(FFT_MATLAB_LIBRARIES ${FFT_LIBRARIES})
 
-    find_package(TBB REQUIRED)
-    if(TBB_FOUND)
-        include_directories(${TBB_INCLUDE_DIRS})
-    else(TBB_FOUND)
-        message(FATAL_ERROR "Unable to find Intel TBB library.")
-    endif(TBB_FOUND)
-
-    set(MATH_LIBRARIES ${CBLAS_LIBRARY} lapack ${FFT_LIBRARIES} ${TBB_LIBRARIES})
+    set(MATH_LIBRARIES ${CBLAS_LIBRARY} lapack ${FFT_LIBRARIES})
 endif(USE_INTEL_STUDIO)
 
 set_property(GLOBAL PROPERTY SOURCE_FILES)
@@ -118,19 +110,19 @@ endforeach()
 add_executable(seismic_forward src/main.cpp)
 
 add_library(project_deps INTERFACE)
-target_link_libraries(project_deps 
+
+target_link_libraries(project_deps
     INTERFACE
-    ${TBB_LIBRARIES}
     ${FFTW_LIBRARIES}
     Boost::filesystem
     Boost::system
-    -ltbb
     -lfftw3
 )
 
-target_link_libraries(seismic_forward 
+target_link_libraries(seismic_forward
     PRIVATE
-    seismic-forward-lib 
+    seismic-forward-lib
+
     ${MATH_LIBRARIES}
     project_deps
 )

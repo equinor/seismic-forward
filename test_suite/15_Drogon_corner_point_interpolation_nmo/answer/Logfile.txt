@@ -2,7 +2,7 @@
 ****************************************************************************************************
 *****                                                                                          *****
 *****                          Seismic Forward Modeling                                        *****
-*****                                 version 4.3                                              *****
+*****                                version 4.3.1                                             *****
 *****                         Copyright (c) 2024 by Equinor                                    *****
 *****                                                                                          *****
 ****************************************************************************************************
@@ -288,8 +288,6 @@ Required precision of UTM coordinates is verified.
 Initializing Segy file 'seismic_time_stack.segy' using format SeisWorks
 
 30084 traces to be generated.
-
-1 of 20 available threads are used.
 
 Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 1000.0 
 

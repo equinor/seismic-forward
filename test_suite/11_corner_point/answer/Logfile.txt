@@ -2,7 +2,7 @@
 ****************************************************************************************************
 *****                                                                                          *****
 *****                          Seismic Forward Modeling                                        *****
-*****                                 version 4.3                                              *****
+*****                                version 4.3.1                                             *****
 *****                         Copyright (c) 2024 by Equinor                                    *****
 *****                                                                                          *****
 ****************************************************************************************************
@@ -231,9 +231,9 @@ Rho           2439.99   2166.07   2590.00
 
 Filling remaining cells in regular grids.
 
-Setting undefined cells in trace equal to default reservoir value    :     166100
-Setting cells in bottom layer equal to default reservoir value       :      50213
-Setting cells in trace equal to layer below                          :        604
+Setting undefined cells in trace equal to default reservoir value    :     119350
+Setting cells in bottom layer equal to default reservoir value       :      50790
+Setting cells in trace equal to layer below                          :      19340
 
 Deleting Eclipse grid to free memory.
 
@@ -243,9 +243,9 @@ Deleting Eclipse grid to free memory.
 
 Assuming NMO.
    tmin           :  2168.00  (top Eclipse - 0.5 wavelet)
-   tmax           :  3264.21  (bot Eclipse + 0.5 wavelet)
+   tmax           :  3245.28  (bot Eclipse + 0.5 wavelet)
    dt             :     4.00
-   nt             :      275
+   nt             :      270
 
 ****************************************************************************************************
 *****                                       Export grids                                       *****
@@ -256,14 +256,14 @@ Assuming NMO.
 ****************************************************************************************************
 
 Generate Twt0 for NMO assuming PP seismic.
-   stretch factor :  1.06611  (twtx_max / twt_max)
+   stretch factor :  1.06692  (twtx_max / twt_max)
    wavelet length :    72.00
-   nt_stretch     :      348
-   nt_seis        :      348
-   tmax_stretch   :  3494.49
-   twtx_max       :  3477.63
+   nt_stretch     :      343
+   nt_seis        :      343
+   tmax_stretch   :  3475.73
+   twtx_max       :  3460.05
    twt0_min       :  2092.00
-   twt0_max       :  3480.00
+   twt0_max       :  3460.00
 
 Generate Z0 for NMO.
    z0_min        :  2155.00
@@ -290,8 +290,6 @@ Initializing Segy file 'seismic_time.segy' using format SeisWorks
 Initializing Segy file 'seismic_depth.segy' using format SeisWorks
 
 2490 traces to be generated.
-
-20 of 20 available threads are used, and queue capacity is 1000000 traces.
 
 Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 1500.0 3000.0 
 

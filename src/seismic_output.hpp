@@ -6,27 +6,20 @@
 #include "nrlib/segy/segygeometry.hpp"
 #include "nrlib/segy/traceheader.hpp"
 
-#include "seismic_parameters.hpp"
-#include "seismic_geometry.hpp"
-#include "modelsettings.hpp"
-
-#include <stdio.h>
-#include <string>
-#include <vector>
-
 class SeismicParameters;
+class SeismicGeometry;
+class ModelSettings;
 
 class SeismicOutput
 {
 public:
-  SeismicOutput(ModelSettings *model_settings);
+  SeismicOutput(ModelSettings * model_settings);
 
-  void SetSegyGeometry(SeismicParameters   & seismic_parameters,
-                       const NRLib::Volume & vol,
-                       size_t                nx,
-                       size_t                ny);
+  NRLib::SegyGeometry * CreateSegyGeometry(const NRLib::Volume & vol,
+                                           size_t                nx,
+                                           size_t                ny);
 
-  bool CheckUTMPrecision(SeismicParameters   & seismic_parameters,
+  bool CheckUTMPrecision(NRLib::SegyGeometry * geometry,
                          const NRLib::Volume & vol,
                          size_t                nx,
                          size_t                ny);
@@ -35,7 +28,7 @@ public:
                    const std::vector<double> & twt_0,
                    size_t                      n_samples,
                    std::string                 fileName,
-                   SeismicParameters         & seismic_parameters,
+                   NRLib::SegyGeometry       * geometry,
                    const std::vector<double> & offset_vec,
                    size_t                      n_traces_per_ensamble,
                    bool                        time,
