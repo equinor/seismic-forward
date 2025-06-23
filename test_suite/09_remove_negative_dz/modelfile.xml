@@ -1,8 +1,9 @@
+<seismic-forward>
+
 <!--
   In this test a trace with negative delta-z values is generated - and negative delta z are removed.
   In addition, this input grid has undefined values in top layer - giving ktop = 2
 -->
-<seismic-forward>
 
 <elastic-param>
   <eclipse-file > ../input/dztest.grdecl </eclipse-file>
