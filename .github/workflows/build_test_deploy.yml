@@ -7,6 +7,7 @@ on:
     types:
       - published
   pull_request:
+  workflow_dispatch:
 jobs:
   build:
     name: Build and test
@@ -16,7 +17,7 @@ jobs:
       options: --privileged
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set release version
       if: github.event_name == 'release'
       run: |
@@ -52,7 +53,7 @@ jobs:
         make -j 8 || exit 1
         make test_seismic_forward || exit 1
         ../seismic-forward/TestScript.pl || exit 1
-        
+
         mkdir -p ../seismic-forward/seismic_forward/bin/
         cp seismic_forward ../seismic-forward/seismic_forward/bin/
 
