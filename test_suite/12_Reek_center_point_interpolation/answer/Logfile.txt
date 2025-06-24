@@ -2,7 +2,7 @@
 ****************************************************************************************************
 *****                                                                                          *****
 *****                          Seismic Forward Modeling                                        *****
-*****                                 version 4.3                                              *****
+*****                                version 4.3.1                                             *****
 *****                         Copyright (c) 2024 by Equinor                                    *****
 *****                                                                                          *****
 ****************************************************************************************************
@@ -102,7 +102,7 @@ Seismic stack time/depth in STORM format
 
 Elastic parameters output
   Time                                              :         no
-  Depth                                             :         no
+  Depth                                             :        yes
 
 Extra parameters output
   Time                                              :         no
@@ -224,7 +224,7 @@ Filling remaining cells in regular grids.
 
 Setting undefined cells in trace equal to default reservoir value    :      32976
 Setting cells in bottom layer equal to default reservoir value       :        576
-Setting cells in trace equal to layer below                          :       2061
+Setting cells in trace equal to layer below                          :          0
 
 Deleting Eclipse grid to free memory.
 
@@ -239,6 +239,27 @@ Deleting Eclipse grid to free memory.
 ****************************************************************************************************
 *****                                       Export grids                                       *****
 ****************************************************************************************************
+
+Segy geometry:
+
+             ReferencePoint      Length Increment
+-------------------------------------------------
+X-coordinate      462580.87     5207.89  50.07585
+Y-coordinate     5927702.82     9836.78  50.18768
+Azimuth             330.000
+
+                 Start      End    Step
+---------------------------------------
+In-line              0      195       1
+Cross-line           0      103       1
+
+Required precision of UTM coordinates is verified.
+
+Initializing Segy file 'vp_depth.segy' using format SeisWorks
+
+Initializing Segy file 'vs_depth.segy' using format SeisWorks
+
+Initializing Segy file 'rho_depth.segy' using format SeisWorks
 
 Write elastic parameters using STORM format.
   Vp : vp.storm
@@ -269,8 +290,6 @@ Initializing Segy file 'seismic_depth.segy' using format SeisWorks
 Initializing Segy file 'seismic_depth_stack.segy' using format SeisWorks
 
 20384 traces to be generated.
-
-1 of 20 available threads are used.
 
 Generating synthetic PP-seismic for angles: 0.0 
 

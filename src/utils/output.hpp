@@ -1,8 +1,13 @@
 #ifndef OUTPUT_HPP
 #define OUTPUT_HPP
 
-#include "seismic_parameters.hpp"
+#include "nrlib/stormgrid/stormcontgrid.hpp"
+#include "nrlib/grid/grid2d.hpp"
+#include "nrlib/segy/segy.hpp"
 
+class SeismicParameters;
+class SeismicOutput;
+class ModelSettings;
 class ResultTrace;
 
 class Output
@@ -10,18 +15,18 @@ class Output
 
 public:
   Output(SeismicParameters   & seismic_parameters,
-         ModelSettings       * model_settings,
-         std::vector<double>   twt_0,
-         std::vector<double>   z_0,
-         std::vector<double>   twts_0,
-         std::vector<double>   offset_vec,
-         size_t                time_samples_stretch);
+         const ModelSettings       & model_settings,
+         const std::vector<double>   twt_0,
+         const std::vector<double>   z_0,
+         const std::vector<double>   twts_0,
+         const std::vector<double>   offset_vec,
+         const size_t                time_samples_stretch);
 
   ~Output(void);
 
-  void AddTrace(ResultTrace   * result_trace,
-                ModelSettings * model_settings,
-                SeismicOutput * seismic_output);
+  void AddTrace(const ResultTrace   & result_trace,
+                const ModelSettings & model_settings,
+                SeismicOutput       * seismic_output);
 
   void AddZeroTraceToStormGrid(NRLib::StormContGrid & grid,
                                const size_t           i,
@@ -32,16 +37,16 @@ public:
                            const size_t                  i,
                            const size_t                  j);
 
-  void WriteStatisticsForSeismic(ModelSettings * model_settings);
+  void WriteStatisticsForSeismic(const ModelSettings & model_settings);
 
-  void WriteSeismicStorm(ModelSettings                     * model_settings,
+  void WriteSeismicStorm(const ModelSettings               & model_settings,
                          SeismicOutput                     * seismic_output,
                          std::vector<NRLib::StormContGrid> & rgrids);
 
-  const bool GetDepthSegyOk(void)          { return depth_segy_ok_          ;}
-  const bool GetDepthStackSegyOk(void)     { return depth_stack_segy_ok_    ;}
-  const bool GetTimeshiftSegyOk(void)      { return timeshift_segy_ok_      ;}
-  const bool GetTimeshiftStackSegyOk(void) { return timeshift_stack_segy_ok_;}
+  bool GetDepthSegyOk(void)          const { return depth_segy_ok_          ;}
+  bool GetDepthStackSegyOk(void)     const { return depth_stack_segy_ok_    ;}
+  bool GetTimeshiftSegyOk(void)      const { return timeshift_segy_ok_      ;}
+  bool GetTimeshiftStackSegyOk(void) const { return timeshift_stack_segy_ok_;}
 
 private:
 

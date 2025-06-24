@@ -1,4 +1,4 @@
-# - Find Intel Studio libraries (MKL and TBB)
+# - Find Intel Studio libraries (MKL)
 #
 # Currently only supports static linking, sequential running and compilation
 # for the Intel 64 architecture.
@@ -9,9 +9,6 @@
 #  MKL_INCLUDE_DIRS      - where to find MKL headers
 #  MKL_FFTW_INCLUDE_DIRS - where to find MKL implementation of FFTW headers
 #  MKL_LIBRARIES         - MKL link options
-#  TBB_ROOT              - Intel TBB root director
-#  TBB_INCLUDE_DIRS      - where to find TBB headers
-#  TBB_LIBRARY           - TBB link options
 
 if(UNIX)
     find_path(INTEL_STUDIO_ROOT
@@ -108,81 +105,16 @@ if(INTEL_STUDIO_ROOT)
       set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_COMPUTATIONAL_LIBRARY})
    endif(UNIX)
 
-   # Intel TBB
-   find_path(TBB_ROOT
-             NAMES include/tbb/compat/thread include/tbb/tbb.h
-             PATHS
-		${INTEL_STUDIO_ROOT}/tbb/latest
-		${INTEL_STUDIO_ROOT}/tbb
-             DOC "Root directory for Intel TBB."
-             )
-
-   find_path(TBB_INCLUDE_DIRS
-             NAMES tbb/compat/thread tbb/tbb.h
-             PATHS ${TBB_ROOT}/include
-             DOC "Intel TBB include directory."
-             )
-
-   if(UNIX)
-     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-                     OUTPUT_VARIABLE GCC_VERSION)
-
-     if(GCC_VERSION VERSION_LESS 4.4)
-       set(TBB_GCC_VER gcc4.1)
-     else()
-       set(TBB_GCC_VER gcc4.4)
-     endif()
-
-     find_path(TBB_LIB_DIR
-               NAMES libtbb.so
-               PATHS ${TBB_ROOT}/lib/intel64/${TBB_GCC_VER}
-               DOC "Library directory for Intel TBB"
-               )
-
-   elseif(WIN32)
-     if(MSVC_VERSION EQUAL 1800)
-       set(TBB_MSVC_VER vc12)
-     elseif(MSVC_VERSION EQUAL 1700)
-       set(TBB_MSVC_VER vc11)
-     elseif(MSVC_VERSION EQUAL 1600)
-       set(TBB_MSVC_VER vc10)
-     else()
-       set(TBB_MSVC_VER vc_mt)
-     endif()
-
-     find_path(TBB_LIB_DIR
-               NAMES tbb.lib
-               PATHS ${TBB_ROOT}/lib/intel64/${TBB_MSVC_VER}
-               DOC "Library directory for Intel TBB"
-               )
-   endif(UNIX)
-
-   find_library(TBB_LIBRARIES_RELEASE
-                NAMES tbb libtbb
-                HINTS ${TBB_LIB_DIR})
-
-   #find_library(TBB_LIBRARIES_DEBUG
-   #             NAMES tbb_debug libtbb_debug
-   #             HINTS ${TBB_LIB_DIR})
-
-   set(TBB_LIBRARIES
-   #   debug ${TBB_LIBRARIES_DEBUG}
-      optimized ${TBB_LIBRARIES_RELEASE})
-
-
 endif(INTEL_STUDIO_ROOT)
 
 
 # handle the QUIETLY and REQUIRED arguments and set MKL_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(INTEL_STUDIO DEFAULT_MSG MKL_LIBRARIES MKL_INCLUDE_DIRS TBB_INCLUDE_DIRS TBB_LIBRARIES)
+find_package_handle_standard_args(INTEL_STUDIO DEFAULT_MSG MKL_LIBRARIES MKL_INCLUDE_DIRS)
 
 mark_as_advanced(MKL_LIBRARIES MKL_INCLUDE_DIRS MKL_FFTW_INCLUDE_DIRS)
 mark_as_advanced(MKL_INTERFACE_LIBRARY MKL_THREADING_LIBRARY MKL_COMPUTATIONAL_LIBRARY)
-mark_as_advanced(TBB_LIBRARIES TBB_INCLUDE_DIRS TBB_LIB_DIR)
-mark_as_advanced(TBB_LIBRARIES_RELEASE)
-#mark_as_advanced(TBB_LIBRARIES_RELEASE TBB_LIBRARIES_DEBUG)
 
 # message(STATUS "TBB_ROOT = ${TBB_ROOT}")
 # message(STATUS "TBB_INCLUDE_DIRS = ${TBB_INCLUDE_DIRS}")

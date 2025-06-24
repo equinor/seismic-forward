@@ -1,12 +1,11 @@
+
 #include "nrlib/extrapolation/extrapolategrid2d.hpp"
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/geometry/interpolation.hpp"
 
 #include "seismic_parameters.hpp"
+#include "seismic_geometry.hpp"
 #include "wavelet.hpp"
-
-#include <thread>
-
 
 //------------------------------------------------------------------
 SeismicParameters::SeismicParameters(ModelSettings * model_settings)
@@ -650,7 +649,7 @@ void SeismicParameters::FindReflections(NRLib::Grid2D<double>          & r_vec,
   std::vector<double> rho_vec(bottom_k_ - top_k_ + 3);
 
   for (size_t off = 0; off < theta_vec.GetNJ(); ++off) {
-    for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {
+    for (size_t k = top_k_; k <= bottom_k_ + 2; k++) {  // NBNB-PAL XXXxxx Settes utenfor offset loop
       size_t kk = k - top_k_;
       vp_vec [kk] = (*vpgrid_ )(i, j, kk);
       vs_vec [kk] = (*vsgrid_ )(i, j, kk);
@@ -710,12 +709,12 @@ void SeismicParameters::FindMaxTwtIndex(size_t & i_max,
 }
 
 //-----------------------------------------------------------------------------------
-void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
+void SeismicParameters::GenerateTwt0AndZ0(const ModelSettings & model_settings,
                                           std::vector<double> & twt_0,
                                           std::vector<double> & z_0,
                                           std::vector<double> & twts_0,
-                                          size_t              & time_samples_stretch,
-                                          bool                  ps_seis)
+                                          size_t              & n_time_samples,
+                                          const bool            ps_seis)
 //-----------------------------------------------------------------------------------
 {
   size_t nt             = seismic_geometry_->nt();
@@ -726,9 +725,11 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
   double twt_wavelet    = wavelet_->GetTwtLength();              // Half a wavelet
   double stretch_factor = -999.0;
 
-  if (model_settings->GetNMOCorr() && !model_settings->GetOffsetWithoutStretch()){
+  n_time_samples        = nt;
+
+  if (model_settings.GetNMOCorr() && !model_settings.GetOffsetWithoutStretch()) {
     GenerateTwt0ForNMO(twt_0,
-                       time_samples_stretch,
+                       n_time_samples,
                        stretch_factor,
                        ps_seis,
                        twt_wavelet,
@@ -739,10 +740,6 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
 
     GenerateZ0ForNMO(z_0,
                      stretch_factor);
-
-    if (model_settings_->GetTwtFileName() != "") {
-      twts_0 = GenerateTWT0Shift(twt_0[0], time_samples_stretch);
-    }
   }
   else {
     twt_0.resize(nt);
@@ -753,15 +750,14 @@ void SeismicParameters::GenerateTwt0AndZ0(ModelSettings       * model_settings,
     double dz         = seismic_geometry_->dz();
     size_t nzmin      = static_cast<size_t>(floor(zmin) / dz + 0.5); // Find min z in a sample
     double zmin_sampl = nzmin *dz;
-    z_0.resize(nz);
 
+    z_0.resize(nz);
     for (size_t i = 0; i < nz; ++i){
       z_0[i] = zmin_sampl + i*dz;
     }
-
-    if (model_settings_->GetTwtFileName() != "") {
-      twts_0 = GenerateTWT0Shift(twt_0[0], twt_0.size());
-    }
+  }
+  if (model_settings.GetTwtFileName() != "") {
+    twts_0 = GenerateTWT0Shift(twt_0[0], n_time_samples);
   }
 }
 
@@ -1162,18 +1158,21 @@ void SeismicParameters::PrintElapsedTime(time_t      start_time,
     << "\n";
 }
 
-//-------------------------------------------------------------------------------------
-tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t & n_traces)
-//-------------------------------------------------------------------------------------
+//--------------------------------------------------------------
+std::vector<Trace*> SeismicParameters::FindTracesInForward(void)
+//--------------------------------------------------------------
 {
-  tbb::concurrent_queue<Trace*> traces;
+  std::vector<Trace*> traces;
+
   int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
   bool ilxl_loop = false;
+
   //find index min and max and whether loop over i,j or il,xl:
   FindLoopIndeces(n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step, ilxl_loop);
-  //NRLib::SegyGeometry *geometry = GetSegyGeometry();
+
   int il_steps = 0;
   int xl_steps = 0;
+
   //----------------------LOOP OVER I,J OR IL,XL---------------------------------
   size_t job_number = 0;
   for (int il = il_min; il <= il_max; il += il_step) {
@@ -1194,11 +1193,10 @@ tbb::concurrent_queue<Trace*> SeismicParameters::FindTracesInForward(size_t & n_
         y = 0;
       }
       Trace * trace = new Trace(job_number, x, y, i, j);
-      traces.push(trace);
+      traces.push_back(trace);
       ++job_number;
     }
   }
-  n_traces = job_number;
   return traces;
 }
 
