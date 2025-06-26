@@ -528,38 +528,6 @@ void SeismicParameters::SetSegyGeometry(const NRLib::SegyGeometry * geometry)
   segy_geometry_ = new NRLib::SegyGeometry(geometry);
 }
 
-void SeismicParameters::FindLoopIndeces(int  & n_xl,
-                                        int  & il_min,
-                                        int  & il_max,
-                                        int  & il_step,
-                                        int  & xl_min,
-                                        int  & xl_max,
-                                        int  & xl_step,
-                                        bool & segy)
-{
-  if (segy_geometry_ == NULL) {
-    il_min  = 0;
-    il_max  = static_cast<int>(seismic_geometry_->nx());
-    il_step = 1;
-    xl_min  = 0;
-    xl_max  = static_cast<int>(seismic_geometry_->ny()-1);
-    xl_step = 1;
-    n_xl = xl_max;
-    segy = false;
-  }
-  else {
-    segy_geometry_->FindILXLGeometry();
-    il_min  = segy_geometry_->GetMinIL();
-    il_max  = segy_geometry_->GetMaxIL();
-    il_step = segy_geometry_->GetILStep();
-    xl_min  = segy_geometry_->GetMinXL();
-    xl_max  = segy_geometry_->GetMaxXL();
-    xl_step = segy_geometry_->GetXLStep();
-    n_xl = (xl_max - xl_min + 1) / xl_step;
-    segy = true;
-  }
-}
-
 //-------------------------------------------------------------------------
 void SeismicParameters::FindVrms(std::vector<double>       & vrms_vec,
                                  const std::vector<double> & twt_vec,
@@ -1164,34 +1132,21 @@ std::vector<Trace*> SeismicParameters::FindTracesInForward(void)
 {
   std::vector<Trace*> traces;
 
-  int n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step;
-  bool ilxl_loop = false;
+  segy_geometry_->FindILXLGeometry();
+  int il_min  = segy_geometry_->GetMinIL();
+  int il_max  = segy_geometry_->GetMaxIL();
+  int il_step = segy_geometry_->GetILStep();
+  int xl_min  = segy_geometry_->GetMinXL();
+  int xl_max  = segy_geometry_->GetMaxXL();
+  int xl_step = segy_geometry_->GetXLStep();
 
-  //find index min and max and whether loop over i,j or il,xl:
-  FindLoopIndeces(n_xl, il_min, il_max, il_step, xl_min, xl_max, xl_step, ilxl_loop);
-
-  int il_steps = 0;
-  int xl_steps = 0;
-
-  //----------------------LOOP OVER I,J OR IL,XL---------------------------------
   size_t job_number = 0;
   for (int il = il_min; il <= il_max; il += il_step) {
-    ++il_steps;
-    xl_steps = 0;
     for (int xl = xl_min; xl <= xl_max; xl += xl_step) {
-      ++xl_steps;
       size_t i, j;
       double x, y;
-      if (ilxl_loop) { //loop over il,xl, find corresponding x,y,i,j
-        segy_geometry_->FindXYFromILXL(il, xl, x, y);
-        segy_geometry_->FindIndex(x, y, i, j);
-      }
-      else { //loop over i,j, no segy output
-        i = il;
-        j = xl;
-        x = 0;
-        y = 0;
-      }
+      segy_geometry_->FindXYFromILXL(il, xl, x, y);
+      segy_geometry_->FindIndex(x, y, i, j);
       Trace * trace = new Trace(job_number, x, y, i, j);
       traces.push_back(trace);
       ++job_number;

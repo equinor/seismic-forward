@@ -28,7 +28,7 @@ namespace NRLib {
 class SeismicParameters
 {
   public:
-    SeismicParameters(ModelSettings *model_settings);
+    SeismicParameters(ModelSettings * model_settings);
 
     ~SeismicParameters() {};
 
@@ -65,15 +65,6 @@ class SeismicParameters
     inline float                                GetMissingVal()           const { return  missing_             ;}
 
     void SetSegyGeometry(const NRLib::SegyGeometry * geometry);
-
-    void FindLoopIndeces(int  & n_xl,
-                         int  & il_min,
-                         int  & il_max,
-                         int  & il_step,
-                         int  & xl_min,
-                         int  & xl_max,
-                         int  & xl_step,
-                         bool & segy);
 
     void FindMaxTwtIndex(size_t & i_max,
                          size_t & j_max,
