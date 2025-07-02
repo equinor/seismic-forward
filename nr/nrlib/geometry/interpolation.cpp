@@ -166,7 +166,8 @@ int Interpolation::FindNearestNeighborIndex(const double                x,
   int    idx  = -1;
   for (int i = 0; i < static_cast<int>(x_in.size()); ++i) {
     double newDist = x - x_in[i];
-    if (newDist > 0.0 && newDist < dist) {
+
+    if (newDist >= 0.0 && newDist < dist) {
       dist = newDist;
       idx  = i;
     }

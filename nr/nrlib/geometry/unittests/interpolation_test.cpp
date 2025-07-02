@@ -4,7 +4,8 @@
 
 #include <nrlib/geometry/interpolation.hpp>
 
-#include <boost/test/unit_test.hpp>
+#define BOOST_TEST_MODULE MyTestModule
+#include <boost/test/included/unit_test.hpp>
 #include <math.h>
 #include <algorithm>
 
@@ -132,7 +133,6 @@ BOOST_AUTO_TEST_CASE( Spline1D )
   std::vector<double> y_out_cubic  = Interpolation::Interpolate1D(x_in, y_in_cubic,  x_out, "spline");
   std::vector<double> y_out_sin    = Interpolation::Interpolate1D(x_in, y_in_sin,    x_out, "spline");
   std::vector<double> y_out_sqrt   = Interpolation::Interpolate1D(x_in, y_in_sqrt,   x_out, "spline");
-
 
   for(size_t i = 0; i < x_out.size(); ++i )
   {
