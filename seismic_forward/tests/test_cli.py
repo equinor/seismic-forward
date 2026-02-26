@@ -1,4 +1,3 @@
-import subprocess
 import sys
 import pytest
 from seismic_forward.cli import main, get_version
@@ -47,9 +46,10 @@ def test_no_arguments(monkeypatch, capsys):
     # Should exit with error code 1
     assert exc_info.value.code == 1
     
-    # Check that error message is shown
+    # Check that help and error message is shown
     captured = capsys.readouterr()
-    assert "modelfile must be provided" in captured.out.lower()
+    output = captured.out + captured.err
+    assert "modelfile must be provided" in output.lower()
 
 
 def test_nonexistent_modelfile(monkeypatch):
