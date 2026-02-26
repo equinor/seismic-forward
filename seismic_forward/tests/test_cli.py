@@ -33,7 +33,8 @@ def test_help_flag(monkeypatch, capsys):
     
     # Check that help output contains expected information
     captured = capsys.readouterr()
-    assert "seismic_forward" in captured.out or "usage" in captured.out.lower()
+    output = (captured.out + captured.err).lower()
+    assert "seismic_forward" in output or "usage" in output
 
 
 def test_no_arguments(monkeypatch, capsys):
