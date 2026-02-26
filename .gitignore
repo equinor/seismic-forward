@@ -8,3 +8,8 @@ geo2seis/cmake-build-debug
 segy_amplitude_difference.txt
 
 storm_volume_difference.txt
+
+# Python
+__pycache__
+*.egg-info
+.pytest_cache
