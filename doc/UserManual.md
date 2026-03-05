@@ -169,7 +169,9 @@ Here z(k) is the depth in layer k. The values are stored in a grid.
 
 Seismic data are calculated trace by trace using the convolution
 
-$$seis(t) = \ \sum_{k = 0}^{n}{c(k)w\left\lbrack twt(k) - t \right\rbrack}$$ (1)
+$$seis(t)\ = \ \sum_{k = 0}^{n}{c(k)w\left\lbrack twt(k) - t \right\rbrack}$$
+
+(1)
 
 Here c(*k*) is the reflection at layer no *k*, and *w* is the
 wavelet specified either as an input file or as a Ricker wavelet with a
