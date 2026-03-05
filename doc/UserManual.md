@@ -331,7 +331,7 @@ triangularization.
 The wavelet can be read from file or specified parametrically as a
 Ricker wavelet. The ricker wavelet is given by the expression
 
-$$Wavelet(t,a) = (1 - {2at}^{2})exp( - {at}^{2})$$
+$$w(t,a) = (1 - {2at}^{2})exp( - {at}^{2})$$
 
 where a = (πν)<sup>2</sup> and ν is the peak frequency that must be
 specified by the user. The Ricker wavelet with a peak frequency of 25 Hz
