@@ -2,118 +2,12 @@
 
 ## User manual – version 4.5
 
-<img src="images/media/image1.PNG" />
+<img src="images/forside.jpg" />
 
 # Abstract
 
 <p>This document describes Seismic Forward, a tool for generating
 synthetic seismic from elastic parameters Vp, Vs and density.</p>
-
-# Contents
-
-- [Introduction ](#introduction)
-- [Release notes](#release-notes)
-  - [Version 4.5](#version-4.5)
-  - [Version 4.4](#version-4.4)
-  - [Version 4.3](#version-4.3)
-- [Theory](#theory)
-  - [Calculation of reflection
-    coefficients](#calculation-of-reflection-coefficients)
-  - [Resampling of depth](#resampling-of-depth)
-  - [Resampling of elastic
-    parameters](#resampling-of-elastic-parameters)
-  - [Wavelet ](#wavelet)
-  - [NMO stretch](#nmo-stretch)
-    - [Generation of seismic data with NMO stretch
-      ](#generation-of-seismic-data-with-nmo-stretch)
-    - [NMO correction](#nmo-correction)
-    - [Offset seismic without NMO
-      stretch](#offset-seismic-without-nmo-stretch)
-  - [Depth conversion and time
-    shifts](#depth-conversion-and-time-shifts)
-- [
-  Model file reference manual](#model-file-reference-manual)
-  - [\<elastic-param\> (necessary)](#elastic-param-necessary)
-    - [\<eclipse-file\> (necessary)](#eclipse-file-necessary)
-    - [\<default-values\> (necessary)](#default-values-necessary)
-    - [\<parameter-names\> (necessary)](#parameter-names-necessary)
-    - [\<extra-parameters\>](#extra-parameters)
-    - [\<cornerpt-interpolation-in-depth\>](#cornerpt-interpolation-in-depth)
-    - [\<cornerpt-interpolation-at-faults\>](#cornerpt-interpolation-at-faults)
-    - [\<zero-thickness-limit\>](#zero-thickness-limit)
-    - [\<remove-negative-delta-z\>](#remove-negative-delta-z)
-    - [\<vertical-interpolation-of-undefined-cells\>](#vertical-interpolation-of-undefined-cells)
-    - [\<horizontal-interpolation-of-undefined-cells\>](#horizontal-interpolation-of-undefined-cells)
-    - [\<fixed-triangularization-of-eclipse-grid\>](#fixed-triangularization-of-eclipse-grid)
-    - [\<resampl-param-to-segy-with-interpol\>](#resampl-param-to-segy-with-interpol)
-  - [\<angle\>](#angle)
-    - [\<theta-0\>](#theta-0)
-    - [\<dtheta\>](#dtheta)
-    - [\<theta-max\>](#theta-max)
-  - [\<wavelet\> (necessary)](#wavelet-necessary)
-    - [\<ricker\>](#ricker)
-    - [\<from-file\>](#from-file)
-    - [\<scale\>](#scale)
-    - [\<length\>](#length)
-  - [\<white-noise\> ](#white-noise)
-    - [\<standard-deviation\>](#standard-deviation)
-    - [\<seed\>](#seed)
-    - [\<equal-noise-for-offsets\>](#equal-noise-for-offsets)
-  - [\<add-noise-to-refl-coef\> ](#add-noise-to-refl-coef)
-    - [\<standard-deviation\>](#standard-deviation-1)
-    - [\<seed\>](#seed-1)
-  - [\<nmo-stretch\>](#nmo-stretch-1)
-    - [\<seafloor-depth\> (necessary)](#seafloor-depth-necessary)
-    - [\<velocity-water\> (necessary)](#velocity-water-necessary)
-    - [\<offset\>](#offset)
-    - [\<offset-without-stretch\>](#offset-without-stretch)
-  - [\<output-grid\> (necessary)](#output-grid-necessary)
-    - [\<area-from-surface\> ](#area-from-surface)
-    - [\<area-from-segy\>](#area-from-segy)
-    - [\<padding-factor-seismic-modelling\>](#padding-factor-seismic-modelling)
-    - [\<area\>](#area)
-    - [\<top-time\>](#top-time)
-    - [\<cell-size\>](#cell-size)
-    - [\<segy-indexes\>](#segy-indexes)
-    - [\<utm-precision\>](#utm-precision)
-    - [\<time-window\>](#time-window)
-    - [\<depth-window\>](#depth-window)
-  - [\<output-parameters\>](#output-parameters)
-    - [\<prefix\>](#prefix)
-    - [\<suffix\>](#suffix)
-    - [\<elastic-parameters\>](#elastic-parameters)
-    - [\<reflections\>](#reflections)
-    - [\<zvalues\>](#zvalues)
-    - [\<twt\>](#twt)
-    - [\<vrms\>](#vrms)
-    - [\<twt-offset-segy\>](#twt-offset-segy)
-    - [\<time-surfaces\>](#time-surfaces)
-    - [\<depth-surfaces\>](#depth-surfaces)
-    - [\<wavelet\>](#wavelet-1)
-    - [\<seismic-time\>](#seismic-time)
-    - [\<seismic-timeshift\>](#seismic-timeshift)
-    - [\<seismic-depth\>](#seismic-depth)
-    - [\<seismic-time-segy\>](#seismic-time-segy)
-    - [\<seismic-timeshift-segy\>](#seismic-timeshift-segy)
-    - [\<seismic-depth-segy\>](#seismic-depth-segy)
-    - [\<seismic-time-prenmo-segy\>](#seismic-time-prenmo-segy)
-    - [\<elastic-parameters-time-segy\>](#elastic-parameters-time-segy)
-    - [\<elastic-parameters-depth-segy\>](#elastic-parameters-depth-segy)
-    - [\<extra-parameters-time-segy\>](#extra-parameters-time-segy)
-    - [\<extra-parameters-depth-segy\>](#extra-parameters-depth-segy)
-    - [\<seismic-stack\>](#seismic-stack)
-  - [\<project-settings\> ](#project-settings)
-    - [\<traces-in-memory\>](#traces-in-memory)
-    - [\<max-threads\>](#max-threads)
-  - [\<timeshift-twt\>](#timeshift-twt)
-  - [\<ps-seismic\>](#ps-seismic)
-- [File formats](#file-formats)
-  - [XML model file example](#xml-model-file-example)
-  - [
-    SegY header format for output](#segy-header-format-for-output)
-  - [SegY header formats for input](#segy-header-formats-for-input)
-  - [Landmark ASCII Wavelet input file](#landmark-ascii-wavelet-input-file)
-- [References](#references)
 
 # Introduction
 
@@ -275,10 +169,10 @@ Here z(k) is the depth in layer k. The values are stored in a grid.
 
 Seismic data are calculated trace by trace using the convolution
 
-$seis(t) = \ \sum_{k = 0}^{n}{c(k)Wavelet\left\lbrack twt(k) - t \right\rbrack}$
+$seis(t) = \ \sum_{k = 0}^{n}{c(k)w\left\lbrack twt(k) - t \right\rbrack}$
 (1)
 
-Here c(*k*) is the reflection at layer no *k*, and *Wavelet* is the
+Here c(*k*) is the reflection at layer no *k*, and *w* is the
 wavelet specified either as an input file or as a Ricker wavelet with a
 user specified peak frequency (see [*Wavelet*](#wavelet)). *twt(k)* is the
 two-way travel time at layer *k*.
@@ -338,11 +232,11 @@ j + 1) and (i, j + 1). The area defined by these four points is divided
 into two triangles by Delaunay decomposition in the xy-plane as shown in
 Figure 1.
 
-<img src="images/media/image4.jpeg"/>
+<img src="images/image4.jpg"/>
 Figure 1: Illustration of Delaunay triangulation.
 
-<img src="images/media/image5.jpg" /> <img src="images/media/image6.jpg" />
-<img src="images/media/image7.jpg" /> <img src="images/media/image8.jpg" />
+<img src="images/image5.jpg" /> <img src="images/image6.jpg" />
+<img src="images/image7.jpg" /> <img src="images/image8.jpg" />
 
 Figure 2: Resampling of depth. The resampled grid is shown as green, and
 the original Eclipse grid as black.
@@ -374,7 +268,7 @@ Eclipse grid cells. This is corrected for at the end of the resampling
 by taking the average of the depth values that have been assigned to a
 given cell.
 
-<img src="images/media/image9.jpg" />
+<img src="images/image9.jpg" />
 
 Figure 3: Visualization of places with negative thicknesses.
 
@@ -413,7 +307,7 @@ points with attributes “Negative dz” and “Layer”. The file format is
 *Roxar Attribute Text*. These points can be used to visualize where the
 negative thicknesses are located as illustrated in Figure 3.
 
-<img src="images/media/image10.jpeg" />
+<img src="images/image10.jpg" />
 
 Figure 4: Treatment of edges when resampling elastic parameters.
 
@@ -443,11 +337,11 @@ where a = (πν)<sup>2</sup> and ν is the peak frequency that must be
 specified by the user. The Ricker wavelet with a peak frequency of 25 Hz
 is shown in Figure 5.
 
-<img src="images/media/image11.jpg" />
+<img src="images/image11.jpg" />
 
 Figure 5: The Ricker wavelet with a peak frequency of 25 Hz.
 
-<img src="images/media/image12.png" />
+<img src="images/image12.png" />
 
 Figure 6: Smoothening of the wavelet.
 
@@ -480,12 +374,12 @@ An effect of NMO is a stretching of the wavelet with increasing offset,
 referred to as NMO stretch. The NMO stretch is highest at far offsets
 and at early times, where the NMO correction is the most pronounced.
 
-<img src="images/media/image13.png" />
+<img src="images/image13.jpg" />
 
 Figure 7: Path from source to receiver for seismic traces with various
 offsets.
 
-<img src="images/media/image14.png" />
+<img src="images/image14.jpg" />
 
 Figure 8: Geometry of a seismic reflection at layer *k*.
 
@@ -524,16 +418,16 @@ seismic trace at time *t* is calculated as:
 $seis(t) = \ \sum_{k = 0}^{n}{c\left( \theta_{x,k} \right)Wavelet\left\lbrack T_{x,k} - t \right\rbrack}$.
 (4)
 
-<img src="images/media/image15.jpg" />
+<img src="images/image15.jpg" />
 
 Figure 9: Example of seismic gather for offsets from 0 to 3500m.
 
-<img src="images/media/image16.jpg" />
+<img src="images/image16.jpg" />
 
 Figure 10: Example of seismic gather after NMO correction for offsets
 from 0 to 3500m.
 
-<img src="images/media/image17.jpg" />
+<img src="images/image17.jpg" />
 
 Figure 11: Example of seismic gather generated without NMO-stretch for
 offsets from 0 to 3500m.
@@ -653,9 +547,9 @@ Example:
 </elastic-param>
 ```
 
-<img src="images/media/image18.png" />
-<img src="images/media/image19.png" />
-<img src="images/media/image20.png" />
+<img src="images/image18.png" />
+<img src="images/image19.png" />
+<img src="images/image20.png" />
 
 Figure 12: Export of Eclipse grids (grdecl file) from RMS.
 
@@ -1207,7 +1101,7 @@ an illustration of the parameters required. If specified, all parameters
 must be given. This command is not active if
 [\<area-from-segy\>](#area-from-segy) is given.
 
-<img src="images/media/image21.jpeg" />
+<img src="images/image21.jpg" />
 
 Figure 13: Illustration of area parameters.
 
