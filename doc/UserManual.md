@@ -169,7 +169,9 @@ Here z(k) is the depth in layer k. The values are stored in a grid.
 
 Seismic data are calculated trace by trace using the convolution
 
-(1) $$seis(t)\ = \ \sum_{k = 0}^{n}{c(k)w\left\lbrack twt(k) - t \right\rbrack}$$
+$$seis(t)\ = \ \sum_{k = 0}^{n}{c(k)w\left\lbrack twt(k) - t \right\rbrack}$$
+
+(1)
 
 Here c(*k*) is the reflection at layer no *k*, and *w* is the
 wavelet specified either as an input file or as a Ricker wavelet with a
@@ -217,7 +219,7 @@ $$a_{2} = 2\frac{\sin\theta}{\cos\varphi}\left( \left( \frac{\overline{Vs}}{\ove
 $$a_{3} = \frac{\sin\theta}{cos\varphi}\left( - 0.5 + \left( \frac{\overline{Vs}}{\overline{Vp}} \right)^{2}\sin^{2}\theta - \frac{\overline{Vs}}{\overline{Vp}}\cos{\theta\cos\varphi} \right)$$
 
 Here, $\varphi$ is the PS reflection angle, given by
-$\sin\varphi = Vs/Vp \bullet \sin\theta$.
+$\sin\varphi = \left(Vs/Vp\right)\sin\theta$.
 
 ## Resampling of depth
 
