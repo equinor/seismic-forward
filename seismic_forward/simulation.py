@@ -44,6 +44,8 @@ def run_simulation(
         model_file: Path to the model file (string or Path object).
         capture_output: Whether to capture and return the simulation output.
             If False, output will be printed directly to stdout.
+            Stderr is always captured internally so failures include
+            a useful error message.
 
     Returns:
         dict: A dictionary containing simulation results with keys:
@@ -61,11 +63,19 @@ def run_simulation(
 
     try:
         binary_path = get_binary_path()
+
+        run_kwargs = {
+            "check": False,
+            "text": True,
+            # Always capture stderr so raised exceptions include error details.
+            "stderr": subprocess.PIPE,
+        }
+        if capture_output:
+            run_kwargs["stdout"] = subprocess.PIPE
+
         result = subprocess.run(
             [binary_path, str(model_path)],
-            check=False,
-            text=True,
-            capture_output=capture_output,
+            **run_kwargs,
         )
 
         output = {
@@ -75,9 +85,12 @@ def run_simulation(
         }
 
         if not output["success"]:
+            error_text = (result.stderr or "").strip()
+            if not error_text:
+                error_text = "No stderr output captured."
             raise SeismicForwardError(
                 f"Seismic Forward failed with return code {result.returncode}\n"
-                f"Error message:\n {result.stderr}"
+                f"Error message:\n{error_text}"
             )
 
         return output

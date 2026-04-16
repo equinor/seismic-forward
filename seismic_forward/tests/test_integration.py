@@ -1,8 +1,11 @@
 import shutil
 import gzip
+import subprocess
 from pathlib import Path
 import pytest
-from seismic_forward.simulation import run_simulation
+from seismic_forward import simulation
+from seismic_forward.simulation import run_simulation, SeismicForwardError
+
 
 def test_run_simulation(tmp_path, monkeypatch):
     # Copy required test files from data directory
@@ -22,8 +25,8 @@ def test_run_simulation(tmp_path, monkeypatch):
     shutil.copy2(timeshift_file, temp_timeshift_file)
 
     # Copy and decompress the gz file
-    with gzip.open(grid_file, 'rb') as f_in:
-        with open(temp_grid_file, 'wb') as f_out:
+    with gzip.open(grid_file, "rb") as f_in:
+        with open(temp_grid_file, "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
 
     # Use monkeypatch to change directory
@@ -31,9 +34,9 @@ def test_run_simulation(tmp_path, monkeypatch):
 
     # Test successful simulation
     result = run_simulation(temp_model_file)
-    assert result['success'] is True
-    assert isinstance(result['output'], str)
-    assert isinstance(result['error'], str)
+    assert result["success"] is True
+    assert isinstance(result["output"], str)
+    assert isinstance(result["error"], str)
 
     # Test with non-existent file
     with pytest.raises(FileNotFoundError):
@@ -41,6 +44,34 @@ def test_run_simulation(tmp_path, monkeypatch):
 
     # Test with capture_output=False
     result = run_simulation(temp_model_file, capture_output=False)
-    assert result['success'] is True
-    assert result['output'] is None
-    assert result['error'] is None
+    assert result["success"] is True
+    assert result["output"] is None
+    assert result["error"] is None
+
+
+def test_run_simulation_failure_reports_stderr_with_capture_output_disabled(
+    tmp_path, monkeypatch
+):
+    model_file = tmp_path / "modelfile.xml"
+    model_file.write_text("<root />")
+
+    monkeypatch.setattr(simulation, "get_binary_path", lambda: "/fake/seismic_forward")
+
+    def fake_run(command, **kwargs):
+        assert kwargs["stderr"] == subprocess.PIPE
+        assert "stdout" not in kwargs
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=1,
+            stdout=None,
+            stderr="simulated failure stderr",
+        )
+
+    monkeypatch.setattr(simulation.subprocess, "run", fake_run)
+
+    with pytest.raises(SeismicForwardError) as exc_info:
+        run_simulation(model_file, capture_output=False)
+
+    message = str(exc_info.value)
+    assert "simulated failure stderr" in message
+    assert "None" not in message

@@ -49,7 +49,7 @@ def main() -> NoReturn:
         run_simulation(args.modelfile, capture_output=False)
         sys.exit(0)
     except (SeismicForwardError, FileNotFoundError) as e:
-        print(f"Error message: {e}")
+        print(f"Error: {e}")
         sys.exit(1)
     except Exception as e:
         print(f"Unexpected error: {e}")
