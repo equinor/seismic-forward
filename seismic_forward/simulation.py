@@ -2,6 +2,7 @@
 This module provides the main Python API for running seismic-forward simulations.
 It handles the execution of the underlying C++ binary and manages simulation results.
 """
+
 from pathlib import Path
 import subprocess
 from typing import Union, Dict, Any
@@ -9,15 +10,16 @@ from typing import Union, Dict, Any
 
 class SeismicForwardError(Exception):
     """Base exception for seismic-forward errors."""
+
     pass
 
 
 def get_binary_path() -> str:
     """Get the path to the seismic-forward binary.
-    
+
     Returns:
         str: The absolute path to the seismic-forward binary.
-        
+
     Raises:
         FileNotFoundError: If the binary cannot be found in the expected location.
     """
@@ -34,22 +36,23 @@ def get_binary_path() -> str:
 
 
 def run_simulation(
-    model_file: Union[str, Path], 
-    capture_output: bool = True
+    model_file: Union[str, Path], capture_output: bool = True
 ) -> Dict[str, Any]:
     """Run a seismic-forward simulation.
-    
+
     Args:
         model_file: Path to the model file (string or Path object).
         capture_output: Whether to capture and return the simulation output.
             If False, output will be printed directly to stdout.
-            
+            Stderr is always captured internally so failures include
+            a useful error message.
+
     Returns:
         dict: A dictionary containing simulation results with keys:
             - 'success': bool indicating if simulation completed successfully
             - 'output': str containing stdout (if capture_output=True)
             - 'error': str containing stderr (if capture_output=True)
-            
+
     Raises:
         SeismicForwardError: If the simulation fails or encounters an error.
         FileNotFoundError: If the model file or binary cannot be found.
@@ -60,22 +63,34 @@ def run_simulation(
 
     try:
         binary_path = get_binary_path()
+
+        run_kwargs = {
+            "check": False,
+            "text": True,
+            # Always capture stderr so raised exceptions include error details.
+            "stderr": subprocess.PIPE,
+        }
+        if capture_output:
+            run_kwargs["stdout"] = subprocess.PIPE
+
         result = subprocess.run(
             [binary_path, str(model_path)],
-            check=False,
-            text=True,
-            capture_output=capture_output
+            **run_kwargs,
         )
 
         output = {
-            'success': result.returncode == 0,
-            'output': result.stdout if capture_output else None,
-            'error': result.stderr if capture_output else None
+            "success": result.returncode == 0,
+            "output": result.stdout if capture_output else None,
+            "error": result.stderr if capture_output else None,
         }
 
-        if not output['success']:
+        if not output["success"]:
+            error_text = (result.stderr or "").strip()
+            if not error_text:
+                error_text = "No stderr output captured."
             raise SeismicForwardError(
-                f"Simulation failed with return code {result.returncode}"
+                f"Seismic Forward failed with return code {result.returncode}\n"
+                f"Error message:\n{error_text}"
             )
 
         return output

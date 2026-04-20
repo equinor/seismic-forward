@@ -2,7 +2,9 @@
 This module provides the command-line interface for running seismic-forward
 simulations.
 """
+
 import argparse
+
 import sys
 from typing import NoReturn
 from importlib.metadata import version, PackageNotFoundError
@@ -11,7 +13,7 @@ from .simulation import run_simulation, SeismicForwardError
 
 def get_version() -> str:
     """Get the version of the seismic-forward package.
-    
+
     Returns:
         str: The version string, or "unknown" if not available.
     """
@@ -23,7 +25,7 @@ def get_version() -> str:
 
 def main() -> NoReturn:
     """Main entry point for the CLI.
-    
+
     Returns:
         NoReturn: The function either exits successfully or with an error code.
     """
@@ -31,19 +33,13 @@ def main() -> NoReturn:
         prog="seismic_forward",
         description="Seismic Forward Modeling Tool - Generate synthetic seismic from elastic parameters",
     )
+    parser.add_argument("modelfile", nargs="?", help="Path to the XML model file")
     parser.add_argument(
-        "modelfile",
-        nargs="?",
-        help="Path to the XML model file"
+        "--version", action="version", version=f"seismic_forward {get_version()}"
     )
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=f"seismic_forward {get_version()}"
-    )
-    
+
     args = parser.parse_args()
-    
+
     if args.modelfile is None:
         parser.print_help()
         print("\nError: A modelfile must be provided.")
@@ -61,4 +57,4 @@ def main() -> NoReturn:
 
 
 if __name__ == "__main__":
-    main() 
+    main()
