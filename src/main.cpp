@@ -26,6 +26,9 @@
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/iotools/logkit.hpp"
 
+#include "utils/timings.hpp"
+#include "utils/timer.hpp"
+
 #include "seismic_parameters.hpp"
 #include "seismic_regridding.hpp"
 #include "seismic_forward.hpp"
@@ -54,6 +57,8 @@ int main(int argc, char *argv[]) {
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n*****\n\n");
 
+  Timer timer;
+
   std::string inputfile(argv[1]);
   XmlModelFile    modelFile(inputfile);
   ModelSettings * model_settings = modelFile.getModelSettings();
@@ -76,18 +81,20 @@ int main(int argc, char *argv[]) {
     NRLib::LogKit::WriteHeader("Model settings");
     model_settings->PrintSettings();
 
-    time_t t1 = time(0);
-
     NRLib::LogKit::WriteHeader("Setting up grid");
     SeismicParameters seismic_parameters = SeismicParameters(model_settings);
     SeismicRegridding::MakeSeismicRegridding(seismic_parameters,
                                              model_settings,
                                              n_threads);
-    seismic_parameters.PrintElapsedTime(t1, "for preprocesses");
 
     NRLib::LogKit::WriteHeader("Forward modelling");
     SeismicForward::DoSeismicForward(seismic_parameters,
                                      *model_settings);
+
+    Timings::setTimeTotal(timer);
+    Timings::reportAll(0.000001);  // Threshold (for percentage) for reporting times
+    Timings::reportTotal();
+
     TaskList::ViewAllTasks();
   }
   NRLib::LogKit::EndLog();

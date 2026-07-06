@@ -5,6 +5,9 @@
 #include "utils/result_trace.hpp"
 #include "utils/output.hpp"
 
+#include "utils/timings.hpp"
+#include "utils/timer.hpp"
+
 #include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
 #include "seismic_forward.hpp"
@@ -66,6 +69,8 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
   float next_monitor;
   MonitorInitialize(n_traces, monitor_size, next_monitor);
 
+  Timer timer;
+
   for (size_t k = 0; k < n_traces; ++k) {
 
     Trace * trace = seismic_traces[k];
@@ -114,6 +119,8 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
 
   std::cout << "\n";
 
+  Timings::setTimeForwardModelling(timer);
+
   output.WriteStatisticsForSeismic(model_settings);
   output.WriteSeismicStorm(model_settings,
                            seismic_parameters.GetSeismicOutput(),
@@ -123,8 +130,6 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
   seismic_parameters.DeleteElasticParameterGrids();
   seismic_parameters.DeleteWavelet();
   seismic_parameters.DeleteGeometryAndOutput();
-
-  seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 }
 
 //--------------------------------------------------------------------------------

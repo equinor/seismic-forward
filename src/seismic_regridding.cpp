@@ -7,6 +7,9 @@
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
+#include "utils/timings.hpp"
+#include "utils/timer.hpp"
+
 #include "seismic_regridding.hpp"
 #include "seismic_geometry.hpp"
 #include "tasklist.hpp"
@@ -26,14 +29,14 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
                                               size_t              n_threads)
 //-----------------------------------------------------------------------------------
 {
-  //time_t t1 = time(0);   // get time now
+  Timer timer;
   NRLib::LogKit::WriteHeader("Find depth values");
   FindZValues(seismic_parameters,
               model_settings,
               n_threads);
-  //seismic_parameters.PrintElapsedTime(t1, "finding Zvalues");
+  Timings::setTimeFindZValues(timer);
 
-  //t1 = time(0);
+  timer.reset();
   NRLib::LogKit::WriteHeader("Fill parameter grids");
   FindParameters(seismic_parameters,
                  model_settings,
@@ -41,7 +44,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
 
   PostProcess(seismic_parameters,
               model_settings);
-  //seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
+  Timings::setTimeFindElasticParameters(timer);
 
   seismic_parameters.DeleteEclipseGrid();
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nDeleting Eclipse grid to free memory.\n");
