@@ -67,9 +67,7 @@ double Timer::Clock(ClockType type) const
     wall = static_cast<double>(time(0) - time_);
     break;
   }
-  default: {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nBug in Timer::CPU. Unknown clock type.\n");
-    std::exit(1);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nBug in Timer::Clock. Unknown clock type.\n");
   }
   }
   return wall;
