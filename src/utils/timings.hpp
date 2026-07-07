@@ -1,10 +1,11 @@
 #ifndef TIMINGS_H
 #define TIMINGS_H
 
+#include <string>
+
 #include "nrlib/iotools/logkit.hpp"
 
 #include "utils/timer.hpp"
-
 class Timings
 {
 public:
