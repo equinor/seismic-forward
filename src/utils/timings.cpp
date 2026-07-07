@@ -19,14 +19,11 @@ void Timings::reportAll(double threshold)
   if (w_total_ < 0.00001)
     w_total_ = 0.00001;
 
-  c_forward_modelling_ -= c_write_segy_;
-  w_forward_modelling_ -= w_write_segy_;
-
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSection                                          CPU Time/s            Real Time/s");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n----------------------------------------------------------------------------------");
   report("Loading corner-point grid              ", c_load_cornerpoint_grid_  , w_load_cornerpoint_grid_  , threshold);
-  report("Find z-values                          ", c_find_zvalues_           , w_find_zvalues_           , threshold);
-  report("Find elastic parameters                ", c_find_elastic_parameters_, w_find_elastic_parameters_, threshold);
+  report("Make regular grid                      ", c_find_zvalues_           , w_find_zvalues_           , threshold);
+  report("Resample elastic parameters            ", c_find_elastic_parameters_, w_find_elastic_parameters_, threshold);
   report("Forward modelling                      ", c_forward_modelling_      , w_forward_modelling_      , threshold);
   report("Write SegY files                       ", c_write_segy_             , w_write_segy_             , threshold);
   report("Dummy                                  ", c_dummy_                  , w_dummy_                  , threshold);
@@ -122,8 +119,8 @@ Timings::setTimeForwardModelling(Timer & timer)
 void
 Timings::setTimeWriteSegy(Timer & timer)
 {
-  c_forward_modelling_ = timer.CPU();
-  w_forward_modelling_ = timer.Clock();
+  c_write_segy_ = timer.CPU();
+  w_write_segy_ = timer.Clock();
 }
 
 void
