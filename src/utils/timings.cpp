@@ -48,7 +48,7 @@ void Timings::report(const std::string & text,
                      double              threshold)
 //-------------------------------------------------
 {
-  if (wallThis < 0.00001) // To omit stupit zero-treatment in ToString()
+  if (wallThis < 0.00001) // To omit stupid zero-treatment in ToString()
     wallThis = 0.00001;
 
   double percentCPU  = 100.0*cpuThis/c_total_;
