@@ -59,7 +59,7 @@ void Timings::report(const std::string & text,
   if (percentWall > 100.0)
     percentWall = 100.0;
 
-  if (cpuThis > threshold && percentCPU > threshold) {
+  if (percentCPU > threshold || percentWall > threshold) {
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n%s %9.2f   %6.2f%%    %9.2f   %6.2f%%", text.c_str(), cpuThis, percentCPU, wallThis, percentWall);
   }
 }
