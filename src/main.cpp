@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
                                      *model_settings);
 
     Timings::setTimeTotal(timer);
-    Timings::reportAll(0.000001);  // Threshold (for percentage) for reporting times
+    Timings::reportAll(0.000001);  // Threshold for reporting times (currently used as both seconds and percentage in Timings::report)
     Timings::reportTotal();
 
     TaskList::ViewAllTasks();
