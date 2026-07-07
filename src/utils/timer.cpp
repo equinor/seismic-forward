@@ -57,18 +57,15 @@ double Timer::CPU(ClockType type) const
 double Timer::Clock(ClockType type) const
 //---------------------------------------
 {
-  double wall = -999.0;
   switch (type) {
-  case TOTAL: {
-    wall = static_cast<double>(time(0) - initial_time_);
-    break;
-  }
-  case STOPWATCH: {
-    wall = static_cast<double>(time(0) - time_);
-    break;
-  }
+  case TOTAL:
+    return static_cast<double>(time(nullptr) - initial_time_);
+
+  case STOPWATCH:
+    return static_cast<double>(time(nullptr) - time_);
+
+  default:
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Error, "\nBug in Timer::Clock. Unknown clock type.\n");
+    std::exit(EXIT_FAILURE);
   }
-  }
-  return wall;
 }
