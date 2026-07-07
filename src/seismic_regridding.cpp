@@ -117,8 +117,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
     seismic_parameters.GetSeismicOutput()->WriteTimeSurfaces(seismic_parameters);
   }
 
-  bool   interpolate = model_settings->GetResamplParamToSegyInterpol();
-  time_t t1          = time(0);   // get time now
+  bool interpolate = model_settings->GetResamplParamToSegyInterpol();
 
   NRLib::LogKit::WriteHeader("Export grids");
 
@@ -156,13 +155,6 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
     WriteExtraParametersSegy(seismic_parameters, filenames, interpolate, queue_capacity, n_threads, false);
   }
   seismic_parameters.DeleteExtraParameterGrids();
-
-  if (model_settings->GetOutputElasticParametersTimeSegy()  ||
-      model_settings->GetOutputElasticParametersDepthSegy() ||
-      model_settings->GetOutputExtraParametersTimeSegy()    ||
-      model_settings->GetOutputExtraParametersDepthSegy()) {
-    seismic_parameters.PrintElapsedTime(t1, "resampling parameters and write to SegY.");
-  }
 
   //---write elastic parameters, z values and twt on storm format---
   if (model_settings->GetOutputVp()) {

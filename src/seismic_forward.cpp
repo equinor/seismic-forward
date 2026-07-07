@@ -20,7 +20,6 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
                                       const ModelSettings & model_settings)
 //---------------------------------------------------------------------------
 {
-  time_t              t1      = time(0);
   bool                nmo     = model_settings.GetNMOCorr();
   bool                ps_seis = model_settings.GetPSSeismic();
 
