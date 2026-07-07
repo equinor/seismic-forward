@@ -42,7 +42,6 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
                   model_settings->GetParameterNames(),
                   model_settings->GetExtraParameterNames());
   Timings::setTimeLoadCornerPointGrid(timer);
-  timer.reset();
 
   FindGeometry(seismic_geometry_,
                segy_geometry_,
