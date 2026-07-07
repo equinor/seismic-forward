@@ -2,8 +2,7 @@
 
 #include "utils/timer.hpp"
 
-#include <sstream>
-
+#include <cstdlib>
 #if defined (unix) || defined (__unix) || defined (__unix__)
 #include <sys/times.h>
 #endif
