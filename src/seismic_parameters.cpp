@@ -3,6 +3,9 @@
 #include "nrlib/eclipsegrid/eclipsegrid.hpp"
 #include "nrlib/geometry/interpolation.hpp"
 
+#include "utils/timings.hpp"
+#include "utils/timer.hpp"
+
 #include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
 #include "wavelet.hpp"
@@ -33,10 +36,12 @@ SeismicParameters::SeismicParameters(ModelSettings * model_settings)
                model_settings->GetWaveletFileFormat(),
                model_settings->GetPrefix());
 
+  Timer timer;
   ReadEclipseGrid(eclipse_grid_,
                   model_settings->GetEclipseFileName(),
                   model_settings->GetParameterNames(),
                   model_settings->GetExtraParameterNames());
+  Timings::setTimeLoadCornerPointGrid(timer);
 
   FindGeometry(seismic_geometry_,
                segy_geometry_,

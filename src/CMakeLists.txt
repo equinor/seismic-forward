@@ -15,6 +15,8 @@ set(CPP_FILES
     utils/output.cpp
     utils/result_trace.cpp
     utils/trace.cpp
+    utils/timer.cpp
+    utils/timings.cpp
 )
 
 set(H_FILES
@@ -32,6 +34,8 @@ set(H_FILES
     utils/output.hpp
     utils/result_trace.hpp
     utils/trace.hpp
+    utils/timer.hpp
+    utils/timings.hpp
 )
 
 append_source_files_to_property(${CMAKE_CURRENT_SOURCE_DIR} "${CPP_FILES}")

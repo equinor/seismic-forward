@@ -5,6 +5,9 @@
 #include "utils/result_trace.hpp"
 #include "utils/output.hpp"
 
+#include "utils/timings.hpp"
+#include "utils/timer.hpp"
+
 #include "seismic_parameters.hpp"
 #include "seismic_geometry.hpp"
 #include "seismic_forward.hpp"
@@ -17,7 +20,6 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
                                       const ModelSettings & model_settings)
 //---------------------------------------------------------------------------
 {
-  time_t              t1      = time(0);
   bool                nmo     = model_settings.GetNMOCorr();
   bool                ps_seis = model_settings.GetPSSeismic();
 
@@ -62,25 +64,26 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
                 offset_theta_vec,
                 offset_wo_stretch);
 
+  std::vector<ResultTrace*> result_traces(n_traces);
+
   float monitor_size;
   float next_monitor;
   MonitorInitialize(n_traces, monitor_size, next_monitor);
 
+  Timer timer;
+
   for (size_t k = 0; k < n_traces; ++k) {
+    result_traces[k] = new ResultTrace(seismic_parameters,
+                                       model_settings,
+                                       *seismic_traces[k],
+                                       nzrefl,
+                                       twt_0.size(),
+                                       z_0.size(),
+                                       twts_0.size(),
+                                       n_time_samples,
+                                       offset_theta_vec.size());
 
-    Trace * trace = seismic_traces[k];
-
-    ResultTrace result_trace(seismic_parameters,
-                             model_settings,
-                             *trace,
-                             nzrefl,
-                             twt_0.size(),
-                             z_0.size(),
-                             twts_0.size(),
-                             n_time_samples,
-                             offset_theta_vec.size());
-
-    if (!result_trace.GetIsEmpty()) {
+    if (!result_traces[k]->GetIsEmpty()) {
       if (nmo) {
         GenerateNMOSeismicTraces(seismic_parameters,
                                  model_settings,
@@ -90,7 +93,7 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
                                  offset_theta_vec,
                                  n_time_samples,
                                  output,
-                                 result_trace);
+                                 *result_traces[k]);
       }
       else {
         GenerateSeismicTraces(seismic_parameters,
@@ -100,19 +103,30 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
                               twts_0,
                               offset_theta_vec,
                               output,
-                              result_trace);
+                              *result_traces[k]);
       }
     }
+    Monitor(k, monitor_size, next_monitor);
+  }
+  std::cout << "\n";
 
-    output.AddTrace(result_trace,
+  Timings::setTimeForwardModelling(timer);
+  timer.reset();
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nWriting SegY grids to file.\n");
+
+  MonitorInitialize(n_traces, monitor_size, next_monitor);
+
+  for (size_t k = 0; k < n_traces; ++k) {
+    output.AddTrace(*(result_traces[k]),
                     model_settings,
                     seismic_parameters.GetSeismicOutput());
-
     Monitor(k, monitor_size, next_monitor);
-    delete trace;
+    delete seismic_traces[k];
+    delete result_traces[k];
   }
 
-  std::cout << "\n";
+  Timings::setTimeWriteSegy(timer);
 
   output.WriteStatisticsForSeismic(model_settings);
   output.WriteSeismicStorm(model_settings,
@@ -123,8 +137,6 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
   seismic_parameters.DeleteElasticParameterGrids();
   seismic_parameters.DeleteWavelet();
   seismic_parameters.DeleteGeometryAndOutput();
-
-  seismic_parameters.PrintElapsedTime(t1, "generating seismic");
 }
 
 //--------------------------------------------------------------------------------

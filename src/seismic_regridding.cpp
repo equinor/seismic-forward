@@ -7,6 +7,9 @@
 #include "nrlib/random/randomgenerator.hpp"
 #include "nrlib/random/normal.hpp"
 
+#include "utils/timings.hpp"
+#include "utils/timer.hpp"
+
 #include "seismic_regridding.hpp"
 #include "seismic_geometry.hpp"
 #include "tasklist.hpp"
@@ -26,14 +29,14 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
                                               size_t              n_threads)
 //-----------------------------------------------------------------------------------
 {
-  //time_t t1 = time(0);   // get time now
+  Timer timer;
   NRLib::LogKit::WriteHeader("Find depth values");
   FindZValues(seismic_parameters,
               model_settings,
               n_threads);
-  //seismic_parameters.PrintElapsedTime(t1, "finding Zvalues");
+  Timings::setTimeFindZValues(timer);
 
-  //t1 = time(0);
+  timer.reset();
   NRLib::LogKit::WriteHeader("Fill parameter grids");
   FindParameters(seismic_parameters,
                  model_settings,
@@ -41,7 +44,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
 
   PostProcess(seismic_parameters,
               model_settings);
-  //seismic_parameters.PrintElapsedTime(t1, "finding elastic parameters");
+  Timings::setTimeFindElasticParameters(timer);
 
   seismic_parameters.DeleteEclipseGrid();
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nDeleting Eclipse grid to free memory.\n");
@@ -114,8 +117,7 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
     seismic_parameters.GetSeismicOutput()->WriteTimeSurfaces(seismic_parameters);
   }
 
-  bool   interpolate = model_settings->GetResamplParamToSegyInterpol();
-  time_t t1          = time(0);   // get time now
+  bool interpolate = model_settings->GetResamplParamToSegyInterpol();
 
   NRLib::LogKit::WriteHeader("Export grids");
 
@@ -153,13 +155,6 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
     WriteExtraParametersSegy(seismic_parameters, filenames, interpolate, queue_capacity, n_threads, false);
   }
   seismic_parameters.DeleteExtraParameterGrids();
-
-  if (model_settings->GetOutputElasticParametersTimeSegy()  ||
-      model_settings->GetOutputElasticParametersDepthSegy() ||
-      model_settings->GetOutputExtraParametersTimeSegy()    ||
-      model_settings->GetOutputExtraParametersDepthSegy()) {
-    seismic_parameters.PrintElapsedTime(t1, "resampling parameters and write to SegY.");
-  }
 
   //---write elastic parameters, z values and twt on storm format---
   if (model_settings->GetOutputVp()) {
