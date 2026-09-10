@@ -104,6 +104,20 @@ XmlModelFile::~XmlModelFile()
 {
 }
 
+//-------------------------------------------------------------------
+static void AddDeprecatedPlacementTask(const std::string & keyword,
+                                       const bool          given_in_project_settings)
+//-------------------------------------------------------------------
+{
+  std::string task = "Keyword <" + keyword + "> has been made a sub-element of section <project-settings>.\n"
+                     "    Current placement is deprecated.";
+  if (given_in_project_settings) {
+    task += " The keyword is given both places, and the value\n"
+            "    given in <project-settings> is the one used.";
+  }
+  TaskList::AddTask(task);
+}
+
 bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
 {
   TiXmlNode *root = node->FirstChildElement("seismic-forward");
@@ -134,7 +148,38 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   ParseOutputGrid(root, errTxt);
   ParseElasticParam(root, errTxt);
   ParseWavelet(root, errTxt);
-  ParseProjectSettings(root, errTxt);
+
+  //  ------ START Moved to new section project setting ----------------
+  //
+  //  <traces-in-memory> and <max-threads> are parsed here, before section
+  //  <project-settings>, so that the values given in <project-settings>
+  //  take precedence when a keyword is given in both places.
+  //
+  double number;
+  bool traces_in_memory_deprecated = ParseValue(root, "traces-in-memory", number, errTxt);
+  if (traces_in_memory_deprecated) {
+    modelSettings_->SetTracesInMemory(static_cast<size_t>(number));
+  }
+
+  double n_threads;
+  bool max_threads_deprecated = ParseValue(root, "max-threads", n_threads, errTxt);
+  if (max_threads_deprecated) {
+    modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
+  }
+
+  //  ------ END Moved to new section project setting ----------------
+
+  bool traces_in_memory_given = false;
+  bool max_threads_given      = false;
+
+  ParseProjectSettings(root, errTxt, traces_in_memory_given, max_threads_given);
+
+  if (traces_in_memory_deprecated) {
+    AddDeprecatedPlacementTask("traces-in-memory", traces_in_memory_given);
+  }
+  if (max_threads_deprecated) {
+    AddDeprecatedPlacementTask("max-threads", max_threads_given);
+  }
 
   if (ParseWhiteNoise(root, errTxt)) {
     modelSettings_->SetAddWhiteNoise();
@@ -160,38 +205,27 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
 
   ParseOutputParameters(root, errTxt);
 
-  //  ------ START Moved to new section project setting ----------------
-
-  double number;
-  if (ParseValue(root, "traces-in-memory", number, errTxt)) {
-    modelSettings_->SetTracesInMemory(static_cast<size_t>(number));
-    TaskList::AddTask("Keyword <traces-in-memory> has been made a sub-element of section <project-settings>. Current\n    placement is deprecated.");
-  }
-
-  double n_threads;
-  if (ParseValue(root, "max-threads", n_threads, errTxt)) {
-    modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
-    TaskList::AddTask("Keyword <max-threads> has been made a sub-element of section <project-settings>. Current\n    placement is deprecated.");
-  }
-
-  //  ------ END Moved to new section project setting ----------------
-
-
   CheckForJunk(root, errTxt, legalCommands);
   return (true);
 }
 
 //------------------------------------------------------------
 bool XmlModelFile::ParseProjectSettings(TiXmlNode   * node,
-                                        std::string & errTxt)
+                                        std::string & errTxt,
+                                        bool        & traces_in_memory_given,
+                                        bool        & max_threads_given)
 //------------------------------------------------------------
 {
+  traces_in_memory_given = false;
+  max_threads_given      = false;
+
   TiXmlNode *root = node->FirstChildElement("project-settings");
   if (root == 0) {
     return (false);
   }
 
   std::vector<std::string> legalCommands;
+  legalCommands.push_back("log-level");
   legalCommands.push_back("max-threads");
   legalCommands.push_back("traces-in-memory");
 
@@ -199,11 +233,13 @@ bool XmlModelFile::ParseProjectSettings(TiXmlNode   * node,
   double number;
   if (ParseValue(root, "traces-in-memory", number, errTxt)) {
     modelSettings_->SetTracesInMemory(static_cast<size_t>(number));
+    traces_in_memory_given = true;
   }
 
   double n_threads;
   if (ParseValue(root, "max-threads", n_threads, errTxt)) {
     modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
+    max_threads_given = true;
   }
 
   std::string level;
