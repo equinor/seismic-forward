@@ -32,14 +32,41 @@ private:
                              ModelSettings     * model_settings,
                              size_t              n_threads);
 
-  static void FindCentralParameters(SeismicParameters                & seismic_parameters,
-                                    ModelSettings                    * model_settings,
-                                    const NRLib::EclipseGeometry     & eclipse_geometry,
-                                    const NRLib::Grid<double>        & eclipse_vp,
-                                    const NRLib::Grid<double>        & eclipse_vs,
-                                    const NRLib::Grid<double>        & eclipse_rho,
-                                    std::vector<NRLib::Grid<double>> & eclipse_extra_params,
-                                    size_t                             n_threads);
+  static void FindInternalParameters(SeismicParameters                & seismic_parameters,
+                                     ModelSettings                    * model_settings,
+                                     const NRLib::EclipseGeometry     & eclipse_geometry,
+                                     const NRLib::Grid<double>        & eclipse_vp,
+                                     const NRLib::Grid<double>        & eclipse_vs,
+                                     const NRLib::Grid<double>        & eclipse_rho,
+                                     std::vector<NRLib::Grid<double>> & eclipse_extra_params,
+                                     size_t                             n_threads);
+
+  static void FindEdgeParameters(SeismicParameters                & seismic_parameters,
+                                 ModelSettings                    * model_settings,
+                                 const NRLib::EclipseGeometry     & geometry,
+                                 const NRLib::Grid<double>        & vp_grid,
+                                 const NRLib::Grid<double>        & vs_grid,
+                                 const NRLib::Grid<double>        & rho_grid,
+                                 std::vector<NRLib::Grid<double>> & parameter_grid_from_eclipse,
+                                 size_t                             i,
+                                 size_t                             j,
+                                 size_t                             k,
+                                 bool                               top,
+                                 bool                               bot,
+                                 bool                               right,
+                                 bool                               left);
+
+  static void FindCornerParameters(SeismicParameters                & seismic_parameters,
+                                   ModelSettings                    * model_settings,
+                                   const NRLib::EclipseGeometry     & geometry,
+                                   const NRLib::Grid<double>        & vp_grid,
+                                   const NRLib::Grid<double>        & vs_grid,
+                                   const NRLib::Grid<double>        & rho_grid,
+                                   std::vector<NRLib::Grid<double>> & parameter_grid_from_eclipse,
+                                   size_t                             i,
+                                   size_t                             j,
+                                   size_t                             k,
+                                   std::vector<NRLib::Point>        & pt_vp);
 
   static void FillInGridValues(const std::string            & text,
                                const NRLib::EclipseGeometry & geometry,
@@ -78,21 +105,6 @@ private:
                             size_t                       & i,
                             size_t                         j);
 
-  static void FindEdges(SeismicParameters                   & seismic_parameters,
-                        ModelSettings                       * model_settings,
-                        const NRLib::EclipseGeometry        & geometry,
-                        const NRLib::Grid<double>           & vp_grid,
-                        const NRLib::Grid<double>           & vs_grid,
-                        const NRLib::Grid<double>           & rho_grid,
-                        std::vector<NRLib::Grid<double> >   & parameter_grid_from_eclipse,
-                        size_t                                i,
-                        size_t                                j,
-                        size_t                                k,
-                        bool                                  top,
-                        bool                                  bot,
-                        bool                                  right,
-                        bool                                  left);
-
   static void GetCornerPointDir(std::vector<size_t> & a,
                                 std::vector<size_t> & b,
                                 std::vector<size_t> & c,
@@ -107,18 +119,6 @@ private:
                                    size_t                         j,
                                    size_t                         k,
                                    size_t                         botk);
-
-  static void FindCorners(SeismicParameters                   & seismic_parameters,
-                          ModelSettings                       * model_settings,
-                          const NRLib::EclipseGeometry        & geometry,
-                          const NRLib::Grid<double>           & vp_grid,
-                          const NRLib::Grid<double>           & vs_grid,
-                          const NRLib::Grid<double>           & rho_grid,
-                          std::vector<NRLib::Grid<double> >   & parameter_grid_from_eclipse,
-                          size_t                                i,
-                          size_t                                j,
-                          size_t                                k,
-                          std::vector<NRLib::Point>           & pt_vp);
 
   static void PostProcess(SeismicParameters & seismic_parameters,
                           ModelSettings     *  model_settings);
