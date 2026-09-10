@@ -49,7 +49,9 @@ private:
                   std::string & errTxt);
 
   bool ParseProjectSettings(TiXmlNode   * node,
-                            std::string & errTxt);
+                            std::string & errTxt,
+                            bool        & traces_in_memory_given,
+                            bool        & max_threads_given);
 
   bool ParseNMOStretch(TiXmlNode *node,
                        std::string &errTxt);
