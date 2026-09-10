@@ -356,12 +356,10 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   size_t                               topk                     = seismic_parameters.GetTopK();
   size_t                               botk                     = seismic_parameters.GetBottomK();
 
-  double                               zlimit                   = model_settings->GetZeroThicknessLimit();
   std::vector<double>                  constvp                  = model_settings->GetConstVp();
   std::vector<double>                  constvs                  = model_settings->GetConstVs();
   std::vector<double>                  constrho                 = model_settings->GetConstRho();
   std::vector<std::string>             names                    = model_settings->GetParameterNames();
-  std::vector<double>                  extra_parameter_defaults = model_settings->GetExtraParameterDefaultValues();
   std::vector<std::string>             extra_parameter_names;
 
   // Only resample extra parameters if requested for output segy.
@@ -409,12 +407,15 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------------\n");
 
   //-----prepare eclipsegrid - include default values and value above where delta < zlimit
-  FillInGridValues("Vp" , eclipse_geometry, eclipse_vp , constvp[0] , constvp[1] , zlimit, topk, botk);
-  FillInGridValues("Vs" , eclipse_geometry, eclipse_vs , constvs[0] , constvs[1] , zlimit, topk, botk);
-  FillInGridValues("Rho", eclipse_geometry, eclipse_rho, constrho[0], constrho[1], zlimit, topk, botk);
-  for (size_t ii = 0; ii < n_extra_params; ++ii) {
-    FillInGridValues(extra_parameter_names[ii], eclipse_geometry, eclipse_extra_params[ii], extra_parameter_defaults[ii], extra_parameter_defaults[ii], zlimit, topk, botk);
-  }
+  FillInactiveEclipseGridCells(model_settings,
+                               eclipse_geometry,
+                               eclipse_vp,
+                               eclipse_vs,
+                               eclipse_rho,
+                               eclipse_extra_params,
+                               extra_parameter_names,
+                               topk,
+                               botk);
 
   eclipse_vp .GetAvgMinMax(vp_avg , vp_min , vp_max );
   eclipse_vs .GetAvgMinMax(vs_avg , vs_min , vs_max );
@@ -585,20 +586,59 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
 }
 
 //-------------------------------------------------------------------------------------
-void SeismicRegridding::FillInGridValues(const std::string            & text,
-                                         const NRLib::EclipseGeometry & geometry,
-                                         NRLib::Grid<double>          & grid_copy,
-                                         double                         default_top,    // default value above
-                                         double                         default_value,  // default value inside
-                                         double                         zlimit,         // zero thickness limit
-                                         size_t                         topk,
-                                         size_t                         botk)
+void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings                    * model_settings,
+                                                     const NRLib::EclipseGeometry     & geometry,
+                                                     NRLib::Grid<double>              & eclipse_vp,
+                                                     NRLib::Grid<double>              & eclipse_vs,
+                                                     NRLib::Grid<double>              & eclipse_rho,
+                                                     std::vector<NRLib::Grid<double>> & eclipse_extra_params,
+                                                     const std::vector<std::string>   & extra_parameter_names,
+                                                     size_t                             topk,
+                                                     size_t                             botk)
 //-------------------------------------------------------------------------------------
 {
-  int nzlimit = 0;
-  int ndeftop = 0;
-  int ndefins = 0;
-  int ndef    = 0;
+  double                              zlimit                   = model_settings->GetZeroThicknessLimit();
+  std::vector<double>                 constvp                  = model_settings->GetConstVp();
+  std::vector<double>                 constvs                  = model_settings->GetConstVs();
+  std::vector<double>                 constrho                 = model_settings->GetConstRho();
+  std::vector<double>                 extra_parameter_defaults = model_settings->GetExtraParameterDefaultValues();
+
+  size_t                              n_extra_params           = eclipse_extra_params.size();
+  size_t                              n_grids                  = 3 + n_extra_params;
+
+  //-----all grids are filled in the same sweep as the activity check is common-----------
+  std::vector<NRLib::Grid<double>*>   grids        (n_grids);
+  std::vector<std::string>            names        (n_grids);
+  std::vector<double>                 default_top  (n_grids);   // default value above
+  std::vector<double>                 default_value(n_grids);   // default value inside
+
+  names[0] = "Vp" ;
+  names[1] = "Vs" ;
+  names[2] = "Rho";
+
+  grids[0] = &eclipse_vp ;
+  grids[1] = &eclipse_vs ;
+  grids[2] = &eclipse_rho;
+
+  default_top[0]   = constvp [0];
+  default_top[1]   = constvs [0];
+  default_top[2]   = constrho[0];
+
+  default_value[0] = constvp [1];
+  default_value[1] = constvs [1];
+  default_value[2] = constrho[1];
+
+  for (size_t n = 0 ; n < n_extra_params ; n++) {
+    grids        [3 + n] = &eclipse_extra_params    [n];
+    names        [3 + n] =  extra_parameter_names   [n];
+    default_top  [3 + n] =  extra_parameter_defaults[n];
+    default_value[3 + n] =  extra_parameter_defaults[n];
+  }
+
+  std::vector<int> nzlimit(n_grids, 0);
+  std::vector<int> ndeftop(n_grids, 0);
+  std::vector<int> ndefins(n_grids, 0);
+  std::vector<int> ndef   (n_grids, 0);
 
   for (size_t k = topk ; k <= botk ; k++) {
     for (size_t i = 0; i < geometry.GetNI(); i++) {
@@ -606,27 +646,40 @@ void SeismicRegridding::FillInGridValues(const std::string            & text,
         if (!geometry.IsActive(i, j, k)) {
           if (k > 0 && k > topk) {
             if (geometry.GetDZ(i, j, k) < zlimit) {
-              grid_copy(i, j, k) = grid_copy(i, j, k - 1);
-              nzlimit++;
-            }
-            else if (grid_copy(i, j, k - 1) == default_top) {
-              grid_copy(i, j, k) = default_top;
-              ndefins++;
+              for (size_t n = 0 ; n < n_grids ; n++) {
+                NRLib::Grid<double> & grid = *grids[n];
+                grid(i, j, k) = grid(i, j, k - 1);
+                nzlimit[n]++;
+              }
             }
             else {
-              grid_copy(i, j, k) = default_value;
-              ndef++;
+              for (size_t n = 0 ; n < n_grids ; n++) {
+                NRLib::Grid<double> & grid = *grids[n];
+                if (grid(i, j, k - 1) == default_top[n]) {
+                  grid(i, j, k) = default_top[n];
+                  ndefins[n]++;
+                }
+                else {
+                  grid(i, j, k) = default_value[n];
+                  ndef[n]++;
+                }
+              }
             }
           }
           else {
-            grid_copy(i, j, k) = default_top;
-            ndeftop++;
+            for (size_t n = 0 ; n < n_grids ; n++) {
+              (*grids[n])(i, j, k) = default_top[n];
+              ndeftop[n]++;
+            }
           }
         }
       }
     }
   }
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%-15s %7d %7d %7d %7d\n",text.c_str(), ndeftop, ndefins, ndef, nzlimit);
+
+  for (size_t n = 0 ; n < n_grids ; n++) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%-15s %7d %7d %7d %7d\n",names[n].c_str(), ndeftop[n], ndefins[n], ndef[n], nzlimit[n]);
+  }
 }
 
 //-------------------------------------------------------------------------------------------

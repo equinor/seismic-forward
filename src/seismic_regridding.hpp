@@ -68,14 +68,15 @@ private:
                                    size_t                             k,
                                    std::vector<NRLib::Point>        & pt_vp);
 
-  static void FillInGridValues(const std::string            & text,
-                               const NRLib::EclipseGeometry & geometry,
-                               NRLib::Grid<double>          & grid_copy,
-                               double                         default_top,
-                               double                         default_value,
-                               double                         zlimit,
-                               size_t                         topk,
-                               size_t                         botk);
+  static void FillInactiveEclipseGridCells(ModelSettings                    * model_settings,
+                                           const NRLib::EclipseGeometry     & geometry,
+                                           NRLib::Grid<double>              & eclipse_vp,
+                                           NRLib::Grid<double>              & eclipse_vs,
+                                           NRLib::Grid<double>              & eclipse_rho,
+                                           std::vector<NRLib::Grid<double>> & eclipse_extra_params,
+                                           const std::vector<std::string>   & extra_parameter_names,
+                                           size_t                             topk,
+                                           size_t                             botk);
 
   static bool Is124Triangulate(std::vector<NRLib::Point> pt_vp);
 
