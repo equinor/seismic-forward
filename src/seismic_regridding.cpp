@@ -606,7 +606,6 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
   size_t                              n_extra_params           = eclipse_extra_params.size();
   size_t                              n_grids                  = 3 + n_extra_params;
 
-  //-----all grids are filled in the same sweep as the activity check is common-----------
   std::vector<NRLib::Grid<double>*>   grids        (n_grids);
   std::vector<std::string>            names        (n_grids);
   std::vector<double>                 default_top  (n_grids);   // default value above
@@ -635,8 +634,11 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
     default_value[3 + n] =  extra_parameter_defaults[n];
   }
 
-  std::vector<int> nzlimit(n_grids, 0);
-  std::vector<int> ndeftop(n_grids, 0);
+  //-----nzlimit and ndeftop are common to all grids as these branches do not look at
+  //-----the grid values. ndefins and ndef split on the value in the cell above, which
+  //-----is a per grid test, so these must be counted per grid.
+  int              nzlimit = 0;
+  int              ndeftop = 0;
   std::vector<int> ndefins(n_grids, 0);
   std::vector<int> ndef   (n_grids, 0);
 
@@ -649,8 +651,8 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
               for (size_t n = 0 ; n < n_grids ; n++) {
                 NRLib::Grid<double> & grid = *grids[n];
                 grid(i, j, k) = grid(i, j, k - 1);
-                nzlimit[n]++;
               }
+              nzlimit++;
             }
             else {
               for (size_t n = 0 ; n < n_grids ; n++) {
@@ -669,8 +671,8 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
           else {
             for (size_t n = 0 ; n < n_grids ; n++) {
               (*grids[n])(i, j, k) = default_top[n];
-              ndeftop[n]++;
             }
+            ndeftop++;
           }
         }
       }
@@ -678,7 +680,7 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
   }
 
   for (size_t n = 0 ; n < n_grids ; n++) {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%-15s %7d %7d %7d %7d\n",names[n].c_str(), ndeftop[n], ndefins[n], ndef[n], nzlimit[n]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%-15s %7d %7d %7d %7d\n",names[n].c_str(), ndeftop, ndefins[n], ndef[n], nzlimit);
   }
 }
 
