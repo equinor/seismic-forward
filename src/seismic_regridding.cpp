@@ -440,12 +440,182 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
     }
   }
 
+  FindCentralParameters(seismic_parameters,
+                        model_settings,
+                        eclipse_geometry,
+                        eclipse_vp,
+                        eclipse_vs,
+                        eclipse_rho,
+                        eclipse_extra_params,
+                        n_threads);
+
+
+  ////-------------find edges---------------------
+  for (size_t k = topk; k <= botk + 1; k++) {
+    for (size_t i = 0; i < egrid.GetNI() - 1; i++) {
+      //bot edge
+      size_t j = 0;
+      if (FindBotCell(eclipse_geometry, egrid.GetNJ(), i, j)){
+        FindEdges(seismic_parameters,
+                  model_settings,
+                  eclipse_geometry,
+                  eclipse_vp,
+                  eclipse_vs,
+                  eclipse_rho,
+                  eclipse_extra_params,
+                  i, j, k,
+                  false, true, false, false);
+      }
+      //top edge
+      j = egrid.GetNJ() - 1;
+      if (FindTopCell(eclipse_geometry, i, j)) {
+        FindEdges(seismic_parameters,
+                  model_settings,
+                  eclipse_geometry,
+                  eclipse_vp,
+                  eclipse_vs,
+                  eclipse_rho,
+                  eclipse_extra_params,
+                  i, j, k,
+                  true, false, false, false);
+      }
+    }
+    for (size_t j = 0; j < egrid.GetNJ() - 1; ++j) {
+      //left edge
+      size_t i = 0;
+      if (FindLeftCell(eclipse_geometry, egrid.GetNI(), i, j)) {
+        FindEdges(seismic_parameters,
+                  model_settings,
+                  eclipse_geometry,
+                  eclipse_vp,
+                  eclipse_vs,
+                  eclipse_rho,
+                  eclipse_extra_params,
+                  i, j, k,
+                  false, false, false, true);
+      }
+      //right edge
+      i = egrid.GetNI() - 1;
+      if (FindRightCell(eclipse_geometry, i, j)) {
+        FindEdges(seismic_parameters,
+                  model_settings,
+                  eclipse_geometry,
+                  eclipse_vp,
+                  eclipse_vs,
+                  eclipse_rho,
+                  eclipse_extra_params,
+                  i, j, k,
+                  false, false, true, false);
+      }
+    }
+    //-------------find corners---------------------
+    //bot left
+    size_t i = 0;
+    size_t j = 0;
+    std::vector<NRLib::Point> pt_vp(4);
+    FindCornerCellPoints(eclipse_geometry,
+                         pt_vp,
+                         i, j, k,
+                         botk);
+    FindCorners(seismic_parameters,
+                model_settings,
+                eclipse_geometry,
+                eclipse_vp,
+                eclipse_vs,
+                eclipse_rho,
+                eclipse_extra_params,
+                i, j, k, pt_vp);
+    //top left
+    j = egrid.GetNJ() - 1;
+    FindCornerCellPoints(eclipse_geometry,
+                         pt_vp,
+                         i, j, k,
+                         botk);
+    FindCorners(seismic_parameters,
+                model_settings,
+                eclipse_geometry,
+                eclipse_vp,
+                eclipse_vs,
+                eclipse_rho,
+                eclipse_extra_params,
+                i, j, k, pt_vp);
+    //top right
+    i = egrid.GetNI() - 1;
+    FindCornerCellPoints(eclipse_geometry,
+                         pt_vp,
+                         i, j, k,
+                         botk);
+    FindCorners(seismic_parameters,
+                model_settings,
+                eclipse_geometry,
+                eclipse_vp,
+                eclipse_vs,
+                eclipse_rho,
+                eclipse_extra_params,
+                i, j, k, pt_vp);
+    //bot right
+    j = 0;
+    FindCornerCellPoints(eclipse_geometry,
+                         pt_vp,
+                         i, j, k,
+                         botk);
+    FindCorners(seismic_parameters,
+                model_settings,
+                eclipse_geometry,
+                eclipse_vp,
+                eclipse_vs,
+                eclipse_rho,
+                eclipse_extra_params,
+                i, j, k, pt_vp);
+  }
+
+  float undef = vpgrid.GetMissingCode();
+  float vpavg , vpmin , vpmax;
+  float vsavg , vsmin , vsmax;
+  float rhoavg, rhomin, rhomax;
+  vpgrid .GetAvgMinMaxWithMissing(vpavg , vpmin , vpmax , undef);
+  vsgrid .GetAvgMinMaxWithMissing(vsavg , vsmin , vsmax , undef);
+  rhogrid.GetAvgMinMaxWithMissing(rhoavg, rhomin, rhomax, undef);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter statistics for regular grid after resampling.\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter         Avg       Min       Max");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vp           %8.2f  %8.2f  %8.2f\n",vpavg , vpmin , vpmax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vs           %8.2f  %8.2f  %8.2f\n",vsavg , vsmin , vsmax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Rho          %8.2f  %8.2f  %8.2f\n",rhoavg, rhomin, rhomax);
+
+}
+
+//-------------------------------------------------------------------------------------------
+void SeismicRegridding::FindCentralParameters(SeismicParameters                & seismic_parameters,
+                                              ModelSettings                    * model_settings,
+                                              const NRLib::EclipseGeometry     & eclipse_geometry,
+                                              const NRLib::Grid<double>        & eclipse_vp,
+                                              const NRLib::Grid<double>        & eclipse_vs,
+                                              const NRLib::Grid<double>        & eclipse_rho,
+                                              std::vector<NRLib::Grid<double>> & eclipse_extra_params,
+                                              size_t                             n_threads)
+//-------------------------------------------------------------------------------------------
+{
+  NRLib::StormContGrid                  & vpgrid               = seismic_parameters.GetVpGrid();
+  NRLib::StormContGrid                  & vsgrid               = seismic_parameters.GetVsGrid();
+  NRLib::StormContGrid                  & rhogrid              = seismic_parameters.GetRhoGrid();
+  std::vector<NRLib::StormContGrid*>      extra_parameter_grid = seismic_parameters.GetExtraParametersGrids();
+
+  std::vector<double>                     constvp              = model_settings->GetConstVp();
+  std::vector<double>                     constvs              = model_settings->GetConstVs();
+  std::vector<double>                     constrho             = model_settings->GetConstRho();
+
+  size_t                                  n_extra_params       = eclipse_extra_params.size();
+
+  size_t                                  topk                 = seismic_parameters.GetTopK();
+  size_t                                  botk                 = seismic_parameters.GetBottomK();
+
   //blocking - for parallelisation - if n_threads > 1
   size_t nbx = 1;
   size_t nby = 1;
   size_t nb  = 1;
-  size_t nx  = egrid.GetNI() - 1;
-  size_t ny  = egrid.GetNJ() - 1;
+  size_t nx  = eclipse_geometry.GetNI() - 1;
+  size_t ny  = eclipse_geometry.GetNJ() - 1;
   size_t nxb = nx;
   size_t nyb = ny;
   if (n_threads > 1){
@@ -624,140 +794,6 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
       }
     }
   }
-
-  ////-------------find edges---------------------
-  for (size_t k = topk; k <= botk + 1; k++) {
-    for (size_t i = 0; i < egrid.GetNI() - 1; i++) {
-      //bot edge
-      size_t j = 0;
-      if (FindBotCell(eclipse_geometry, egrid.GetNJ(), i, j)){
-        FindEdges(seismic_parameters,
-                  model_settings,
-                  eclipse_geometry,
-                  eclipse_vp,
-                  eclipse_vs,
-                  eclipse_rho,
-                  eclipse_extra_params,
-                  i, j, k,
-                  false, true, false, false);
-      }
-      //top edge
-      j = egrid.GetNJ() - 1;
-      if (FindTopCell(eclipse_geometry, i, j)) {
-        FindEdges(seismic_parameters,
-                  model_settings,
-                  eclipse_geometry,
-                  eclipse_vp,
-                  eclipse_vs,
-                  eclipse_rho,
-                  eclipse_extra_params,
-                  i, j, k,
-                  true, false, false, false);
-      }
-    }
-    for (size_t j = 0; j < egrid.GetNJ() - 1; ++j) {
-      //left edge
-      size_t i = 0;
-      if (FindLeftCell(eclipse_geometry, egrid.GetNI(), i, j)) {
-        FindEdges(seismic_parameters,
-                  model_settings,
-                  eclipse_geometry,
-                  eclipse_vp,
-                  eclipse_vs,
-                  eclipse_rho,
-                  eclipse_extra_params,
-                  i, j, k,
-                  false, false, false, true);
-      }
-      //right edge
-      i = egrid.GetNI() - 1;
-      if (FindRightCell(eclipse_geometry, i, j)) {
-        FindEdges(seismic_parameters,
-                  model_settings,
-                  eclipse_geometry,
-                  eclipse_vp,
-                  eclipse_vs,
-                  eclipse_rho,
-                  eclipse_extra_params,
-                  i, j, k,
-                  false, false, true, false);
-      }
-    }
-    //-------------find corners---------------------
-    //bot left
-    size_t i = 0;
-    size_t j = 0;
-    std::vector<NRLib::Point> pt_vp(4);
-    FindCornerCellPoints(eclipse_geometry,
-                         pt_vp,
-                         i, j, k,
-                         botk);
-    FindCorners(seismic_parameters,
-                model_settings,
-                eclipse_geometry,
-                eclipse_vp,
-                eclipse_vs,
-                eclipse_rho,
-                eclipse_extra_params,
-                i, j, k, pt_vp);
-    //top left
-    j = egrid.GetNJ() - 1;
-    FindCornerCellPoints(eclipse_geometry,
-                         pt_vp,
-                         i, j, k,
-                         botk);
-    FindCorners(seismic_parameters,
-                model_settings,
-                eclipse_geometry,
-                eclipse_vp,
-                eclipse_vs,
-                eclipse_rho,
-                eclipse_extra_params,
-                i, j, k, pt_vp);
-    //top right
-    i = egrid.GetNI() - 1;
-    FindCornerCellPoints(eclipse_geometry,
-                         pt_vp,
-                         i, j, k,
-                         botk);
-    FindCorners(seismic_parameters,
-                model_settings,
-                eclipse_geometry,
-                eclipse_vp,
-                eclipse_vs,
-                eclipse_rho,
-                eclipse_extra_params,
-                i, j, k, pt_vp);
-    //bot right
-    j = 0;
-    FindCornerCellPoints(eclipse_geometry,
-                         pt_vp,
-                         i, j, k,
-                         botk);
-    FindCorners(seismic_parameters,
-                model_settings,
-                eclipse_geometry,
-                eclipse_vp,
-                eclipse_vs,
-                eclipse_rho,
-                eclipse_extra_params,
-                i, j, k, pt_vp);
-  }
-
-  float undef = vpgrid.GetMissingCode();
-  float vpavg , vpmin , vpmax;
-  float vsavg , vsmin , vsmax;
-  float rhoavg, rhomin, rhomax;
-  vpgrid .GetAvgMinMaxWithMissing(vpavg , vpmin , vpmax , undef);
-  vsgrid .GetAvgMinMaxWithMissing(vsavg , vsmin , vsmax , undef);
-  rhogrid.GetAvgMinMaxWithMissing(rhoavg, rhomin, rhomax, undef);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter statistics for regular grid after resampling.\n");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter         Avg       Min       Max");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------\n");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vp           %8.2f  %8.2f  %8.2f\n",vpavg , vpmin , vpmax);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vs           %8.2f  %8.2f  %8.2f\n",vsavg , vsmin , vsmax);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Rho          %8.2f  %8.2f  %8.2f\n",rhoavg, rhomin, rhomax);
-
 }
 
 //-------------------------------------------------------------------------------------

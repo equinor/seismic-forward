@@ -32,6 +32,15 @@ private:
                              ModelSettings     * model_settings,
                              size_t              n_threads);
 
+  static void FindCentralParameters(SeismicParameters                & seismic_parameters,
+                                    ModelSettings                    * model_settings,
+                                    const NRLib::EclipseGeometry     & eclipse_geometry,
+                                    const NRLib::Grid<double>        & eclipse_vp,
+                                    const NRLib::Grid<double>        & eclipse_vs,
+                                    const NRLib::Grid<double>        & eclipse_rho,
+                                    std::vector<NRLib::Grid<double>> & eclipse_extra_params,
+                                    size_t                             n_threads);
+
   static void FillInGridValues(const std::string            & text,
                                const NRLib::EclipseGeometry & geometry,
                                NRLib::Grid<double>          & grid_copy,
@@ -43,13 +52,13 @@ private:
 
   static bool Is124Triangulate(std::vector<NRLib::Point> pt_vp);
 
-  static void SetElasticTriangles(std::vector<NRLib::Point>               & pt_vp,
-                                  std::vector<NRLib::Point>               & pt_vs,
-                                  std::vector<NRLib::Point>               & pt_rho,
-                                  std::vector<std::vector<NRLib::Point> > & pt_extra_param,
-                                  bool                                      triangulate_124,
-                                  std::vector<NRLib::Triangle>            & triangles_elastic,
-                                  std::vector<NRLib::Triangle>            & triangles_extra_param);
+  static void SetElasticTriangles(std::vector<NRLib::Point>              & pt_vp,
+                                  std::vector<NRLib::Point>              & pt_vs,
+                                  std::vector<NRLib::Point>              & pt_rho,
+                                  std::vector<std::vector<NRLib::Point>> & pt_extra_param,
+                                  bool                                     triangulate_124,
+                                  std::vector<NRLib::Triangle>           & triangles_elastic,
+                                  std::vector<NRLib::Triangle>           & triangles_extra_param);
 
   static bool FindTopCell(const NRLib::EclipseGeometry & geometry,
                           size_t                         i,
