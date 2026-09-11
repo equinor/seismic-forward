@@ -42,8 +42,6 @@ void SeismicRegridding::MakeSeismicRegridding(SeismicParameters & seismic_parame
                  model_settings,
                  n_threads);
 
-  PostProcess(seismic_parameters,
-              model_settings);
   Timings::setTimeFindElasticParameters(timer);
 
   seismic_parameters.DeleteEclipseGrid();
@@ -427,19 +425,6 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vs           %8.2f  %8.2f  %8.2f\n",vs_avg , vs_min , vs_max);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Rho          %8.2f  %8.2f  %8.2f\n",rho_avg, rho_min, rho_max);
 
-
-  //default value in top
-  for (size_t i = 0; i < vpgrid.GetNI(); i++) {
-    for (size_t j = 0; j < vpgrid.GetNJ(); j++) {
-      vpgrid (i, j, 0) = static_cast<float>(constvp[0]);
-      vsgrid (i, j, 0) = static_cast<float>(constvs[0]);
-      rhogrid(i, j, 0) = static_cast<float>(constrho[0]);
-      for (size_t ii = 0; ii < n_extra_params; ++ii) {
-        (*extra_parameter_grid[ii])(i, j, 0) = 0.0;
-      }
-    }
-  }
-
   FindInternalParameters(seismic_parameters,
                          model_settings,
                          eclipse_geometry,
@@ -569,6 +554,9 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
                          i, j, k, pt_vp);
   }
 
+  PostProcess(seismic_parameters,
+              model_settings);
+
   float undef = vpgrid.GetMissingCode();
   float vpavg , vpmin , vpmax;
   float vsavg , vsmin , vsmax;
@@ -579,9 +567,9 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter statistics for regular grid after resampling.\n");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nParameter         Avg       Min       Max");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------\n");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vp           %8.2f  %8.2f  %8.2f\n",vpavg , vpmin , vpmax);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vs           %8.2f  %8.2f  %8.2f\n",vsavg , vsmin , vsmax);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Rho          %8.2f  %8.2f  %8.2f\n",rhoavg, rhomin, rhomax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vp           %8.2f  %8.2f  %8.2f\n", vpavg , vpmin , vpmax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Vs           %8.2f  %8.2f  %8.2f\n", vsavg , vsmin , vsmax);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Rho          %8.2f  %8.2f  %8.2f\n", rhoavg, rhomin, rhomax);
 
 }
 
@@ -634,6 +622,8 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
     default_value[3 + n] =  extra_parameter_defaults[n];
   }
 
+  size_t nk = grids[0]->GetNK();
+
   //-----nzlimit and ndeftop are common to all grids as these branches do not look at
   //-----the grid values. ndefins and ndef split on the value in the cell above, which
   //-----is a per grid test, so these must be counted per grid.
@@ -642,37 +632,39 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
   std::vector<int> ndefins(n_grids, 0);
   std::vector<int> ndef   (n_grids, 0);
 
-  for (size_t k = topk ; k <= botk ; k++) {
-    for (size_t i = 0; i < geometry.GetNI(); i++) {
-      for (size_t j = 0; j < geometry.GetNJ(); j++) {
-        if (!geometry.IsActive(i, j, k)) {
-          if (k > 0 && k > topk) {
-            if (geometry.GetDZ(i, j, k) < zlimit) {
-              for (size_t n = 0 ; n < n_grids ; n++) {
-                NRLib::Grid<double> & grid = *grids[n];
-                grid(i, j, k) = grid(i, j, k - 1);
-              }
-              nzlimit++;
-            }
-            else {
-              for (size_t n = 0 ; n < n_grids ; n++) {
-                NRLib::Grid<double> & grid = *grids[n];
-                if (grid(i, j, k - 1) == default_top[n]) {
-                  grid(i, j, k) = default_top[n];
-                  ndefins[n]++;
-                }
-                else {
-                  grid(i, j, k) = default_value[n];
-                  ndef[n]++;
-                }
-              }
-            }
+  double undef = 0.0; // Should be -99999
+
+  for (size_t i = 0; i < geometry.GetNI(); i++) {
+    for (size_t j = 0; j < geometry.GetNJ(); j++) {
+
+      int k1 = std::max(0, static_cast<int>(topk) - 1);
+      int k2 = static_cast<int>(botk);
+
+      while (k1 < botk && (*grids[0])(i, j, k1) == undef) { ++k1; }
+      while (k2 > topk && (*grids[0])(i, j, k2) == undef) { --k2; }
+
+      // Overburden
+      for (size_t k = 0 ; k < k1 ; ++k) {
+        for (size_t n = 0 ; n < n_grids ; ++n) {
+          (*grids[n])(i, j, k) = (*grids[n])(i, j, k1);
+        }
+      }
+
+      // Inside reservoir
+      for (size_t k = k1 + 1 ; k <= k2 ; ++k) { // Cell k1 is defined
+        if (!geometry.IsActive(i, j, k) || geometry.GetDZ(i, j, k) < zlimit) {
+          for (size_t n = 0 ; n < n_grids ; ++n) {
+            (*grids[n])(i, j, k) = (*grids[n])(i, j, k - 1);
           }
-          else {
-            for (size_t n = 0 ; n < n_grids ; n++) {
-              (*grids[n])(i, j, k) = default_top[n];
-            }
-            ndeftop++;
+        }
+        nzlimit++;
+      }
+
+      // Underburden
+      if (k2 > k1) {
+        for (size_t k = k2 + 1 ; k < nk ; ++k) { // Cell k2 is defined
+          for (size_t n = 0 ; n < n_grids ; ++n) {
+            (*grids[n])(i, j, k) = (*grids[n])(i, j, k2);
           }
         }
       }
@@ -759,7 +751,7 @@ void SeismicRegridding::FindInternalParameters(SeismicParameters                
     for (size_t i = 0; i < n_extra_params; ++i)
       pt_extra_param[i] = pt_vp;
 
-    for (size_t k = topk; k <= botk + 1; k++) {
+    for (size_t k = topk; k <= botk; k++) {
       for (size_t i = imin; i < imax; ++i) {
         for (size_t j = jmin; j < jmax; ++j) {
 
@@ -795,24 +787,12 @@ void SeismicRegridding::FindInternalParameters(SeismicParameters                
                 }
               }
 
-              if (k == botk + 1) {
-                for (size_t pt = 0; pt < 4; ++pt) {
-                  pt_vp[pt].z  = constvp[2];
-                  pt_vs[pt].z  = constvs[2];
-                  pt_rho[pt].z = constrho[2];
-                  for (size_t ii = 0; ii < n_extra_params; ++ii) {
-                    pt_extra_param[ii][pt].z = 0.0;
-                  }
-                }
-              }
-              else {
-                for (size_t pt = 0; pt < 4; ++pt) {
-                  pt_vp[pt].z  = eclipse_vp (i + int(pt % 2), j + int(floor(double(pt / 2))), k);
-                  pt_vs[pt].z  = eclipse_vs (i + int(pt % 2), j + int(floor(double(pt / 2))), k);
-                  pt_rho[pt].z = eclipse_rho(i + int(pt % 2), j + int(floor(double(pt / 2))), k);
-                  for (size_t ii = 0; ii < n_extra_params; ++ii) {
-                    pt_extra_param[ii][pt].z = eclipse_extra_params[ii](i + int(pt % 2), j + int(floor(double(pt / 2))), k);
-                  }
+              for (size_t pt = 0; pt < 4; ++pt) {
+                pt_vp[pt].z  = eclipse_vp (i + int(pt % 2), j + int(floor(double(pt / 2))), k);
+                pt_vs[pt].z  = eclipse_vs (i + int(pt % 2), j + int(floor(double(pt / 2))), k);
+                pt_rho[pt].z = eclipse_rho(i + int(pt % 2), j + int(floor(double(pt / 2))), k);
+                for (size_t ii = 0; ii < n_extra_params; ++ii) {
+                  pt_extra_param[ii][pt].z = eclipse_extra_params[ii](i + int(pt % 2), j + int(floor(double(pt / 2))), k);
                 }
               }
 
@@ -1476,60 +1456,68 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
   std::vector<double>    constrho            = model_settings->GetConstRho();
   bool                   default_underburden = model_settings->GetDefaultUnderburden();
 
-  size_t                 ni                  = vpgrid.GetNI();
-  size_t                 nj                  = vpgrid.GetNJ();
-  size_t                 nk                  = vpgrid.GetNK();
+  int                    ni                  = static_cast<int>(vpgrid.GetNI());
+  int                    nj                  = static_cast<int>(vpgrid.GetNJ());
+  int                    nk                  = static_cast<int>(vpgrid.GetNK());
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling remaining cells in regular grids.\n");
 
   int count1 = 0;
   int count2 = 0;
   int count3 = 0;
+  int count4 = 0;
 
   for (size_t i = 0 ; i < ni ; ++i) {
     for (size_t j = 0 ; j < nj ; ++j) {
 
-      bool found_bot = false;
-      for (size_t k = nk - 1 ; k > 0 ; --k) {
-        if (found_bot && vpgrid(i, j, k) == missing) {
+      int k1 = 0;
+      int k2 = nk - 1;
+
+      while (k1 < nk && vpgrid(i, j, k1) == missing) { ++k1 ;}
+      while (k2 >  0 && vpgrid(i, j, k2) == missing) { --k2 ;}
+
+      if (k1 == nk) {
+        for (int k = 0 ; k < nk ; ++k) {
           vpgrid (i, j, k) = static_cast<float>(constvp [1]);
           vsgrid (i, j, k) = static_cast<float>(constvs [1]);
           rhogrid(i, j, k) = static_cast<float>(constrho[1]);
+          count4++;
+        }
+      }
+      else {
+        for (int k = 0 ; k < k1 ; ++k) {
+          vpgrid (i, j, k) = vpgrid (i, j, k1);
+          vsgrid (i, j, k) = vsgrid (i, j, k1);
+          rhogrid(i, j, k) = rhogrid(i, j, k1);
           count1++;
         }
-        else if (!found_bot && vpgrid(i, j, k) != missing) {
-          found_bot = true;
-          for (size_t kk = vpgrid.GetNK() - 1 ; kk > k ; --kk) {
-            if (default_underburden) {
-              vpgrid (i, j, kk) = static_cast<float>(constvp [2]);
-              vsgrid (i, j, kk) = static_cast<float>(constvs [2]);
-              rhogrid(i, j, kk) = static_cast<float>(constrho[2]);
-            }
-            else {
-              vpgrid (i, j, kk) = vpgrid (i, j, k);
-              vsgrid (i, j, kk) = vsgrid (i, j, k);
-              rhogrid(i, j, kk) = rhogrid(i, j, k);
-            }
+        for (int k = k1 + 1 ; k < k2 ; ++k) {
+          if (vpgrid (i, j, k) == missing) {
+            vpgrid (i, j, k) = vpgrid (i, j, k - 1);
+            vsgrid (i, j, k) = vsgrid (i, j, k - 1);
+            rhogrid(i, j, k) = rhogrid(i, j, k - 1);
             count2++;
           }
         }
-      }
-      if (found_bot == false) {
-        for (size_t k = 0; k < nk; ++k) {
-          vpgrid (i, j, k) = static_cast<float>(constvp [1]);
-          vsgrid (i, j, k) = static_cast<float>(constvs [1]);
-          rhogrid(i, j, k) = static_cast<float>(constrho[1]);
+        for (int k = k2 + 1 ; k < nk ; ++k) {
+          vpgrid (i, j, k) = vpgrid (i, j, k2);
+          vsgrid (i, j, k) = vsgrid (i, j, k2);
+          rhogrid(i, j, k) = rhogrid(i, j, k2);
           count3++;
         }
       }
     }
   }
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in trace equal to default reservoir value    : %10d", count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in bottom layer equal to default reservoir value       : %10d", count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in overburden equal to first defined value             : %10d", count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in trace equal to last define value above    : %10d", count2);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in underburden equal to last defined value             : %10d", count3);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting fully empty traces to zero                                   : %10d", count4);
+  /*
   if (default_underburden)
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to default underburden                  : %10d\n", count2);
   else
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to layer below                          : %10d\n", count2);
+  */
 }
 
 //---------------------------------------------------------------------------------
