@@ -121,8 +121,15 @@ private:
                                    size_t                         k,
                                    size_t                         botk);
 
-  static void PostProcess(SeismicParameters & seismic_parameters,
-                          ModelSettings     *  model_settings);
+  static void PostProcess(NRLib::StormContGrid               & vpgrid,
+                          NRLib::StormContGrid               & vsgrid,
+                          NRLib::StormContGrid               & rhogrid,
+                          std::vector<NRLib::StormContGrid*> & extra_parameter_grid,
+                          const std::vector<double>          & constvp,
+                          const std::vector<double>          & constvs,
+                          const std::vector<double>          & constrho,
+                          const std::vector<double>          & extra_parameter_defaults,
+                          const float                          missing);
 
   static void FindTWT(SeismicParameters             & seismic_parameters,
                       ModelSettings                 * model_settings,

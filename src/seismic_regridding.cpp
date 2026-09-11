@@ -344,40 +344,34 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
                                        size_t              n_threads)
 //----------------------------------------------------------------------
 {
+  const NRLib::EclipseGrid           & egrid                    = seismic_parameters.GetEclipseGrid();
   NRLib::StormContGrid               & vpgrid                   = seismic_parameters.GetVpGrid();
   NRLib::StormContGrid               & vsgrid                   = seismic_parameters.GetVsGrid();
   NRLib::StormContGrid               & rhogrid                  = seismic_parameters.GetRhoGrid();
   std::vector<NRLib::StormContGrid*>   extra_parameter_grid     = seismic_parameters.GetExtraParametersGrids();
-
-  const NRLib::EclipseGrid           & egrid                    = seismic_parameters.GetEclipseGrid();
-
   size_t                               topk                     = seismic_parameters.GetTopK();
   size_t                               botk                     = seismic_parameters.GetBottomK();
+  float                                missing                  = seismic_parameters.GetMissingVal();
 
   std::vector<double>                  constvp                  = model_settings->GetConstVp();
   std::vector<double>                  constvs                  = model_settings->GetConstVs();
   std::vector<double>                  constrho                 = model_settings->GetConstRho();
   std::vector<std::string>             names                    = model_settings->GetParameterNames();
+  std::vector<double>                  extra_parameter_defaults = model_settings->GetExtraParameterDefaultValues();
+
+  const NRLib::EclipseGeometry       & eclipse_geometry         = egrid.GetGeometry();
+  NRLib::Grid<double>                  eclipse_vp               = egrid.GetParameter(names[0]);
+  NRLib::Grid<double>                  eclipse_vs               = egrid.GetParameter(names[1]);
+  NRLib::Grid<double>                  eclipse_rho              = egrid.GetParameter(names[2]);
+  std::vector<NRLib::Grid<double>>     eclipse_extra_params;
   std::vector<std::string>             extra_parameter_names;
 
   // Only resample extra parameters if requested for output segy.
   if (model_settings->GetOutputExtraParametersTimeSegy() || model_settings->GetOutputExtraParametersDepthSegy()) {
     extra_parameter_names = model_settings->GetExtraParameterNames();
-  }
-  size_t n_extra_params = extra_parameter_names.size();
-
-  const NRLib::EclipseGeometry       & eclipse_geometry         = egrid.GetGeometry();
-  //---for parallelisation
-  //use copy-constructor, need copy as values are filled in.
-  NRLib::Grid<double>                  eclipse_vp               = egrid.GetParameter(names[0]);
-  NRLib::Grid<double>                  eclipse_vs               = egrid.GetParameter(names[1]);
-  NRLib::Grid<double>                  eclipse_rho              = egrid.GetParameter(names[2]);
-
-  std::vector<NRLib::Grid<double> >    eclipse_extra_params;
-
-  for (size_t i = 0; i < n_extra_params; ++i) {
-    NRLib::Grid<double> one_parameter_grid = egrid.GetParameter(extra_parameter_names[i]);
-    eclipse_extra_params.push_back(one_parameter_grid);
+    for (size_t i = 0 ; i < extra_parameter_names.size() ; ++i) {
+      eclipse_extra_params.push_back(egrid.GetParameter(extra_parameter_names[i]));
+    }
   }
 
   double vp_avg , vp_min , vp_max;
@@ -436,7 +430,7 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
 
 
   ////-------------find edges---------------------
-  for (size_t k = topk; k <= botk + 1; k++) {
+  for (size_t k = topk; k <= botk; k++) {
     for (size_t i = 0; i < egrid.GetNI() - 1; i++) {
       //bot edge
       size_t j = 0;
@@ -554,8 +548,17 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
                          i, j, k, pt_vp);
   }
 
-  PostProcess(seismic_parameters,
-              model_settings);
+  // Fill in values where there are still missing values in grids
+
+  PostProcess(vpgrid,
+              vsgrid,
+              rhogrid,
+              extra_parameter_grid,
+              constvp,
+              constvs,
+              constrho,
+              extra_parameter_defaults,
+              missing);
 
   float undef = vpgrid.GetMissingCode();
   float vpavg , vpmin , vpmax;
@@ -1428,8 +1431,8 @@ void SeismicRegridding::FindCornerParameters(SeismicParameters                & 
         vpgrid.FindCenterOfCell(ii, jj, 0, x, y, z);
         NRLib::Point p1(x, y, 0.0);
         if (inside_e_cells.IsInsidePolygonXY(p1)) {
-          vpgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(pt_vp[3].z);
-          vsgrid(ii, jj, (k - topk) + 1)  = static_cast<float>(pt_vs[3].z);
+          vpgrid (ii, jj, (k - topk) + 1) = static_cast<float>(pt_vp[3].z);
+          vsgrid (ii, jj, (k - topk) + 1) = static_cast<float>(pt_vs[3].z);
           rhogrid(ii, jj, (k - topk) + 1) = static_cast<float>(pt_rho[3].z);
           for (size_t iii = 0; iii < n_extra_params; ++iii) {
             NRLib::StormContGrid &param_grid = *(extra_parameter_grid[iii]);
@@ -1441,31 +1444,31 @@ void SeismicRegridding::FindCornerParameters(SeismicParameters                & 
   }
 }
 
-//--------------------------------------------------------------------------
-void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
-                                    ModelSettings     *  model_settings)
-//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+void SeismicRegridding::PostProcess(NRLib::StormContGrid               & vpgrid,
+                                    NRLib::StormContGrid               & vsgrid,
+                                    NRLib::StormContGrid               & rhogrid,
+                                    std::vector<NRLib::StormContGrid*> & extra_parameter_grid,
+                                    const std::vector<double>          & constvp,
+                                    const std::vector<double>          & constvs,
+                                    const std::vector<double>          & constrho,
+                                    const std::vector<double>          & extra_parameter_defaults,
+                                    const float                          missing)
+//--------------------------------------------------------------------------------------------
 {
-  NRLib::StormContGrid & vpgrid              = seismic_parameters.GetVpGrid();
-  NRLib::StormContGrid & vsgrid              = seismic_parameters.GetVsGrid();
-  NRLib::StormContGrid & rhogrid             = seismic_parameters.GetRhoGrid();
-  float                  missing             = seismic_parameters.GetMissingVal();
-
-  std::vector<double>    constvp             = model_settings->GetConstVp();
-  std::vector<double>    constvs             = model_settings->GetConstVs();
-  std::vector<double>    constrho            = model_settings->GetConstRho();
-  bool                   default_underburden = model_settings->GetDefaultUnderburden();
-
-  int                    ni                  = static_cast<int>(vpgrid.GetNI());
-  int                    nj                  = static_cast<int>(vpgrid.GetNJ());
-  int                    nk                  = static_cast<int>(vpgrid.GetNK());
-
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling remaining cells in regular grids.\n");
+
+  int ni      = static_cast<int>(vpgrid.GetNI());
+  int nj      = static_cast<int>(vpgrid.GetNJ());
+  int nk      = static_cast<int>(vpgrid.GetNK());
+  int n_extra = static_cast<int>(extra_parameter_grid.size());
 
   int count1 = 0;
   int count2 = 0;
   int count3 = 0;
   int count4 = 0;
+
+  // Also, we may want to use default over and underburden here
 
   for (size_t i = 0 ; i < ni ; ++i) {
     for (size_t j = 0 ; j < nj ; ++j) {
@@ -1476,11 +1479,14 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
       while (k1 < nk && vpgrid(i, j, k1) == missing) { ++k1 ;}
       while (k2 >  0 && vpgrid(i, j, k2) == missing) { --k2 ;}
 
-      if (k1 == nk) {
+      if (k1 == nk) { // All are missing
         for (int k = 0 ; k < nk ; ++k) {
-          vpgrid (i, j, k) = static_cast<float>(constvp [1]);
-          vsgrid (i, j, k) = static_cast<float>(constvs [1]);
-          rhogrid(i, j, k) = static_cast<float>(constrho[1]);
+          vpgrid (i, j, k) = static_cast<float>(constvp [0]);
+          vsgrid (i, j, k) = static_cast<float>(constvs [0]);
+          rhogrid(i, j, k) = static_cast<float>(constrho[0]);
+          for (size_t n = 0 ; n < n_extra ; ++n) {
+            (*extra_parameter_grid[n])(i, j, k) = static_cast<float>(extra_parameter_defaults[n]);
+          }
           count4++;
         }
       }
@@ -1489,6 +1495,9 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
           vpgrid (i, j, k) = vpgrid (i, j, k1);
           vsgrid (i, j, k) = vsgrid (i, j, k1);
           rhogrid(i, j, k) = rhogrid(i, j, k1);
+          for (size_t n = 0 ; n < n_extra ; ++n) {
+            (*extra_parameter_grid[n])(i, j, k) = (*extra_parameter_grid[n])(i, j, k1);
+          }
           count1++;
         }
         for (int k = k1 + 1 ; k < k2 ; ++k) {
@@ -1496,6 +1505,9 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
             vpgrid (i, j, k) = vpgrid (i, j, k - 1);
             vsgrid (i, j, k) = vsgrid (i, j, k - 1);
             rhogrid(i, j, k) = rhogrid(i, j, k - 1);
+            for (size_t n = 0 ; n < n_extra ; ++n) {
+              (*extra_parameter_grid[n])(i, j, k) = (*extra_parameter_grid[n])(i, j, k - 1);
+            }
             count2++;
           }
         }
@@ -1503,21 +1515,18 @@ void SeismicRegridding::PostProcess(SeismicParameters & seismic_parameters,
           vpgrid (i, j, k) = vpgrid (i, j, k2);
           vsgrid (i, j, k) = vsgrid (i, j, k2);
           rhogrid(i, j, k) = rhogrid(i, j, k2);
+          for (size_t n = 0 ; n < n_extra ; ++n) {
+            (*extra_parameter_grid[n])(i, j, k) = (*extra_parameter_grid[n])(i, j, k2);
+          }
           count3++;
         }
       }
     }
   }
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in overburden equal to first defined value             : %10d", count1);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in trace equal to last define value above    : %10d", count2);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in underburden equal to last defined value             : %10d", count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting fully empty traces to zero                                   : %10d", count4);
-  /*
-  if (default_underburden)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to default underburden                  : %10d\n", count2);
-  else
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting cells in trace equal to layer below                          : %10d\n", count2);
-  */
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in overburden equal to first defined value    : %10d", count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in reservoir equal to last define value above : %10d", count2);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in underburden equal to last defined value    : %10d", count3);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting fully empty traces to default reservopir values               : %10d", count4);
 }
 
 //---------------------------------------------------------------------------------
