@@ -389,16 +389,8 @@ void SeismicRegridding::FindParameters(SeismicParameters & seismic_parameters,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Rho          %8.2f  %8.2f  %8.2f\n",rho_avg, rho_min, rho_max);
 
   size_t nijk = egrid.GetNI()*egrid.GetNJ()*egrid.GetNK();
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive cells in Eclipse grid above and in reservoir.\n");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nTotal number of Eclipse grid cells: %d x %d x %d = %d\n",egrid.GetNI(),egrid.GetNJ(),egrid.GetNK(), nijk);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOB1 = Using default value for overburden above first layer.");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nOB2 = Using default value for overburden in and below first layer.");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nRES = Using default value for reservoir in reservoir.");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nZRO = Using cell value from cell above for zero thickness cells.\n");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nGridName            OB1     OB2     RES     ZRO");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n-----------------------------------------------\n");
 
-  //-----prepare eclipsegrid - include default values and value above where delta < zlimit
   FillInactiveEclipseGridCells(model_settings,
                                eclipse_geometry,
                                eclipse_vp,
@@ -598,17 +590,12 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
   size_t                              n_grids                  = 3 + n_extra_params;
 
   std::vector<NRLib::Grid<double>*>   grids        (n_grids);
-  std::vector<std::string>            names        (n_grids);
   std::vector<double>                 default_top  (n_grids);   // default value above
   std::vector<double>                 default_value(n_grids);   // default value inside
 
-  names[0] = "Vp" ;
-  names[1] = "Vs" ;
-  names[2] = "Rho";
-
-  grids[0] = &eclipse_vp ;
-  grids[1] = &eclipse_vs ;
-  grids[2] = &eclipse_rho;
+  grids[0]         = &eclipse_vp ;
+  grids[1]         = &eclipse_vs ;
+  grids[2]         = &eclipse_rho;
 
   default_top[0]   = constvp [0];
   default_top[1]   = constvs [0];
@@ -620,20 +607,15 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
 
   for (size_t n = 0 ; n < n_extra_params ; n++) {
     grids        [3 + n] = &eclipse_extra_params    [n];
-    names        [3 + n] =  extra_parameter_names   [n];
     default_top  [3 + n] =  extra_parameter_defaults[n];
     default_value[3 + n] =  extra_parameter_defaults[n];
   }
 
   size_t nk = grids[0]->GetNK();
 
-  //-----nzlimit and ndeftop are common to all grids as these branches do not look at
-  //-----the grid values. ndefins and ndef split on the value in the cell above, which
-  //-----is a per grid test, so these must be counted per grid.
-  int              nzlimit = 0;
-  int              ndeftop = 0;
-  std::vector<int> ndefins(n_grids, 0);
-  std::vector<int> ndef   (n_grids, 0);
+  int count1 = 0;
+  int count2 = 0;
+  int count3 = 0;
 
   double undef = 0.0; // Should be -99999
 
@@ -652,6 +634,7 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
           (*grids[n])(i, j, k) = (*grids[n])(i, j, k1);
         }
       }
+      count1 += k1;
 
       // Inside reservoir
       for (size_t k = k1 + 1 ; k <= k2 ; ++k) { // Cell k1 is defined
@@ -659,8 +642,8 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
           for (size_t n = 0 ; n < n_grids ; ++n) {
             (*grids[n])(i, j, k) = (*grids[n])(i, j, k - 1);
           }
+          count2++;
         }
-        nzlimit++;
       }
 
       // Underburden
@@ -670,13 +653,14 @@ void SeismicRegridding::FillInactiveEclipseGridCells(ModelSettings              
             (*grids[n])(i, j, k) = (*grids[n])(i, j, k2);
           }
         }
+        count3 += nk - k2 - 1;
       }
     }
   }
 
-  for (size_t n = 0 ; n < n_grids ; n++) {
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "%-15s %7d %7d %7d %7d\n",names[n].c_str(), ndeftop, ndefins[n], ndef[n], nzlimit);
-  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive Eclipse cells in overburden  : %10d"  , count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive Eclipse cells in reservoir   : %10d"  , count2);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive Eclipse cells in underburden : %10d\n", count3);
 }
 
 //-------------------------------------------------------------------------------------------
@@ -1526,7 +1510,7 @@ void SeismicRegridding::PostProcess(NRLib::StormContGrid               & vpgrid,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in overburden equal to first defined value    : %10d", count1);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in reservoir equal to last define value above : %10d", count2);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in underburden equal to last defined value    : %10d", count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting fully empty traces to default reservopir values               : %10d", count4);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting fully empty traces to default reservoir values                : %10d\n", count4);
 }
 
 //---------------------------------------------------------------------------------
