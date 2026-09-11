@@ -259,7 +259,7 @@ void SeismicRegridding::RemoveNegativeDz(NRLib::StormContGrid & zgrid,
       for (size_t k = 0 ; k < nk - 1 ; ++k) {
         float  z1 = zgrid(i, j, k    );
         float  z2 = zgrid(i, j, k + 1);
-        if (z1 != missing && z2 != missing && z1 > z2 > thresh) { // Only log errors larger than threshold
+        if (z1 != missing && z2 != missing && (z1 - z2) > thresh) { // Only log errors larger than threshold
           double x, y, z;
           zgrid.FindCenterOfCell(i, j, k, x, y, z);
           std::vector<double> neg(5);
