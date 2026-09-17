@@ -338,63 +338,90 @@ bool XmlModelFile::ParseDefaultValues(TiXmlNode   * node,
   legalCommands.push_back("rho-mid");
   legalCommands.push_back("rho-bot");
 
-  double value;
-  if (ParseValue(root, "vp-top", value, errTxt)) {
-    modelSettings_->SetVpTop(value);
-  } else {
-    errTxt += "Value for Vp above reservoir is not given.\n";
+  double undef = -99999.0;
+  double vp0   = undef;
+  double vp1   = undef;
+  double vp2   = undef;
+  double vs0   = undef;
+  double vs1   = undef;
+  double vs2   = undef;
+  double rho0  = undef;
+  double rho1  = undef;
+  double rho2  = undef;
+
+  if (ParseValue(root, "vp-top", vp0, errTxt)) {
+    modelSettings_->SetVpTop(vp0);
+  }
+  if (ParseValue(root, "vp-mid", vp1, errTxt)) {
+    modelSettings_->SetVpMid(vp1);
+  }
+  if (ParseValue(root, "vp-bot", vp2, errTxt)) {
+    modelSettings_->SetVpBot(vp2);
+  }
+  if (ParseValue(root, "vs-top", vs0, errTxt)) {
+    modelSettings_->SetVsTop(vs0);
+  }
+  if (ParseValue(root, "vs-mid", vs1, errTxt)) {
+    modelSettings_->SetVsMid(vs1);
+  }
+  if (ParseValue(root, "vs-bot", vs2, errTxt)) {
+    modelSettings_->SetVsBot(vs2);
+  }
+  if (ParseValue(root, "rho-top", rho0, errTxt)) {
+    modelSettings_->SetRhoTop(rho0);
+  }
+  if (ParseValue(root, "rho-mid", rho1, errTxt)) {
+    modelSettings_->SetRhoMid(rho1);
+  }
+  if (ParseValue(root, "rho-bot", rho2, errTxt)) {
+    modelSettings_->SetRhoBot(rho2);
   }
 
-  if (ParseValue(root, "vp-mid", value, errTxt)) {
-    modelSettings_->SetVpMid(value);
-  } else {
-    errTxt += "Value for Vp in missing cells is not given.\n";
+  if (vp0 != undef && vs0 != undef && rho0 != undef) {
+    modelSettings_->SetUseDefaultOverburden(true);
+  }
+  else if (BadDefaults(vp0, vs0, rho0, undef)) {
+    if (vp0 == undef)
+      errTxt += "A default value for Vp in overburden is missing\n";
+    if (vs0 == undef)
+      errTxt += "A default value for Vs in overburden is missing\n";
+    if (rho0 == undef)
+      errTxt += "A default value for Rho in overburden is missing\n";
   }
 
-  if (ParseValue(root, "vp-bot", value, errTxt)) {
-    modelSettings_->SetVpBot(value);
-  } else {
-    errTxt += "Value for Vp below reservoir is not given\n";
+  if (vp1 != undef && vs1 != undef && rho1 != undef) {
+    modelSettings_->SetUseDefaultReservoir(true);
+  }
+  else if (BadDefaults(vp1, vs1, rho1, undef)) {
+    if (vp1 == undef)
+      errTxt += "A default value for Vp in reservoir is missing\n";
+    if (vs1 == undef)
+      errTxt += "A default value for Vs in reservoir is missing\n";
+    if (rho1 == undef)
+      errTxt += "A default value for Rho in reservoir is missing\n";
   }
 
-  if (ParseValue(root, "vs-top", value, errTxt)) {
-        modelSettings_->SetVsTop(value);
-  } else {
-    errTxt += "Value for Vs above reservoir is not given.\n";
+  if (vp2 != undef && vs2 != undef && rho2 != undef) {
+    modelSettings_->SetUseDefaultUnderburden(true);
   }
-
-  if (ParseValue(root, "vs-mid", value, errTxt)) {
-    modelSettings_->SetVsMid(value);
-  } else {
-    errTxt += "Value for Vs in missing cells is not given.\n";
-  }
-
-  if (ParseValue(root, "vs-bot", value, errTxt)) {
-    modelSettings_->SetVsBot(value);
-  } else {
-    errTxt += "Value for Vs below reservoir is not given\n";
-  }
-
-  if (ParseValue(root, "rho-top", value, errTxt)) {
-    modelSettings_->SetRhoTop(value);
-  } else {
-    errTxt += "Value for Rho above reservoir is not given.\n";
-  }
-
-  if (ParseValue(root, "rho-mid", value, errTxt)) {
-    modelSettings_->SetRhoMid(value);
-  } else {
-    errTxt += "Value for rho in missing cells is not given.\n";
-  }
-
-  if (ParseValue(root, "rho-bot", value, errTxt)) {
-    modelSettings_->SetRhoBot(value);
-  } else {
-    errTxt += "Value for rho below reservoir is not given\n";
+  else if (BadDefaults(vp2, vs2, rho2, undef)) {
+    if (vp2 == undef)
+      errTxt += "A default value for Vp in underburden is missing\n";
+    if (vs2 == undef)
+      errTxt += "A default value for Vs in underburden is missing\n";
+    if (rho2 == undef)
+      errTxt += "A default value for Rho in underburden is missing\n";
   }
 
   CheckForJunk(root, errTxt, legalCommands);
   return true;
+}
+
+bool XmlModelFile::BadDefaults(double vp, double vs, double rho, double undef)
+{
+  return ((vp  != undef && (vs == undef || rho == undef)) ||
+          (vs  != undef && (vp == undef || rho == undef)) ||
+          (rho != undef && (vp == undef || vs  == undef)));
 }
 
 bool XmlModelFile::ParseParameterNames(TiXmlNode   * node,

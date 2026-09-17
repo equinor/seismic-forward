@@ -54,7 +54,15 @@ ModelSettings::ModelSettings(void)
   seed_1_                              = static_cast<unsigned long>(std::time(0)    );
   seed_2_                              = static_cast<unsigned long>(std::time(0) + 1);
 
+  constvp_                             = {3200, 3400, 3600};
+  constvs_                             = {1600, 1700, 1800};
+  constrho_                            = {2500, 2600, 2700};
+
+  use_default_overburden_              = false;
+  use_default_reservoir_               = false;
+  use_default_underburden_             = false;
   default_underburden_                 = false;
+
   ps_seismic_                          = false;
   nmo_corr_                            = false;
 
@@ -403,16 +411,30 @@ void ModelSettings::PrintSettings(void)
   const std::vector<double> & vs  = GetConstVs();
   const std::vector<double> & rho = GetConstRho();
 
+  const bool use_default_overburden  = GetUseDefaultOverburden();
+  const bool use_default_reservoir   = GetUseDefaultReservoir();
+  const bool use_default_underburden = GetUseDefaultUnderburden();
+
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Parameters names\n");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vp                                                : %10s\n", GetParameterNames()[0].c_str());
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vs                                                : %10s\n", GetParameterNames()[1].c_str());
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Rho                                               : %10s\n", GetParameterNames()[2].c_str());
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Default values for overburden, reservoir and underburden\n");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vp                                                :%7.1f ->%7.1f ->%7.1f\n", vp[0] , vp[1] , vp[2]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vs                                                :%7.1f ->%7.1f ->%7.1f\n", vs[0] , vs[1] , vs[2]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Rho                                               :%7.1f ->%7.1f ->%7.1f\n", rho[0], rho[1], rho[2]);
+  if (use_default_overburden || use_default_reservoir || use_default_underburden) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Default values                                            Vp      Vs     Rho\n");
+    if (use_default_overburden)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Overburden                                        :%7.1f %7.1f %7.1f\n", vp[0], vs[0], rho[0]);
+    if (use_default_reservoir)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Reservoir                                         :%7.1f %7.1f %7.1f\n", vp[1], vs[1], rho[1]);
+    if (use_default_underburden)
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Underburden                                       :%7.1f %7.1f %7.1f\n", vp[2], vs[2], rho[2]);
+  }
+  else {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Default values for overburden, reservoir and underburden are not used. Undefined\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "values above reservoir are taken from nearest defined value below, while undefined \n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "values inside and below reservoir are taken from nearest defined value above\n");
+  }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
   size_t n = GetExtraParameterNames().size();

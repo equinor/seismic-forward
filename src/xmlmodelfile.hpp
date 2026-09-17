@@ -60,6 +60,10 @@ private:
                          std::string & errTxt);
   bool    ParseDefaultValues(TiXmlNode   * node,
                              std::string & errTxt);
+  bool    BadDefaults(double vp,
+                      double vs,
+                      double rho,
+                      double undef);
 
   bool ParseOutputGrid(TiXmlNode   * node,
                        std::string & errTxt);

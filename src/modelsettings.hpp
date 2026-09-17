@@ -87,10 +87,13 @@ public:
   std::string               GetEclipseFileName()                      const { return eclipse_file_name_              ;}
 
   std::vector<std::string>  GetParameterNames()                       const { return parameter_names_                ;}
-  std::vector<double>       GetConstVp()                              const { return constvp_                        ;}
-  std::vector<double>       GetConstVs()                              const { return constvs_                        ;}
-  std::vector<double>       GetConstRho()                             const { return constrho_                       ;}
+  const std::vector<double> & GetConstVp()                              const { return constvp_                        ;}
+  const std::vector<double> & GetConstVs()                              const { return constvs_                        ;}
+  const std::vector<double> & GetConstRho()                             const { return constrho_                       ;}
   bool                      GetDefaultUnderburden(void)               const { return default_underburden_            ;}
+  bool                      GetUseDefaultOverburden(void)             const { return use_default_overburden_         ;}
+  bool                      GetUseDefaultReservoir(void)              const { return use_default_reservoir_          ;}
+  bool                      GetUseDefaultUnderburden(void)            const { return use_default_underburden_        ;}
 
   std::vector<std::string>  GetExtraParameterNames()                  const { return extra_parameter_names_          ;}
   std::vector<double>       GetExtraParameterDefaultValues()          const { return extra_parameter_default_values_ ;}
@@ -181,15 +184,15 @@ public:
   bool                      GetOutputSeismicStackDepthSegy()          const { return seismic_stack_depth_segy_       ;}
   NRLib::TraceHeaderFormat  GetOutputSegyFileFormat()                 const { return output_segy_file_format_        ;}
 
-  void SetLogLevel(int level)                          { log_level_                           = level    ;}
+  void SetLogLevel(int level)                          { log_level_                           = level   ;}
 
-  void SetEclipseGrid(std::string filename)            { eclipse_file_name_                   = filename ;}
-  void SetTwtFileName(std::string name)                { twt_file_name_                       = name     ;}
+  void SetEclipseGrid(std::string filename)            { eclipse_file_name_                   = filename;}
+  void SetTwtFileName(std::string name)                { twt_file_name_                       = name    ;}
 
-  void SetPrefix(std::string val)                      { prefix_                              = val      ;}
-  void SetSuffix(std::string val)                      { suffix_                              = val      ;}
-  void SetTracesInMemory(size_t value)                 { traces_in_memory_                    = value    ;}
-  void SetMaxThreads(size_t value)                     { max_threads_                         = value    ;}
+  void SetPrefix(std::string val)                      { prefix_                              = val     ;}
+  void SetSuffix(std::string val)                      { suffix_                              = val     ;}
+  void SetTracesInMemory(size_t value)                 { traces_in_memory_                    = value   ;}
+  void SetMaxThreads(size_t value)                     { max_threads_                         = value   ;}
 
   void SetZeroThicknessLimit(double val)               { zero_thickness_limit_                = val     ;}
 
@@ -220,6 +223,9 @@ public:
   void SetRemoveNegativeDeltaZ(bool value)             { remove_negative_delta_z_             = value   ;}
   void SetPSSeismic(bool ps)                           { ps_seismic_                          = ps      ;}
   void SetDefaultUnderburden(bool value)               { default_underburden_                 = value   ;}
+  void SetUseDefaultOverburden(bool value)             { use_default_overburden_              = value   ;}
+  void SetUseDefaultReservoir(bool value)              { use_default_reservoir_               = value   ;}
+  void SetUseDefaultUnderburden(bool value)            { use_default_underburden_             = value   ;}
   void SetResamplParamToSegyInterpol(bool value)       { resampl_param_to_segy_with_interpol_ = value   ;}
   void SetNMOCorr(bool nmo)                            { nmo_corr_                            = nmo     ;}
 
@@ -358,6 +364,9 @@ private:
   unsigned long             seed_2_;
 
   bool                      default_underburden_;
+  bool                      use_default_overburden_;  // Insert default values for overburden
+  bool                      use_default_reservoir_;   // Insert default values for reservoir
+  bool                      use_default_underburden_; // Insert default values for underburden
   bool                      ps_seismic_;
   bool                      nmo_corr_;
   bool                      resampl_param_to_segy_with_interpol_;

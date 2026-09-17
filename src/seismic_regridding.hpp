@@ -33,7 +33,6 @@ private:
                              size_t              n_threads);
 
   static void FindInternalParameters(SeismicParameters                & seismic_parameters,
-                                     ModelSettings                    * model_settings,
                                      const NRLib::EclipseGeometry     & eclipse_geometry,
                                      const NRLib::Grid<double>        & eclipse_vp,
                                      const NRLib::Grid<double>        & eclipse_vs,
@@ -42,7 +41,6 @@ private:
                                      size_t                             n_threads);
 
   static void FindEdgeParameters(SeismicParameters                & seismic_parameters,
-                                 ModelSettings                    * model_settings,
                                  const NRLib::EclipseGeometry     & geometry,
                                  const NRLib::Grid<double>        & vp_grid,
                                  const NRLib::Grid<double>        & vs_grid,
@@ -124,10 +122,7 @@ private:
                           NRLib::StormContGrid               & vsgrid,
                           NRLib::StormContGrid               & rhogrid,
                           std::vector<NRLib::StormContGrid*> & extra_parameter_grid,
-                          const std::vector<double>          & constvp,
-                          const std::vector<double>          & constvs,
-                          const std::vector<double>          & constrho,
-                          const std::vector<double>          & extra_parameter_defaults,
+                          const ModelSettings                & model_settings,
                           const float                          missing);
 
   static void FindTWT(SeismicParameters             & seismic_parameters,
