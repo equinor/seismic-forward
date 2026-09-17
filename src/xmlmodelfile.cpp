@@ -105,17 +105,19 @@ XmlModelFile::~XmlModelFile()
 }
 
 //-------------------------------------------------------------------
-static void AddDeprecatedPlacementTask(const std::string & keyword,
-                                       const bool          given_in_project_settings)
+static void CheckDeprecatedPlacement(const std::string & keyword,
+                                     const bool          given_in_project_settings,
+                                     std::string       & errTxt)
 //-------------------------------------------------------------------
 {
-  std::string task = "Keyword <" + keyword + "> has been made a sub-element of section <project-settings>.\n"
-                     "    Current placement is deprecated.";
   if (given_in_project_settings) {
-    task += " The keyword is given both places, and the value\n"
-            "    given in <project-settings> is the one used.";
+    errTxt += "Keyword <" + keyword + "> is given both at top level and in section <project-settings>.\n"
+              "Give it only in <project-settings>; the top level placement is deprecated.\n";
   }
-  TaskList::AddTask(task);
+  else {
+    TaskList::AddTask("Keyword <" + keyword + "> has been made a sub-element of section <project-settings>.\n"
+                      "    Current placement is deprecated.");
+  }
 }
 
 bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
@@ -151,9 +153,8 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
 
   //  ------ START Moved to new section project setting ----------------
   //
-  //  <traces-in-memory> and <max-threads> are parsed here, before section
-  //  <project-settings>, so that the values given in <project-settings>
-  //  take precedence when a keyword is given in both places.
+  //  <traces-in-memory> and <max-threads> are still accepted at top level,
+  //  but giving a keyword both here and in <project-settings> is an error.
   //
   double number;
   bool traces_in_memory_deprecated = ParseValue(root, "traces-in-memory", number, errTxt);
@@ -175,10 +176,10 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
   ParseProjectSettings(root, errTxt, traces_in_memory_given, max_threads_given);
 
   if (traces_in_memory_deprecated) {
-    AddDeprecatedPlacementTask("traces-in-memory", traces_in_memory_given);
+    CheckDeprecatedPlacement("traces-in-memory", traces_in_memory_given, errTxt);
   }
   if (max_threads_deprecated) {
-    AddDeprecatedPlacementTask("max-threads", max_threads_given);
+    CheckDeprecatedPlacement("max-threads", max_threads_given, errTxt);
   }
 
   if (ParseWhiteNoise(root, errTxt)) {
