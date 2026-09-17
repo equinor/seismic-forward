@@ -1588,7 +1588,7 @@ Example:
 
 ```
 <project-settings>
-  <traces-in-mmeory> 200000 </traces-in-memory>
+  <traces-in-memory> 200000 </traces-in-memory>
   <max-threads> 5 </max-threads>
 </project-settings>
 ```
