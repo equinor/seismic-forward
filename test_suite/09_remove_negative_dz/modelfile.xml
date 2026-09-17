@@ -9,17 +9,20 @@
   <eclipse-file > ../input/dztest.grdecl </eclipse-file>
 
   <default-values>
+<!--
     <vp-top>  3200 </vp-top>
-    <vp-mid>  3200 </vp-mid>
-    <vp-bot>  4000 </vp-bot>
-
     <vs-top>  1600 </vs-top>
-    <vs-mid>  1500 </vs-mid>
-    <vs-bot>  2200 </vs-bot>
-
     <rho-top> 2500 </rho-top>
+-->
+    <vp-mid>  3200 </vp-mid>
+    <vs-mid>  1500 </vs-mid>
     <rho-mid> 2550 </rho-mid>
+
+<!--
+    <vp-bot>  4000 </vp-bot>
+    <vs-bot>  2200 </vs-bot>
     <rho-bot> 2500 </rho-bot>
+-->
   </default-values>
 
   <parameter-names>

@@ -58,9 +58,7 @@ Parameters names
   Rho                                               :  DENS_DATA
 
 Default values                                            Vp      Vs     Rho
-  Overburden                                        : 3200.0  1600.0  2500.0
   Reservoir                                         : 3200.0  1500.0  2550.0
-  Underburden                                       : 4000.0  2200.0  2500.0
 
 Extra parameters                                    :         no
 
@@ -143,22 +141,24 @@ Base layer of Eclipse grid                :  274
 
 Number of layers needed in z-grid         :  274
 
-Finding Eclipse top and base surfaces (not corner point interpolation).
-
-Eclipse grid minimum value                :  2338.10
-Eclipse grid maximum value                :  4507.89
-
-Using PP velocity                         :  3200.00
+Finding Eclipse top and base surfaces using center-point interpolation:
+  Eclipse grid minimum value                   :  2338.10
+  Eclipse grid maximum value                   :  4507.89
 
 Calculating Eclipse top time surface
+  Using PP velocity                            :  3200.00
 
-Wavelet time length is                    :    72.00
+Calculating additional grid size to account for wavelet size
+  Using PP velocity for surface ext. - overburden  :  3200.00
+  Using PP velocity for surface ext. - underburden :  3600.00
 
-Eclipse top surface lift due to wavelet   :    57.60
-Eclipse base surface drop due to wavelet  :    72.00
+  Wavelet time length is                           :    72.00
 
-Grid minimum value                        :  2280.50 (Eclipse grid minimum - 0.5 wavelet)
-Grid maximum value                        :  4579.89 (Eclipse grid maximum + 0.5 wavelet)
+  Eclipse top surface lift due to wavelet          :    57.60
+  Eclipse base surface drop due to wavelet         :    64.80
+
+  Grid minimum value                               :  2280.50 (Eclipse grid minimum - 0.5 wavelet)
+  Grid maximum value                               :  4572.69 (Eclipse grid maximum + 0.5 wavelet)
 
 Making regular grids:
   z, TWT                 30 x   83 x  274 :     682260
@@ -201,9 +201,9 @@ Parameter statistics for Eclipse grid after filling of inactive cells.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            3621.89   2868.46   3850.32
-Vs            1830.61   1290.70   1991.41
-Rho           2477.00   2164.63   2590.00
+Vp            3639.70   2868.46   3850.32
+Vs            1836.43   1290.70   1991.41
+Rho           2469.59   2164.63   2590.00
 
 Resampling parameters in Eclipse grid into regular grids.
 
@@ -218,9 +218,9 @@ Parameter statistics for regular grid after resampling.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            3411.52   2871.21   4000.00
-Vs            1712.75   1291.22   2200.00
-Rho           2456.56   2166.07   2590.00
+Vp            3406.37   2871.21   3848.48
+Vs            1694.83   1290.93   1989.35
+Rho           2440.73   2166.07   2590.00
 
 Deleting Eclipse grid to free memory.
 
@@ -254,7 +254,7 @@ Generate Twt0 for NMO assuming PP seismic.
 
 Generate Z0 for NMO.
    z0_min        :  2155.00
-   z0_max        :  4720.00
+   z0_max        :  4700.00
    dz            :     5.00
 
 Segy geometry:
@@ -287,8 +287,8 @@ if not, data are taken from first offset angle.
 
 Type               Avg         Min         Max
 ----------------------------------------------
-Time            0.0000     -0.0917      0.1471
-Depth           0.0000     -0.0931      0.1492
+Time            0.0000     -0.0919      0.0850
+Depth           0.0000     -0.0914      0.0887
 
 
 ****************************************************************************************************
@@ -297,18 +297,18 @@ Depth           0.0000     -0.0931      0.1492
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.34     3.11%         0.00     0.00%
-Make regular grid                            2.52    22.87%         1.00    14.29%
-Resample elastic parameters                  1.53    13.86%         0.00     0.00%
-Forward modelling                            6.42    58.32%         6.00    85.71%
-Write SegY files                             0.11     0.98%         0.00     0.00%
+Loading corner-point grid                    0.28     9.45%         0.00     0.00%
+Make regular grid                            0.24     8.30%         1.00    33.33%
+Resample elastic parameters                  0.25     8.49%         0.00     0.00%
+Forward modelling                            2.13    72.50%         2.00    66.67%
+Write SegY files                             0.02     0.63%         0.00     0.00%
 Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.09     0.86%         0.00     0.00%
+Miscellaneous                                0.02     0.63%         0.00     0.00%
 ----------------------------------------------------------------------------------
-Total                                       11.01   100.00%         7.00   100.00%
+Total                                        2.94   100.00%         3.00   100.00%
 
-Total CPU  time used by Seismic Forward:    11.01 s
-Total real time used in Seismic Forward:     7.00 s
+Total CPU  time used by Seismic Forward:     2.94 s
+Total real time used in Seismic Forward:     3.00 s
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****
