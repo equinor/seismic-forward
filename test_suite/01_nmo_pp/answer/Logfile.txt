@@ -1,11 +1,11 @@
 
-****************************************************************************************************
-*****                                                                                          *****
-*****                          Seismic Forward Modeling                                        *****
-*****                                version 4.3.1                                             *****
-*****                         Copyright (c) 2024 by Equinor                                    *****
-*****                                                                                          *****
-****************************************************************************************************
+*****
+*****
+*****          Seismic Forward Modeling
+*****          version {version_number}
+*****          Copyright (c) 2025 by Equinor
+*****
+*****
 
 Threads in use                            :    20 /  20
 
@@ -24,7 +24,6 @@ Suffix                                              :
 Seismic data type                                   :         PP
 NMO correction                                      :        yes
 Offset without stretch                              :         no
-Use default underburden                             :         no
 Resample parameters to Segy with interpolation      :         no
 
 Regular grid
@@ -57,11 +56,14 @@ Parameters names
   Vs                                                :    VS_DATA
   Rho                                               :   RHO_DATA
 
-Default values for overburden, reservoir and underburden
-  Vp                                                : 2400.0 -> 2240.0 -> 2240.0
-  Vs                                                : 1100.0 ->  890.0 ->  890.0
-  Rho                                               : 2300.0 -> 2240.0 -> 2240.0
-
+Default values                                            Vp      Vs     Rho
+  Overburden                                        : 2400.0  1100.0  2300.0
+  Reservoir                                         : 2240.0   890.0  2240.0
+  Underburden                                       : 2240.0   890.0  2240.0
+Default values used to fill empty cells
+  Overburden                                        :yes
+  Reservoir                                         :yes
+  Underburden                                       :yes
 Extra parameters                                    :         no
 
 Output area is specified in model file
@@ -144,18 +146,21 @@ Base layer of Eclipse grid                :   22
 
 Number of layers needed in z-grid         :   24
 
-Finding Eclipse top and base surfaces (not corner point interpolation).
+Finding Eclipse top and base surfaces using center-point interpolation:
+  Eclipse grid minimum value                   :  1723.28
+  Eclipse grid maximum value                   :  1814.26
 
-Eclipse grid minimum value                :  1723.28
-Eclipse grid maximum value                :  1814.26
+Calculating additional grid size to account for wavelet size
+  Using PP velocity for surface ext. - overburden  :  2400.00
+  Using PP velocity for surface ext. - underburden :  2240.00
 
-Wavelet time length is                    :    64.00
+  Wavelet time length is                           :    64.00
 
-Eclipse top surface lift due to wavelet   :    38.40
-Eclipse base surface drop due to wavelet  :    35.84
+  Eclipse top surface lift due to wavelet          :    38.40
+  Eclipse base surface drop due to wavelet         :    35.84
 
-Grid minimum value                        :  1684.88 (Eclipse grid minimum - 0.5 wavelet)
-Grid maximum value                        :  1850.10 (Eclipse grid maximum + 0.5 wavelet)
+  Grid minimum value                               :  1684.88 (Eclipse grid minimum - 0.5 wavelet)
+  Grid maximum value                               :  1850.10 (Eclipse grid maximum + 0.5 wavelet)
 
 Making regular grids:
   z, TWT                  2 x    2 x   24 :         96
@@ -187,20 +192,13 @@ Vp             763.95      0.00   3035.62
 Vs             363.74      0.00   1620.68
 Rho            631.64      0.00   2250.27
 
-Filling inactive cells in Eclipse grid above and in reservoir.
-
 Total number of Eclipse grid cells: 11 x 11 x 23 = 2783
 
-OB1 = Using default value for overburden above first layer.
-OB2 = Using default value for overburden in and below first layer.
-RES = Using default value for reservoir in reservoir.
-ZRO = Using cell value from cell above for zero thickness cells.
+Filling inactive Eclipse cells in overburden  :          0
+Filling inactive Eclipse cells in reservoir   :       1029
+Filling inactive Eclipse cells in underburden :          0
 
-GridName            OB1     OB2     RES     ZRO
------------------------------------------------
-Vp                   41     291      43    1597
-Vs                   41     291      43    1597
-Rho                  41     291      43    1597
+Filling fully inactive Eclipse columns        :        943
 
 Parameter statistics for Eclipse grid after filling of inactive cells.
 
@@ -212,6 +210,13 @@ Rho           2233.82   2093.31   2300.00
 
 Resampling parameters in Eclipse grid into regular grids.
 
+Filling remaining cells in regular grids.
+
+Setting undefined cells in overburden equal to first defined value    :          4
+Setting undefined cells in reservoir equal to last define value above :          0
+Setting undefined cells in underburden equal to last defined value    :          4
+Setting fully empty columns to default reservoir values               :          0
+
 Parameter statistics for regular grid after resampling.
 
 Parameter         Avg       Min       Max
@@ -219,12 +224,6 @@ Parameter         Avg       Min       Max
 Vp            2431.95   2235.27   3035.00
 Vs            1071.50    888.36   1620.07
 Rho           2202.63   2093.34   2300.00
-
-Filling remaining cells in regular grids.
-
-Setting undefined cells in trace equal to default reservoir value    :          0
-Setting cells in bottom layer equal to default reservoir value       :          0
-Setting cells in trace equal to layer below                          :          0
 
 Deleting Eclipse grid to free memory.
 
@@ -290,6 +289,8 @@ Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 1000.0 2000.0 3000.0 
 
+Writing SegY grids to file.
+
 Statistics for generated seismic data. If present, stack data are used,
 if not, data are taken from first offset angle.
 
@@ -299,6 +300,25 @@ Time            0.0000     -0.1591      0.1577
 Time shift     -0.0000     -0.1645      0.1593
 Depth          -0.0009     -0.1642      0.1520
 
+
+****************************************************************************************************
+*****                                     Timings Summary                                      *****
+****************************************************************************************************
+
+Section                                          CPU Time/s            Real Time/s
+----------------------------------------------------------------------------------
+Loading corner-point grid                    0.01     8.41%         0.00   100.00%
+Make regular grid                            0.01     9.18%         0.00   100.00%
+Resample elastic parameters                  0.00     1.55%         0.00   100.00%
+Forward modelling                            0.00     0.52%         0.00   100.00%
+Write SegY files                             0.00     0.03%         0.00   100.00%
+Dummy                                        0.00     0.00%         0.00   100.00%
+Miscellaneous                                0.06    80.32%         0.00   100.00%
+----------------------------------------------------------------------------------
+Total                                        0.08   100.00%         0.00   100.00%
+
+Total CPU  time used by Seismic Forward:     0.08 s
+Total real time used in Seismic Forward:     0.00 s
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

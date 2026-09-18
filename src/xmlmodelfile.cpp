@@ -153,14 +153,14 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
     modelSettings_->SetPSSeismic(bolval);
   }
 
-  bool bolval2;
-  if (ParseBool(root, "default-underburden", bolval2, errTxt)) {
-    modelSettings_->SetDefaultUnderburden(bolval2);
-  }
-
   ParseOutputParameters(root, errTxt);
 
   //  ------ START Moved to new section project setting ----------------
+
+  if (ParseBool(root, "default-underburden", bolval, errTxt)) {
+    modelSettings_->SetUseDefaultUnderburden(bolval);
+    TaskList::AddTask("Keyword <default-underburden> has been made a sub-element of section <project-settings>. Current\n    placement is deprecated.");
+  }
 
   double number;
   if (ParseValue(root, "traces-in-memory", number, errTxt)) {
@@ -194,7 +194,22 @@ bool XmlModelFile::ParseProjectSettings(TiXmlNode   * node,
   std::vector<std::string> legalCommands;
   legalCommands.push_back("max-threads");
   legalCommands.push_back("traces-in-memory");
+  legalCommands.push_back("default-overburden");
+  legalCommands.push_back("default-reservoir");
+  legalCommands.push_back("default-underburden");
 
+  bool bolval;
+  if (ParseBool(root, "default-overburden", bolval, errTxt)) {
+    modelSettings_->SetUseDefaultOverburden(bolval);
+  }
+
+  if (ParseBool(root, "default-reservoir", bolval, errTxt)) {
+    modelSettings_->SetUseDefaultReservoir(bolval);
+  }
+
+  if (ParseBool(root, "default-underburden", bolval, errTxt)) {
+    modelSettings_->SetUseDefaultUnderburden(bolval);
+  }
 
   double number;
   if (ParseValue(root, "traces-in-memory", number, errTxt)) {
@@ -339,59 +354,50 @@ bool XmlModelFile::ParseDefaultValues(TiXmlNode   * node,
   legalCommands.push_back("rho-bot");
 
   double value;
-  if (ParseValue(root, "vp-top", value, errTxt)) {
+  if (ParseValue(root, "vp-top", value, errTxt))
     modelSettings_->SetVpTop(value);
-  } else {
-    errTxt += "Value for Vp above reservoir is not given.\n";
-  }
+  else
+    errTxt += "Default value for Vp in overburden is not given.\n";
 
-  if (ParseValue(root, "vp-mid", value, errTxt)) {
+  if (ParseValue(root, "vp-mid", value, errTxt))
     modelSettings_->SetVpMid(value);
-  } else {
-    errTxt += "Value for Vp in missing cells is not given.\n";
-  }
+  else
+    errTxt += "Default value for Vp in reservoir is not given.\n";
 
-  if (ParseValue(root, "vp-bot", value, errTxt)) {
+  if (ParseValue(root, "vp-bot", value, errTxt))
     modelSettings_->SetVpBot(value);
-  } else {
-    errTxt += "Value for Vp below reservoir is not given\n";
-  }
+  else
+    errTxt += "Default value for Vp in underburden is not given\n";
 
-  if (ParseValue(root, "vs-top", value, errTxt)) {
+  if (ParseValue(root, "vs-top", value, errTxt))
         modelSettings_->SetVsTop(value);
-  } else {
-    errTxt += "Value for Vs above reservoir is not given.\n";
-  }
+  else
+    errTxt += "Default value for Vs in overburden is not given.\n";
 
-  if (ParseValue(root, "vs-mid", value, errTxt)) {
+  if (ParseValue(root, "vs-mid", value, errTxt))
     modelSettings_->SetVsMid(value);
-  } else {
-    errTxt += "Value for Vs in missing cells is not given.\n";
-  }
+  else
+    errTxt += "Default value for Vs in reservoir is not given.\n";
 
-  if (ParseValue(root, "vs-bot", value, errTxt)) {
+  if (ParseValue(root, "vs-bot", value, errTxt))
     modelSettings_->SetVsBot(value);
-  } else {
-    errTxt += "Value for Vs below reservoir is not given\n";
-  }
+  else
+    errTxt += "Default value for Vs in underburden is not given\n";
 
-  if (ParseValue(root, "rho-top", value, errTxt)) {
+  if (ParseValue(root, "rho-top", value, errTxt))
     modelSettings_->SetRhoTop(value);
-  } else {
-    errTxt += "Value for Rho above reservoir is not given.\n";
-  }
+  else
+    errTxt += "Default value for Rho in overburden is not given.\n";
 
-  if (ParseValue(root, "rho-mid", value, errTxt)) {
+  if (ParseValue(root, "rho-mid", value, errTxt))
     modelSettings_->SetRhoMid(value);
-  } else {
-    errTxt += "Value for rho in missing cells is not given.\n";
-  }
+  else
+    errTxt += "Default value for rho in reservoir is not given.\n";
 
-  if (ParseValue(root, "rho-bot", value, errTxt)) {
+  if (ParseValue(root, "rho-bot", value, errTxt))
     modelSettings_->SetRhoBot(value);
-  } else {
-    errTxt += "Value for rho below reservoir is not given\n";
-  }
+  else
+    errTxt += "Default value for rho in underburden is not given\n";
 
   CheckForJunk(root, errTxt, legalCommands);
   return true;

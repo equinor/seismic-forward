@@ -54,7 +54,10 @@ ModelSettings::ModelSettings(void)
   seed_1_                              = static_cast<unsigned long>(std::time(0)    );
   seed_2_                              = static_cast<unsigned long>(std::time(0) + 1);
 
-  default_underburden_                 = false;
+  use_default_overburden_              = true;
+  use_default_reservoir_               = true;
+  use_default_underburden_             = true;
+
   ps_seismic_                          = false;
   nmo_corr_                            = false;
 
@@ -308,7 +311,6 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Seismic data type                                   : %10s\n"  , GetPSSeismic()                        ? "PS"  : "PP");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "NMO correction                                      : %10s\n"  , GetNMOCorr()                          ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Offset without stretch                              : %10s\n"  , GetOffsetWithoutStretch()             ? "yes" : "no");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Use default underburden                             : %10s\n"  , GetDefaultUnderburden()               ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Resample parameters to Segy with interpolation      : %10s\n"  , GetResamplParamToSegyInterpol()       ? "yes" : "no");
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
@@ -409,11 +411,15 @@ void ModelSettings::PrintSettings(void)
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Rho                                               : %10s\n", GetParameterNames()[2].c_str());
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Default values for overburden, reservoir and underburden\n");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vp                                                :%7.1f ->%7.1f ->%7.1f\n", vp[0] , vp[1] , vp[2]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Vs                                                :%7.1f ->%7.1f ->%7.1f\n", vs[0] , vs[1] , vs[2]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Rho                                               :%7.1f ->%7.1f ->%7.1f\n", rho[0], rho[1], rho[2]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Default values                                            Vp      Vs     Rho\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Overburden                                        :%7.1f %7.1f %7.1f\n", vp[0], vs[0], rho[0]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Reservoir                                         :%7.1f %7.1f %7.1f\n", vp[1], vs[1], rho[1]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Underburden                                       :%7.1f %7.1f %7.1f\n", vp[2], vs[2], rho[2]);
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Default values used to fill empty cells\n");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Overburden                                        :%s\n", GetUseDefaultOverburden()  ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Reservoir                                         :%s\n", GetUseDefaultReservoir()   ? "yes" : "no");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "  Underburden                                       :%s\n", GetUseDefaultUnderburden() ? "yes" : "no");
 
   size_t n = GetExtraParameterNames().size();
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "Extra parameters                                    : %10s\n", n > 0 ? "yes" : "no");

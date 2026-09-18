@@ -5,6 +5,12 @@
   In addition, this input grid has undefined values in top layer - giving ktop = 2
 -->
 
+<project-settings>
+  <default-overburden>  no  </default-overburden>
+  <default-reservoir>   yes </default-reservoir>
+  <default-underburden> no  </default-underburden>
+</project-settings>
+
 <elastic-param>
   <eclipse-file > ../input/dztest.grdecl </eclipse-file>
 
@@ -12,11 +18,9 @@
     <vp-top>  3200 </vp-top>
     <vp-mid>  3200 </vp-mid>
     <vp-bot>  4000 </vp-bot>
-
     <vs-top>  1600 </vs-top>
     <vs-mid>  1500 </vs-mid>
     <vs-bot>  2200 </vs-bot>
-
     <rho-top> 2500 </rho-top>
     <rho-mid> 2550 </rho-mid>
     <rho-bot> 2500 </rho-bot>
@@ -91,7 +95,5 @@
   <seismic-depth-segy> yes </seismic-depth-segy>
   <seismic-time-segy>  yes </seismic-time-segy>
 </output-parameters>
-
-<traces-in-memory> 1000000 </traces-in-memory>
 
 </seismic-forward>
