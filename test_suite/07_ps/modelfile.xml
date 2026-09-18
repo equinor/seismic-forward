@@ -92,6 +92,9 @@
 
 <ps-seismic> yes </ps-seismic>
 <timeshift-twt> ../../01_nmo_pp/input/Input_timeshift_minus50_twt_PS.storm </timeshift-twt>
-<traces-in-memory> 4 </traces-in-memory>
+
+<project-settings>
+  <max-threads> 1 </max-threads>
+</project-settings>
 
 </seismic-forward>
