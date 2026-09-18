@@ -24,7 +24,6 @@ Suffix                                              :
 Seismic data type                                   :         PP
 NMO correction                                      :        yes
 Offset without stretch                              :         no
-Use default underburden                             :         no
 Resample parameters to Segy with interpolation      :         no
 
 Regular grid
@@ -61,7 +60,10 @@ Default values                                            Vp      Vs     Rho
   Overburden                                        : 3200.0  1600.0  2500.0
   Reservoir                                         : 3200.0  1500.0  2550.0
   Underburden                                       : 4000.0  2200.0  2500.0
-
+Default values used to fill empty cells
+  Overburden                                        :yes
+  Reservoir                                         :yes
+  Underburden                                       :yes
 Extra parameters                                    :         no
 
 Output area is specified in model file
@@ -143,22 +145,24 @@ Base layer of Eclipse grid                :  274
 
 Number of layers needed in z-grid         :  274
 
-Finding Eclipse top and base surfaces using cornerpoint interpolation.
-
-Eclipse grid minimum value                :  2338.10
-Eclipse grid maximum value                :  4507.89
-
-Using PP velocity                         :  3200.00
+Finding Eclipse top and base surfaces using cornerpoint interpolation:
+  Eclipse grid minimum value                   :  2338.10
+  Eclipse grid maximum value                   :  4507.89
 
 Calculating Eclipse top time surface
+  Using PP velocity                            :  3200.00
 
-Wavelet time length is                    :    72.00
+Calculating additional grid size to account for wavelet size
+  Using PP velocity for surface ext. - overburden  :  3200.00
+  Using PP velocity for surface ext. - underburden :  4000.00
 
-Eclipse top surface lift due to wavelet   :    57.60
-Eclipse base surface drop due to wavelet  :    72.00
+  Wavelet time length is                           :    72.00
 
-Grid minimum value                        :  2280.50 (Eclipse grid minimum - 0.5 wavelet)
-Grid maximum value                        :  4579.89 (Eclipse grid maximum + 0.5 wavelet)
+  Eclipse top surface lift due to wavelet          :    57.60
+  Eclipse base surface drop due to wavelet         :    72.00
+
+  Grid minimum value                               :  2280.50 (Eclipse grid minimum - 0.5 wavelet)
+  Grid maximum value                               :  4579.89 (Eclipse grid maximum + 0.5 wavelet)
 
 Making regular grids:
   z, TWT                 30 x   83 x  274 :     682260
@@ -304,18 +308,18 @@ Depth           0.0000     -0.0989      0.1462
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.33     3.54%         1.00    12.50%
-Make regular grid                            1.02    10.83%         0.00     0.00%
-Resample elastic parameters                  1.54    16.24%         0.00     0.00%
-Forward modelling                            6.37    67.33%         7.00    87.50%
-Write SegY files                             0.11     1.13%         0.00     0.00%
+Loading corner-point grid                    0.26     9.28%         0.00     0.00%
+Make regular grid                            0.16     5.62%         0.00     0.00%
+Resample elastic parameters                  0.26     9.30%         0.00     0.00%
+Forward modelling                            2.10    74.53%         2.00   100.00%
+Write SegY files                             0.02     0.64%         0.00     0.00%
 Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.09     0.92%         0.00     0.00%
+Miscellaneous                                0.02     0.62%         0.00     0.00%
 ----------------------------------------------------------------------------------
-Total                                        9.46   100.00%         8.00   100.00%
+Total                                        2.82   100.00%         2.00   100.00%
 
-Total CPU  time used by Seismic Forward:     9.46 s
-Total real time used in Seismic Forward:     8.00 s
+Total CPU  time used by Seismic Forward:     2.82 s
+Total real time used in Seismic Forward:     2.00 s
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

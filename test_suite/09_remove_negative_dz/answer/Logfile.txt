@@ -301,17 +301,17 @@ Depth           0.0000     -0.0914      0.0887
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.26     8.98%         1.00    33.33%
-Make regular grid                            0.24     8.28%         0.00     0.00%
-Resample elastic parameters                  0.29     9.78%         0.00     0.00%
-Forward modelling                            2.11    71.77%         2.00    66.67%
-Write SegY files                             0.02     0.61%         0.00     0.00%
+Loading corner-point grid                    0.27     9.28%         1.00    33.33%
+Make regular grid                            0.24     8.37%         0.00     0.00%
+Resample elastic parameters                  0.24     8.24%         0.00     0.00%
+Forward modelling                            2.11    72.86%         2.00    66.67%
+Write SegY files                             0.02     0.63%         0.00     0.00%
 Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.02     0.58%         0.00     0.00%
+Miscellaneous                                0.02     0.62%         0.00     0.00%
 ----------------------------------------------------------------------------------
-Total                                        2.94   100.00%         3.00   100.00%
+Total                                        2.90   100.00%         3.00   100.00%
 
-Total CPU  time used by Seismic Forward:     2.94 s
+Total CPU  time used by Seismic Forward:     2.90 s
 Total real time used in Seismic Forward:     3.00 s
 
 ****************************************************************************************************
