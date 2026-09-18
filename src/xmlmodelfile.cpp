@@ -153,14 +153,14 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
     modelSettings_->SetPSSeismic(bolval);
   }
 
-  bool bolval2;
-  if (ParseBool(root, "default-underburden", bolval2, errTxt)) {
-    modelSettings_->SetDefaultUnderburden(bolval2);
-  }
-
   ParseOutputParameters(root, errTxt);
 
   //  ------ START Moved to new section project setting ----------------
+
+  if (ParseBool(root, "default-underburden", bolval, errTxt)) {
+    modelSettings_->SetUseDefaultUnderburden(bolval);
+    TaskList::AddTask("Keyword <default-underburden> has been made a sub-element of section <project-settings>. Current\n    placement is deprecated.");
+  }
 
   double number;
   if (ParseValue(root, "traces-in-memory", number, errTxt)) {
@@ -194,7 +194,22 @@ bool XmlModelFile::ParseProjectSettings(TiXmlNode   * node,
   std::vector<std::string> legalCommands;
   legalCommands.push_back("max-threads");
   legalCommands.push_back("traces-in-memory");
+  legalCommands.push_back("default-overburden");
+  legalCommands.push_back("default-reservoir");
+  legalCommands.push_back("default-underburden");
 
+  bool bolval;
+  if (ParseBool(root, "default-overburden", bolval, errTxt)) {
+    modelSettings_->SetUseDefaultOverburden(bolval);
+  }
+
+  if (ParseBool(root, "default-reservoir", bolval, errTxt)) {
+    modelSettings_->SetUseDefaultReservoir(bolval);
+  }
+
+  if (ParseBool(root, "default-underburden", bolval, errTxt)) {
+    modelSettings_->SetUseDefaultUnderburden(bolval);
+  }
 
   double number;
   if (ParseValue(root, "traces-in-memory", number, errTxt)) {
@@ -338,90 +353,54 @@ bool XmlModelFile::ParseDefaultValues(TiXmlNode   * node,
   legalCommands.push_back("rho-mid");
   legalCommands.push_back("rho-bot");
 
-  double undef = -99999.0;
-  double vp0   = undef;
-  double vp1   = undef;
-  double vp2   = undef;
-  double vs0   = undef;
-  double vs1   = undef;
-  double vs2   = undef;
-  double rho0  = undef;
-  double rho1  = undef;
-  double rho2  = undef;
+  double value;
+  if (ParseValue(root, "vp-top", value, errTxt))
+    modelSettings_->SetVpTop(value);
+  else
+    errTxt += "Default value for Vp in overburden is not given.\n";
 
-  if (ParseValue(root, "vp-top", vp0, errTxt)) {
-    modelSettings_->SetVpTop(vp0);
-  }
-  if (ParseValue(root, "vp-mid", vp1, errTxt)) {
-    modelSettings_->SetVpMid(vp1);
-  }
-  if (ParseValue(root, "vp-bot", vp2, errTxt)) {
-    modelSettings_->SetVpBot(vp2);
-  }
-  if (ParseValue(root, "vs-top", vs0, errTxt)) {
-    modelSettings_->SetVsTop(vs0);
-  }
-  if (ParseValue(root, "vs-mid", vs1, errTxt)) {
-    modelSettings_->SetVsMid(vs1);
-  }
-  if (ParseValue(root, "vs-bot", vs2, errTxt)) {
-    modelSettings_->SetVsBot(vs2);
-  }
-  if (ParseValue(root, "rho-top", rho0, errTxt)) {
-    modelSettings_->SetRhoTop(rho0);
-  }
-  if (ParseValue(root, "rho-mid", rho1, errTxt)) {
-    modelSettings_->SetRhoMid(rho1);
-  }
-  if (ParseValue(root, "rho-bot", rho2, errTxt)) {
-    modelSettings_->SetRhoBot(rho2);
-  }
+  if (ParseValue(root, "vp-mid", value, errTxt))
+    modelSettings_->SetVpMid(value);
+  else
+    errTxt += "Default value for Vp in reservoir is not given.\n";
 
-  if (vp0 != undef && vs0 != undef && rho0 != undef) {
-    modelSettings_->SetUseDefaultOverburden(true);
-  }
-  else if (BadDefaults(vp0, vs0, rho0, undef)) {
-    if (vp0 == undef)
-      errTxt += "A default value for Vp in overburden is missing\n";
-    if (vs0 == undef)
-      errTxt += "A default value for Vs in overburden is missing\n";
-    if (rho0 == undef)
-      errTxt += "A default value for Rho in overburden is missing\n";
-  }
+  if (ParseValue(root, "vp-bot", value, errTxt))
+    modelSettings_->SetVpBot(value);
+  else
+    errTxt += "Default value for Vp in underburden is not given\n";
 
-  if (vp1 != undef && vs1 != undef && rho1 != undef) {
-    modelSettings_->SetUseDefaultReservoir(true);
-  }
-  else if (BadDefaults(vp1, vs1, rho1, undef)) {
-    if (vp1 == undef)
-      errTxt += "A default value for Vp in reservoir is missing\n";
-    if (vs1 == undef)
-      errTxt += "A default value for Vs in reservoir is missing\n";
-    if (rho1 == undef)
-      errTxt += "A default value for Rho in reservoir is missing\n";
-  }
+  if (ParseValue(root, "vs-top", value, errTxt))
+        modelSettings_->SetVsTop(value);
+  else
+    errTxt += "Default value for Vs in overburden is not given.\n";
 
-  if (vp2 != undef && vs2 != undef && rho2 != undef) {
-    modelSettings_->SetUseDefaultUnderburden(true);
-  }
-  else if (BadDefaults(vp2, vs2, rho2, undef)) {
-    if (vp2 == undef)
-      errTxt += "A default value for Vp in underburden is missing\n";
-    if (vs2 == undef)
-      errTxt += "A default value for Vs in underburden is missing\n";
-    if (rho2 == undef)
-      errTxt += "A default value for Rho in underburden is missing\n";
-  }
+  if (ParseValue(root, "vs-mid", value, errTxt))
+    modelSettings_->SetVsMid(value);
+  else
+    errTxt += "Default value for Vs in reservoir is not given.\n";
+
+  if (ParseValue(root, "vs-bot", value, errTxt))
+    modelSettings_->SetVsBot(value);
+  else
+    errTxt += "Default value for Vs in underburden is not given\n";
+
+  if (ParseValue(root, "rho-top", value, errTxt))
+    modelSettings_->SetRhoTop(value);
+  else
+    errTxt += "Default value for Rho in overburden is not given.\n";
+
+  if (ParseValue(root, "rho-mid", value, errTxt))
+    modelSettings_->SetRhoMid(value);
+  else
+    errTxt += "Default value for rho in reservoir is not given.\n";
+
+  if (ParseValue(root, "rho-bot", value, errTxt))
+    modelSettings_->SetRhoBot(value);
+  else
+    errTxt += "Default value for rho in underburden is not given\n";
 
   CheckForJunk(root, errTxt, legalCommands);
   return true;
-}
-
-bool XmlModelFile::BadDefaults(double vp, double vs, double rho, double undef)
-{
-  return ((vp  != undef && (vs == undef || rho == undef)) ||
-          (vs  != undef && (vp == undef || rho == undef)) ||
-          (rho != undef && (vp == undef || vs  == undef)));
 }
 
 bool XmlModelFile::ParseParameterNames(TiXmlNode   * node,

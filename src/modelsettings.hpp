@@ -90,7 +90,6 @@ public:
   const std::vector<double> & GetConstVp()                              const { return constvp_                        ;}
   const std::vector<double> & GetConstVs()                              const { return constvs_                        ;}
   const std::vector<double> & GetConstRho()                             const { return constrho_                       ;}
-  bool                      GetDefaultUnderburden(void)               const { return default_underburden_            ;}
   bool                      GetUseDefaultOverburden(void)             const { return use_default_overburden_         ;}
   bool                      GetUseDefaultReservoir(void)              const { return use_default_reservoir_          ;}
   bool                      GetUseDefaultUnderburden(void)            const { return use_default_underburden_        ;}

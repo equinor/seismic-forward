@@ -275,6 +275,7 @@ sub CheckSegYGrids( $$$$$$ )
         my $name    = $filenames[$i];
         my $file1   = "$outputdir/$name";
         my $file2   = "$answerdir/$name";
+
         my $exists1 = -e $file1;
         my $exists2 = -e $file2;
 
