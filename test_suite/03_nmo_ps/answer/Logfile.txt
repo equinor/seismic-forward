@@ -14,7 +14,7 @@ Threads in use                            :     1 /  20
 ****************************************************************************************************
 
 Max threads                                         :          1
-Traces in memory                                    :          4
+Traces in memory                                    :     100000
 
 Log level                                           :          7
 
@@ -220,7 +220,7 @@ Filling remaining cells in regular grids.
 Setting undefined cells in overburden equal to first defined value    :          4
 Setting undefined cells in reservoir equal to last define value above :          0
 Setting undefined cells in underburden equal to last defined value    :          4
-Setting fully empty columns to default reservoir values               :          0
+Setting fully empty columns to default overburden                     :          0
 
 Parameter statistics for regular grid after resampling.
 
@@ -314,13 +314,13 @@ Depth           0.0000      0.0000      0.0000
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.01    11.10%         0.00   100.00%
-Make regular grid                            0.00     0.67%         0.00   100.00%
-Resample elastic parameters                  0.00     0.83%         0.00   100.00%
+Loading corner-point grid                    0.01    10.21%         0.00   100.00%
+Make regular grid                            0.00     0.66%         0.00   100.00%
+Resample elastic parameters                  0.00     0.82%         0.00   100.00%
 Forward modelling                            0.00     0.75%         0.00   100.00%
 Write SegY files                             0.00     0.03%         0.00   100.00%
 Dummy                                        0.00     0.00%         0.00   100.00%
-Miscellaneous                                0.07    86.62%         0.00   100.00%
+Miscellaneous                                0.07    87.53%         0.00   100.00%
 ----------------------------------------------------------------------------------
 Total                                        0.08   100.00%         0.00   100.00%
 
@@ -331,8 +331,4 @@ Total real time used in Seismic Forward:     0.00 s
 *****                                     Suggested tasks                                      *****
 ****************************************************************************************************
 
- 1. Keyword <traces-in-memory> has been made a sub-element of section <project-settings>. Current
-    placement is deprecated.
- 2. Keyword <max-threads> has been made a sub-element of section <project-settings>. Current
-    placement is deprecated.
-
+No tasks suggested.

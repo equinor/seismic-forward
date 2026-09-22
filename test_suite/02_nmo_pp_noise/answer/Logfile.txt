@@ -217,7 +217,7 @@ Filling remaining cells in regular grids.
 Setting undefined cells in overburden equal to first defined value    :          4
 Setting undefined cells in reservoir equal to last define value above :          0
 Setting undefined cells in underburden equal to last defined value    :          4
-Setting fully empty columns to default reservoir values               :          0
+Setting fully empty columns to default overburden                     :          0
 
 Parameter statistics for regular grid after resampling.
 
@@ -309,17 +309,17 @@ Depth           0.0015     -0.6253      0.4572
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.01    10.57%         0.00   100.00%
-Make regular grid                            0.01     7.97%         0.00   100.00%
-Resample elastic parameters                  0.00     1.46%         0.00   100.00%
-Forward modelling                            0.00     0.51%         0.00   100.00%
+Loading corner-point grid                    0.01    10.30%         0.00   100.00%
+Make regular grid                            0.00     5.80%         0.00   100.00%
+Resample elastic parameters                  0.00     1.64%         0.00   100.00%
+Forward modelling                            0.00     0.52%         0.00   100.00%
 Write SegY files                             0.00     0.03%         0.00   100.00%
 Dummy                                        0.00     0.00%         0.00   100.00%
-Miscellaneous                                0.07    79.46%         0.00   100.00%
+Miscellaneous                                0.07    81.72%         0.00   100.00%
 ----------------------------------------------------------------------------------
-Total                                        0.09   100.00%         0.00   100.00%
+Total                                        0.08   100.00%         0.00   100.00%
 
-Total CPU  time used by Seismic Forward:     0.09 s
+Total CPU  time used by Seismic Forward:     0.08 s
 Total real time used in Seismic Forward:     0.00 s
 
 ****************************************************************************************************

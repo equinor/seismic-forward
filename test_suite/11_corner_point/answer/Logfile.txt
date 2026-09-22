@@ -14,7 +14,7 @@ Threads in use                            :    20 /  20
 ****************************************************************************************************
 
 Max threads                                         :        100
-Traces in memory                                    :    1000000
+Traces in memory                                    :     100000
 
 Log level                                           :          7
 
@@ -212,9 +212,9 @@ Parameter statistics for Eclipse grid after filling of inactive cells.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            3621.89   2868.46   3850.32
-Vs            1830.61   1290.70   1991.41
-Rho           2477.00   2164.63   2590.00
+Vp            3622.87   2868.46   4000.00
+Vs            1831.98   1290.70   2200.00
+Rho           2476.86   2164.63   2590.00
 
 Resampling parameters in Eclipse grid into regular grids.
 
@@ -223,15 +223,15 @@ Filling remaining cells in regular grids.
 Setting undefined cells in overburden equal to first defined value    :      52846
 Setting undefined cells in reservoir equal to last define value above :          0
 Setting undefined cells in underburden equal to last defined value    :      21226
-Setting fully empty columns to default reservoir values               :     119350
+Setting fully empty columns to default overburden                     :     119350
 
 Parameter statistics for regular grid after resampling.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            3411.52   2871.21   4000.00
-Vs            1712.75   1291.22   2200.00
-Rho           2456.56   2166.07   2590.00
+Vp            3411.86   2871.21   4000.00
+Vs            1713.11   1291.22   2200.00
+Rho           2456.65   2166.07   2590.00
 
 Deleting Eclipse grid to free memory.
 
@@ -241,7 +241,7 @@ Deleting Eclipse grid to free memory.
 
 Assuming NMO.
    tmin           :  2168.00  (top Eclipse - 0.5 wavelet)
-   tmax           :  3245.29  (bot Eclipse + 0.5 wavelet)
+   tmax           :  3245.28  (bot Eclipse + 0.5 wavelet)
    dt             :     4.00
    nt             :      270
 
@@ -258,7 +258,7 @@ Generate Twt0 for NMO assuming PP seismic.
    wavelet length :    72.00
    nt_stretch     :      343
    nt_seis        :      343
-   tmax_stretch   :  3475.74
+   tmax_stretch   :  3475.73
    twtx_max       :  3460.05
    twt0_min       :  2092.00
    twt0_max       :  3460.00
@@ -308,24 +308,22 @@ Depth           0.0000     -0.0989      0.1462
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.26     9.28%         0.00     0.00%
-Make regular grid                            0.16     5.62%         0.00     0.00%
-Resample elastic parameters                  0.26     9.30%         0.00     0.00%
-Forward modelling                            2.10    74.53%         2.00   100.00%
-Write SegY files                             0.02     0.64%         0.00     0.00%
+Loading corner-point grid                    0.26     9.43%         0.00     0.00%
+Make regular grid                            0.16     5.72%         0.00     0.00%
+Resample elastic parameters                  0.26     9.41%         0.00     0.00%
+Forward modelling                            2.07    74.13%         2.00   100.00%
+Write SegY files                             0.02     0.66%         0.00     0.00%
 Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.02     0.62%         0.00     0.00%
+Miscellaneous                                0.02     0.65%         0.00     0.00%
 ----------------------------------------------------------------------------------
-Total                                        2.82   100.00%         2.00   100.00%
+Total                                        2.80   100.00%         2.00   100.00%
 
-Total CPU  time used by Seismic Forward:     2.82 s
+Total CPU  time used by Seismic Forward:     2.80 s
 Total real time used in Seismic Forward:     2.00 s
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****
 ****************************************************************************************************
 
- 1. Keyword <traces-in-memory> has been made a sub-element of section <project-settings>. Current
-    placement is deprecated.
- 2. Check section 3: Negative dz values found when building z-grid
+ 1. Check section 3: Negative dz values found when building z-grid
 

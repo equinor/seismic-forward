@@ -226,7 +226,7 @@ Filling remaining cells in regular grids.
 Setting undefined cells in overburden equal to first defined value    :          4
 Setting undefined cells in reservoir equal to last define value above :          0
 Setting undefined cells in underburden equal to last defined value    :          4
-Setting fully empty columns to default reservoir values               :          0
+Setting fully empty columns to default overburden                     :          0
 
 Parameter statistics for regular grid after resampling.
 
@@ -301,17 +301,17 @@ Depth          -0.0019     -0.1636      0.1513
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.01     9.14%         0.00   100.00%
-Make regular grid                            0.00     0.71%         0.00   100.00%
-Resample elastic parameters                  0.00     0.88%         0.00   100.00%
+Loading corner-point grid                    0.01    11.69%         0.00   100.00%
+Make regular grid                            0.00     0.68%         0.00   100.00%
+Resample elastic parameters                  0.00     0.81%         0.00   100.00%
 Forward modelling                            0.00     0.14%         0.00   100.00%
 Write SegY files                             0.00     0.02%         0.00   100.00%
 Dummy                                        0.00     0.00%         0.00   100.00%
-Miscellaneous                                0.06    89.11%         0.00   100.00%
+Miscellaneous                                0.07    86.65%         0.00   100.00%
 ----------------------------------------------------------------------------------
-Total                                        0.07   100.00%         0.00   100.00%
+Total                                        0.08   100.00%         0.00   100.00%
 
-Total CPU  time used by Seismic Forward:     0.07 s
+Total CPU  time used by Seismic Forward:     0.08 s
 Total real time used in Seismic Forward:     0.00 s
 
 ****************************************************************************************************

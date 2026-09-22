@@ -215,7 +215,7 @@ Filling remaining cells in regular grids.
 Setting undefined cells in overburden equal to first defined value    :          4
 Setting undefined cells in reservoir equal to last define value above :          0
 Setting undefined cells in underburden equal to last defined value    :          4
-Setting fully empty columns to default reservoir values               :          0
+Setting fully empty columns to default overburden                     :          0
 
 Parameter statistics for regular grid after resampling.
 
@@ -307,13 +307,13 @@ Depth          -0.0009     -0.1642      0.1520
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.01     8.41%         0.00   100.00%
-Make regular grid                            0.01     9.18%         0.00   100.00%
-Resample elastic parameters                  0.00     1.55%         0.00   100.00%
+Loading corner-point grid                    0.00     5.85%         0.00   100.00%
+Make regular grid                            0.01     7.62%         0.00   100.00%
+Resample elastic parameters                  0.00     1.62%         0.00   100.00%
 Forward modelling                            0.00     0.52%         0.00   100.00%
 Write SegY files                             0.00     0.03%         0.00   100.00%
 Dummy                                        0.00     0.00%         0.00   100.00%
-Miscellaneous                                0.06    80.32%         0.00   100.00%
+Miscellaneous                                0.07    84.36%         0.00   100.00%
 ----------------------------------------------------------------------------------
 Total                                        0.08   100.00%         0.00   100.00%
 

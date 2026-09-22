@@ -570,6 +570,7 @@ void SeismicRegridding::FillInactiveEclipseGridCells(const ModelSettings        
   const double                       zlimit                   = model_settings.GetZeroThicknessLimit();
   const bool                         use_default_overburden   = model_settings.GetUseDefaultOverburden();
   const bool                         use_default_reservoir    = model_settings.GetUseDefaultReservoir();
+  const bool                         use_default_underburden  = model_settings.GetUseDefaultUnderburden();
   const std::vector<double>        & constvp                  = model_settings.GetConstVp();
   const std::vector<double>        & constvs                  = model_settings.GetConstVs();
   const std::vector<double>        & constrho                 = model_settings.GetConstRho();
@@ -578,30 +579,36 @@ void SeismicRegridding::FillInactiveEclipseGridCells(const ModelSettings        
   const size_t                       n_extra_params           = eclipse_extra_params.size();
   const size_t                       n_grids                  = 3 + n_extra_params;
 
-  std::vector<NRLib::Grid<double>*>  grids             (n_grids);
-  std::vector<double>                default_overburden(n_grids);   // default value above
-  std::vector<double>                default_reservoir (n_grids);   // default value inside
+  std::vector<NRLib::Grid<double>*>  grids              (n_grids);
+  std::vector<double>                default_overburden (n_grids);  // default value above
+  std::vector<double>                default_reservoir  (n_grids);  // default value inside
+  std::vector<double>                default_underburden(n_grids);  // default value below
 
-  grids[0]              = &eclipse_vp ;
-  grids[1]              = &eclipse_vs ;
-  grids[2]              = &eclipse_rho;
+  grids[0]               = &eclipse_vp ;
+  grids[1]               = &eclipse_vs ;
+  grids[2]               = &eclipse_rho;
 
-  default_overburden[0] = constvp [0];
-  default_overburden[1] = constvs [0];
-  default_overburden[2] = constrho[0];
+  default_overburden[0]  = constvp [0];
+  default_overburden[1]  = constvs [0];
+  default_overburden[2]  = constrho[0];
 
-  default_reservoir[0]  = constvp [1];
-  default_reservoir[1]  = constvs [1];
-  default_reservoir[2]  = constrho[1];
+  default_reservoir[0]   = constvp [1];
+  default_reservoir[1]   = constvs [1];
+  default_reservoir[2]   = constrho[1];
+
+  default_underburden[0] = constvp [2];
+  default_underburden[1] = constvs [2];
+  default_underburden[2] = constrho[2];
 
   for (size_t n = 0 ; n < n_extra_params ; n++) {
-    grids             [3 + n] = &eclipse_extra_params   [n];
-    default_overburden[3 + n] = extra_parameter_defaults[n];
-    default_reservoir [3 + n] = extra_parameter_defaults[n];
+    grids              [3 + n] = &eclipse_extra_params   [n];
+    default_overburden [3 + n] = extra_parameter_defaults[n];
+    default_reservoir  [3 + n] = extra_parameter_defaults[n];
+    default_underburden[3 + n] = extra_parameter_defaults[n];
   }
 
-  size_t ni = geometry.GetNI();
-  size_t nj = geometry.GetNJ();
+  size_t ni = grids[0]->GetNI();
+  size_t nj = grids[0]->GetNJ();
   size_t nk = grids[0]->GetNK();
 
   int count1 = 0;
@@ -614,14 +621,24 @@ void SeismicRegridding::FillInactiveEclipseGridCells(const ModelSettings        
   for (size_t i = 0 ; i < ni ; i++) {
     for (size_t j = 0 ; j < nj ; j++) {
 
-      size_t k1 = std::max(0, static_cast<int>(topk) - 1);
-      size_t k2 = static_cast<int>(botk);
+      size_t k1 = topk;
 
-      while (k1 < botk && (*grids[0])(i, j, k1) == undef) { ++k1; }
-      while (k2 > topk && (*grids[0])(i, j, k2) == undef) { --k2; }
+      while (k1 <= botk && (*grids[0])(i, j, k1) == undef) { ++k1; }
 
-      // Overburden
-      if (k1 < botk) {
+      if (k1 > botk) { // Fully undefined trace
+        for (size_t k = 0 ; k < nk ; ++k) {
+          for (size_t n = 0 ; n < n_grids ; ++n) {
+            (*grids[n])(i, j, k) = default_overburden[n];
+          }
+        }
+        count4 += static_cast<int>(nk);
+      }
+      else {
+        size_t k2 = botk;
+
+        while ((*grids[0])(i, j, k2) == undef) { --k2; } // Stops at k1 at the latest
+
+        // Overburden
         for (size_t k = 0 ; k < k1 ; ++k) {
           for (size_t n = 0 ; n < n_grids ; ++n) {
             if (use_default_overburden)
@@ -630,38 +647,31 @@ void SeismicRegridding::FillInactiveEclipseGridCells(const ModelSettings        
               (*grids[n])(i, j, k) = (*grids[n])(i, j, k1);
           }
         }
-        count1 += k1;
-      }
-      else { // Fully undefined trace
-        for (size_t k = 0 ; k < nk ; ++k) {
-          for (size_t n = 0 ; n < n_grids ; ++n) {
-            (*grids[n])(i, j, k) = default_overburden[n];
+        count1 += static_cast<int>(k1);
+
+        // Inside reservoir
+        for (size_t k = k1 + 1 ; k <= k2 ; ++k) { // Cell k1 is defined
+          if (!geometry.IsActive(i, j, k)) {
+            for (size_t n = 0 ; n < n_grids ; ++n) {
+              if (geometry.GetDZ(i, j, k) < zlimit || !use_default_reservoir)
+                (*grids[n])(i, j, k) = (*grids[n])(i, j, k - 1);
+              else
+                (*grids[n])(i, j, k) = default_reservoir[n];
+            }
+            count2++;
           }
         }
-        count4 += nk;
-      }
 
-      // Inside reservoir
-      for (size_t k = k1 + 1 ; k <= k2 ; ++k) { // Cell k1 is defined
-        if (!geometry.IsActive(i, j, k)) {
+        // Underburden
+        for (size_t k = k2 + 1 ; k < nk ; ++k) { // Cell k2 is defined
           for (size_t n = 0 ; n < n_grids ; ++n) {
-            if (geometry.GetDZ(i, j, k) < zlimit || !use_default_reservoir)
-              (*grids[n])(i, j, k) = (*grids[n])(i, j, k - 1);
+            if (use_default_underburden)
+              (*grids[n])(i, j, k) = default_underburden[n];
             else
-              (*grids[n])(i, j, k) = default_reservoir[n];
-          }
-          count2++;
-        }
-      }
-
-      // Underburden
-      if (k2 > k1) {
-        for (size_t k = k2 + 1 ; k < botk + 1 ; ++k) { // Cell k2 is defined
-          for (size_t n = 0 ; n < n_grids ; ++n) {
-            (*grids[n])(i, j, k) = (*grids[n])(i, j, k2);
+              (*grids[n])(i, j, k) = (*grids[n])(i, j, k2);
           }
         }
-        count3 += botk - k2;
+        count3 += static_cast<int>(nk - 1 - k2);
       }
     }
   }
@@ -1468,8 +1478,8 @@ void SeismicRegridding::PostProcess(NRLib::StormContGrid               & vpgrid,
           for (size_t n = 0 ; n < n_grids ; ++n) {
             (*grids[n])(i, j, k) = default_overburden[n];
           }
-          count4++;
         }
+        count4 += nk;
       }
       else {
         for (int k = 0 ; k < k1 ; ++k) {                // Overburden
@@ -1507,7 +1517,7 @@ void SeismicRegridding::PostProcess(NRLib::StormContGrid               & vpgrid,
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in overburden equal to first defined value    : %10d", count1);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in reservoir equal to last define value above : %10d", count2);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in underburden equal to last defined value    : %10d", count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting fully empty columns to default reservoir values               : %10d\n", count4);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting fully empty columns to default overburden                     : %10d\n", count4);
 }
 
 //---------------------------------------------------------------------------------

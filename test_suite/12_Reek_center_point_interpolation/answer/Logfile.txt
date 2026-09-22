@@ -203,9 +203,9 @@ Parameter statistics for Eclipse grid after filling of inactive cells.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            2792.20   1911.09   3377.32
-Vs            1375.00    842.86   1833.09
-Rho           2272.62   1739.88   2450.57
+Vp            2790.01   1911.09   3377.32
+Vs            1373.27    842.86   1833.09
+Rho           2272.43   1739.88   2450.57
 
 Resampling parameters in Eclipse grid into regular grids.
 
@@ -214,15 +214,15 @@ Filling remaining cells in regular grids.
 Setting undefined cells in overburden equal to first defined value    :      18899
 Setting undefined cells in reservoir equal to last define value above :          0
 Setting undefined cells in underburden equal to last defined value    :      18323
-Setting fully empty columns to default reservoir values               :      32976
+Setting fully empty columns to default overburden                     :      32976
 
 Parameter statistics for regular grid after resampling.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            2774.26   1911.11   3375.99
-Vs            1355.44    842.86   1831.34
-Rho           2270.69   1739.89   2450.57
+Vp            2772.04   1911.11   3375.99
+Vs            1353.70    842.86   1831.34
+Rho           2270.48   1739.89   2450.57
 
 Deleting Eclipse grid to free memory.
 
@@ -230,9 +230,9 @@ Deleting Eclipse grid to free memory.
 *****                                      Make TWT grid                                       *****
 ****************************************************************************************************
    tmin           :   972.00  (top Eclipse - 0.5 wavelet)
-   tmax           :  1373.92  (bot Eclipse + 0.5 wavelet)
+   tmax           :  1374.48  (bot Eclipse + 0.5 wavelet)
    dt             :     4.00
-   nt             :      101
+   nt             :      102
 
 ****************************************************************************************************
 *****                                       Export grids                                       *****
@@ -307,17 +307,17 @@ Depth           0.0003     -0.2928      0.3540
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.07    11.75%         0.00     0.00%
-Make regular grid                            0.04     6.66%         0.00     0.00%
-Resample elastic parameters                  0.08    13.17%         0.00     0.00%
-Forward modelling                            0.32    51.96%         1.00   100.00%
-Write SegY files                             0.02     3.78%         0.00     0.00%
+Loading corner-point grid                    0.07    10.77%         0.00     0.00%
+Make regular grid                            0.04     6.80%         1.00   100.00%
+Resample elastic parameters                  0.08    13.65%         0.00     0.00%
+Forward modelling                            0.32    52.23%         0.00     0.00%
+Write SegY files                             0.02     3.46%         0.00     0.00%
 Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.08    12.68%         0.00     0.00%
+Miscellaneous                                0.08    13.08%         0.00     0.00%
 ----------------------------------------------------------------------------------
-Total                                        0.62   100.00%         1.00   100.00%
+Total                                        0.61   100.00%         1.00   100.00%
 
-Total CPU  time used by Seismic Forward:     0.62 s
+Total CPU  time used by Seismic Forward:     0.61 s
 Total real time used in Seismic Forward:     1.00 s
 
 ****************************************************************************************************
