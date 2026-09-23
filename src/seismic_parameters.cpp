@@ -415,8 +415,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vs used for surface ext. - overburden          : %8.2f", constvs[0]);
     NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vs used for surface ext. - underburden         : %8.2f", constvs[2]);
   }
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Using %s velocity for surface ext. - overburden  : %8.2f", text.c_str(), constvp[0]);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Using %s velocity for surface ext. - underburden : %8.2f", text.c_str(), constvp[2]);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Using %s velocity for surface ext. - overburden  : %8.2f", text.c_str(), vel_top);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Using %s velocity for surface ext. - underburden : %8.2f", text.c_str(), vel_bot);
 
   double z_top_wavelet = vel_top*(twt_wavelet/2000);
   double z_bot_wavelet = vel_bot*(twt_wavelet/2000);
@@ -425,7 +425,7 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   model_settings->SetZWaveletBot(z_bot_wavelet);
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n\n  Wavelet time length is                           : %8.2f\n", twt_wavelet*2.0);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Eclipse top surface lift due to wavelet          : %8.2f", z_top_wavelet);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Eclipse top surface lift due to wavelet          : %8.2f"  , z_top_wavelet);
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Eclipse base surface drop due to wavelet         : %8.2f\n", z_bot_wavelet);
 
   topeclipse.Add(-1 * z_top_wavelet); // add one wavelet length to bot and subtract from top

@@ -676,10 +676,11 @@ void SeismicRegridding::FillInactiveEclipseGridCells(const ModelSettings        
     }
   }
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive Eclipse cells in overburden  : %10d"  , count1);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive Eclipse cells in reservoir   : %10d"  , count2);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive Eclipse cells in underburden : %10d\n", count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling fully inactive Eclipse columns        : %10d\n", count4);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive cells in Eclipse grid");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Overburden            : %10d"  , count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Reservoir             : %10d"  , count2);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Underburden           : %10d"  , count3);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Fully inactive column : %10d\n", count4);
 }
 
 //-------------------------------------------------------------------------------------------
@@ -1415,8 +1416,6 @@ void SeismicRegridding::PostProcess(NRLib::StormContGrid               & vpgrid,
                                     const float                          missing)
 //--------------------------------------------------------------------------------------------
 {
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling remaining cells in regular grids.\n");
-
   const std::vector<double>        & constvp                  = model_settings.GetConstVp();
   const std::vector<double>        & constvs                  = model_settings.GetConstVs();
   const std::vector<double>        & constrho                 = model_settings.GetConstRho();
@@ -1514,10 +1513,11 @@ void SeismicRegridding::PostProcess(NRLib::StormContGrid               & vpgrid,
       }
     }
   }
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in overburden equal to first defined value    : %10d", count1);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in reservoir equal to last define value above : %10d", count2);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting undefined cells in underburden equal to last defined value    : %10d", count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nSetting fully empty columns to default overburden                     : %10d\n", count4);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nPost-processing grid to fill remaining cells with values");
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Overburden             : %10d", count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Reservoir              : %10d", count2);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Underburden            : %10d", count3);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Fully inactive columns : %10d\n", count4);
 }
 
 //---------------------------------------------------------------------------------
