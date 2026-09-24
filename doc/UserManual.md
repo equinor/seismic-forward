@@ -31,9 +31,82 @@ gives description of file formats and references respectively.
 
 # Release notes
 
+## Version 4.6
+
+*Filling of empty cells*
+
+Empty cells above, inside and below the reservoir used to be filled
+with the default values given in [\<default-values\>](#default-values).
+When the defaults differ from the values at the top and base of the
+reservoir, this gives contrasts that could represent false
+reflections. Empty cells can now instead be given the value of the
+closest defined cell. This is controlled separately for the overburden,
+reservoir and underburden with the new keywords
+[\<default-overburden\>](#default-overburden) and
+[\<default-reservoir\>](#default-reservoir), and the existing keyword
+[\<default-underburden\>](#default-underburden). All three default to
+yes, which gives the old behaviour. The same rules are used both for
+inactive cells in the Eclipse grid and for cells in the regular grid
+that remain undefined after resampling, and extra parameters are now
+filled in the same way as Vp, Vs and density. See
+[*Filling of empty cells*](#filling-of-empty-cells) for details.
+
+*Moved keywords/commands*
+
+Keyword [\<default-underburden\>](#default-underburden) has been moved
+from top level [\<seismic-forward\>](#seismic-forward) to element
+[\<project-settings\>](#project-settings). The top level placement of
+[\<default-underburden\>](#default-underburden),
+[\<max-threads\>](#max-threads) and
+[\<traces-in-memory\>](#traces-in-memory) is still accepted but
+deprecated. Giving one of these keywords both at top level and in
+[\<project-settings\>](#project-settings) is now an error.
+
+*Log file*
+
+The log file now reports CPU and wall-clock time for the most time
+consuming parts of the program, and the number of cells filled in the
+overburden, reservoir and underburden.
+
+*User manual*
+
+The user manual has been converted to Markdown format. Keyword
+[\<log-level\>](#log-level) and the trace header keywords of
+[\<area-from-segy\>](#area-from-segy) are now documented, and stated
+default values have been checked against the program.
+
 ## Version 4.5
 
+*Interpolation bug fix*
+
+In the vertical interpolation, an output sample that coincided exactly
+with an input sample was not recognized as belonging to that sample.
+This bug has been fixed, which may cause small changes in the generated
+seismic compared to earlier versions.
+
+*Bug fixes*
+
+A segmentation fault that could occur when no SegY geometry was given
+has been removed.
+
+*Internal restructuring*
+
+The generation of seismic traces and the resampling of parameters have
+been restructured to simplify the code. The Boost libraries are no
+longer bundled with the source code and must be installed separately
+when building the program.
+
+*Python command line wrapper (version 4.5.1)*
+
+The Python wrapper accepts the options `--version` and `--help`, and
+gives a clearer error message when a simulation fails.
+
 ## Version 4.4
+
+Seismic Forward is now published on PyPI as a compiled package, and can
+be installed with `pip install seismic-forward`. The program is built
+and tested automatically on GitHub. There are no changes to the
+functionality or the results.
 
 ## Version 4.3
 
@@ -133,13 +206,10 @@ README file for details on how to run the tests.
 
 *Moved keywords/commands*
 
-Keywords [\<max-threads\>](#max-threads),
-[\<traces-in-memory\>](#traces-in-memory) and
-[\<default-underburden\>](#default-underburden) have been moved from top
-level [\<seismic-forward\>](#seismic-forward) to new element
-[\<project-settings\>](#project-settings). The top level placement is
-still accepted but deprecated. Giving a keyword both at top level and in
-[\<project-settings\>](#project-settings) is an error.
+Keywords [\<max-threads\>](#max-threads) and
+[\<traces-in-memory\>](#traces-in-memory) have been moved from top level
+[\<seismic-forward\>](#seismic-forward) to new element
+[\<project-settings\>](#project-settings).
 
 Keywords [\<il0\>](#il0-loc), [\<xl0\>](#xl0-loc),
 [\<utmxLoc\>](#utmx-loc) and [\<utmyLoc\>](#utmy-loc) in
