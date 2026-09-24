@@ -98,4 +98,6 @@ int main(int argc, char *argv[]) {
     TaskList::ViewAllTasks();
   }
   NRLib::LogKit::EndLog();
+
+  return modelFile.getParsingFailed() ? 1 : 0;
 }
