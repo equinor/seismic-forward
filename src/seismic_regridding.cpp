@@ -616,14 +616,21 @@ void SeismicRegridding::FillInactiveEclipseGridCells(const ModelSettings        
   int count3 = 0;
   int count4 = 0;
 
-  double undef = 0.0; // Should possibly be -99999
+  // A cell is defined if it is active and has a Vp value. Inactive cells
+  // may hold any value in the Eclipse file, so activity is the primary
+  // test. Vp is never 0 in a real cell, so 0 marks an active cell without data.
+  const double undef = 0.0;
 
   for (size_t i = 0 ; i < ni ; i++) {
     for (size_t j = 0 ; j < nj ; j++) {
 
+      auto defined = [&](size_t k) {
+        return geometry.IsActive(i, j, k) && (*grids[0])(i, j, k) != undef;
+      };
+
       size_t k1 = topk;
 
-      while (k1 <= botk && (*grids[0])(i, j, k1) == undef) { ++k1; }
+      while (k1 <= botk && !defined(k1)) { ++k1; }
 
       if (k1 > botk) { // Fully undefined trace
         for (size_t k = 0 ; k < nk ; ++k) {
@@ -636,7 +643,7 @@ void SeismicRegridding::FillInactiveEclipseGridCells(const ModelSettings        
       else {
         size_t k2 = botk;
 
-        while ((*grids[0])(i, j, k2) == undef) { --k2; } // Stops at k1 at the latest
+        while (!defined(k2)) { --k2; } // Stops at k1 at the latest
 
         // Overburden
         for (size_t k = 0 ; k < k1 ; ++k) {
@@ -651,7 +658,7 @@ void SeismicRegridding::FillInactiveEclipseGridCells(const ModelSettings        
 
         // Inside reservoir
         for (size_t k = k1 + 1 ; k <= k2 ; ++k) { // Cell k1 is defined
-          if (!geometry.IsActive(i, j, k)) {
+          if (!defined(k)) {
             for (size_t n = 0 ; n < n_grids ; ++n) {
               if (geometry.GetDZ(i, j, k) < zlimit || !use_default_reservoir)
                 (*grids[n])(i, j, k) = (*grids[n])(i, j, k - 1);
