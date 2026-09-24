@@ -7,7 +7,7 @@
 
 <project-settings>
   <default-overburden>  no  </default-overburden>
-  <default-reservoir>   yes </default-reservoir>
+  <default-reservoir>   no  </default-reservoir>
   <default-underburden> no  </default-underburden>
 </project-settings>
 

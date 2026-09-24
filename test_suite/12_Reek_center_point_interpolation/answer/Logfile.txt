@@ -62,9 +62,9 @@ Default values                                            Vp      Vs     Rho
   Reservoir                                         : 2240.0   890.0  2240.0
   Underburden                                       : 2240.0   890.0  2240.0
 Default values used to fill empty cells
-  Overburden                                        :yes
-  Reservoir                                         :yes
-  Underburden                                       :yes
+  Overburden                                        :no
+  Reservoir                                         :no
+  Underburden                                       :no
 Extra parameters                                    :         no
 
 Output area is taken from Eclipse grid
@@ -193,36 +193,35 @@ Rho           1754.55      0.00   2450.57
 
 Total number of Eclipse grid cells: 40 x 64 x 14 = 35840
 
-Filling inactive Eclipse cells in overburden  :         35
-Filling inactive Eclipse cells in reservoir   :        750
-Filling inactive Eclipse cells in underburden :        132
-
-Filling fully inactive Eclipse columns        :       7168
+Filling inactive cells in Eclipse grid
+  Overburden            :         35
+  Reservoir             :        750
+  Underburden           :        132
+  Fully inactive column :       7168
 
 Parameter statistics for Eclipse grid after filling of inactive cells.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            2790.01   1911.09   3377.32
-Vs            1373.27    842.86   1833.09
-Rho           2272.43   1739.88   2450.57
+Vp            2801.57   1911.09   3377.32
+Vs            1382.49    842.86   1833.09
+Rho           2273.23   1739.88   2450.57
 
 Resampling parameters in Eclipse grid into regular grids.
 
-Filling remaining cells in regular grids.
-
-Setting undefined cells in overburden equal to first defined value    :      18899
-Setting undefined cells in reservoir equal to last define value above :          0
-Setting undefined cells in underburden equal to last defined value    :      18323
-Setting fully empty columns to default overburden                     :      32976
+Post-processing grid to fill remaining cells with values
+  Overburden             :      18899
+  Reservoir              :          0
+  Underburden            :      18323
+  Fully inactive columns :      32976
 
 Parameter statistics for regular grid after resampling.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            2772.04   1911.11   3375.99
-Vs            1353.70    842.86   1831.34
-Rho           2270.48   1739.89   2450.57
+Vp            2853.76   1911.11   3375.99
+Vs            1419.26    842.86   1831.34
+Rho           2268.80   1739.89   2450.57
 
 Deleting Eclipse grid to free memory.
 
@@ -230,9 +229,9 @@ Deleting Eclipse grid to free memory.
 *****                                      Make TWT grid                                       *****
 ****************************************************************************************************
    tmin           :   972.00  (top Eclipse - 0.5 wavelet)
-   tmax           :  1374.48  (bot Eclipse + 0.5 wavelet)
+   tmax           :  1373.92  (bot Eclipse + 0.5 wavelet)
    dt             :     4.00
-   nt             :      102
+   nt             :      101
 
 ****************************************************************************************************
 *****                                       Export grids                                       *****
@@ -298,7 +297,7 @@ if not, data are taken from first offset angle.
 
 Type               Avg         Min         Max
 ----------------------------------------------
-Depth           0.0003     -0.2928      0.3540
+Depth           0.0001     -0.2997      0.3264
 
 
 ****************************************************************************************************
@@ -307,13 +306,13 @@ Depth           0.0003     -0.2928      0.3540
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.07    10.77%         0.00     0.00%
-Make regular grid                            0.04     6.80%         1.00   100.00%
-Resample elastic parameters                  0.08    13.65%         0.00     0.00%
-Forward modelling                            0.32    52.23%         0.00     0.00%
-Write SegY files                             0.02     3.46%         0.00     0.00%
+Loading corner-point grid                    0.06    10.23%         0.00     0.00%
+Make regular grid                            0.04     6.76%         0.00     0.00%
+Resample elastic parameters                  0.08    13.32%         0.00     0.00%
+Forward modelling                            0.32    52.81%         1.00   100.00%
+Write SegY files                             0.02     3.86%         0.00     0.00%
 Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.08    13.08%         0.00     0.00%
+Miscellaneous                                0.08    13.02%         0.00     0.00%
 ----------------------------------------------------------------------------------
 Total                                        0.61   100.00%         1.00   100.00%
 
