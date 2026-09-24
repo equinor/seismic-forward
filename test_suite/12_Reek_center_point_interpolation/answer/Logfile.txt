@@ -194,10 +194,10 @@ Rho           1754.55      0.00   2450.57
 Total number of Eclipse grid cells: 40 x 64 x 14 = 35840
 
 Filling inactive cells in Eclipse grid
-  Overburden            :         35
-  Reservoir             :        750
-  Underburden           :        132
-  Fully inactive column :       7168
+  Overburden cells            :         35
+  Reservoir cells             :        750
+  Underburden cells           :        132
+  Fully inactive column cells :       7168
 
 Parameter statistics for Eclipse grid after filling of inactive cells.
 
@@ -210,10 +210,10 @@ Rho           2273.23   1739.88   2450.57
 Resampling parameters in Eclipse grid into regular grids.
 
 Post-processing grid to fill remaining cells with values
-  Overburden             :      18899
-  Reservoir              :          0
-  Underburden            :      18323
-  Fully inactive columns :      32976
+  Overburden cells            :      18899
+  Reservoir cells             :          0
+  Underburden cells           :      18323
+  Fully inactive column cells :      32976
 
 Parameter statistics for regular grid after resampling.
 
@@ -306,18 +306,18 @@ Depth           0.0001     -0.2997      0.3264
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.06    10.23%         0.00     0.00%
-Make regular grid                            0.04     6.76%         0.00     0.00%
-Resample elastic parameters                  0.08    13.32%         0.00     0.00%
-Forward modelling                            0.32    52.81%         1.00   100.00%
-Write SegY files                             0.02     3.86%         0.00     0.00%
-Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.08    13.02%         0.00     0.00%
+Loading corner-point grid                    0.07    11.69%         0.00   100.00%
+Make regular grid                            0.04     6.69%         0.00   100.00%
+Resample elastic parameters                  0.08    13.16%         0.00   100.00%
+Forward modelling                            0.32    52.46%         0.00   100.00%
+Write SegY files                             0.02     3.50%         0.00   100.00%
+Dummy                                        0.00     0.00%         0.00   100.00%
+Miscellaneous                                0.08    12.49%         0.00   100.00%
 ----------------------------------------------------------------------------------
-Total                                        0.61   100.00%         1.00   100.00%
+Total                                        0.62   100.00%         0.00   100.00%
 
-Total CPU  time used by Seismic Forward:     0.61 s
-Total real time used in Seismic Forward:     1.00 s
+Total CPU  time used by Seismic Forward:     0.62 s
+Total real time used in Seismic Forward:     0.00 s
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

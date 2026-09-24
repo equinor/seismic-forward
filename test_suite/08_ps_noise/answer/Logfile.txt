@@ -158,8 +158,8 @@ Calculating additional grid size to account for wavelet size
   Vp used for surface ext. - underburden         :  2240.00
   Vs used for surface ext. - overburden          :  1100.00
   Vs used for surface ext. - underburden         :   890.00
-  Using PS velocity for surface ext. - overburden  :  2400.00
-  Using PS velocity for surface ext. - underburden :  2240.00
+  Using PS velocity for surface ext. - overburden  :  1508.57
+  Using PS velocity for surface ext. - underburden :  1273.87
 
   Wavelet time length is                           :    64.00
 
@@ -201,11 +201,11 @@ Rho            631.64      0.00   2250.27
 
 Total number of Eclipse grid cells: 11 x 11 x 23 = 2783
 
-Filling inactive Eclipse cells in overburden  :          0
-Filling inactive Eclipse cells in reservoir   :       1029
-Filling inactive Eclipse cells in underburden :          0
-
-Filling fully inactive Eclipse columns        :        943
+Filling inactive cells in Eclipse grid
+  Overburden cells            :          0
+  Reservoir cells             :       1029
+  Underburden cells           :          0
+  Fully inactive column cells :        943
 
 Parameter statistics for Eclipse grid after filling of inactive cells.
 
@@ -217,12 +217,11 @@ Rho           2233.82   2093.31   2300.00
 
 Resampling parameters in Eclipse grid into regular grids.
 
-Filling remaining cells in regular grids.
-
-Setting undefined cells in overburden equal to first defined value    :          4
-Setting undefined cells in reservoir equal to last define value above :          0
-Setting undefined cells in underburden equal to last defined value    :          4
-Setting fully empty columns to default overburden                     :          0
+Post-processing grid to fill remaining cells with values
+  Overburden cells            :          4
+  Reservoir cells             :          0
+  Underburden cells           :          4
+  Fully inactive column cells :          0
 
 Parameter statistics for regular grid after resampling.
 
@@ -297,17 +296,17 @@ Depth           0.0090     -0.8960      0.6906
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.01    12.22%         0.00   100.00%
-Make regular grid                            0.00     0.65%         0.00   100.00%
-Resample elastic parameters                  0.00     0.79%         0.00   100.00%
-Forward modelling                            0.00     0.20%         0.00   100.00%
+Loading corner-point grid                    0.01     8.08%         0.00   100.00%
+Make regular grid                            0.00     0.71%         0.00   100.00%
+Resample elastic parameters                  0.00     0.89%         0.00   100.00%
+Forward modelling                            0.00     0.23%         0.00   100.00%
 Write SegY files                             0.00     0.02%         0.00   100.00%
 Dummy                                        0.00     0.00%         0.00   100.00%
-Miscellaneous                                0.07    86.13%         0.00   100.00%
+Miscellaneous                                0.06    90.06%         0.00   100.00%
 ----------------------------------------------------------------------------------
-Total                                        0.08   100.00%         0.00   100.00%
+Total                                        0.07   100.00%         0.00   100.00%
 
-Total CPU  time used by Seismic Forward:     0.08 s
+Total CPU  time used by Seismic Forward:     0.07 s
 Total real time used in Seismic Forward:     0.00 s
 
 ****************************************************************************************************

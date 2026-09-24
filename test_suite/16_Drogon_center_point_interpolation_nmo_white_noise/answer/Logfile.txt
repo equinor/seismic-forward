@@ -196,11 +196,11 @@ Rho           1607.16      0.00   2641.37
 
 Total number of Eclipse grid cells: 46 x 73 x 31 = 104098
 
-Filling inactive Eclipse cells in overburden  :         72
-Filling inactive Eclipse cells in reservoir   :      32329
-Filling inactive Eclipse cells in underburden :        791
-
-Filling fully inactive Eclipse columns        :          0
+Filling inactive cells in Eclipse grid
+  Overburden cells            :         72
+  Reservoir cells             :      32329
+  Underburden cells           :        791
+  Fully inactive column cells :          0
 
 Parameter statistics for Eclipse grid after filling of inactive cells.
 
@@ -212,12 +212,11 @@ Rho           2356.47   1924.08   2641.37
 
 Resampling parameters in Eclipse grid into regular grids.
 
-Filling remaining cells in regular grids.
-
-Setting undefined cells in overburden equal to first defined value    :       7521
-Setting undefined cells in reservoir equal to last define value above :          0
-Setting undefined cells in underburden equal to last defined value    :       7521
-Setting fully empty columns to default overburden                     :          0
+Post-processing grid to fill remaining cells with values
+  Overburden cells            :       7521
+  Reservoir cells             :          0
+  Underburden cells           :       7521
+  Fully inactive column cells :          0
 
 Parameter statistics for regular grid after resampling.
 
@@ -306,13 +305,13 @@ Depth           0.0017     -0.2927      0.4267
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.18    14.53%         0.00     0.00%
-Make regular grid                            0.07     5.56%         0.00     0.00%
-Resample elastic parameters                  0.15    12.22%         0.00     0.00%
-Forward modelling                            0.75    61.93%         1.00   100.00%
-Write SegY files                             0.03     2.60%         0.00     0.00%
+Loading corner-point grid                    0.17    14.28%         0.00     0.00%
+Make regular grid                            0.07     5.55%         0.00     0.00%
+Resample elastic parameters                  0.15    12.03%         0.00     0.00%
+Forward modelling                            0.76    62.39%         1.00   100.00%
+Write SegY files                             0.03     2.61%         0.00     0.00%
 Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.04     3.15%         0.00     0.00%
+Miscellaneous                                0.04     3.14%         0.00     0.00%
 ----------------------------------------------------------------------------------
 Total                                        1.21   100.00%         1.00   100.00%
 

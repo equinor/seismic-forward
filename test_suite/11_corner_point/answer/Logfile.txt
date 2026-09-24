@@ -202,11 +202,11 @@ Rho           2058.23      0.00   2590.00
 
 Total number of Eclipse grid cells: 110 x 6 x 275 = 181500
 
-Filling inactive Eclipse cells in overburden  :      20136
-Filling inactive Eclipse cells in reservoir   :       9475
-Filling inactive Eclipse cells in underburden :        919
-
-Filling fully inactive Eclipse columns        :          0
+Filling inactive cells in Eclipse grid
+  Overburden cells            :      20136
+  Reservoir cells             :       9475
+  Underburden cells           :        919
+  Fully inactive column cells :          0
 
 Parameter statistics for Eclipse grid after filling of inactive cells.
 
@@ -218,12 +218,11 @@ Rho           2476.86   2164.63   2590.00
 
 Resampling parameters in Eclipse grid into regular grids.
 
-Filling remaining cells in regular grids.
-
-Setting undefined cells in overburden equal to first defined value    :      52846
-Setting undefined cells in reservoir equal to last define value above :          0
-Setting undefined cells in underburden equal to last defined value    :      21226
-Setting fully empty columns to default overburden                     :     119350
+Post-processing grid to fill remaining cells with values
+  Overburden cells            :      52846
+  Reservoir cells             :          0
+  Underburden cells           :      21226
+  Fully inactive column cells :     119350
 
 Parameter statistics for regular grid after resampling.
 
@@ -241,7 +240,7 @@ Deleting Eclipse grid to free memory.
 
 Assuming NMO.
    tmin           :  2168.00  (top Eclipse - 0.5 wavelet)
-   tmax           :  3245.28  (bot Eclipse + 0.5 wavelet)
+   tmax           :  3245.29  (bot Eclipse + 0.5 wavelet)
    dt             :     4.00
    nt             :      270
 
@@ -258,7 +257,7 @@ Generate Twt0 for NMO assuming PP seismic.
    wavelet length :    72.00
    nt_stretch     :      343
    nt_seis        :      343
-   tmax_stretch   :  3475.73
+   tmax_stretch   :  3475.74
    twtx_max       :  3460.05
    twt0_min       :  2092.00
    twt0_max       :  3460.00
@@ -308,17 +307,17 @@ Depth           0.0000     -0.0989      0.1462
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.26     9.43%         0.00     0.00%
-Make regular grid                            0.16     5.72%         0.00     0.00%
-Resample elastic parameters                  0.26     9.41%         0.00     0.00%
-Forward modelling                            2.07    74.13%         2.00   100.00%
-Write SegY files                             0.02     0.66%         0.00     0.00%
+Loading corner-point grid                    0.26     9.32%         0.00     0.00%
+Make regular grid                            0.16     5.59%         0.00     0.00%
+Resample elastic parameters                  0.26     9.28%         0.00     0.00%
+Forward modelling                            2.11    74.57%         2.00   100.00%
+Write SegY files                             0.02     0.62%         0.00     0.00%
 Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.02     0.65%         0.00     0.00%
+Miscellaneous                                0.02     0.62%         0.00     0.00%
 ----------------------------------------------------------------------------------
-Total                                        2.80   100.00%         2.00   100.00%
+Total                                        2.83   100.00%         2.00   100.00%
 
-Total CPU  time used by Seismic Forward:     2.80 s
+Total CPU  time used by Seismic Forward:     2.83 s
 Total real time used in Seismic Forward:     2.00 s
 
 ****************************************************************************************************
