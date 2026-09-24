@@ -133,10 +133,20 @@ README file for details on how to run the tests.
 
 *Moved keywords/commands*
 
-Keywords [\<max-threads\>](#max-threads) and
-[\<traces-in-memory\>](#traces-in-memory) have been moved from top level
-[\<seismic-forward\>](#seismic-forward) to new element
-[\<project-settings\>](#project-settings).
+Keywords [\<max-threads\>](#max-threads),
+[\<traces-in-memory\>](#traces-in-memory) and
+[\<default-underburden\>](#default-underburden) have been moved from top
+level [\<seismic-forward\>](#seismic-forward) to new element
+[\<project-settings\>](#project-settings). The top level placement is
+still accepted but deprecated. Giving a keyword both at top level and in
+[\<project-settings\>](#project-settings) is an error.
+
+Keywords [\<il0\>](#il0-loc), [\<xl0\>](#xl0-loc),
+[\<utmxLoc\>](#utmx-loc) and [\<utmyLoc\>](#utmy-loc) in
+[\<area-from-segy\>](#area-from-segy) have been renamed to
+[\<il0-loc\>](#il0-loc), [\<xl0-loc\>](#xl0-loc),
+[\<utmx-loc\>](#utmx-loc) and [\<utmy-loc\>](#utmy-loc). The old names
+are still accepted but deprecated.
 
 # Theory
 
@@ -151,14 +161,16 @@ but corner point interpolation can also be used. Next, reflection
 coefficients are calculated layer by layer (see
 [*Calculation of reflection coefficients*](#calculation-of-reflection-coefficients)).
 For this, elastic parameters must be resampled (see
-[*Resampling of elastic parameters*](#resampling-of-elsatic-parameters)).
+[*Resampling of elastic parameters*](#resampling-of-elastic-parameters)).
 The elastic parameters are interpolated using Delaunay triangulation,
 with centrepoints in top and bottom of cells, in a way similar to the depth
 interpolation. The values are stored in a grid. In inactive cells where
 no values for elastic parameters exist, we use default values provided
 by the user. The user also must provide default values for use above and
 below the reservoir. Cells with thickness smaller than 0.1\,m, or another
-user defined limit, get the value from the cell above.
+user defined limit, get the value from the cell above. Instead of using
+default values, empty cells can be given the value of the closest
+defined cell, see [*Filling of empty cells*](#filling-of-empty-cells).
 
 When the elastic parameters have been resampled, the two-way travel time
 (measured in ms) is calculated for each layer k:
@@ -313,17 +325,50 @@ Figure 4: Treatment of edges when resampling elastic parameters.
 ## Resampling of elastic parameters
 
 This is done in a similar way as for the depth. To calculate
-reflections, values at both top and base of cells must be resampled. If
-a cell is inactive, default values for the parameters are used in
-triangularization. For inactive cells with thickness less than a given
-limit (default is 0.1 m), the value in the cell above is used.
+reflections, values at both top and base of cells must be resampled.
+Inactive cells are given values before the triangularization, as
+described in [*Filling of empty cells*](#filling-of-empty-cells).
 
 Since we use centre of cells, an edge around the eclipse grid is not
 treated by this algorithm, see Figure 4. In this region, we use
 mirroring values to the outside of the eclipse grid, and then filling
-out unwritten values on the inside by triangulation. If a cell is
-inactive, default values for the parameters are used in the
-triangularization.
+out unwritten values on the inside by triangulation.
+
+## Filling of empty cells
+
+Empty cells are filled twice: first the inactive cells of the Eclipse
+grid, before the triangularization, and then the cells of the regular
+grid that remain undefined after the resampling. In both cases, each
+vertical column is split in three parts by its first and last defined
+cell:
+
+-   *Overburden*: cells above the first defined cell. These get the
+    overburden default values ([\<vp-top\>](#vp-top),
+    [\<vs-top\>](#vs-top), [\<rho-top\>](#rho-top)) if
+    [\<default-overburden\>](#default-overburden) is yes, and the value
+    of the first defined cell otherwise.
+
+-   *Reservoir*: empty cells between the first and last defined cell.
+    These get the reservoir default values ([\<vp-mid\>](#vp-mid),
+    [\<vs-mid\>](#vs-mid), [\<rho-mid\>](#rho-mid)) if
+    [\<default-reservoir\>](#default-reservoir) is yes, and the value of
+    the cell above otherwise. Inactive Eclipse cells with thickness less
+    than [\<zero-thickness-limit\>](#zero-thickness-limit) (default is
+    0.1 m) always get the value of the cell above.
+
+-   *Underburden*: cells below the last defined cell. These get the
+    underburden default values ([\<vp-bot\>](#vp-bot),
+    [\<vs-bot\>](#vs-bot), [\<rho-bot\>](#rho-bot)) if
+    [\<default-underburden\>](#default-underburden) is yes, and the value
+    of the last defined cell otherwise.
+
+Extra parameters use their [\<default-value\>](#default-value) in all
+three parts. A column without any defined cells is filled with the
+overburden default values, regardless of the settings above.
+
+Using the value of the closest defined cell instead of a default value
+avoids artificial contrasts, and thereby reflections, at the top and
+base of the reservoir.
 
 ## Wavelet
 
@@ -874,7 +919,7 @@ number will be used.
 *Description:* This lets you choose between unique noise for each offset
 or equal noise for all offsets.
 
-*Argument:* Yes or no, default is no.
+*Argument:* Yes or no, default is yes.
 
 ## \<add-noise-to-refl-coef\>
 
@@ -1048,8 +1093,9 @@ is given.
 trace header formats are recognized, see
 [*SegY header format for output*](#segy-header-format-for-output).
 Other formats can be specified by the user, by using the key words
-[\<il0\>](#il0), [\<xl0\>](#xl0), [\<utmxLoc\>](#utmxLoc), and
-[\<utmyLoc\>](#utmyLoc).
+[\<il0-loc\>](#il0-loc), [\<xl0-loc\>](#xl0-loc),
+[\<utmx-loc\>](#utmx-loc), [\<utmy-loc\>](#utmy-loc),
+[\<scalco-loc\>](#scalco-loc) and [\<start-time-loc\>](#start-time-loc).
 
 ### \<padding-factor-seismic-modelling\>
 
@@ -1065,33 +1111,47 @@ adding white noise, especially for larger offsets.
 
 *Argument:* String with name of segy file.
 
-#### \<il0\>
+#### \<il0-loc\>
 
 *Description:* Byte number for inline start in trace header in the given
-file.
+file. Replaces the deprecated keyword \<il0\>.
 
-*Argument:* integer
+*Argument:* integer, default is 189.
 
-#### \<xl0\>
+#### \<xl0-loc\>
 
 *Description:* Byte number for crossline start in trace header in the
-given file.
+given file. Replaces the deprecated keyword \<xl0\>.
 
-*Argument:* integer
+*Argument:* integer, default is 193.
 
-#### \<utmxLoc\>
+#### \<utmx-loc\>
 
 *Description:* Byte number for location of x coordinate in trace header
-in the given file.
+in the given file. Replaces the deprecated keyword \<utmxLoc\>.
 
-*Argument:* integer
+*Argument:* integer, default is 181.
 
-#### \<utmyLoc\>
+#### \<utmy-loc\>
 
 *Description:* Byte number for location of y coordinate in trace header
-in the given file.
+in the given file. Replaces the deprecated keyword \<utmyLoc\>.
 
-*Argument:* integer
+*Argument:* integer, default is 185.
+
+#### \<scalco-loc\>
+
+*Description:* Byte number for location of the coordinate scaling factor
+in trace header in the given file.
+
+*Argument:* integer, default is 71.
+
+#### \<start-time-loc\>
+
+*Description:* Byte number for location of the start time in trace
+header in the given file.
+
+*Argument:* integer, default is 109.
 
 ### \<area\>
 
@@ -1588,8 +1648,12 @@ Example:
 
 ```
 <project-settings>
-  <traces-in-memory> 200000 </traces-in-memory>
-  <max-threads> 5 </max-threads>
+  <traces-in-memory>      200000 </traces-in-memory>
+  <max-threads>                5 </max-threads>
+  <log-level>             medium </log-level>
+  <default-overburden>        no </default-overburden>
+  <default-reservoir>        yes </default-reservoir>
+  <default-underburden>       no </default-underburden>
 </project-settings>
 ```
 
@@ -1605,7 +1669,47 @@ memory simultaneously.
 *Description:* Specifies the maximum number of threads that can be used
 by the program.
 
-*Argument*: integer, default is maximum available threads.
+*Argument*: integer, default is 100. The number of threads used is
+limited to the number of available processors.
+
+### \<log-level\>
+
+*Description:* Specifies how much information is written to screen and
+log file.
+
+*Argument*: error, warning, low, medium, high, debuglow or debughigh,
+default is low.
+
+### \<default-overburden\>
+
+*Description:* Specifies how empty cells above the reservoir are filled.
+If yes, the overburden default values given in
+[\<default-values\>](#default-values) are used. If no, the value of the
+first defined cell below is used. See
+[*Filling of empty cells*](#filling-of-empty-cells).
+
+*Argument*: Yes or no, default is yes.
+
+### \<default-reservoir\>
+
+*Description:* Specifies how empty cells inside the reservoir are
+filled. If yes, the reservoir default values given in
+[\<default-values\>](#default-values) are used. If no, the value of the
+defined cell above is used. See
+[*Filling of empty cells*](#filling-of-empty-cells).
+
+*Argument*: Yes or no, default is yes.
+
+### \<default-underburden\>
+
+*Description:* Specifies how empty cells below the reservoir are filled.
+If yes, the underburden default values given in
+[\<default-values\>](#default-values) are used. If no, the value of the
+last defined cell above is used. See
+[*Filling of empty cells*](#filling-of-empty-cells). Placement at top
+level in [\<seismic-forward\>](#seismic-forward) is deprecated.
+
+*Argument*: Yes or no, default is yes.
 
 ## \<timeshift-twt\>
 
