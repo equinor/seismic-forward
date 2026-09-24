@@ -677,10 +677,10 @@ void SeismicRegridding::FillInactiveEclipseGridCells(const ModelSettings        
   }
 
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nFilling inactive cells in Eclipse grid");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Overburden            : %10d"  , count1);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Reservoir             : %10d"  , count2);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Underburden           : %10d"  , count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Fully inactive column : %10d\n", count4);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Overburden cells            : %10d"  , count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Reservoir cells             : %10d"  , count2);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Underburden cells           : %10d"  , count3);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Fully inactive column cells : %10d\n", count4);
 }
 
 //-------------------------------------------------------------------------------------------
@@ -1514,10 +1514,10 @@ void SeismicRegridding::PostProcess(NRLib::StormContGrid               & vpgrid,
     }
   }
   NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nPost-processing grid to fill remaining cells with values");
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Overburden             : %10d", count1);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Reservoir              : %10d", count2);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Underburden            : %10d", count3);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Fully inactive columns : %10d\n", count4);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Overburden cells            : %10d", count1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Reservoir cells             : %10d", count2);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Underburden cells           : %10d", count3);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\n  Fully inactive column cells : %10d\n", count4);
 }
 
 //---------------------------------------------------------------------------------
