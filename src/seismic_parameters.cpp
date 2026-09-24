@@ -314,11 +314,6 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   bool   faults     = model_settings->GetCornerpointInterpolationAtFaults();
   bool   horizontal = true; // Always use horizontal interpolation for top and base surface
 
-  if (cornerpt)
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation.\n");
-  else
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces (not corner point interpolation).\n");
-
   NRLib::Grid2D<double> tvalues(nx, ny, 0.0);
   NRLib::Grid2D<double> bvalues(nx, ny, 0.0);
 
@@ -359,25 +354,38 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
       }
     }
   }
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse grid minimum value                : %8.2f", d1);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse grid maximum value                : %8.2f\n", d2);
+
+  if (cornerpt)
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using cornerpoint interpolation:");
+  else
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nFinding Eclipse top and base surfaces using center-point interpolation:");
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Eclipse grid minimum value                   : %8.2f", d1);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Eclipse grid maximum value                   : %8.2f\n", d2);
 
   //
   // Finding top and base Eclipse surfaces in time
   //
+  const std::vector<double> & constvp = model_settings->GetConstVp();
+  const std::vector<double> & constvs = model_settings->GetConstVs();
 
+  //
   // NBNB-PAL: Testen nedenfor er ikke god ettersom en flate spesifisert fra fil kan være konstant
+  //
   if (const_top_given) {
     std::string text = "PP";
-    double const_v   = model_settings->GetConstVp()[0];
-    double const_vs  = model_settings->GetConstVs()[0];
     double t1        = model_settings->GetTopTimeConstant();
+    double const_v   = constvp[0];
     if (model_settings->GetPSSeismic()) {
-      const_v = 2/(1/const_v + 1/const_vs);
-      text = "PS";
+      const_v = 2/(1/constvp[0] + 1/constvs[0]);
+      text    = "PS";
     }
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nUsing %s velocity                         : %8.2f\n", text.c_str(), const_v);
-    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculating Eclipse top time surface\n");
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculating Eclipse top time surface");
+    if (model_settings->GetPSSeismic()) {
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vp used for velocity estimation - overburden : %8.2f", constvp[0]);
+      NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vs used for velocity estimation - overburden : %8.2f", constvs[0]);
+    }
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Using %s velocity                            : %8.2f\n", text.c_str(), const_v);
 
     for (size_t i = 0; i < top_time.GetNI(); i++)
       for (size_t j = 0; j < top_time.GetNJ(); j++) {
@@ -389,27 +397,36 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
   //
   // Finding additional grid size due to wavelet length
   //
-  double twt_wavelet = wavelet->GetTwtLength();
-  std::vector<double> constvp = model_settings->GetConstVp();
+  double      twt_wavelet = wavelet->GetTwtLength();
+  double      vel_top     = constvp[0];
+  double      vel_bot     = constvp[2];
+  std::string text        = "PP";
 
-  double z_top_wavelet = twt_wavelet*constvp[0]/2000;
-  double z_bot_wavelet = twt_wavelet*constvp[2]/2000;
-
-  std::string text = "PP";
   if (model_settings->GetPSSeismic()) {
-    std::vector<double> constvs = model_settings->GetConstVs();
-    double vel_top = 2/(1/constvp[0] + 1/constvs[0]);
-    double vel_bot = 2/(1/constvp[2] + 1/constvs[2]);
-    z_top_wavelet = twt_wavelet*vel_top/2000;
-    z_bot_wavelet = twt_wavelet*vel_bot/2000;
+    vel_top = 2/(1/constvp[0] + 1/constvs[0]);
+    vel_bot = 2/(1/constvp[2] + 1/constvs[2]);
     text = "PS";
   }
+
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nCalculating additional grid size to account for wavelet size");
+  if (model_settings->GetPSSeismic()) {
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vp used for surface ext. - overburden          : %8.2f", constvp[0]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vp used for surface ext. - underburden         : %8.2f", constvp[2]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vs used for surface ext. - overburden          : %8.2f", constvs[0]);
+    NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Vs used for surface ext. - underburden         : %8.2f", constvs[2]);
+  }
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Using %s velocity for surface ext. - overburden  : %8.2f", text.c_str(), vel_top);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Using %s velocity for surface ext. - underburden : %8.2f", text.c_str(), vel_bot);
+
+  double z_top_wavelet = vel_top*(twt_wavelet/2000);
+  double z_bot_wavelet = vel_bot*(twt_wavelet/2000);
+
   model_settings->SetZWaveletTop(z_top_wavelet);
   model_settings->SetZWaveletBot(z_bot_wavelet);
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nWavelet time length is                    : %8.2f\n", twt_wavelet*2.0);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse top surface lift due to wavelet   : %8.2f"  , z_top_wavelet);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nEclipse base surface drop due to wavelet  : %8.2f\n", z_bot_wavelet);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n\n  Wavelet time length is                           : %8.2f\n", twt_wavelet*2.0);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Eclipse top surface lift due to wavelet          : %8.2f"  , z_top_wavelet);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Eclipse base surface drop due to wavelet         : %8.2f\n", z_bot_wavelet);
 
   topeclipse.Add(-1 * z_top_wavelet); // add one wavelet length to bot and subtract from top
   boteclipse.Add(     z_bot_wavelet);
@@ -421,8 +438,8 @@ void SeismicParameters::FindTopAndBaseSurfaces(NRLib::RegularSurface<double> & t
 
   seismic_geometry->setZRange(d1, d2);
 
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid minimum value                        : %8.2f (Eclipse grid minimum - %.1f wavelet)"  , d1, factor/2.0);
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\nGrid maximum value                        : %8.2f (Eclipse grid maximum + %.1f wavelet)\n", d2, factor/2.0);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Grid minimum value                               : %8.2f (Eclipse grid minimum - %.1f wavelet)"  , d1, factor/2.0);
+  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low,"\n  Grid maximum value                               : %8.2f (Eclipse grid maximum + %.1f wavelet)\n", d2, factor/2.0);
 }
 
 //---------------------------------------------------------------------

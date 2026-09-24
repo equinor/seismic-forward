@@ -1,11 +1,11 @@
 
-****************************************************************************************************
-*****                                                                                          *****
-*****                          Seismic Forward Modeling                                        *****
-*****                                version 4.3.1                                             *****
-*****                         Copyright (c) 2024 by Equinor                                    *****
-*****                                                                                          *****
-****************************************************************************************************
+*****
+*****
+*****          Seismic Forward Modeling
+*****          version {version_number}
+*****          Copyright (c) 2025 by Equinor
+*****
+*****
 
 Threads in use                            :     1 /  20
 
@@ -24,7 +24,6 @@ Suffix                                              :
 Seismic data type                                   :         PP
 NMO correction                                      :         no
 Offset without stretch                              :         no
-Use default underburden                             :         no
 Resample parameters to Segy with interpolation      :         no
 
 Regular grid
@@ -58,11 +57,14 @@ Parameters names
   Vs                                                : VS2000_01_01
   Rho                                               : DENS2000_01_01
 
-Default values for overburden, reservoir and underburden
-  Vp                                                : 2400.0 -> 2240.0 -> 2240.0
-  Vs                                                : 1100.0 ->  890.0 ->  890.0
-  Rho                                               : 2300.0 -> 2240.0 -> 2240.0
-
+Default values                                            Vp      Vs     Rho
+  Overburden                                        : 2400.0  1100.0  2300.0
+  Reservoir                                         : 2240.0   890.0  2240.0
+  Underburden                                       : 2240.0   890.0  2240.0
+Default values used to fill empty cells
+  Overburden                                        :no
+  Reservoir                                         :no
+  Underburden                                       :no
 Extra parameters                                    :         no
 
 Output area is taken from Eclipse grid
@@ -140,22 +142,24 @@ Base layer of Eclipse grid                :   13
 
 Number of layers needed in z-grid         :   15
 
-Finding Eclipse top and base surfaces (not corner point interpolation).
-
-Eclipse grid minimum value                :  1551.12
-Eclipse grid maximum value                :  1976.88
-
-Using PP velocity                         :  2400.00
+Finding Eclipse top and base surfaces using center-point interpolation:
+  Eclipse grid minimum value                   :  1551.12
+  Eclipse grid maximum value                   :  1976.88
 
 Calculating Eclipse top time surface
+  Using PP velocity                            :  2400.00
 
-Wavelet time length is                    :    64.00
+Calculating additional grid size to account for wavelet size
+  Using PP velocity for surface ext. - overburden  :  2400.00
+  Using PP velocity for surface ext. - underburden :  2240.00
 
-Eclipse top surface lift due to wavelet   :    38.40
-Eclipse base surface drop due to wavelet  :    35.84
+  Wavelet time length is                           :    64.00
 
-Grid minimum value                        :  1512.71 (Eclipse grid minimum - 0.5 wavelet)
-Grid maximum value                        :  2012.72 (Eclipse grid maximum + 0.5 wavelet)
+  Eclipse top surface lift due to wavelet          :    38.40
+  Eclipse base surface drop due to wavelet         :    35.84
+
+  Grid minimum value                               :  1512.71 (Eclipse grid minimum - 0.5 wavelet)
+  Grid maximum value                               :  2012.72 (Eclipse grid maximum + 0.5 wavelet)
 
 Making regular grids:
   z, TWT                104 x  196 x   15 :     305760
@@ -187,44 +191,37 @@ Vp            2247.00      0.00   3377.32
 Vs            1125.95      0.00   1833.09
 Rho           1754.55      0.00   2450.57
 
-Filling inactive cells in Eclipse grid above and in reservoir.
-
 Total number of Eclipse grid cells: 40 x 64 x 14 = 35840
 
-OB1 = Using default value for overburden above first layer.
-OB2 = Using default value for overburden in and below first layer.
-RES = Using default value for reservoir in reservoir.
-ZRO = Using cell value from cell above for zero thickness cells.
-
-GridName            OB1     OB2     RES     ZRO
------------------------------------------------
-Vp                  537    6656     467     425
-Vs                  537    6656     467     425
-Rho                 537    6656     467     425
+Filling inactive cells in Eclipse grid
+  Overburden cells            :         35
+  Reservoir cells             :        750
+  Underburden cells           :        132
+  Fully inactive column cells :       7168
 
 Parameter statistics for Eclipse grid after filling of inactive cells.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            2792.20   1911.09   3377.32
-Vs            1375.00    842.86   1833.09
-Rho           2272.62   1739.88   2450.57
+Vp            2801.57   1911.09   3377.32
+Vs            1382.49    842.86   1833.09
+Rho           2273.23   1739.88   2450.57
 
 Resampling parameters in Eclipse grid into regular grids.
+
+Post-processing grid to fill remaining cells with values
+  Overburden cells            :      18899
+  Reservoir cells             :          0
+  Underburden cells           :      18323
+  Fully inactive column cells :      32976
 
 Parameter statistics for regular grid after resampling.
 
 Parameter         Avg       Min       Max
 -----------------------------------------
-Vp            2814.25   1911.11   3375.99
-Vs            1382.74    842.86   1831.34
-Rho           2267.56   1739.89   2450.57
-
-Filling remaining cells in regular grids.
-
-Setting undefined cells in trace equal to default reservoir value    :      32976
-Setting cells in bottom layer equal to default reservoir value       :        576
-Setting cells in trace equal to layer below                          :          0
+Vp            2853.76   1911.11   3375.99
+Vs            1419.26    842.86   1831.34
+Rho           2268.80   1739.89   2450.57
 
 Deleting Eclipse grid to free memory.
 
@@ -232,9 +229,9 @@ Deleting Eclipse grid to free memory.
 *****                                      Make TWT grid                                       *****
 ****************************************************************************************************
    tmin           :   972.00  (top Eclipse - 0.5 wavelet)
-   tmax           :  1376.27  (bot Eclipse + 0.5 wavelet)
+   tmax           :  1373.92  (bot Eclipse + 0.5 wavelet)
    dt             :     4.00
-   nt             :      102
+   nt             :      101
 
 ****************************************************************************************************
 *****                                       Export grids                                       *****
@@ -293,13 +290,34 @@ Initializing Segy file 'seismic_depth_stack.segy' using format SeisWorks
 
 Generating synthetic PP-seismic for angles: 0.0 
 
+Writing SegY grids to file.
+
 Statistics for generated seismic data. If present, stack data are used,
 if not, data are taken from first offset angle.
 
 Type               Avg         Min         Max
 ----------------------------------------------
-Depth           0.0003     -0.2928      0.3540
+Depth           0.0001     -0.2997      0.3264
 
+
+****************************************************************************************************
+*****                                     Timings Summary                                      *****
+****************************************************************************************************
+
+Section                                          CPU Time/s            Real Time/s
+----------------------------------------------------------------------------------
+Loading corner-point grid                    0.07    11.69%         0.00   100.00%
+Make regular grid                            0.04     6.69%         0.00   100.00%
+Resample elastic parameters                  0.08    13.16%         0.00   100.00%
+Forward modelling                            0.32    52.46%         0.00   100.00%
+Write SegY files                             0.02     3.50%         0.00   100.00%
+Dummy                                        0.00     0.00%         0.00   100.00%
+Miscellaneous                                0.08    12.49%         0.00   100.00%
+----------------------------------------------------------------------------------
+Total                                        0.62   100.00%         0.00   100.00%
+
+Total CPU  time used by Seismic Forward:     0.62 s
+Total real time used in Seismic Forward:     0.00 s
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****
