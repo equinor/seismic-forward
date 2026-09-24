@@ -153,8 +153,9 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
 
   //  ------ START Moved to new section project setting ----------------
   //
-  //  <traces-in-memory> and <max-threads> are still accepted at top level,
-  //  but giving a keyword both here and in <project-settings> is an error.
+  //  <traces-in-memory>, <max-threads> and <default-underburden> are still
+  //  accepted at top level, but giving a keyword both here and in
+  //  <project-settings> is an error.
   //
   double number;
   bool traces_in_memory_deprecated = ParseValue(root, "traces-in-memory", number, errTxt);
@@ -168,18 +169,28 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
     modelSettings_->SetMaxThreads(static_cast<size_t>(n_threads));
   }
 
+  bool use_default_underburden;
+  bool default_underburden_deprecated = ParseBool(root, "default-underburden", use_default_underburden, errTxt);
+  if (default_underburden_deprecated) {
+    modelSettings_->SetUseDefaultUnderburden(use_default_underburden);
+  }
+
   //  ------ END Moved to new section project setting ----------------
 
-  bool traces_in_memory_given = false;
-  bool max_threads_given      = false;
+  bool traces_in_memory_given    = false;
+  bool max_threads_given         = false;
+  bool default_underburden_given = false;
 
-  ParseProjectSettings(root, errTxt, traces_in_memory_given, max_threads_given);
+  ParseProjectSettings(root, errTxt, traces_in_memory_given, max_threads_given, default_underburden_given);
 
   if (traces_in_memory_deprecated) {
     CheckDeprecatedPlacement("traces-in-memory", traces_in_memory_given, errTxt);
   }
   if (max_threads_deprecated) {
     CheckDeprecatedPlacement("max-threads", max_threads_given, errTxt);
+  }
+  if (default_underburden_deprecated) {
+    CheckDeprecatedPlacement("default-underburden", default_underburden_given, errTxt);
   }
 
   if (ParseWhiteNoise(root, errTxt)) {
@@ -209,11 +220,13 @@ bool XmlModelFile::ParseSeismicForward(TiXmlNode *node, std::string &errTxt)
 bool XmlModelFile::ParseProjectSettings(TiXmlNode   * node,
                                         std::string & errTxt,
                                         bool        & traces_in_memory_given,
-                                        bool        & max_threads_given)
+                                        bool        & max_threads_given,
+                                        bool        & default_underburden_given)
 //------------------------------------------------------------
 {
-  traces_in_memory_given = false;
-  max_threads_given      = false;
+  traces_in_memory_given    = false;
+  max_threads_given         = false;
+  default_underburden_given = false;
 
   TiXmlNode *root = node->FirstChildElement("project-settings");
   if (root == 0) {
@@ -239,6 +252,7 @@ bool XmlModelFile::ParseProjectSettings(TiXmlNode   * node,
 
   if (ParseBool(root, "default-underburden", bolval, errTxt)) {
     modelSettings_->SetUseDefaultUnderburden(bolval);
+    default_underburden_given = true;
   }
 
   double number;

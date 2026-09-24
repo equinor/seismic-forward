@@ -362,9 +362,10 @@ cell:
     [\<default-underburden\>](#default-underburden) is yes, and the value
     of the last defined cell otherwise.
 
-Extra parameters use their [\<default-value\>](#default-value) in all
-three parts. A column without any defined cells is filled with the
-overburden default values, regardless of the settings above.
+Extra parameters follow the same settings, using their
+[\<default-value\>](#default-value) where default values apply. A
+column without any defined cells is filled with the overburden default
+values, regardless of the settings above.
 
 Using the value of the closest defined cell instead of a default value
 avoids artificial contrasts, and thereby reflections, at the top and
