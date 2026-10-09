@@ -1,11 +1,11 @@
 
-*****
-*****
-*****          Seismic Forward Modeling
-*****          version {version_number}
-*****          Copyright (c) 2025 by Equinor
-*****
-*****
+****************************************************************************************************
+*****                                                                                          *****
+*****                             Seismic Forward Modelling                                    *****
+*****                                version {version_number}                                             *****
+*****                           Copyright (c) 2026 by Equinor                                  *****
+*****                                                                                          *****
+****************************************************************************************************
 
 Threads in use                            :    20 /  20
 
@@ -290,8 +290,6 @@ Initializing Segy file 'seismic_depth.segy' using format SeisWorks
 
 Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 1500.0 3000.0 
 
-Writing SegY grids to file.
-
 Statistics for generated seismic data. If present, stack data are used,
 if not, data are taken from first offset angle.
 
@@ -307,13 +305,11 @@ Depth           0.0000     -0.0989      0.1462
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.26     9.32%         0.00     0.00%
-Make regular grid                            0.16     5.59%         0.00     0.00%
-Resample elastic parameters                  0.26     9.28%         0.00     0.00%
-Forward modelling                            2.11    74.57%         2.00   100.00%
-Write SegY files                             0.02     0.62%         0.00     0.00%
-Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.02     0.62%         0.00     0.00%
+Loading corner-point grid                    0.27     9.44%         0.00     0.00%
+Make regular grid                            0.16     5.72%         0.00     0.00%
+Resample elastic parameters                  0.30    10.43%         0.00     0.00%
+Forward modelling                            2.09    73.78%         2.00   100.00%
+Miscellaneous                                0.02     0.63%         0.00     0.00%
 ----------------------------------------------------------------------------------
 Total                                        2.83   100.00%         2.00   100.00%
 

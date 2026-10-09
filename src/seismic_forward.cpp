@@ -64,8 +64,6 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
                 offset_theta_vec,
                 offset_wo_stretch);
 
-  std::vector<ResultTrace*> result_traces(n_traces);
-
   float monitor_size;
   float next_monitor;
   MonitorInitialize(n_traces, monitor_size, next_monitor);
@@ -73,17 +71,17 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
   Timer timer;
 
   for (size_t k = 0; k < n_traces; ++k) {
-    result_traces[k] = new ResultTrace(seismic_parameters,
-                                       model_settings,
-                                       *seismic_traces[k],
-                                       nzrefl,
-                                       twt_0.size(),
-                                       z_0.size(),
-                                       twts_0.size(),
-                                       n_time_samples,
-                                       offset_theta_vec.size());
+    ResultTrace * result_trace = new ResultTrace(seismic_parameters,
+                                                 model_settings,
+                                                 *seismic_traces[k],
+                                                 nzrefl,
+                                                 twt_0.size(),
+                                                 z_0.size(),
+                                                 twts_0.size(),
+                                                 n_time_samples,
+                                                 offset_theta_vec.size());
 
-    if (!result_traces[k]->GetIsEmpty()) {
+    if (!result_trace->GetIsEmpty()) {
       GenerateSeismicTraces(seismic_parameters,
                             model_settings,
                             twt_0,
@@ -91,29 +89,22 @@ void SeismicForward::DoSeismicForward(SeismicParameters   & seismic_parameters,
                             twts_0,
                             offset_theta_vec,
                             output,
-                            *result_traces[k]);
+                            *result_trace);
     }
+
+    output.AddTrace(*result_trace,                 // Empty traces are written as zero traces
+                    model_settings,
+                    seismic_parameters.GetSeismicOutput());
+
+    delete result_trace;
+    delete seismic_traces[k];
+
     Monitor(k, monitor_size, next_monitor);
   }
   std::cout << "\n";
 
   Timings::setTimeForwardModelling(timer);
   timer.reset();
-
-  NRLib::LogKit::LogFormatted(NRLib::LogKit::Low, "\nWriting SegY grids to file.\n");
-
-  MonitorInitialize(n_traces, monitor_size, next_monitor);
-
-  for (size_t k = 0; k < n_traces; ++k) {
-    output.AddTrace(*(result_traces[k]),
-                    model_settings,
-                    seismic_parameters.GetSeismicOutput());
-    Monitor(k, monitor_size, next_monitor);
-    delete seismic_traces[k];
-    delete result_traces[k];
-  }
-
-  Timings::setTimeWriteSegy(timer);
 
   output.WriteStatisticsForSeismic(model_settings);
   output.WriteSeismicStorm(model_settings,

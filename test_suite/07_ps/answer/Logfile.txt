@@ -1,11 +1,11 @@
 
-*****
-*****
-*****          Seismic Forward Modeling
-*****          version {version_number}
-*****          Copyright (c) 2025 by Equinor
-*****
-*****
+****************************************************************************************************
+*****                                                                                          *****
+*****                             Seismic Forward Modelling                                    *****
+*****                                version {version_number}                                             *****
+*****                           Copyright (c) 2026 by Equinor                                  *****
+*****                                                                                          *****
+****************************************************************************************************
 
 Threads in use                            :     1 /  20
 
@@ -276,8 +276,6 @@ Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 Generating synthetic PS-seismic for angles: 0.0 15.0 30.0 45.0 
 
-Writing SegY grids to file.
-
 Statistics for generated seismic data. If present, stack data are used,
 if not, data are taken from first offset angle.
 
@@ -294,18 +292,18 @@ Depth           0.0000      0.0000      0.0000
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.01    10.91%         1.00   100.00%
-Make regular grid                            0.00     0.63%         0.00     0.00%
-Resample elastic parameters                  0.00     0.76%         0.00     0.00%
-Forward modelling                            0.00     0.17%         0.00     0.00%
-Write SegY files                             0.00     0.02%         0.00     0.00%
-Dummy                                        0.00     0.00%         0.00     0.00%
-Miscellaneous                                0.07    87.50%         0.00     0.00%
+Loading corner-point grid                    0.01    10.29%         0.00   100.00%
+Make regular grid                            0.00     0.64%         0.00   100.00%
+Resample elastic parameters                  0.00     0.81%         0.00   100.00%
+Forward modelling                            0.00     0.19%         0.00   100.00%
+Write SegY files                             0.00     0.00%         0.00   100.00%
+Dummy                                        0.00     0.00%         0.00   100.00%
+Miscellaneous                                0.07    88.07%         0.00   100.00%
 ----------------------------------------------------------------------------------
-Total                                        0.08   100.00%         1.00   100.00%
+Total                                        0.08   100.00%         0.00   100.00%
 
 Total CPU  time used by Seismic Forward:     0.08 s
-Total real time used in Seismic Forward:     1.00 s
+Total real time used in Seismic Forward:     0.00 s
 
 ****************************************************************************************************
 *****                                     Suggested tasks                                      *****

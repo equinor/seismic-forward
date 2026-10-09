@@ -1,11 +1,11 @@
 
-*****
-*****
-*****          Seismic Forward Modeling
-*****          version {version_number}
-*****          Copyright (c) 2025 by Equinor
-*****
-*****
+****************************************************************************************************
+*****                                                                                          *****
+*****                             Seismic Forward Modelling                                    *****
+*****                                version {version_number}                                             *****
+*****                           Copyright (c) 2026 by Equinor                                  *****
+*****                                                                                          *****
+****************************************************************************************************
 
 Threads in use                            :    20 /  20
 
@@ -290,8 +290,6 @@ Initializing Segy file 'seismic_timeshift.segy' using format SeisWorks
 
 Generating synthetic NMO PP-seismic with stretch for offsets: 0.0 1000.0 2000.0 3000.0 
 
-Writing SegY grids to file.
-
 Statistics for generated seismic data. If present, stack data are used,
 if not, data are taken from first offset angle.
 
@@ -308,13 +306,13 @@ Depth           0.0015     -0.6253      0.4572
 
 Section                                          CPU Time/s            Real Time/s
 ----------------------------------------------------------------------------------
-Loading corner-point grid                    0.01     9.82%         0.00   100.00%
-Make regular grid                            0.01     9.57%         0.00   100.00%
-Resample elastic parameters                  0.00     1.51%         0.00   100.00%
-Forward modelling                            0.00     0.54%         0.00   100.00%
-Write SegY files                             0.00     0.03%         0.00   100.00%
+Loading corner-point grid                    0.01    11.16%         0.00   100.00%
+Make regular grid                            0.01     6.53%         0.00   100.00%
+Resample elastic parameters                  0.00     1.52%         0.00   100.00%
+Forward modelling                            0.00     0.55%         0.00   100.00%
+Write SegY files                             0.00     0.00%         0.00   100.00%
 Dummy                                        0.00     0.00%         0.00   100.00%
-Miscellaneous                                0.07    78.54%         0.00   100.00%
+Miscellaneous                                0.07    80.23%         0.00   100.00%
 ----------------------------------------------------------------------------------
 Total                                        0.08   100.00%         0.00   100.00%
 

@@ -1,6 +1,6 @@
 # Seismic Forward
 
-## User manual – version 4.5
+## User manual – version 5.0
 
 <img src="images/forside.jpg" />
 
@@ -31,9 +31,71 @@ gives description of file formats and references respectively.
 
 # Release notes
 
-## Version 4.5
+## Version 5.0
+
+*Avoid artificial contrasts in the overburden and underburden.*
+
+Empty grid cells have until now been filled with the default values
+given in [\<default-values\>](#default-values). Above and below the
+reservoir this introduces a contrast, and thereby an artificial
+reflection, at the first and last defined cell of each column. These
+cells can now be given the value of the nearest defined cell instead.
+The filling is controlled by three keywords in
+[\<project-settings\>](#project-settings):
+[\<default-overburden\>](#default-overburden),
+[\<default-reservoir\>](#default-reservoir) and
+[\<default-underburden\>](#default-underburden). All three default to
+yes, which means that the default values are used. See
+[*Filling of empty cells*](#filling-of-empty-cells).
+
+The filling is now done in the same way for the inactive cells of the
+Eclipse grid and for the cells of the regular grid that remain undefined
+after the resampling. Each column is split into overburden, reservoir
+and underburden by its first and last defined cell. A column without any
+defined cell is filled with the overburden default values; formerly the
+regular grid used the reservoir default values for such columns.
+
+*Changed default:* [\<default-underburden\>](#default-underburden)
+defaulted to no in version 4.4, and was applied to the regular grid
+only. It now defaults to yes, and is applied to the inactive cells of
+the Eclipse grid as well. A model file that does not give this keyword
+will therefore give different results below the reservoir than in
+version 4.4. Give `<default-underburden> no </default-underburden>` in
+[\<project-settings\>](#project-settings) to keep the former behaviour.
+
+## Version 4.5 / 4.5.1
+
+*Bug fixes, and the vendored Boost library replaced by a system install.*
+
+The nearest neighbour used when interpolating was found by requiring the
+distance to the input point to be strictly positive. A point falling
+exactly on a sample position was therefore skipped, and the next
+position used instead. The distance is now allowed to be zero.
+
+A pitfall in the segmentation of the SegY geometry has been removed, and
+the forward modelling has been restructured internally.
+
+The copy of the Boost library that used to be distributed with the
+source code has been removed. Boost must now be installed on the system.
+
+Flags `--version` and `--help` have been added to the command line
+interface of the Python wrapper.
+
+Note that the restructuring of the forward modelling changed the filling
+of empty cells, and thereby the generated seismic. The grid extent is
+also slightly changed.
 
 ## Version 4.4
+
+*The program is distributed as a Python wheel.*
+
+Seismic Forward is now published to PyPI as a Python package with the
+compiled program bundled, and can be installed with
+`pip install seismic-forward`. In addition, the test suite is built and
+run automatically for every change pushed to the Git repository.
+
+This version contains no changes to the forward modelling, and no
+changes to the model file.
 
 ## Version 4.3
 
