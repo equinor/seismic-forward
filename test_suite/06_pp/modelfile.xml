@@ -89,7 +89,10 @@
 </output-parameters>
 
 <timeshift-twt> ../../01_nmo_pp/input/Input_timeshift_minus50_twt.storm </timeshift-twt>
-<traces-in-memory> 4 </traces-in-memory>
-<max-threads> 1 </max-threads>
+
+<project-settings>
+  <max-threads> 1 </max-threads>
+</project-settings>
+
 
 </seismic-forward>

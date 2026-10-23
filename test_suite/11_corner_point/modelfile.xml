@@ -89,5 +89,4 @@
   <seismic-time-segy>  yes </seismic-time-segy>
 </output-parameters>
 
-<traces-in-memory> 1000000 </traces-in-memory>
 </seismic-forward>

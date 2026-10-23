@@ -1,7 +1,11 @@
 <seismic-forward>
 
   <project-settings>
-    <max-threads> 1 </max-threads>
+    <default-overburden>   no  </default-overburden>
+    <default-reservoir>    no  </default-reservoir>
+    <default-underburden>  no  </default-underburden>
+
+    <max-threads>            1 </max-threads>
   </project-settings>
 
   <elastic-param>
